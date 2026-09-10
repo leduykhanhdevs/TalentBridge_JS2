@@ -6,15 +6,56 @@
 
 ---
 
-## 👥 Danh Sách Thành Viên & Bảng Phân Công Công Việc
+## 👥 Danh Sách Thành Viên & Bảng Theo Dõi Tiến Độ Chi Tiết (Task Checklist)
 
-| STT | Họ và Tên | Vai Trò Trong Dự Án | Module & Nhiệm Vụ Phụ Trách Chính |
-| :---: | :--- | :--- | :--- |
-| 1 | **Lê Duy Khánh** | **Trưởng nhóm (Team Leader / Architect)** | - Thiết kế kiến trúc tổng thể, Quản lý Git Repository & kiểm duyệt toàn bộ Pull Request.<br>- Khởi tạo Base Project Spring Boot 3, cấu hình Spring Security 6 & JWT / Session.<br>- Quản lý Cơ sở dữ liệu chung (`schema.sql`).<br>- Triển khai **Module Admin**: Kiểm duyệt doanh nghiệp, duyệt tin, quản lý tài khoản người dùng. |
-| 2 | **Trần Đình Tình** | **Backend Developer (Job & Search Module)** | - Triển khai **Module Tin tuyển dụng (Jobs)**: CRUD tin tuyển dụng cho Nhà tuyển dụng.<br>- Xây dựng **Bộ lọc & Công cụ tìm kiếm việc làm**: Lọc theo từ khóa, ngành nghề, mức lương, tỉnh thành, cấp bậc.<br>- Xây dựng Scheduled Task (Cron job) tự động quét và đóng các tin hết hạn nộp. |
-| 3 | **Nguyễn Phan Minh Hiếu** | **Backend Developer (Company & ATS Pipeline Module)** | - Triển khai **Module Doanh nghiệp (Company Profile)**: Tạo, cập nhật hồ sơ, logo, giới thiệu công ty.<br>- Xây dựng **Quy trình tuyển dụng ATS (Applicant Tracking System)**: Quản lý ứng viên qua các vòng (`APPLIED` $\to$ `SCREENING` $\to$ `INTERVIEW` $\to$ `OFFER` $\to$ `HIRED` / `REJECTED`).<br>- Chức năng Chấm điểm sao (Rating 1-5), Gắn thẻ nhãn (Tags), Ghi chú nội bộ cho từng ứng viên. |
-| 4 | **Đặng Trường Thịnh** | **Backend Developer (Candidate & Application Module)** | - Triển khai **Module Hồ sơ Ứng viên (Candidate Profile)**: Thông tin cá nhân, chức danh, mức lương mong muốn.<br>- Quản lý **Upload CV (Resume Management)**: Tải lên file PDF, đặt CV mặc định, xem trước CV.<br>- Luồng **Nộp đơn ứng tuyển (Apply Job)**: Nộp CV + Cover letter, chống nộp trùng lặp.<br>- Tính năng Lưu tin tuyển dụng yêu thích (Saved Jobs) và xem lịch sử các đơn đã nộp. |
-| 5 | **Phan Thị Ánh Tuyền** | **Backend & UI/UX Co-Lead (Interview, Mail & Analytics)** | - Triển khai **Module Lịch phỏng vấn (Interviews)**: Tạo lịch, chọn hình thức Online/Offline, link Meet/Zoom.<br>- Tích hợp **Spring Mail**: Gửi email tự động xác nhận nộp hồ sơ, thư mời phỏng vấn, thư thông báo kết quả.<br>- Xây dựng hệ thống **Thông báo trong ứng dụng (In-app Notification)**.<br>- Xây dựng **Dashboard Thống kê & Báo cáo tuyển dụng**: Tỷ lệ ứng viên qua các vòng tuyển dụng.<br>- Hỗ trợ thiết kế giao diện UI/UX và ghép nối API toàn hệ thống. |
+### 1. 👑 Lê Duy Khánh – Trưởng nhóm (Tech Lead & Security / Admin Module)
+- [x] Đọc và phân tích kỹ tài liệu đề tài `02.docx`.
+- [x] Thiết kế kiến trúc tổng thể, danh mục 4 Actor, 7 Feature Modules và các luồng nghiệp vụ.
+- [x] Thiết kế CSDL chuẩn hóa 3NF 16 bảng (`docs/DATABASE_DESIGN.md` & `database/schema.sql`).
+- [x] Xây dựng bộ quy tắc làm việc nhóm, Git Flow & Quy chuẩn AI Code (`TEAM_RULES_AND_GITFLOW.md`).
+- [x] Khởi tạo Repository GitHub, cấu hình `.gitignore`, bảo vệ nhánh `main`, tạo nhánh `dev` và push lên remote.
+- [ ] Khởi tạo Skeleton Spring Boot 3 (Maven/Gradle, Spring Web, Spring Data JPA, Lombok, Validation).
+- [ ] Triển khai Module Authentication & Security (User, Role, UserRole, BCrypt, JWT / Form Login, Refresh Token).
+- [ ] Triển khai Module Admin: API quản lý người dùng (Khóa/Mở User), duyệt doanh nghiệp (`PENDING`/`APPROVED`), kiểm duyệt tin tuyển dụng.
+- [ ] Phụ trách Review & Kiểm duyệt tất cả các Pull Request từ thành viên trước khi gộp vào `dev`/`main`.
+
+### 2. 💼 Trần Đình Tình – Backend Developer (Job & Search Module)
+- [x] Nghiên cứu đề tài, nắm rõ luồng đăng tin và tìm kiếm việc làm.
+- [x] Thống nhất cấu trúc các bảng `jobs`, `categories`, `skills`, `job_skills`.
+- [ ] Tạo Entity, Repository, DTO cho `Job`, `Category`, `Skill`, `JobSkill`.
+- [ ] Xây dựng Service & Controller CRUD Tin tuyển dụng cho Nhà tuyển dụng (Tạo, Sửa, Ẩn/Hiện, Đóng tin).
+- [ ] Xây dựng Bộ lọc & Tìm kiếm việc làm đa tiêu chí (Từ khóa, ngành nghề, khoảng lương min-max, địa điểm, cấp bậc, hình thức làm việc).
+- [ ] Xây dựng Scheduled Task (`@Scheduled` cron job) tự động quét và cập nhật các tin quá hạn `deadline` sang `EXPIRED`.
+- [ ] Viết Unit Test & Postman Collection kiểm thử toàn bộ API Job & Search.
+
+### 3. 🏢 Nguyễn Phan Minh Hiếu – Backend Developer (Company & ATS Pipeline Module)
+- [x] Nghiên cứu đề tài, nắm rõ luồng quản lý doanh nghiệp và quy trình ATS.
+- [x] Thống nhất cấu trúc các bảng `companies`, `recruiters`, `application_stages`, `application_notes`.
+- [ ] Tạo Entity, Repository, DTO cho `Company`, `Recruiter`, `ApplicationStage`, `ApplicationNote`.
+- [ ] Xây dựng Service & Controller quản lý Hồ sơ Doanh nghiệp (Tên, logo, website, quy mô, địa chỉ, trạng thái duyệt).
+- [ ] Xây dựng API Quản lý danh sách ứng viên theo từng công việc (ATS Pipeline qua các vòng: `APPLIED` $\to$ `SCREENING` $\to$ `INTERVIEW` $\to$ `OFFER` $\to$ `HIRED` / `REJECTED`).
+- [ ] Xây dựng tính năng Đánh giá ứng viên (Rating 1-5 sao, Gắn Tag phân loại, Viết ghi chú nội bộ cho HR).
+- [ ] Viết Unit Test & Postman Collection kiểm thử các API Company & ATS Pipeline.
+
+### 4. 📄 Đặng Trường Thịnh – Backend Developer (Candidate & Application Module)
+- [x] Nghiên cứu đề tài, nắm rõ luồng hồ sơ ứng viên và nộp đơn tuyển dụng.
+- [x] Thống nhất cấu trúc các bảng `candidates`, `resumes`, `applications`, `saved_jobs`.
+- [ ] Tạo Entity, Repository, DTO cho `Candidate`, `Resume`, `Application`, `SavedJob`.
+- [ ] Xây dựng Service & Controller quản lý Thông tin cá nhân Ứng viên (Title, Kinh nghiệm, Mức lương mong muốn, Địa chỉ).
+- [ ] Xây dựng tính năng Quản lý Upload CV (`resumes`): Tải file PDF lên server/cloud, chọn CV mặc định, xem trước CV.
+- [ ] Xây dựng Luồng nộp đơn ứng tuyển (`applications`): Nộp hồ sơ kèm Cover Letter, kiểm tra ràng buộc chống nộp trùng lặp (`UNIQUE KEY`).
+- [ ] Xây dựng tính năng Lưu tin việc làm (`saved_jobs`) và xem lịch sử các đơn đã nộp kèm trạng thái hiện tại.
+- [ ] Viết Unit Test & Postman Collection kiểm thử các API Candidate & Application.
+
+### 5. 📅 Phan Thị Ánh Tuyền – Backend & UI Co-Lead (Interview, Mail & Analytics)
+- [x] Nghiên cứu đề tài, nắm rõ luồng phỏng vấn, thông báo và dashboard.
+- [x] Thống nhất cấu trúc các bảng `interviews`, `notifications`.
+- [ ] Tạo Entity, Repository, DTO cho `Interview`, `Notification`.
+- [ ] Xây dựng Service & Controller Lên lịch phỏng vấn (Thời gian, Online qua Meet/Zoom hoặc Offline tại công ty, ghi chú).
+- [ ] Cấu hình Spring Mail & Xây dựng Template gửi Email tự động (Xác nhận nộp đơn, Thư mời phỏng vấn, Thông báo kết quả).
+- [ ] Xây dựng Module Thông báo trong ứng dụng (In-app notifications) khi có cập nhật đơn/lịch phỏng vấn.
+- [ ] Xây dựng API Thống kê & Báo cáo tuyển dụng (Dashboard Metrics: số lượng ứng viên qua từng vòng, tỷ lệ chuyển đổi).
+- [ ] Phối hợp thiết kế và ghép nối giao diện Frontend (Thymeleaf / React).
 
 ---
 
@@ -87,6 +128,22 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **16 bả
 
 > 📖 **Xem chi tiết tài liệu CSDL**: [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)  
 > 💾 **File script DDL MySQL**: [database/schema.sql](database/schema.sql)
+
+---
+
+## 🤖 QUY CHUẨN BẮT BUỘC KHI SỬ DỤNG AI ĐỂ CODE (CHUẨN CEO)
+
+Nếu thành viên sử dụng AI (ChatGPT, Gemini, Claude, Cursor, Copilot...) hỗ trợ lập trình, **BẮT BUỘC** phải tuân thủ 5 nguyên tắc thép:
+
+1. **AI phải đọc lại toàn bộ dự án (Full Context Awareness)**: Trước khi code, bắt buộc AI phải đọc `README.md`, `docs/DATABASE_DESIGN.md`, `database/schema.sql` và các class hiện có. Tuyệt đối không để AI code "mù context".
+2. **Luôn cập nhật bản mới nhất từ `main`/`dev`**: Chạy `git pull origin dev` trước khi đưa context cho AI làm việc.
+3. **Chia nhỏ thành từng task nguyên tử (Atomic Tasks)**: Làm từng việc nhỏ một (Entity $\to$ DTO $\to$ Service $\to$ Controller). Không dồn toàn bộ module vào 1 prompt.
+4. **Vòng lặp AI Tester bắt buộc (Verification Loop)**: Sau khi xong mỗi task nhỏ, **AI phải tự tester lại toàn bộ** (kiểm tra biên dịch, test case biên: null, rỗng, số âm, trùng lặp) và **đưa ra kết quả test**. **CHỈ KHI NÀO TEST ĐẠT 100% MỚI ĐƯỢC LÀM TIẾP TASK KHÁC**.
+5. **Code tối ưu, chuẩn, dễ đọc, dễ fix, chuẩn CEO**:
+   - Clean Code, tuân thủ DRY & SOLID, không lặp code, không code thừa.
+   - Đặt tên chuẩn CamelCase, tự giải thích, có comment súc tích tại logic phức tạp.
+   - Xử lý ngoại lệ chuẩn hóa qua `@RestControllerAdvice` (không nuốt lỗi).
+   - Bảo mật cao (chống SQL Injection), tối ưu truy vấn chống N+1 Query.
 
 ---
 
