@@ -16,7 +16,7 @@
 - [x] Khởi tạo Repository GitHub, cấu hình `.gitignore`, bảo vệ nhánh `main`, tạo nhánh `dev` và push lên remote.
 - [x] Khởi tạo Skeleton Spring Boot 3 (Maven/Gradle, Spring Web, Spring Data JPA, Lombok, Validation).
 - [x] Triển khai Module Authentication & Security (User, Role, UserRole, BCrypt, JWT / Form Login, Refresh Token).
-- [ ] Triển khai Module Admin: API quản lý người dùng (Khóa/Mở User), duyệt doanh nghiệp (`PENDING`/`APPROVED`), kiểm duyệt tin tuyển dụng.
+- [x] Triển khai Module Admin: API quản lý người dùng (Khóa/Mở User), duyệt doanh nghiệp (`PENDING`/`APPROVED`), kiểm duyệt tin tuyển dụng.
 - [ ] Phụ trách Review & Kiểm duyệt tất cả các Pull Request từ thành viên trước khi gộp vào `dev`/`main`.
 
 ### 2. 💼 Trần Đình Tình – Backend Developer (Job & Search Module)
