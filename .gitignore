@@ -1,0 +1,10 @@
+﻿*.class
+*.log
+target/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+~$*
+temp_*
