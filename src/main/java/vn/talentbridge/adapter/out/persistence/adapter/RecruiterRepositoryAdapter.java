@@ -3,6 +3,7 @@ package vn.talentbridge.adapter.out.persistence.adapter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RecruiterJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@Transactional
 public class RecruiterRepositoryAdapter implements RecruiterRepositoryPort {
 
     private final RecruiterJpaRepository recruiterJpaRepository;
@@ -30,30 +32,34 @@ public class RecruiterRepositoryAdapter implements RecruiterRepositoryPort {
     private final CompanyJpaRepository companyJpaRepository;
 
     public RecruiterRepositoryAdapter(RecruiterJpaRepository recruiterJpaRepository,
-                                     UserJpaRepository userJpaRepository,
-                                     CompanyJpaRepository companyJpaRepository) {
+                                      UserJpaRepository userJpaRepository,
+                                      CompanyJpaRepository companyJpaRepository) {
         this.recruiterJpaRepository = recruiterJpaRepository;
         this.userJpaRepository = userJpaRepository;
         this.companyJpaRepository = companyJpaRepository;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Recruiter> findById(Long id) {
         return recruiterJpaRepository.findById(id).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Recruiter> findByUserId(Long userId) {
         return recruiterJpaRepository.findByUserId(userId).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Recruiter> findAll(int page, int size, String keyword) {
         Page<RecruiterJpaEntity> resultPage = recruiterJpaRepository.searchRecruiters(keyword, PageRequest.of(page, size));
         return resultPage.stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count(String keyword) {
         return recruiterJpaRepository.countSearchRecruiters(keyword);
     }

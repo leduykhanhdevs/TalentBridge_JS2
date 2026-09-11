@@ -6,4 +6,5 @@ public interface TokenProviderPort {
     boolean validateToken(String token);
     String getEmailFromToken(String token);
     Long getUserIdFromToken(String token);
+    String getRoleFromToken(String token);
 }

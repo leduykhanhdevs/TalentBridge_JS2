@@ -8,6 +8,7 @@ import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
@@ -29,6 +30,17 @@ public class UserPrincipal implements UserDetails {
         this.authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                 .collect(Collectors.toList());
+    }
+
+    public UserPrincipal(Long id, String email, String role) {
+        this.id = id;
+        this.email = email;
+        this.password = null;
+        this.fullName = null;
+        this.status = UserStatus.ACTIVE;
+        this.authorities = role != null && !role.isBlank()
+                ? List.of(new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role))
+                : List.of();
     }
 
     @Override

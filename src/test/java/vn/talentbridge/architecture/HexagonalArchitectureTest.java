@@ -95,4 +95,23 @@ public class HexagonalArchitectureTest {
                 .should().implement(resideInAPackage("vn.talentbridge.core.application.port.out.."));
         rule.check(ALL);
     }
+
+    @Test
+    @DisplayName("Inbound web controllers must not depend on Outbound repository ports")
+    void inboundWebAdaptersMustNotDependOnOutboundPorts() {
+        ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.in.web..")
+                .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.core.application.port.out..")
+                .allowEmptyShould(true);
+        rule.check(ALL);
+    }
+
+    @Test
+    @DisplayName("Common package must not depend on JPA/Hibernate persistence")
+    void commonMustNotDependOnPersistence() {
+        ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.common..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage("jakarta.persistence..", "javax.persistence..", "org.hibernate..")
+                .allowEmptyShould(true);
+        rule.check(ALL);
+    }
 }

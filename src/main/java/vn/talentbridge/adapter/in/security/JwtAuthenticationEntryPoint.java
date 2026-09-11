@@ -10,8 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import vn.talentbridge.adapter.in.web.exception.ErrorCode;
 import vn.talentbridge.common.ApiResponse;
-import vn.talentbridge.exception.ErrorCode;
 
 import java.io.IOException;
 
@@ -36,7 +36,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         ApiResponse<Object> apiResponse = ApiResponse.error(
                 ErrorCode.UNAUTHORIZED.getCode(),
-                "Báº¡n cáº§n Ä‘Äƒng nháº­p Ä‘á»ƒ truy cáº­p tÃ i nguyÃªn nÃ y"
+                "Bạn cần đăng nhập để truy cập tài nguyên này"
         );
 
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));

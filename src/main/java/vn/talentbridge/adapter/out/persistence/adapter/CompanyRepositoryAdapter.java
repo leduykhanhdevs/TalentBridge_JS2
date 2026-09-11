@@ -3,6 +3,7 @@ package vn.talentbridge.adapter.out.persistence.adapter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.core.application.port.out.CompanyRepositoryPort;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
+@Transactional
 public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     private final CompanyJpaRepository companyJpaRepository;
 
@@ -22,6 +24,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Company> findById(Long id) {
         return companyJpaRepository.findById(id).map(this::toDomain);
     }
@@ -51,6 +54,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Company> findAll(int page, int size, CompanyStatus status) {
         Page<CompanyJpaEntity> resultPage;
         if (status != null) {
@@ -62,11 +66,13 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count() {
         return companyJpaRepository.count();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByStatus(CompanyStatus status) {
         return companyJpaRepository.countByStatus(status);
     }

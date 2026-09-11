@@ -3,6 +3,7 @@ package vn.talentbridge.adapter.out.persistence.adapter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
+@Transactional
 public class JobRepositoryAdapter implements JobRepositoryPort {
     private final JobJpaRepository jobJpaRepository;
     private final CompanyJpaRepository companyJpaRepository;
@@ -26,6 +28,7 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Job> findById(Long id) {
         return jobJpaRepository.findById(id).map(this::toDomain);
     }
@@ -64,6 +67,7 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Job> findAll(int page, int size, JobStatus status) {
         Page<JobJpaEntity> resultPage;
         if (status != null) {
@@ -75,11 +79,13 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count() {
         return jobJpaRepository.count();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByStatus(JobStatus status) {
         return jobJpaRepository.countByStatus(status);
     }

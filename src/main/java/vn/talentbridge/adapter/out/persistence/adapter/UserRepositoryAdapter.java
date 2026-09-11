@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.out.persistence.adapter;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.UserJpaEntity;
 import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
@@ -18,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@Transactional
 public class UserRepositoryAdapter implements UserRepositoryPort {
     private final UserJpaRepository userJpaRepository;
     private final RoleJpaRepository roleJpaRepository;
@@ -28,16 +30,19 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<User> findById(Long id) {
         return userJpaRepository.findById(id).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userJpaRepository.findByEmail(email).map(this::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return userJpaRepository.existsByEmail(email);
     }
@@ -78,6 +83,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<User> findAll(int page, int size) {
         return userJpaRepository.findAll(PageRequest.of(page, size)).stream()
                 .map(this::toDomain)
@@ -85,6 +91,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long count() {
         return userJpaRepository.count();
     }

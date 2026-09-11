@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.out.persistence.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +14,13 @@ import java.util.Optional;
 @Repository
 public interface RecruiterJpaRepository extends JpaRepository<RecruiterJpaEntity, Long> {
 
+    @EntityGraph(attributePaths = {"user", "user.roles", "company"})
+    Optional<RecruiterJpaEntity> findById(Long id);
+
+    @EntityGraph(attributePaths = {"user", "user.roles", "company"})
     Optional<RecruiterJpaEntity> findByUserId(Long userId);
 
+    @EntityGraph(attributePaths = {"user", "user.roles", "company"})
     @Query("SELECT r FROM RecruiterJpaEntity r " +
            "LEFT JOIN r.user u " +
            "LEFT JOIN r.company c " +

@@ -96,6 +96,17 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
         return null;
     }
 
+    @Override
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        Object role = claims.get("role");
+        return role != null ? role.toString() : null;
+    }
+
     public long getExpirationMs() {
         return jwtExpirationMs;
     }
