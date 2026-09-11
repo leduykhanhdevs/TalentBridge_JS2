@@ -4,11 +4,10 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import vn.talentbridge.modules.user.entity.User;
-import vn.talentbridge.modules.user.enums.UserStatus;
+import vn.talentbridge.core.domain.model.User;
+import vn.talentbridge.core.domain.vo.UserStatus;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
@@ -27,6 +26,17 @@ public class UserPrincipal implements UserDetails {
         this.password = user.getPasswordHash();
         this.fullName = user.getFullName();
         this.status = user.getStatus();
+        this.authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                .collect(Collectors.toList());
+    }
+
+    public UserPrincipal(vn.talentbridge.modules.user.entity.User user) {
+        this.id = user.getId();
+        this.email = user.getEmail();
+        this.password = user.getPasswordHash();
+        this.fullName = user.getFullName();
+        this.status = user.getStatus() != null ? UserStatus.valueOf(user.getStatus().name()) : UserStatus.ACTIVE;
         this.authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
@@ -54,7 +64,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return status != UserStatus.BANNED;
+        return status != UserStatus.LOCKED;
     }
 
     @Override

@@ -19,6 +19,23 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(vn.talentbridge.core.domain.exception.DomainException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDomainException(vn.talentbridge.core.domain.exception.DomainException ex) {
+        log.warn("DomainException occurred: code={}, message={}", ex.getCode(), ex.getMessage());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        if (ex.getCode() == 40401) {
+            status = HttpStatus.NOT_FOUND;
+        } else if (ex.getCode() == 40901) {
+            status = HttpStatus.CONFLICT;
+        } else if (ex.getCode() == 40102) {
+            status = HttpStatus.UNAUTHORIZED;
+        } else if (ex.getCode() == 40301) {
+            status = HttpStatus.FORBIDDEN;
+        }
+        ApiResponse<Object> response = ApiResponse.error(ex.getCode(), ex.getMessage());
+        return new ResponseEntity<>(response, status);
+    }
+
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Object>> handleAppException(AppException ex) {
         log.warn("AppException occurred: code={}, message={}", ex.getErrorCode().getCode(), ex.getMessage());

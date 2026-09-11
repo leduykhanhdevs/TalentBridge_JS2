@@ -1,144 +1,84 @@
 package vn.talentbridge.modules.auth.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import vn.talentbridge.exception.AppException;
-import vn.talentbridge.exception.ErrorCode;
+import vn.talentbridge.core.application.dto.AuthResult;
+import vn.talentbridge.core.application.dto.LoginCommand;
+import vn.talentbridge.core.application.dto.RegisterCommand;
+import vn.talentbridge.core.application.dto.UserResult;
+import vn.talentbridge.core.application.port.in.GetCurrentUserUseCase;
+import vn.talentbridge.core.application.port.in.LoginUseCase;
+import vn.talentbridge.core.application.port.in.RefreshTokenUseCase;
+import vn.talentbridge.core.application.port.in.RegisterUseCase;
 import vn.talentbridge.modules.auth.dto.request.LoginRequest;
 import vn.talentbridge.modules.auth.dto.request.RefreshTokenRequest;
 import vn.talentbridge.modules.auth.dto.request.RegisterRequest;
 import vn.talentbridge.modules.auth.dto.response.AuthResponse;
 import vn.talentbridge.modules.auth.dto.response.UserResponse;
-import vn.talentbridge.modules.user.entity.Role;
-import vn.talentbridge.modules.user.entity.User;
 import vn.talentbridge.modules.user.enums.UserStatus;
-import vn.talentbridge.modules.user.repository.RoleRepository;
-import vn.talentbridge.modules.user.repository.UserRepository;
-import vn.talentbridge.security.JwtTokenProvider;
-import vn.talentbridge.security.UserPrincipal;
-
-import java.util.Collections;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider tokenProvider;
+    private final RegisterUseCase registerUseCase;
+    private final LoginUseCase loginUseCase;
+    private final RefreshTokenUseCase refreshTokenUseCase;
+    private final GetCurrentUserUseCase getCurrentUserUseCase;
 
     @Override
-    @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
-            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
-        }
-
-        Role role = roleRepository.findByName(request.getRole())
-                .orElseGet(() -> roleRepository.save(Role.builder().name(request.getRole()).build()));
-
-        User user = User.builder()
-                .email(request.getEmail().toLowerCase().trim())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName().trim())
-                .phone(request.getPhone())
-                .status(UserStatus.ACTIVE)
-                .roles(new HashSet<>(Collections.singletonList(role)))
-                .build();
-
-        User savedUser = userRepository.save(user);
-        UserPrincipal userPrincipal = new UserPrincipal(savedUser);
-
-        String accessToken = tokenProvider.generateAccessToken(userPrincipal);
-        String refreshToken = tokenProvider.generateRefreshToken(userPrincipal);
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresInMs(tokenProvider.getAccessTokenExpirationMs())
-                .user(UserResponse.from(savedUser))
-                .build();
+        AuthResult result = registerUseCase.register(new RegisterCommand(
+                request.getEmail(),
+                request.getPassword(),
+                request.getFullName(),
+                request.getPhone(),
+                request.getRole()
+        ));
+        return toAuthResponse(result);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail().toLowerCase().trim(),
-                            request.getPassword()
-                    )
-            );
-
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-
-            if (userPrincipal.getStatus() == UserStatus.BANNED) {
-                throw new AppException(ErrorCode.ACCOUNT_BANNED);
-            }
-
-            String accessToken = tokenProvider.generateAccessToken(userPrincipal);
-            String refreshToken = tokenProvider.generateRefreshToken(userPrincipal);
-
-            User user = userRepository.findByEmail(userPrincipal.getEmail())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-            return AuthResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .tokenType("Bearer")
-                    .expiresInMs(tokenProvider.getAccessTokenExpirationMs())
-                    .user(UserResponse.from(user))
-                    .build();
-        } catch (BadCredentialsException ex) {
-            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-        }
+        AuthResult result = loginUseCase.login(new LoginCommand(
+                request.getEmail(),
+                request.getPassword()
+        ));
+        return toAuthResponse(result);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public AuthResponse refreshToken(RefreshTokenRequest request) {
-        String token = request.getRefreshToken();
-        if (!tokenProvider.validateToken(token)) {
-            throw new AppException(ErrorCode.INVALID_TOKEN, "Refresh token không hợp lệ hoặc đã hết hạn");
-        }
+        AuthResult result = refreshTokenUseCase.refreshToken(request.getRefreshToken());
+        return toAuthResponse(result);
+    }
 
-        String email = tokenProvider.getEmailFromToken(token);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    @Override
+    public UserResponse getCurrentUser(String email) {
+        UserResult result = getCurrentUserUseCase.getCurrentUser(email);
+        return toUserResponse(result);
+    }
 
-        if (user.getStatus() == UserStatus.BANNED) {
-            throw new AppException(ErrorCode.ACCOUNT_BANNED);
-        }
-
-        UserPrincipal userPrincipal = new UserPrincipal(user);
-        String newAccessToken = tokenProvider.generateAccessToken(userPrincipal);
-        String newRefreshToken = tokenProvider.generateRefreshToken(userPrincipal);
-
+    private AuthResponse toAuthResponse(AuthResult result) {
         return AuthResponse.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
-                .tokenType("Bearer")
-                .expiresInMs(tokenProvider.getAccessTokenExpirationMs())
-                .user(UserResponse.from(user))
+                .accessToken(result.accessToken())
+                .refreshToken(result.refreshToken())
+                .tokenType(result.tokenType())
+                .expiresInMs(result.expiresIn() * 1000)
+                .user(toUserResponse(result.user()))
                 .build();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public UserResponse getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        return UserResponse.from(user);
+    private UserResponse toUserResponse(UserResult user) {
+        return UserResponse.builder()
+                .id(user.id())
+                .email(user.email())
+                .fullName(user.fullName())
+                .phone(user.phoneNumber())
+                .avatarUrl(user.avatarUrl())
+                .status(user.status() != null ? UserStatus.valueOf(user.status()) : null)
+                .roles(user.roles())
+                .createdAt(user.createdAt())
+                .build();
     }
 }

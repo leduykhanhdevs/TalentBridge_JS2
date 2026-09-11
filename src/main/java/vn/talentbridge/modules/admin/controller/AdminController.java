@@ -7,13 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.common.PageResponse;
 import vn.talentbridge.modules.admin.dto.request.UpdateCompanyStatusRequest;
@@ -50,7 +44,7 @@ public class AdminController {
     }
 
     @PatchMapping("/users/{id}/status")
-    @Operation(summary = "Khóa hoặc Mở khóa tài khoản", description = "Cập nhật trạng thái người dùng sang ACTIVE hoặc BANNED")
+    @Operation(summary = "Khóa hoặc Mở khóa tài khoản", description = "Cập nhật trạng thái người dùng sang ACTIVE hoặc LOCKED")
     public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserStatusRequest request
@@ -98,11 +92,11 @@ public class AdminController {
             @Valid @RequestBody UpdateJobStatusRequest request
     ) {
         JobAdminResponse updatedJob = adminService.updateJobStatus(id, request.getStatus());
-        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái tin tuyển dụng thành công", updatedJob));
+        return ResponseEntity.ok(ApiResponse.success("Kiểm duyệt tin tuyển dụng thành công", updatedJob));
     }
 
     @GetMapping("/dashboard/stats")
-    @Operation(summary = "Thống kê tổng quan hệ thống", description = "Trả về số lượng tổng người dùng, doanh nghiệp, tin tuyển dụng và các mục chờ duyệt")
+    @Operation(summary = "Thống kê tổng quan Admin Dashboard", description = "Lấy tổng số user, công ty chờ duyệt, tin tuyển dụng đang hoạt động")
     public ResponseEntity<ApiResponse<AdminDashboardStatsResponse>> getDashboardStats() {
         AdminDashboardStatsResponse stats = adminService.getDashboardStats();
         return ResponseEntity.ok(ApiResponse.success(stats));
