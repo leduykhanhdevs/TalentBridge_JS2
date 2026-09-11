@@ -14,12 +14,14 @@ import vn.talentbridge.adapter.in.web.dto.request.UpdateUserStatusRequest;
 import vn.talentbridge.adapter.in.web.dto.response.AdminDashboardStatsResponse;
 import vn.talentbridge.adapter.in.web.dto.response.CompanyAdminResponse;
 import vn.talentbridge.adapter.in.web.dto.response.JobAdminResponse;
+import vn.talentbridge.adapter.in.web.dto.response.RecruiterAdminResponse;
 import vn.talentbridge.adapter.in.web.dto.response.UserResponse;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.common.PageResponse;
 import vn.talentbridge.core.application.dto.AdminDashboardStatsResult;
 import vn.talentbridge.core.application.dto.CompanyResult;
 import vn.talentbridge.core.application.dto.JobResult;
+import vn.talentbridge.core.application.dto.RecruiterResult;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.AdminManagementUseCase;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
@@ -141,6 +143,38 @@ public class AdminController {
     ) {
         JobResult updatedJob = adminManagementUseCase.updateJobStatus(id, request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("Kiá»ƒm duyá»‡t tin tuyá»ƒn dá»¥ng thÃ nh cÃ´ng", JobAdminResponse.from(updatedJob)));
+    }
+
+    @GetMapping("/recruiters")
+    @Operation(summary = "Danh sách nhà tuyển dụng", description = "Lấy danh sách nhà tuyển dụng (HR) có phân trang và tìm kiếm theo từ khóa (tên, email, tên công ty)")
+    public ResponseEntity<ApiResponse<PageResponse<RecruiterAdminResponse>>> getAllRecruiters(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword
+    ) {
+        int pageIndex = Math.max(0, page - 1);
+        List<RecruiterResult> recruiters = adminManagementUseCase.getAllRecruiters(pageIndex, size, keyword);
+        long totalElements = adminManagementUseCase.countRecruiters(keyword);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        List<RecruiterAdminResponse> content = recruiters.stream().map(RecruiterAdminResponse::from).toList();
+        PageResponse<RecruiterAdminResponse> pageResponse = PageResponse.<RecruiterAdminResponse>builder()
+                .content(content)
+                .pageNumber(page)
+                .pageSize(size)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .isLast(page >= totalPages)
+                .build();
+
+        return ResponseEntity.ok(ApiResponse.success(pageResponse));
+    }
+
+    @GetMapping("/recruiters/{id}")
+    @Operation(summary = "Chi tiết nhà tuyển dụng", description = "Xem thông tin chi tiết của một nhà tuyển dụng")
+    public ResponseEntity<ApiResponse<RecruiterAdminResponse>> getRecruiterById(@PathVariable Long id) {
+        RecruiterResult recruiter = adminManagementUseCase.getRecruiterById(id);
+        return ResponseEntity.ok(ApiResponse.success(RecruiterAdminResponse.from(recruiter)));
     }
 
     @GetMapping("/dashboard/stats")

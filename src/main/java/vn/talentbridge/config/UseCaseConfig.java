@@ -45,7 +45,8 @@ public class UseCaseConfig {
     @Bean
     public AdminManagementUseCase adminManagementUseCase(UserRepositoryPort userRepository,
                                                          CompanyRepositoryPort companyRepository,
-                                                         JobRepositoryPort jobRepository) {
-        return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository);
+                                                         JobRepositoryPort jobRepository,
+                                                         RecruiterRepositoryPort recruiterRepository) {
+        return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository, recruiterRepository);
     }
 }

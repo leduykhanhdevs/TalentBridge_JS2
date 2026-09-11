@@ -1,6 +1,7 @@
 package vn.talentbridge;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
+import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
+import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
+import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -34,8 +38,29 @@ class AuthControllerTest {
     @Autowired
     private UserJpaRepository userJpaRepository;
 
+    @Autowired
+    private RecruiterJpaRepository recruiterJpaRepository;
+
+    @Autowired
+    private JobJpaRepository jobJpaRepository;
+
+    @Autowired
+    private CompanyJpaRepository companyJpaRepository;
+
     @BeforeEach
     void setUp() {
+        cleanup();
+    }
+
+    @AfterEach
+    void tearDown() {
+        cleanup();
+    }
+
+    private void cleanup() {
+        recruiterJpaRepository.deleteAll();
+        jobJpaRepository.deleteAll();
+        companyJpaRepository.deleteAll();
         userJpaRepository.deleteAll();
     }
 

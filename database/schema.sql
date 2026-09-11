@@ -238,11 +238,11 @@ CREATE TABLE `companies` (
 CREATE TABLE `recruiters` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `user_id` BIGINT NOT NULL UNIQUE,
-    `company_id` BIGINT NOT NULL,
+    `company_id` BIGINT NULL,
     `position` VARCHAR(100) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_recruiters_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_recruiters_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_recruiters_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE SET NULL,
     INDEX `idx_recruiters_company` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

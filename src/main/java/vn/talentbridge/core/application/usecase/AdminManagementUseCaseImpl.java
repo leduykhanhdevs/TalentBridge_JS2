@@ -3,14 +3,17 @@ package vn.talentbridge.core.application.usecase;
 import vn.talentbridge.core.application.dto.AdminDashboardStatsResult;
 import vn.talentbridge.core.application.dto.CompanyResult;
 import vn.talentbridge.core.application.dto.JobResult;
+import vn.talentbridge.core.application.dto.RecruiterResult;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.AdminManagementUseCase;
 import vn.talentbridge.core.application.port.out.CompanyRepositoryPort;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
+import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
 import vn.talentbridge.core.domain.model.Company;
 import vn.talentbridge.core.domain.model.Job;
+import vn.talentbridge.core.domain.model.Recruiter;
 import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.JobStatus;
@@ -23,13 +26,16 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     private final UserRepositoryPort userRepository;
     private final CompanyRepositoryPort companyRepository;
     private final JobRepositoryPort jobRepository;
+    private final RecruiterRepositoryPort recruiterRepository;
 
     public AdminManagementUseCaseImpl(UserRepositoryPort userRepository,
-                                     CompanyRepositoryPort companyRepository,
-                                     JobRepositoryPort jobRepository) {
+                                      CompanyRepositoryPort companyRepository,
+                                      JobRepositoryPort jobRepository,
+                                      RecruiterRepositoryPort recruiterRepository) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.jobRepository = jobRepository;
+        this.recruiterRepository = recruiterRepository;
     }
 
     @Override
@@ -47,7 +53,7 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     @Override
     public UserResult updateUserStatus(Long userId, UserStatus status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("NgÆ°á»i dÃ¹ng", userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", userId));
         user.setStatus(status);
         User updated = userRepository.save(user);
         return UserResult.from(updated);
@@ -68,7 +74,7 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     @Override
     public CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doanh nghiá»‡p", companyId));
+                .orElseThrow(() -> new ResourceNotFoundException("Doanh nghiệp", companyId));
         company.setStatus(status);
         Company updated = companyRepository.save(company);
         return CompanyResult.from(updated);
@@ -89,10 +95,29 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     @Override
     public JobResult updateJobStatus(Long jobId, JobStatus status) {
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tin tuyá»ƒn dá»¥ng", jobId));
+                .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng", jobId));
         job.setStatus(status);
         Job updated = jobRepository.save(job);
         return JobResult.from(updated);
+    }
+
+    @Override
+    public List<RecruiterResult> getAllRecruiters(int page, int size, String keyword) {
+        return recruiterRepository.findAll(page, size, keyword).stream()
+                .map(RecruiterResult::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long countRecruiters(String keyword) {
+        return recruiterRepository.count(keyword);
+    }
+
+    @Override
+    public RecruiterResult getRecruiterById(Long id) {
+        Recruiter recruiter = recruiterRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nhà tuyển dụng", id));
+        return RecruiterResult.from(recruiter);
     }
 
     @Override
