@@ -55,14 +55,15 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Company> findAll(int page, int size, CompanyStatus status) {
-        Page<CompanyJpaEntity> resultPage;
-        if (status != null) {
-            resultPage = companyJpaRepository.findByStatus(status, PageRequest.of(page, size));
-        } else {
-            resultPage = companyJpaRepository.findAll(PageRequest.of(page, size));
-        }
+    public List<Company> findAll(int page, int size, String keyword, CompanyStatus status) {
+        Page<CompanyJpaEntity> resultPage = companyJpaRepository.searchCompanies(keyword, status, PageRequest.of(page, size));
         return resultPage.stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long count(String keyword, CompanyStatus status) {
+        return companyJpaRepository.countSearchCompanies(keyword, status);
     }
 
     @Override

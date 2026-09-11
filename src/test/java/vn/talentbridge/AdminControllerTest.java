@@ -135,14 +135,6 @@ class AdminControllerTest {
                 .build();
         testCandidate = candidateRepository.save(testCandidate);
 
-        // Create Sample Company
-        testCompany = CompanyJpaEntity.builder()
-                .name("FPT Software")
-                .address("Khu Cong Nghe Cao")
-                .status(CompanyStatus.PENDING)
-                .build();
-        testCompany = companyRepository.save(testCompany);
-
         // Create Sample Recruiter
         UserJpaEntity hrUser = UserJpaEntity.builder()
                 .email("hr@fpt.com")
@@ -153,6 +145,16 @@ class AdminControllerTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser = userRepository.save(hrUser);
+
+        // Create Sample Company
+        testCompany = CompanyJpaEntity.builder()
+                .name("FPT Software")
+                .address("Khu Cong Nghe Cao")
+                .taxCode("0101234567")
+                .status(CompanyStatus.PENDING)
+                .createdByUserId(hrUser.getId())
+                .build();
+        testCompany = companyRepository.save(testCompany);
 
         testRecruiter = RecruiterJpaEntity.builder()
                 .user(hrUser)
@@ -229,7 +231,54 @@ class AdminControllerTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].name").value("FPT Software"))
-                .andExpect(jsonPath("$.data.content[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.data.content[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("Admin Companies - Tìm kiếm công ty theo từ khóa (tên, MST)")
+    void testGetAllCompanies_SearchKeyword() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("keyword", "FPT")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("FPT Software"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("keyword", "0101234567")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("FPT Software"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("keyword", "NonExistent")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
+    @Test
+    @DisplayName("Admin Companies - Xem chi tiết công ty theo ID")
+    void testGetCompanyById_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/companies/" + testCompany.getId())
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.id").value(testCompany.getId()))
+                .andExpect(jsonPath("$.data.name").value("FPT Software"))
+                .andExpect(jsonPath("$.data.taxCode").value("0101234567"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
+    }
+
+    @Test
+    @DisplayName("Admin Companies - Xem chi tiết công ty không tồn tại trả về HTTP 404")
+    void testGetCompanyById_NotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/companies/99999")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(40401));
     }
 
     @Test
@@ -246,6 +295,43 @@ class AdminControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("APPROVED"));
+    }
+
+    @Test
+    @DisplayName("Admin Companies - Từ chối phê duyệt công ty sang REJECTED kèm lý do")
+    void testUpdateCompanyStatus_Reject() throws Exception {
+        UpdateCompanyStatusRequest request = UpdateCompanyStatusRequest.builder()
+                .status(CompanyStatus.REJECTED)
+                .reason("Mã số thuế không tồn tại trên Cổng thông tin Quốc gia")
+                .build();
+
+        mockMvc.perform(patch("/api/v1/admin/companies/" + testCompany.getId() + "/status")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("REJECTED"));
+    }
+
+    @Test
+    @DisplayName("Admin Companies - Không có quyền ADMIN bị chặn HTTP 403 Forbidden")
+    void testCompanyEndpoints_ForbiddenForNonAdmin() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/admin/companies/" + testCompany.getId())
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isForbidden());
+
+        UpdateCompanyStatusRequest request = UpdateCompanyStatusRequest.builder()
+                .status(CompanyStatus.APPROVED)
+                .build();
+        mockMvc.perform(patch("/api/v1/admin/companies/" + testCompany.getId() + "/status")
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

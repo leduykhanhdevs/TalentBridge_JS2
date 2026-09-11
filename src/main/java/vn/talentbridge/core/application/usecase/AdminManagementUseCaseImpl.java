@@ -66,23 +66,41 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     }
 
     @Override
-    public List<CompanyResult> getAllCompanies(int page, int size, CompanyStatus status) {
-        return companyRepository.findAll(page, size, status).stream()
+    public List<CompanyResult> getAllCompanies(int page, int size, String keyword, CompanyStatus status) {
+        return companyRepository.findAll(page, size, keyword, status).stream()
                 .map(CompanyResult::from)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public long countCompanies() {
-        return companyRepository.count();
+    public long countCompanies(String keyword, CompanyStatus status) {
+        return companyRepository.count(keyword, status);
     }
 
     @Override
-    public CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status) {
+    public CompanyResult getCompanyById(Long id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Doanh nghiệp", id));
+        return CompanyResult.from(company);
+    }
+
+    @Override
+    public CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status, String reason) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doanh nghiệp", companyId));
         company.setStatus(status);
         Company updated = companyRepository.save(company);
+
+        // Khi Admin phê duyệt công ty (APPROVED), tự động liên kết HR tạo công ty làm đại diện chính thức
+        if (status == CompanyStatus.APPROVED && updated.getCreatedByUserId() != null) {
+            recruiterRepository.findByUserId(updated.getCreatedByUserId()).ifPresent(recruiter -> {
+                if (recruiter.getCompany() == null || !updated.getId().equals(recruiter.getCompany().getId())) {
+                    recruiter.setCompany(updated);
+                    recruiterRepository.save(recruiter);
+                }
+            });
+        }
+
         return CompanyResult.from(updated);
     }
 

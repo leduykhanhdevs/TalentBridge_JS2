@@ -26,6 +26,7 @@ public class CompanyAdminResponse {
     private String taxCode;
     private String description;
     private CompanyStatus status;
+    private Long createdByUserId;
     private LocalDateTime createdAt;
 
     public static CompanyAdminResponse from(CompanyResult result) {
@@ -39,6 +40,7 @@ public class CompanyAdminResponse {
                 .taxCode(result.taxCode())
                 .description(result.description())
                 .status(result.status() != null ? CompanyStatus.valueOf(result.status()) : null)
+                .createdByUserId(result.createdByUserId())
                 .createdAt(result.createdAt())
                 .build();
     }

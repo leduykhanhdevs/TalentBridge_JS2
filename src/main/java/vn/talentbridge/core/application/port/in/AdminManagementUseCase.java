@@ -1,11 +1,6 @@
 package vn.talentbridge.core.application.port.in;
 
-import vn.talentbridge.core.application.dto.AdminDashboardStatsResult;
-import vn.talentbridge.core.application.dto.CandidateResult;
-import vn.talentbridge.core.application.dto.CompanyResult;
-import vn.talentbridge.core.application.dto.JobResult;
-import vn.talentbridge.core.application.dto.RecruiterResult;
-import vn.talentbridge.core.application.dto.UserResult;
+import vn.talentbridge.core.application.dto.*;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.JobStatus;
 import vn.talentbridge.core.domain.vo.UserStatus;
@@ -17,9 +12,10 @@ public interface AdminManagementUseCase {
     long countUsers();
     UserResult updateUserStatus(Long userId, UserStatus status);
 
-    List<CompanyResult> getAllCompanies(int page, int size, CompanyStatus status);
-    long countCompanies();
-    CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status);
+    List<CompanyResult> getAllCompanies(int page, int size, String keyword, CompanyStatus status);
+    long countCompanies(String keyword, CompanyStatus status);
+    CompanyResult getCompanyById(Long id);
+    CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status, String reason);
 
     List<JobResult> getAllJobs(int page, int size, JobStatus status);
     long countJobs();

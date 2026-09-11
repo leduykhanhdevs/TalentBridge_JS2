@@ -78,15 +78,16 @@ public class AdminController {
     }
 
     @GetMapping("/companies")
-    @Operation(summary = "Danh sách doanh nghiệp", description = "Lấy danh sách công ty có phân trang và lọc theo trạng thái duyệt")
+    @Operation(summary = "Danh sách doanh nghiệp", description = "Lấy danh sách công ty có phân trang, tìm kiếm theo từ khóa (tên, MST, địa chỉ) và lọc theo trạng thái duyệt")
     public ResponseEntity<ApiResponse<PageResponse<CompanyAdminResponse>>> getAllCompanies(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) CompanyStatus status
     ) {
         int pageIndex = Math.max(0, page - 1);
-        List<CompanyResult> companies = adminManagementUseCase.getAllCompanies(pageIndex, size, status);
-        long totalElements = adminManagementUseCase.countCompanies();
+        List<CompanyResult> companies = adminManagementUseCase.getAllCompanies(pageIndex, size, keyword, status);
+        long totalElements = adminManagementUseCase.countCompanies(keyword, status);
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
         List<CompanyAdminResponse> content = companies.stream().map(CompanyAdminResponse::from).toList();
@@ -102,13 +103,20 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(pageResponse));
     }
 
+    @GetMapping("/companies/{id}")
+    @Operation(summary = "Chi tiết doanh nghiệp", description = "Xem chi tiết thông tin doanh nghiệp và người gửi yêu cầu phê duyệt")
+    public ResponseEntity<ApiResponse<CompanyAdminResponse>> getCompanyById(@PathVariable Long id) {
+        CompanyResult company = adminManagementUseCase.getCompanyById(id);
+        return ResponseEntity.ok(ApiResponse.success(CompanyAdminResponse.from(company)));
+    }
+
     @PatchMapping("/companies/{id}/status")
-    @Operation(summary = "Phê duyệt hoặc Từ chối doanh nghiệp", description = "Duyệt công ty mới đăng ký sang APPROVED hoặc REJECTED")
+    @Operation(summary = "Phê duyệt hoặc Từ chối doanh nghiệp", description = "Duyệt công ty mới đăng ký sang APPROVED hoặc REJECTED kèm lý do")
     public ResponseEntity<ApiResponse<CompanyAdminResponse>> updateCompanyStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCompanyStatusRequest request
     ) {
-        CompanyResult updatedCompany = adminManagementUseCase.updateCompanyStatus(id, request.getStatus());
+        CompanyResult updatedCompany = adminManagementUseCase.updateCompanyStatus(id, request.getStatus(), request.getReason());
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái doanh nghiệp thành công", CompanyAdminResponse.from(updatedCompany)));
     }
 
