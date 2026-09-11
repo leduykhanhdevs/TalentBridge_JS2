@@ -1,0 +1,69 @@
+"Issue Type","Summary","Description","Assignee","Priority","Story Points","Component","Sprint"
+"Story","[Khánh] Quản lý ứng viên (Candidate Management) dành cho Admin","Là Quản trị viên (Admin), tôi muốn xem danh sách ứng viên (phân trang, tìm kiếm theo email/họ tên) và có quyền Khóa/Mở khóa tài khoản ứng viên để kiểm soát tính tuân thủ trên hệ thống.
+
+Acceptance Criteria:
+1. GET /api/v1/admin/candidates: Trả về danh sách candidate có phân trang (page, size), hỗ trợ lọc theo status (ACTIVE, BANNED).
+2. GET /api/v1/admin/candidates/{id}: Xem thông tin chi tiết hồ sơ ứng viên.
+3. PATCH /api/v1/admin/users/{id}/status: Cập nhật trạng thái người dùng sang ACTIVE hoặc BANNED.
+4. Yêu cầu quyền ROLE_ADMIN, trả về 403 Forbidden nếu không có quyền.","Lê Duy Khánh","High",3,"Admin Module","TB Sprint 1"
+"Story","[Khánh] Quản lý nhà tuyển dụng (HR Management) dành cho Admin","Là Quản trị viên (Admin), tôi muốn xem danh sách các nhà tuyển dụng (HR), biết họ đang thuộc công ty nào, và có quyền Khóa/Mở tài khoản HR vi phạm.
+
+Acceptance Criteria:
+1. GET /api/v1/admin/recruiters: Trả về danh sách HR có phân trang, bao gồm thông tin user và công ty trực thuộc.
+2. PATCH /api/v1/admin/users/{id}/status: Cho phép khóa tài khoản HR vi phạm.
+3. Yêu cầu quyền ROLE_ADMIN.","Lê Duy Khánh","High",2,"Admin Module","TB Sprint 1"
+"Story","[Khánh] Quản lý & Phê duyệt doanh nghiệp do HR yêu cầu (Company Approval)","Là Quản trị viên (Admin), tôi muốn xem danh sách các công ty đang chờ duyệt và thực hiện phê duyệt (APPROVED) hoặc từ chối (REJECTED) công ty do HR gửi yêu cầu.
+
+Acceptance Criteria:
+1. GET /api/v1/admin/companies?status=PENDING: Lấy danh sách công ty đang chờ phê duyệt.
+2. PATCH /api/v1/admin/companies/{id}/status: Cập nhật trạng thái sang APPROVED hoặc REJECTED kèm lý do.
+3. Khi công ty được APPROVED, công ty chính thức hiển thị trên hệ thống và HR tạo công ty có toàn quyền đăng tin.","Lê Duy Khánh","Highest",3,"Admin Module","TB Sprint 1"
+"Story","[Tuyền] Xây dựng tính năng Quên mật khẩu qua Email (Forget Password)","Là Người dùng (Ứng viên hoặc HR), khi quên mật khẩu, tôi muốn nhập email để nhận mã OTP hoặc đường link đặt lại mật khẩu để khôi phục quyền truy cập vào tài khoản.
+
+Acceptance Criteria:
+1. POST /api/v1/auth/forgot-password: Nhập email, nếu email tồn tại thì sinh mã OTP/Token (hết hạn sau 15 phút) và gửi email qua Spring Mail.
+2. POST /api/v1/auth/reset-password: Nhập token/OTP hợp lệ và mật khẩu mới (validate >= 6 ký tự), hệ thống mã hóa BCrypt và cập nhật mật khẩu mới vào CSDL.
+3. Xử lý trường hợp token hết hạn hoặc sai mã OTP (trả về HTTP 400 kèm thông báo rõ ràng).","Phan Thị Ánh Tuyền","Highest",3,"Auth & Mail","TB Sprint 1"
+"Task","[Tuyền] Thiết kế HTML Template Email thông báo đặt lại mật khẩu","Xây dựng template email HTML chuyên nghiệp, thân thiện bằng Thymeleaf/Spring Mail với logo TalentBridge, nút 'Đặt lại mật khẩu' và hướng dẫn bảo mật khi nhận OTP.
+
+Acceptance Criteria:
+1. Email hiển thị tốt trên cả giao diện Web và Mobile (Gmail, Outlook).
+2. Tự động thay thế các biến động: tên người nhận, mã OTP/link reset, thời hạn hiệu lực.","Phan Thị Ánh Tuyền","Medium",2,"Auth & Mail","TB Sprint 1"
+"Story","[Thịnh] Đăng ký & Đăng nhập tài khoản Ứng viên (Candidate Auth)","Là Ứng viên tìm việc, tôi muốn đăng ký tài khoản với vai trò CANDIDATE và đăng nhập để bắt đầu sử dụng các tính năng tìm việc.
+
+Acceptance Criteria:
+1. POST /api/v1/auth/register: Nhập email, mật khẩu, họ tên, số điện thoại, role='ROLE_CANDIDATE'. Tự động tạo bản ghi trong bảng users, user_roles và candidates.
+2. POST /api/v1/auth/login: Xác thực email và mật khẩu, trả về JWT Access Token và Refresh Token.
+3. Bắt lỗi trùng email (409 Conflict), sai mật khẩu (401 Unauthorized).","Đặng Trường Thịnh","High",2,"Candidate Module","TB Sprint 1"
+"Story","[Thịnh] Xem & Cập nhật Hồ sơ Ứng viên (Update Candidate Profile)","Là Ứng viên, tôi muốn cập nhật đầy đủ thông tin cá nhân: ngày sinh, giới tính, mục tiêu nghề nghiệp, số điện thoại, địa chỉ, vị trí mong muốn, mức lương kỳ vọng và liên kết mạng xã hội (LinkedIn, GitHub, Portfolio).
+
+Acceptance Criteria:
+1. GET /api/v1/candidates/profile: Lấy thông tin chi tiết hồ sơ cá nhân của ứng viên đang đăng nhập.
+2. PUT /api/v1/candidates/profile: Cập nhật thông tin cá nhân: dob, gender, summary/bio, expected_salary, current_salary, city, address, personal_website, linkedin_url, github_url.
+3. Validate dữ liệu đầu vào (định dạng ngày sinh hợp lệ, số điện thoại đúng chuẩn).","Đặng Trường Thịnh","Highest",3,"Candidate Module","TB Sprint 1"
+"Story","[Hiếu] Đăng ký, Đăng nhập & Quản lý Profile Nhà tuyển dụng (HR Auth & Profile)","Là Nhà tuyển dụng (HR), tôi muốn đăng ký tài khoản với vai trò RECRUITER, đăng nhập vào hệ thống và cập nhật thông tin cá nhân, chức danh công việc của mình.
+
+Acceptance Criteria:
+1. POST /api/v1/auth/register: Đăng ký tài khoản với role='ROLE_RECRUITER'. Tạo bản ghi trong users, user_roles và recruiters (chưa có company_id hoặc company_id null).
+2. POST /api/v1/auth/login: Đăng nhập nhận JWT Token có quyền ROLE_RECRUITER.
+3. GET/PUT /api/v1/recruiters/profile: Xem và cập nhật họ tên, số điện thoại, chức danh (position), avatar.","Nguyễn Phan Minh Hiếu","High",2,"HR & Company","TB Sprint 1"
+"Story","[Hiếu] Yêu cầu tạo mới một Công ty (Request Create New Company)","Là Nhà tuyển dụng (HR), nếu công ty của tôi chưa có trên hệ thống, tôi muốn gửi yêu cầu tạo mới công ty kèm thông tin pháp lý để Quản trị viên (Admin) xem xét và phê duyệt.
+
+Acceptance Criteria:
+1. POST /api/v1/recruiters/companies/request-create: HR nhập tên công ty, mã số thuế, website, quy mô nhân viên, địa chỉ, thành phố, mô tả và tải lên logo.
+2. Tạo bản ghi trong bảng companies với trạng thái ban đầu là PENDING, ghi nhận created_by_user_id là HR hiện tại.
+3. Gán công ty này cho HR ở trạng thái chờ duyệt. Khi Admin approve, công ty chuyển sang APPROVED và HR trở thành đại diện chính thức.","Nguyễn Phan Minh Hiếu","Highest",3,"HR & Company","TB Sprint 1"
+"Story","[Tình] Tìm kiếm & Gửi yêu cầu gia nhập Công ty có sẵn (Join Company Request)","Là Nhà tuyển dụng (HR), nếu công ty tôi làm việc đã có sẵn trên hệ thống, tôi muốn tìm kiếm công ty đó và gửi yêu cầu 'Xin gia nhập công ty' để các HR hiện tại phê duyệt.
+
+Acceptance Criteria:
+1. GET /api/v1/recruiters/companies/search?keyword=...: Tìm kiếm danh sách các công ty đã được phê duyệt (status=APPROVED).
+2. POST /api/v1/recruiters/companies/{companyId}/join-request: Gửi yêu cầu xin gia nhập công ty kèm vị trí công tác (vd: Senior Recruiter).
+3. Không được gửi nhiều yêu cầu cùng lúc vào nhiều công ty hoặc gửi trùng lặp nếu yêu cầu trước đó đang PENDING.","Trần Đình Tình","High",2,"HR & Company","TB Sprint 1"
+"Story","[Tình] HR phê duyệt hoặc từ chối yêu cầu gia nhập của HR khác (HR Peer Approval)","Là một HR đang làm việc tại một công ty đã được duyệt, tôi muốn xem danh sách các yêu cầu xin gia nhập công ty từ các HR khác và có quyền Phê duyệt (Approve) hoặc Từ chối (Reject).
+
+Acceptance Criteria:
+1. GET /api/v1/recruiters/companies/my-company/join-requests: Lấy danh sách các yêu cầu gia nhập đang ở trạng thái PENDING của công ty mà HR hiện tại đang trực thuộc.
+2. PATCH /api/v1/recruiters/companies/join-requests/{requestId}:
+   - Nếu ACCEPTED: Cập nhật recruiter_id của người xin gia nhập trỏ vào company_id này, kích hoạt quyền quản lý công ty.
+   - Nếu REJECTED: Từ chối yêu cầu kèm lý do.
+3. Chỉ HR thuộc công ty đó mới có quyền xem và thao tác duyệt yêu cầu này.","Trần Đình Tình","Highest",3,"HR & Company","TB Sprint 1"

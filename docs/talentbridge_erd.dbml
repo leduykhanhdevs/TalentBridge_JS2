@@ -330,6 +330,9 @@ Ref: candidates.id < resumes.candidate_id [delete: cascade]
 
 Ref: users.id - recruiters.user_id [delete: cascade]
 Ref: companies.id < recruiters.company_id [delete: cascade]
+Ref: users.id < company_join_requests.user_id [delete: cascade]
+Ref: companies.id < company_join_requests.company_id [delete: cascade]
+Ref: users.id < company_join_requests.approved_by_user_id [delete: set null]
 
 Ref: companies.id < jobs.company_id [delete: cascade]
 Ref: recruiters.id < jobs.recruiter_id [delete: cascade]
