@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
+import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
@@ -39,6 +40,9 @@ class AuthControllerTest {
     private UserJpaRepository userJpaRepository;
 
     @Autowired
+    private CandidateJpaRepository candidateJpaRepository;
+
+    @Autowired
     private RecruiterJpaRepository recruiterJpaRepository;
 
     @Autowired
@@ -58,6 +62,7 @@ class AuthControllerTest {
     }
 
     private void cleanup() {
+        candidateJpaRepository.deleteAll();
         recruiterJpaRepository.deleteAll();
         jobJpaRepository.deleteAll();
         companyJpaRepository.deleteAll();

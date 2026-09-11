@@ -46,7 +46,8 @@ public class UseCaseConfig {
     public AdminManagementUseCase adminManagementUseCase(UserRepositoryPort userRepository,
                                                          CompanyRepositoryPort companyRepository,
                                                          JobRepositoryPort jobRepository,
-                                                         RecruiterRepositoryPort recruiterRepository) {
-        return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository, recruiterRepository);
+                                                         RecruiterRepositoryPort recruiterRepository,
+                                                         CandidateRepositoryPort candidateRepository) {
+        return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository, recruiterRepository, candidateRepository);
     }
 }

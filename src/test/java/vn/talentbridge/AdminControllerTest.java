@@ -15,11 +15,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateCompanyStatusRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateJobStatusRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateUserStatusRequest;
+import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RecruiterJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.UserJpaEntity;
+import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
@@ -67,6 +69,9 @@ class AdminControllerTest {
     private RecruiterJpaRepository recruiterRepository;
 
     @Autowired
+    private CandidateJpaRepository candidateRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -78,13 +83,11 @@ class AdminControllerTest {
     private CompanyJpaEntity testCompany;
     private JobJpaEntity testJob;
     private RecruiterJpaEntity testRecruiter;
+    private CandidateJpaEntity testCandidate;
 
     @BeforeEach
     void setUp() {
-        recruiterRepository.deleteAll();
-        jobRepository.deleteAll();
-        companyRepository.deleteAll();
-        userRepository.deleteAll();
+        cleanup();
 
         // Setup Roles
         RoleJpaEntity adminRole = roleRepository.findByName("ROLE_ADMIN")
@@ -115,6 +118,22 @@ class AdminControllerTest {
                 .build();
         testUser = userRepository.save(testUser);
         candidateToken = tokenProvider.generateAccessToken(testUser.getId(), testUser.getEmail(), "ROLE_CANDIDATE");
+
+        // Create Candidate Profile
+        testCandidate = CandidateJpaEntity.builder()
+                .user(testUser)
+                .title("Fullstack Java Developer")
+                .dob(LocalDate.of(2000, 5, 20))
+                .gender("MALE")
+                .summary("Passionate software engineer")
+                .experienceYears(3)
+                .expectedSalary(new BigDecimal("25000000"))
+                .city("Ho Chi Minh")
+                .address("123 Nguyen Trai, Q1")
+                .linkedinUrl("https://linkedin.com/in/candidate")
+                .githubUrl("https://github.com/candidate")
+                .build();
+        testCandidate = candidateRepository.save(testCandidate);
 
         // Create Sample Company
         testCompany = CompanyJpaEntity.builder()
@@ -162,6 +181,11 @@ class AdminControllerTest {
 
     @AfterEach
     void tearDown() {
+        cleanup();
+    }
+
+    private void cleanup() {
+        candidateRepository.deleteAll();
         recruiterRepository.deleteAll();
         jobRepository.deleteAll();
         companyRepository.deleteAll();
@@ -169,24 +193,16 @@ class AdminControllerTest {
     }
 
     @Test
-    @DisplayName("Admin Dashboard - Lấy số liệu thống kê thành công (HTTP 200)")
-    void testGetDashboardStats() throws Exception {
-        mockMvc.perform(get("/api/v1/admin/dashboard/stats")
+    @DisplayName("Admin Users - Lấy danh sách người dùng thành công (HTTP 200)")
+    void testGetAllUsers_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/users")
+                        .param("page", "1")
+                        .param("size", "10")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(200))
-                .andExpect(jsonPath("$.data.totalUsers").value(3))
-                .andExpect(jsonPath("$.data.totalCompanies").value(1))
-                .andExpect(jsonPath("$.data.pendingCompanies").value(1))
-                .andExpect(jsonPath("$.data.totalJobs").value(1));
-    }
-
-    @Test
-    @DisplayName("Admin Access Control - Không có quyền ADMIN bị chặn HTTP 403 Forbidden")
-    void testForbiddenForNonAdmin() throws Exception {
-        mockMvc.perform(get("/api/v1/admin/dashboard/stats")
-                        .header("Authorization", "Bearer " + candidateToken))
-                .andExpect(status().isForbidden());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.totalElements").value(3));
     }
 
     @Test
@@ -194,6 +210,7 @@ class AdminControllerTest {
     void testUpdateUserStatus() throws Exception {
         UpdateUserStatusRequest request = UpdateUserStatusRequest.builder()
                 .status(UserStatus.BANNED)
+                .reason("Vi phạm chính sách cộng đồng")
                 .build();
 
         mockMvc.perform(patch("/api/v1/admin/users/" + testUser.getId() + "/status")
@@ -205,8 +222,19 @@ class AdminControllerTest {
     }
 
     @Test
-    @DisplayName("Admin Companies - Duyệt doanh nghiệp sang APPROVED")
-    void testApproveCompany() throws Exception {
+    @DisplayName("Admin Companies - Lấy danh sách công ty chờ duyệt")
+    void testGetAllCompanies_FilterPending() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("status", "PENDING")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("FPT Software"))
+                .andExpect(jsonPath("$.data.content[0].status").value("PENDING"));
+    }
+
+    @Test
+    @DisplayName("Admin Companies - Phê duyệt công ty sang APPROVED")
+    void testUpdateCompanyStatus() throws Exception {
         UpdateCompanyStatusRequest request = UpdateCompanyStatusRequest.builder()
                 .status(CompanyStatus.APPROVED)
                 .reason("Giấy phép kinh doanh hợp lệ")
@@ -285,6 +313,82 @@ class AdminControllerTest {
     @DisplayName("Admin Recruiters - Không có quyền ADMIN bị chặn HTTP 403 Forbidden")
     void testRecruiters_ForbiddenForNonAdmin() throws Exception {
         mockMvc.perform(get("/api/v1/admin/recruiters")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Admin Candidates - Lấy danh sách ứng viên thành công (HTTP 200)")
+    void testGetCandidates_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/candidates")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.content[0].email").value("candidate_user@test.com"))
+                .andExpect(jsonPath("$.data.content[0].fullName").value("Candidate User"))
+                .andExpect(jsonPath("$.data.content[0].title").value("Fullstack Java Developer"))
+                .andExpect(jsonPath("$.data.content[0].city").value("Ho Chi Minh"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("Admin Candidates - Tìm kiếm ứng viên theo từ khóa và trạng thái")
+    void testGetCandidates_SearchAndFilter() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/candidates")
+                        .param("keyword", "Fullstack")
+                        .param("status", "ACTIVE")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].title").value("Fullstack Java Developer"));
+
+        mockMvc.perform(get("/api/v1/admin/candidates")
+                        .param("keyword", "NonExistent")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+
+        mockMvc.perform(get("/api/v1/admin/candidates")
+                        .param("status", "BANNED")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
+    @Test
+    @DisplayName("Admin Candidates - Xem chi tiết hồ sơ ứng viên theo ID")
+    void testGetCandidateById_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/candidates/" + testCandidate.getId())
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.id").value(testCandidate.getId()))
+                .andExpect(jsonPath("$.data.email").value("candidate_user@test.com"))
+                .andExpect(jsonPath("$.data.fullName").value("Candidate User"))
+                .andExpect(jsonPath("$.data.title").value("Fullstack Java Developer"))
+                .andExpect(jsonPath("$.data.city").value("Ho Chi Minh"))
+                .andExpect(jsonPath("$.data.experienceYears").value(3));
+    }
+
+    @Test
+    @DisplayName("Admin Candidates - Xem chi tiết ứng viên không tồn tại trả về HTTP 404")
+    void testGetCandidateById_NotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/candidates/99999")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.statusCode").value(40401));
+    }
+
+    @Test
+    @DisplayName("Admin Candidates - Không có quyền ADMIN bị chặn HTTP 403 Forbidden")
+    void testCandidates_ForbiddenForNonAdmin() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/candidates")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/admin/candidates/" + testCandidate.getId())
                         .header("Authorization", "Bearer " + candidateToken))
                 .andExpect(status().isForbidden());
     }

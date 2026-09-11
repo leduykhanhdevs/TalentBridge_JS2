@@ -1,16 +1,19 @@
 package vn.talentbridge.core.application.usecase;
 
 import vn.talentbridge.core.application.dto.AdminDashboardStatsResult;
+import vn.talentbridge.core.application.dto.CandidateResult;
 import vn.talentbridge.core.application.dto.CompanyResult;
 import vn.talentbridge.core.application.dto.JobResult;
 import vn.talentbridge.core.application.dto.RecruiterResult;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.AdminManagementUseCase;
+import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.CompanyRepositoryPort;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
+import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.Company;
 import vn.talentbridge.core.domain.model.Job;
 import vn.talentbridge.core.domain.model.Recruiter;
@@ -27,15 +30,18 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     private final CompanyRepositoryPort companyRepository;
     private final JobRepositoryPort jobRepository;
     private final RecruiterRepositoryPort recruiterRepository;
+    private final CandidateRepositoryPort candidateRepository;
 
     public AdminManagementUseCaseImpl(UserRepositoryPort userRepository,
                                       CompanyRepositoryPort companyRepository,
                                       JobRepositoryPort jobRepository,
-                                      RecruiterRepositoryPort recruiterRepository) {
+                                      RecruiterRepositoryPort recruiterRepository,
+                                      CandidateRepositoryPort candidateRepository) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.jobRepository = jobRepository;
         this.recruiterRepository = recruiterRepository;
+        this.candidateRepository = candidateRepository;
     }
 
     @Override
@@ -118,6 +124,25 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
         Recruiter recruiter = recruiterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nhà tuyển dụng", id));
         return RecruiterResult.from(recruiter);
+    }
+
+    @Override
+    public List<CandidateResult> getAllCandidates(int page, int size, String keyword, UserStatus status) {
+        return candidateRepository.findAll(page, size, keyword, status).stream()
+                .map(CandidateResult::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long countCandidates(String keyword, UserStatus status) {
+        return candidateRepository.count(keyword, status);
+    }
+
+    @Override
+    public CandidateResult getCandidateById(Long id) {
+        Candidate candidate = candidateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ứng viên", id));
+        return CandidateResult.from(candidate);
     }
 
     @Override
