@@ -1,0 +1,226 @@
+// ====================================================================
+// TALENTBRIDGE - DATABASE SCHEMA (DBML)
+// Copy and paste this code into https://dbdiagram.io to generate interactive ERD
+// ====================================================================
+
+Table users {
+  id bigint [pk, increment]
+  email varchar(150) [unique, not null]
+  password_hash varchar(255) [not null]
+  full_name varchar(100) [not null]
+  phone varchar(20)
+  avatar_url varchar(500)
+  status varchar(20) [not null, default: 'ACTIVE', note: 'ACTIVE, INACTIVE, BANNED']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table roles {
+  id int [pk, increment]
+  name varchar(50) [unique, not null, note: 'ROLE_CANDIDATE, ROLE_RECRUITER, ROLE_ADMIN']
+}
+
+Table user_roles {
+  user_id bigint [not null]
+  role_id int [not null]
+
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table candidates {
+  id bigint [pk, increment]
+  user_id bigint [unique, not null]
+  title varchar(150)
+  summary text
+  experience_years int [default: 0]
+  current_salary decimal(12,2)
+  expected_salary decimal(12,2)
+  city varchar(100)
+  address varchar(255)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table resumes {
+  id bigint [pk, increment]
+  candidate_id bigint [not null]
+  file_name varchar(255) [not null]
+  file_url varchar(500) [not null]
+  file_type varchar(50) [default: 'application/pdf']
+  is_default boolean [default: false]
+  parsed_text longtext
+  created_at timestamp [default: `now()`]
+}
+
+Table companies {
+  id bigint [pk, increment]
+  name varchar(200) [not null]
+  logo_url varchar(500)
+  banner_url varchar(500)
+  website varchar(255)
+  industry varchar(150)
+  company_size varchar(50)
+  address varchar(300) [not null]
+  city varchar(100) [not null]
+  description text
+  status varchar(20) [default: 'PENDING', note: 'PENDING, APPROVED, REJECTED']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table recruiters {
+  id bigint [pk, increment]
+  user_id bigint [unique, not null]
+  company_id bigint [not null]
+  position varchar(100)
+  created_at timestamp [default: `now()`]
+}
+
+Table categories {
+  id int [pk, increment]
+  name varchar(100) [unique, not null]
+  slug varchar(120) [unique, not null]
+  description varchar(255)
+}
+
+Table skills {
+  id int [pk, increment]
+  name varchar(100) [unique, not null]
+}
+
+Table jobs {
+  id bigint [pk, increment]
+  company_id bigint [not null]
+  recruiter_id bigint [not null]
+  category_id int [not null]
+  title varchar(255) [not null]
+  description longtext [not null]
+  requirements longtext [not null]
+  benefits text
+  job_type varchar(50) [not null, note: 'FULL_TIME, PART_TIME, REMOTE, HYBRID']
+  experience_level varchar(50) [not null, note: 'INTERN, FRESHER, JUNIOR, MIDDLE, SENIOR']
+  salary_min decimal(12,2)
+  salary_max decimal(12,2)
+  is_negotiable boolean [default: false]
+  city varchar(100) [not null]
+  address varchar(300)
+  status varchar(20) [default: 'ACTIVE', note: 'DRAFT, PENDING, ACTIVE, EXPIRED, CLOSED']
+  deadline date [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table job_skills {
+  job_id bigint [not null]
+  skill_id int [not null]
+
+  indexes {
+    (job_id, skill_id) [pk]
+  }
+}
+
+Table saved_jobs {
+  id bigint [pk, increment]
+  candidate_id bigint [not null]
+  job_id bigint [not null]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (candidate_id, job_id) [unique]
+  }
+}
+
+Table applications {
+  id bigint [pk, increment]
+  job_id bigint [not null]
+  candidate_id bigint [not null]
+  resume_id bigint [not null]
+  cover_letter text
+  current_stage varchar(30) [default: 'APPLIED', note: 'APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED']
+  status varchar(20) [default: 'SUBMITTED', note: 'SUBMITTED, IN_REVIEW, ACCEPTED, DECLINED']
+  ai_match_score decimal(5,2)
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (job_id, candidate_id) [unique]
+  }
+}
+
+Table application_stages {
+  id bigint [pk, increment]
+  application_id bigint [not null]
+  stage varchar(30) [not null]
+  note text
+  changed_by_user_id bigint [not null]
+  changed_at timestamp [default: `now()`]
+}
+
+Table application_notes {
+  id bigint [pk, increment]
+  application_id bigint [not null]
+  recruiter_id bigint [not null]
+  rating tinyint [note: '1-5 stars']
+  tag varchar(50)
+  comment text [not null]
+  created_at timestamp [default: `now()`]
+}
+
+Table interviews {
+  id bigint [pk, increment]
+  application_id bigint [not null]
+  interview_time datetime [not null]
+  location_type varchar(20) [default: 'ONLINE', note: 'ONLINE, OFFLINE']
+  meeting_link_or_address varchar(500) [not null]
+  notes text
+  status varchar(20) [default: 'SCHEDULED', note: 'SCHEDULED, COMPLETED, CANCELLED, NO_SHOW']
+  created_at timestamp [default: `now()`]
+}
+
+Table notifications {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  title varchar(200) [not null]
+  message text [not null]
+  type varchar(50) [not null, note: 'APPLICATION_STATUS, INTERVIEW_INVITE, SYSTEM']
+  is_read boolean [default: false]
+  created_at timestamp [default: `now()`]
+}
+
+// ----------------------------------------------------
+// RELATIONSHIPS (FOREIGN KEYS)
+// ----------------------------------------------------
+
+Ref: users.id < user_roles.user_id [delete: cascade]
+Ref: roles.id < user_roles.role_id [delete: cascade]
+
+Ref: users.id - candidates.user_id [delete: cascade]
+Ref: candidates.id < resumes.candidate_id [delete: cascade]
+
+Ref: users.id - recruiters.user_id [delete: cascade]
+Ref: companies.id < recruiters.company_id [delete: cascade]
+
+Ref: companies.id < jobs.company_id [delete: cascade]
+Ref: recruiters.id < jobs.recruiter_id [delete: cascade]
+Ref: categories.id < jobs.category_id [delete: restrict]
+
+Ref: jobs.id < job_skills.job_id [delete: cascade]
+Ref: skills.id < job_skills.skill_id [delete: cascade]
+
+Ref: candidates.id < saved_jobs.candidate_id [delete: cascade]
+Ref: jobs.id < saved_jobs.job_id [delete: cascade]
+
+Ref: jobs.id < applications.job_id [delete: cascade]
+Ref: candidates.id < applications.candidate_id [delete: cascade]
+Ref: resumes.id < applications.resume_id [delete: restrict]
+
+Ref: applications.id < application_stages.application_id [delete: cascade]
+Ref: users.id < application_stages.changed_by_user_id [delete: cascade]
+
+Ref: applications.id < application_notes.application_id [delete: cascade]
+Ref: recruiters.id < application_notes.recruiter_id [delete: cascade]
+
+Ref: applications.id < interviews.application_id [delete: cascade]
+Ref: users.id < notifications.user_id [delete: cascade]
