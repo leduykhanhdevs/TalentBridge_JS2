@@ -11,9 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import vn.talentbridge.modules.auth.dto.request.LoginRequest;
-import vn.talentbridge.modules.auth.dto.request.RegisterRequest;
-import vn.talentbridge.modules.user.repository.UserRepository;
+import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
+import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
+import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,11 +32,11 @@ class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserJpaRepository userJpaRepository;
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
+        userJpaRepository.deleteAll();
     }
 
     @Test

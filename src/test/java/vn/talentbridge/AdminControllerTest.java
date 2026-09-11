@@ -11,22 +11,21 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import vn.talentbridge.modules.admin.dto.request.UpdateCompanyStatusRequest;
-import vn.talentbridge.modules.admin.dto.request.UpdateJobStatusRequest;
-import vn.talentbridge.modules.admin.dto.request.UpdateUserStatusRequest;
-import vn.talentbridge.modules.company.entity.Company;
-import vn.talentbridge.modules.company.enums.CompanyStatus;
-import vn.talentbridge.modules.company.repository.CompanyRepository;
-import vn.talentbridge.modules.job.entity.Job;
-import vn.talentbridge.modules.job.enums.JobStatus;
-import vn.talentbridge.modules.job.repository.JobRepository;
-import vn.talentbridge.modules.user.entity.Role;
-import vn.talentbridge.modules.user.entity.User;
-import vn.talentbridge.modules.user.enums.UserStatus;
-import vn.talentbridge.modules.user.repository.RoleRepository;
-import vn.talentbridge.modules.user.repository.UserRepository;
-import vn.talentbridge.security.JwtTokenProvider;
-import vn.talentbridge.security.UserPrincipal;
+import vn.talentbridge.adapter.in.web.dto.request.UpdateCompanyStatusRequest;
+import vn.talentbridge.adapter.in.web.dto.request.UpdateJobStatusRequest;
+import vn.talentbridge.adapter.in.web.dto.request.UpdateUserStatusRequest;
+import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
+import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
+import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
+import vn.talentbridge.adapter.out.persistence.entity.UserJpaEntity;
+import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
+import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
+import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
+import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
+import vn.talentbridge.core.application.port.out.TokenProviderPort;
+import vn.talentbridge.core.domain.vo.CompanyStatus;
+import vn.talentbridge.core.domain.vo.JobStatus;
+import vn.talentbridge.core.domain.vo.UserStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,28 +49,28 @@ class AdminControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserJpaRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private RoleJpaRepository roleRepository;
 
     @Autowired
-    private CompanyRepository companyRepository;
+    private CompanyJpaRepository companyRepository;
 
     @Autowired
-    private JobRepository jobRepository;
+    private JobJpaRepository jobRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtTokenProvider tokenProvider;
+    private TokenProviderPort tokenProvider;
 
     private String adminToken;
     private String candidateToken;
-    private User testUser;
-    private Company testCompany;
-    private Job testJob;
+    private UserJpaEntity testUser;
+    private CompanyJpaEntity testCompany;
+    private JobJpaEntity testJob;
 
     @BeforeEach
     void setUp() {
@@ -80,13 +79,13 @@ class AdminControllerTest {
         userRepository.deleteAll();
 
         // Setup Roles
-        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_ADMIN").build()));
-        Role candidateRole = roleRepository.findByName("ROLE_CANDIDATE")
-                .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_CANDIDATE").build()));
+        RoleJpaEntity adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseGet(() -> roleRepository.save(RoleJpaEntity.builder().name("ROLE_ADMIN").build()));
+        RoleJpaEntity candidateRole = roleRepository.findByName("ROLE_CANDIDATE")
+                .orElseGet(() -> roleRepository.save(RoleJpaEntity.builder().name("ROLE_CANDIDATE").build()));
 
         // Create Admin User & Token
-        User adminUser = User.builder()
+        UserJpaEntity adminUser = UserJpaEntity.builder()
                 .email("admin@test.com")
                 .passwordHash(passwordEncoder.encode("admin123"))
                 .fullName("System Administrator")
@@ -94,10 +93,10 @@ class AdminControllerTest {
                 .roles(new HashSet<>(Collections.singletonList(adminRole)))
                 .build();
         adminUser = userRepository.save(adminUser);
-        adminToken = tokenProvider.generateAccessToken(new UserPrincipal(adminUser));
+        adminToken = tokenProvider.generateAccessToken(adminUser.getId(), adminUser.getEmail(), "ROLE_ADMIN");
 
         // Create Candidate User & Token
-        testUser = User.builder()
+        testUser = UserJpaEntity.builder()
                 .email("candidate_user@test.com")
                 .passwordHash(passwordEncoder.encode("user123"))
                 .fullName("Candidate User")
@@ -105,30 +104,28 @@ class AdminControllerTest {
                 .roles(new HashSet<>(Collections.singletonList(candidateRole)))
                 .build();
         testUser = userRepository.save(testUser);
-        candidateToken = tokenProvider.generateAccessToken(new UserPrincipal(testUser));
+        candidateToken = tokenProvider.generateAccessToken(testUser.getId(), testUser.getEmail(), "ROLE_CANDIDATE");
 
         // Create Sample Company
-        testCompany = Company.builder()
+        testCompany = CompanyJpaEntity.builder()
                 .name("FPT Software")
                 .address("Khu Cong Nghe Cao")
-                .city("Ho Chi Minh")
                 .status(CompanyStatus.PENDING)
                 .build();
         testCompany = companyRepository.save(testCompany);
 
         // Create Sample Job
-        testJob = Job.builder()
+        testJob = JobJpaEntity.builder()
                 .company(testCompany)
-                .recruiterId(1L)
-                .categoryId(1)
+                .recruiterUserId(1L)
                 .title("Senior Java Developer")
                 .description("Build microservices")
                 .requirements("Java 21, Spring Boot")
                 .jobType("FULL_TIME")
                 .experienceLevel("SENIOR")
-                .salaryMin(new BigDecimal("20000000"))
-                .salaryMax(new BigDecimal("40000000"))
-                .city("Ho Chi Minh")
+                .minSalary(new BigDecimal("20000000"))
+                .maxSalary(new BigDecimal("40000000"))
+                .location("Ho Chi Minh")
                 .status(JobStatus.ACTIVE)
                 .deadline(LocalDate.now().plusDays(30))
                 .build();
