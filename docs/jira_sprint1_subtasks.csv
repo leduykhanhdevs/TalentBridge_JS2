@@ -1,0 +1,130 @@
+﻿"Issue Type","Summary","Parent Summary","Description","Assignee","Priority","Story Points","Component"
+"Sub-task","[FE] Giao diện Admin xem danh sách, tìm kiếm và Khóa/Mở ứng viên","[Khánh] Quản lý ứng viên (Candidate Management) dành cho Admin","Xây dựng giao diện trang Quản lý ứng viên dành cho Admin:
+- Table danh sách ứng viên với phân trang (Pagination), tìm kiếm theo Họ tên/Email, bộ lọc Status (ACTIVE, BANNED).
+- Modal xem chi tiết hồ sơ cá nhân của ứng viên.
+- Nút thao tác Khóa (Ban) / Mở khóa (Active) tài khoản kèm hộp thoại xác nhận và thông báo Toast.
+- Tích hợp gọi API GET /api/v1/admin/candidates và PATCH /api/v1/admin/users/{id}/status.","Lê Duy Khánh","High",1,"Admin Module"
+"Sub-task","[BE] API Admin lấy danh sách ứng viên và cập nhật trạng thái User (Clean Architecture)","[Khánh] Quản lý ứng viên (Candidate Management) dành cho Admin","Xây dựng backend theo Clean/Hexagonal Architecture:
+- Inbound Controller: AdminCandidateController, AdminUserController.
+- Inbound Port & UseCase: GetCandidatesUseCase, ChangeUserStatusUseCase.
+- Outbound Port & Adapter: CandidatePersistenceAdapter, UserPersistenceAdapter.
+- Phân quyền RBAC @PreAuthorize(""hasRole('ADMIN')"").
+- Viết Unit test & ArchUnit test kiểm tra tính toàn vẹn kiến trúc.","Lê Duy Khánh","High",2,"Admin Module"
+"Sub-task","[FE] Giao diện Admin quản lý danh sách HR và công ty trực thuộc","[Khánh] Quản lý nhà tuyển dụng (HR Management) dành cho Admin","Xây dựng giao diện trang Quản lý nhà tuyển dụng dành cho Admin:
+- Table danh sách HR: Avatar, Họ tên, Email, SĐT, Tên công ty trực thuộc, Trạng thái tài khoản.
+- Bộ lọc theo Công ty và Trạng thái (ACTIVE/BANNED).
+- Modal xem chi tiết thông tin HR và pháp lý công ty liên kết.
+- Nút Khóa/Mở khóa tài khoản HR vi phạm quy định.
+- Tích hợp gọi API GET /api/v1/admin/recruiters và PATCH /api/v1/admin/users/{id}/status.","Lê Duy Khánh","High",1,"Admin Module"
+"Sub-task","[BE] API Admin lấy danh sách HR và khóa tài khoản vi phạm (Clean Architecture)","[Khánh] Quản lý nhà tuyển dụng (HR Management) dành cho Admin","Xây dựng backend theo Clean/Hexagonal Architecture:
+- Inbound Controller: AdminRecruiterController.
+- Inbound Port & UseCase: GetRecruitersUseCase, GetRecruiterDetailUseCase.
+- Outbound Adapter: Nối dữ liệu giữa bảng recruiters, users và companies (JPQL / Eager Join).
+- Xử lý mã lỗi 404 UserNotFound, 403 Forbidden khi không phải ADMIN.
+- Viết Unit test cho UseCase và MockMvc test cho Controller.","Lê Duy Khánh","High",1,"Admin Module"
+"Sub-task","[FE] Giao diện Admin duyệt doanh nghiệp: Tab chờ duyệt, chi tiết và lý do từ chối","[Khánh] Quản lý & Phê duyệt doanh nghiệp do HR yêu cầu (Company Approval)","Xây dựng giao diện trang Phê duyệt doanh nghiệp dành cho Admin:
+- Tabs chuyển đổi trạng thái: PENDING (Chờ duyệt), APPROVED (Đã duyệt), REJECTED (Đã từ chối).
+- Card/Table hiển thị thông tin pháp lý công ty: Tên công ty, Mã số thuế, Website, Logo, Địa chỉ, HR nộp đơn.
+- Modal xem xét hồ sơ và Popup nhập lý do từ chối (Rejection Reason).
+- Tích hợp gọi API GET /api/v1/admin/companies và PATCH /api/v1/admin/companies/{id}/status.","Lê Duy Khánh","Highest",1,"Admin Module"
+"Sub-task","[BE] API Admin phê duyệt/từ chối công ty và liên kết quyền HR đại diện (Clean Architecture)","[Khánh] Quản lý & Phê duyệt doanh nghiệp do HR yêu cầu (Company Approval)","Xây dựng backend theo Clean/Hexagonal Architecture:
+- Inbound Controller: AdminCompanyController.
+- Inbound Port & UseCase: GetCompaniesUseCase, ApproveCompanyUseCase (xử lý duyệt/từ chối).
+- Transactional Logic: Khi APPROVED, cập nhật status công ty thành APPROVED và tự động gán company_id vào Recruiter đã tạo.
+- Outbound Port & Adapter: CompanyPersistenceAdapter, RecruiterPersistenceAdapter.
+- Viết Unit test đảm bảo ACID transaction và kiểm tra ArchUnit.","Lê Duy Khánh","Highest",2,"Admin Module"
+"Sub-task","[FE] Màn hình Quên mật khẩu: Form nhập Email, OTP 6 số và Form Đặt lại mật khẩu","[Tuyền] Xây dựng tính năng Quên mật khẩu qua Email (Forget Password)","Xây dựng giao diện luồng Quên & Đặt lại mật khẩu:
+- Bước 1: Form nhập Email để yêu cầu nhận OTP, có validate định dạng email và countdown đếm ngược gửi lại sau 60s.
+- Bước 2: Form/Modal nhập mã OTP 6 ký tự số kèm thời hạn hiệu lực 15 phút.
+- Bước 3: Form nhập mật khẩu mới và xác nhận mật khẩu (validate độ dài >= 6, độ mạnh mật khẩu).
+- Xử lý thông báo lỗi (hết hạn OTP, sai OTP) và điều hướng về trang Đăng nhập sau khi thành công.","Phan Thị Ánh Tuyền","Highest",1,"Auth & Mail"
+"Sub-task","[BE] API Quên mật khẩu: Sinh mã OTP, gửi email và mã hóa mật khẩu mới BCrypt","[Tuyền] Xây dựng tính năng Quên mật khẩu qua Email (Forget Password)","Xây dựng backend xử lý Quên mật khẩu theo Clean Architecture:
+- Endpoint POST /api/v1/auth/forgot-password: Kiểm tra email tồn tại, sinh OTP ngẫu nhiên 6 chữ số kèm thời hạn hết hạn 15 phút, gọi MailService gửi OTP.
+- Endpoint POST /api/v1/auth/reset-password: Kiểm tra OTP hợp lệ và chưa hết hạn, mã hóa mật khẩu mới bằng PasswordEncoder (BCrypt) và cập nhật vào bảng users.
+- Xử lý các mã lỗi: 400 Bad Request (OTP sai hoặc hết hạn), 404 Not Found (Email không tồn tại).
+- Viết Unit test nghiệp vụ sinh OTP và đổi mật khẩu.","Phan Thị Ánh Tuyền","Highest",2,"Auth & Mail"
+"Sub-task","[FE] Thiết kế Responsive HTML Template Email thông báo OTP/Reset Password","[Tuyền] Thiết kế HTML Template Email thông báo đặt lại mật khẩu","Thiết kế mẫu Email HTML chuẩn thương hiệu TalentBridge:
+- Bố cục email chuẩn Responsive hiển thị tối ưu trên Gmail, Outlook, Apple Mail (Web và Mobile).
+- Bao gồm Logo TalentBridge, Lời chào cá nhân hóa, Khung hiển thị mã OTP 6 số cỡ lớn nổi bật, Nút CTA đặt lại mật khẩu, Cảnh báo bảo mật không chia sẻ mã.
+- Tối ưu CSS inline để tương thích mọi trình duyệt email client.","Phan Thị Ánh Tuyền","Medium",1,"Auth & Mail"
+"Sub-task","[BE] Tích hợp Spring Mail & Thymeleaf Engine render biến động email bất đồng bộ","[Tuyền] Thiết kế HTML Template Email thông báo đặt lại mật khẩu","Xây dựng dịch vụ gửi email bằng Spring Boot:
+- Cấu hình Spring Boot Starter Mail (SMTP Gmail/Mailtrap) trong application.properties.
+- Tích hợp Thymeleaf Template Engine để đổ dữ liệu động (Tên người dùng, Mã OTP, Hạn sử dụng) vào file HTML template.
+- Sử dụng JavaMailSender và MimeMessageHelper (UTF-8, multipart).
+- Cấu hình @Async để gửi email bất đồng bộ không làm block request của người dùng.","Phan Thị Ánh Tuyền","Medium",1,"Auth & Mail"
+"Sub-task","[FE] Màn hình Đăng ký & Đăng nhập Ứng viên: Form validation và lưu JWT Token","[Thịnh] Đăng ký & Đăng nhập tài khoản Ứng viên (Candidate Auth)","Xây dựng giao diện Đăng ký & Đăng nhập cho Ứng viên:
+- Form Đăng ký: Nhập Họ tên, Email, Số điện thoại, Mật khẩu, Xác nhận mật khẩu; validate dữ liệu client-side.
+- Form Đăng nhập: Nhập Email và Mật khẩu.
+- Xử lý lưu trữ JWT Access Token và Refresh Token an toàn (LocalStorage / Secure Cookie).
+- Bắt lỗi hiển thị: Trùng email (409), Sai thông tin đăng nhập (401).
+- Tự động điều hướng đến trang tìm việc sau khi đăng nhập thành công.","Đặng Trường Thịnh","High",1,"Candidate Module"
+"Sub-task","[BE] API Đăng ký và Đăng nhập Ứng viên: Lưu User/Candidate và cấp JWT Token","[Thịnh] Đăng ký & Đăng nhập tài khoản Ứng viên (Candidate Auth)","Xây dựng backend xác thực Ứng viên theo Clean Architecture:
+- Inbound Controller: AuthController (POST /api/v1/auth/register, POST /api/v1/auth/login).
+- UseCase RegisterCandidateUseCase: Tạo bản ghi trong bảng users, gán ROLE_CANDIDATE trong user_roles, tự động khởi tạo bản ghi trong bảng candidates trong 1 Transaction.
+- UseCase LoginUseCase: Xác thực thông tin qua AuthenticationManager, sinh JWT Access & Refresh Token.
+- Trả về mã lỗi 409 Conflict nếu email đã tồn tại, 401 nếu sai mật khẩu.
+- Viết Unit test xác thực và MockMvc test.","Đặng Trường Thịnh","High",1,"Candidate Module"
+"Sub-task","[FE] Giao diện xem và cập nhật thông tin cá nhân & liên kết mạng xã hội của Ứng viên","[Thịnh] Xem & Cập nhật Hồ sơ Ứng viên (Update Candidate Profile)","Xây dựng giao diện Quản lý hồ sơ cá nhân cho Ứng viên:
+- Màn hình xem hồ sơ cá nhân đầy đủ (Overview profile).
+- Form cập nhật thông tin: Ngày sinh, Giới tính, Địa chỉ, Thành phố, Mục tiêu nghề nghiệp (Bio), Vị trí mong muốn, Mức lương kỳ vọng.
+- Thêm liên kết mạng xã hội chuyên môn: Website cá nhân, LinkedIn URL, GitHub URL.
+- Validate định dạng ngày tháng, số điện thoại, URL hợp lệ.
+- Tích hợp gọi API GET/PUT /api/v1/candidates/profile.","Đặng Trường Thịnh","Highest",1,"Candidate Module"
+"Sub-task","[BE] API xem và cập nhật hồ sơ Ứng viên (Clean Architecture & Validation)","[Thịnh] Xem & Cập nhật Hồ sơ Ứng viên (Update Candidate Profile)","Xây dựng backend quản lý hồ sơ ứng viên theo Clean Architecture:
+- Inbound Controller: CandidateProfileController (GET/PUT /api/v1/candidates/profile).
+- Inbound Port & UseCase: GetCandidateProfileUseCase, UpdateCandidateProfileUseCase.
+- Outbound Adapter: CandidatePersistenceAdapter thao tác với bảng candidates.
+- DTO Request với Bean Validation (@Pattern SĐT, @Past Ngày sinh, URL formats).
+- Bảo vệ endpoint bằng @PreAuthorize(""hasRole('CANDIDATE')""), lấy user_id trực tiếp từ SecurityContext JWT.
+- Viết Unit test cho UseCase cập nhật hồ sơ.","Đặng Trường Thịnh","Highest",2,"Candidate Module"
+"Sub-task","[FE] Màn hình Đăng ký, Đăng nhập & Trang cập nhật Profile Nhà tuyển dụng (HR)","[Hiếu] Đăng ký, Đăng nhập & Quản lý Profile Nhà tuyển dụng (HR Auth & Profile)","Xây dựng giao diện cho Nhà tuyển dụng (HR):
+- Màn hình Đăng ký tài khoản HR: Form nhập Họ tên, Email, Số điện thoại, Chức vụ (Position).
+- Màn hình Đăng nhập HR: Xác thực và điều hướng vào HR Workspace.
+- Trang cập nhật hồ sơ cá nhân HR: Chỉnh sửa Họ tên, SĐT, Vị trí công tác, Upload Avatar.
+- Hiển thị thông tin công ty trực thuộc hoặc banner hướng dẫn 'Tạo công ty mới / Xin gia nhập công ty' nếu chưa có công ty.","Nguyễn Phan Minh Hiếu","High",1,"HR & Company"
+"Sub-task","[BE] API Đăng ký, Đăng nhập và Cập nhật Profile HR (Recruiter Entity & RBAC)","[Hiếu] Đăng ký, Đăng nhập & Quản lý Profile Nhà tuyển dụng (HR Auth & Profile)","Xây dựng backend cho Nhà tuyển dụng theo Clean Architecture:
+- Endpoint POST /api/v1/auth/register (Role RECRUITER): Tạo user và bản ghi recruiter với company_id = null ban đầu.
+- Inbound Controller: RecruiterProfileController (GET/PUT /api/v1/recruiters/profile).
+- UseCase GetRecruiterProfileUseCase, UpdateRecruiterProfileUseCase.
+- Outbound Adapter: RecruiterPersistenceAdapter.
+- Phân quyền @PreAuthorize(""hasRole('RECRUITER')""), kiểm tra bảo mật truy cập.
+- Viết Unit test và MockMvc test.","Nguyễn Phan Minh Hiếu","High",1,"HR & Company"
+"Sub-task","[FE] Màn hình Form tạo yêu cầu mở Công ty mới & Upload logo dành cho HR","[Hiếu] Yêu cầu tạo mới một Công ty (Request Create New Company)","Xây dựng giao diện Form đăng ký công ty mới cho HR:
+- Form nhập thông tin công ty: Tên công ty, Mã số thuế, Website, Quy mô nhân sự, Địa chỉ trụ sở, Tỉnh/Thành phố, Giới thiệu công ty.
+- Khu vực upload Logo công ty kèm preview hình ảnh trực quan.
+- Màn hình thông báo trạng thái 'Hồ sơ công ty đang chờ Admin phê duyệt'.
+- Tích hợp gọi API POST /api/v1/recruiters/companies/request-create.","Nguyễn Phan Minh Hiếu","Highest",1,"HR & Company"
+"Sub-task","[BE] API tạo yêu cầu đăng ký Công ty mới với trạng thái PENDING (Clean Architecture)","[Hiếu] Yêu cầu tạo mới một Công ty (Request Create New Company)","Xây dựng backend tạo yêu cầu công ty mới theo Clean Architecture:
+- Inbound Controller: RecruiterCompanyController (POST /api/v1/recruiters/companies/request-create).
+- Inbound Port & UseCase: RequestCreateCompanyUseCase.
+- Validation: Kiểm tra trùng mã số thuế, kiểm tra HR hiện tại chưa thuộc công ty nào khác.
+- Outbound Adapter: CompanyPersistenceAdapter lưu bản ghi company với status = PENDING, created_by_user_id = HR hiện tại.
+- Xử lý mã lỗi 409 nếu trùng MST, 400 nếu HR đã có công ty.
+- Viết Unit test cho UseCase kiểm tra ràng buộc nghiệp vụ.","Nguyễn Phan Minh Hiếu","Highest",2,"HR & Company"
+"Sub-task","[FE] Giao diện Tìm kiếm công ty và Modal gửi yêu cầu xin gia nhập công ty","[Tình] Tìm kiếm & Gửi yêu cầu gia nhập Công ty có sẵn (Join Company Request)","Xây dựng giao diện cho HR tìm kiếm và gia nhập công ty:
+- Thanh tìm kiếm công ty dạng Auto-complete / Search List hiển thị danh sách công ty đã APPROVED.
+- Thẻ thông tin công ty: Logo, Tên công ty, Địa chỉ, Quy mô nhân sự, Website.
+- Modal 'Gửi yêu cầu gia nhập': Nhập vị trí công tác (vd: Senior Recruiter) và Lời nhắn gửi đến ban quản trị công ty.
+- Khóa (Disable) nút gửi nếu HR đã có yêu cầu gia nhập đang ở trạng thái PENDING.
+- Tích hợp gọi API GET /api/v1/recruiters/companies/search và POST /api/v1/recruiters/companies/{companyId}/join-request.","Trần Đình Tình","High",1,"HR & Company"
+"Sub-task","[BE] API Tìm kiếm công ty đã duyệt và Gửi yêu cầu gia nhập chống trùng lặp","[Tình] Tìm kiếm & Gửi yêu cầu gia nhập Công ty có sẵn (Join Company Request)","Xây dựng backend tìm kiếm và gia nhập công ty theo Clean Architecture:
+- Inbound Controller: CompanyJoinRequestController.
+- UseCase SearchApprovedCompaniesUseCase: Tìm kiếm công ty có status = APPROVED theo từ khóa có phân trang.
+- UseCase SubmitJoinCompanyRequestUseCase: Kiểm tra HR chưa thuộc công ty nào, kiểm tra chưa có request PENDING nào khác trước khi tạo bản ghi trong bảng company_join_requests (status = PENDING).
+- Trả về mã lỗi 409 Conflict nếu đã có yêu cầu chờ duyệt.
+- Viết Unit test nghiệp vụ và MockMvc test.","Trần Đình Tình","High",1,"HR & Company"
+"Sub-task","[FE] Giao diện Quản lý yêu cầu gia nhập công ty nội bộ (Approve / Reject kèm lý do)","[Tình] HR phê duyệt hoặc từ chối yêu cầu gia nhập của HR khác (HR Peer Approval)","Xây dựng giao diện cho HR quản lý thành viên công ty:
+- Màn hình danh sách các yêu cầu xin gia nhập đang PENDING của công ty mình.
+- Hiển thị thông tin người xin gia nhập: Avatar, Họ tên, Email, Số điện thoại, Vị trí ứng tuyển, Thời gian gửi.
+- Nút Chấp thuận (Approve): Xác nhận đưa HR vào công ty.
+- Nút Từ chối (Reject): Mở dialog nhập lý do từ chối gửi thông báo.
+- Badge đếm số lượng yêu cầu cần xử lý.
+- Tích hợp gọi API GET /api/v1/recruiters/companies/my-company/join-requests và PATCH /api/v1/recruiters/companies/join-requests/{requestId}.","Trần Đình Tình","Highest",1,"HR & Company"
+"Sub-task","[BE] API Lấy danh sách yêu cầu gia nhập và Phê duyệt thành viên HR nội bộ công ty","[Tình] HR phê duyệt hoặc từ chối yêu cầu gia nhập của HR khác (HR Peer Approval)","Xây dựng backend phê duyệt thành viên nội bộ theo Clean Architecture:
+- Inbound Controller: CompanyPeerApprovalController.
+- UseCase GetPendingJoinRequestsUseCase: Lấy danh sách request PENDING của công ty mà HR hiện tại đang trực thuộc.
+- UseCase ReviewJoinRequestUseCase: 
+  + Nếu ACCEPTED: Cập nhật status request = ACCEPTED, đồng thời gán company_id vào Recruiter xin gia nhập trong 1 Transaction.
+  + Nếu REJECTED: Cập nhật status request = REJECTED kèm lý do.
+- Bảo mật: Kiểm tra HR thao tác phải cùng company_id với request, ném lỗi 403 Forbidden nếu không đúng thẩm quyền.
+- Viết Unit test đảm bảo tính đúng đắn và Transaction rollback khi có lỗi.","Trần Đình Tình","Highest",2,"HR & Company"
