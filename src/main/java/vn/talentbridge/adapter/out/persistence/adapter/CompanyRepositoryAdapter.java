@@ -78,6 +78,12 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
         return companyJpaRepository.countByStatus(status);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByTaxCode(String taxCode) {
+        return companyJpaRepository.existsByTaxCode(taxCode);
+    }
+
     private Company toDomain(CompanyJpaEntity entity) {
         return new Company(
                 entity.getId(),

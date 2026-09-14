@@ -33,4 +33,5 @@ public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Lo
 
     Page<CompanyJpaEntity> findByStatus(CompanyStatus status, Pageable pageable);
     long countByStatus(CompanyStatus status);
+    boolean existsByTaxCode(String taxCode);
 }

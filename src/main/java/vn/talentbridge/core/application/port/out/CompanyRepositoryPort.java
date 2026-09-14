@@ -13,4 +13,5 @@ public interface CompanyRepositoryPort {
     long count(String keyword, CompanyStatus status);
     long count();
     long countByStatus(CompanyStatus status);
+    boolean existsByTaxCode(String taxCode);
 }

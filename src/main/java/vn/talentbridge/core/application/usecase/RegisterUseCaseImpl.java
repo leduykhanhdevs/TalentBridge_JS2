@@ -13,19 +13,31 @@ import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.RoleName;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
+// hiếu 
+import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
+import vn.talentbridge.core.domain.exception.DomainException;
+import vn.talentbridge.core.domain.model.Recruiter;
+
 import java.time.LocalDateTime;
 
 public class RegisterUseCaseImpl implements RegisterUseCase {
+
+    // hiếu
     private final UserRepositoryPort userRepository;
+    private final RecruiterRepositoryPort recruiterRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final long tokenExpirationMs;
 
-    public RegisterUseCaseImpl(UserRepositoryPort userRepository,
-                               PasswordEncoderPort passwordEncoder,
-                               TokenProviderPort tokenProvider,
-                               long tokenExpirationMs) {
+    // hiếu
+    public RegisterUseCaseImpl(
+            UserRepositoryPort userRepository,
+            RecruiterRepositoryPort recruiterRepository,
+            PasswordEncoderPort passwordEncoder,
+            TokenProviderPort tokenProvider,
+            long tokenExpirationMs) {
         this.userRepository = userRepository;
+        this.recruiterRepository = recruiterRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.tokenExpirationMs = tokenExpirationMs;
@@ -58,7 +70,20 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
         User savedUser = userRepository.save(user);
 
-        String accessToken = tokenProvider.generateAccessToken(savedUser.getId(), savedUser.getEmail(), roleName.name());
+        if (roleName == RoleName.ROLE_RECRUITER) {
+            Recruiter recruiter = new Recruiter();
+            recruiter.setUser(savedUser);
+            recruiter.setCompany(null);
+            String position = command.position() != null && !command.position().isBlank()
+                    ? command.position().trim()
+                    : "Recruiter";
+            recruiter.setPosition(position);
+            recruiter.setCreatedAt(LocalDateTime.now());
+
+            recruiterRepository.save(recruiter);
+        }
+        String accessToken = tokenProvider.generateAccessToken(savedUser.getId(), savedUser.getEmail(),
+                roleName.name());
         String refreshToken = tokenProvider.generateRefreshToken(savedUser.getId(), savedUser.getEmail());
 
         return AuthResult.of(accessToken, refreshToken, tokenExpirationMs / 1000, UserResult.from(savedUser));

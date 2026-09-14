@@ -38,6 +38,14 @@ public class RegisterRequest {
 
     @NotBlank(message = "Vai trò đăng ký không được để trống")
     @Pattern(regexp = "^(ROLE_CANDIDATE|ROLE_RECRUITER)$", message = "Vai trò chỉ được là ROLE_CANDIDATE hoặc ROLE_RECRUITER")
-    @Schema(description = "Vai trò người dùng đăng ký", example = "ROLE_CANDIDATE", allowableValues = {"ROLE_CANDIDATE", "ROLE_RECRUITER"}, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Vai trò người dùng đăng ký", example = "ROLE_CANDIDATE", allowableValues = {
+            "ROLE_CANDIDATE", "ROLE_RECRUITER" }, requiredMode = Schema.RequiredMode.REQUIRED)
     private String role;
+
+    // Hiếu
+    // Chức danh tuyển dụng, dùng khi đăng ký tài khoản HR
+    @Size(max = 100, message = "Chức danh không được vượt quá 100 ký tự")
+    @Schema(description = "Chức danh tuyển dụng, dùng khi đăng ký tài khoản HR", example = "HR Executive")
+
+    private String position;
 }
