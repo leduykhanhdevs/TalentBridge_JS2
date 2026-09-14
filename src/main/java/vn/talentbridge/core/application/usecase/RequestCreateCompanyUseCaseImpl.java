@@ -45,6 +45,7 @@ public class RequestCreateCompanyUseCaseImpl implements RequestCreateCompanyUseC
         company.setWebsite(command.website() != null ? command.website().trim() : null);
         company.setCompanySize(command.companySize() != null ? command.companySize().trim() : null);
         company.setAddress(command.address() != null ? command.address().trim() : null);
+        company.setCity(command.city() != null && !command.city().isBlank() ? command.city().trim() : "Chưa xác định");
         company.setDescription(command.description() != null ? command.description().trim() : null);
         company.setLogoUrl(command.logoUrl() != null ? command.logoUrl().trim() : null);
         company.setStatus(CompanyStatus.PENDING);

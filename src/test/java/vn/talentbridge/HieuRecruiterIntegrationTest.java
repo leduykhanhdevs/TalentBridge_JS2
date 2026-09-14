@@ -198,6 +198,7 @@ class HieuRecruiterIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statusCode").value(201))
                 .andExpect(jsonPath("$.data.name").value("FPT Software Innovation"))
+                .andExpect(jsonPath("$.data.city").value("Ho Chi Minh"))
                 .andExpect(jsonPath("$.data.status").value("PENDING"));
     }
 

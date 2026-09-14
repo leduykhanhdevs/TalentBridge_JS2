@@ -35,6 +35,9 @@ public class CompanyJpaEntity extends BaseJpaEntity {
     @Column(name = "address", length = 255)
     private String address;
 
+    @Column(name = "city", length = 100)
+    private String city;
+
     @Column(name = "tax_code", length = 50)
     private String taxCode;
 

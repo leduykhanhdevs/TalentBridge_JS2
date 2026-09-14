@@ -13,7 +13,6 @@ import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.RoleName;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
-// hiếu 
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.model.Recruiter;
@@ -22,14 +21,12 @@ import java.time.LocalDateTime;
 
 public class RegisterUseCaseImpl implements RegisterUseCase {
 
-    // hiếu
     private final UserRepositoryPort userRepository;
     private final RecruiterRepositoryPort recruiterRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final long tokenExpirationMs;
 
-    // hiếu
     public RegisterUseCaseImpl(
             UserRepositoryPort userRepository,
             RecruiterRepositoryPort recruiterRepository,

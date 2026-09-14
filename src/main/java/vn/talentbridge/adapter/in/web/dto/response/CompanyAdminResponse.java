@@ -23,6 +23,7 @@ public class CompanyAdminResponse {
     private String website;
     private String companySize;
     private String address;
+    private String city;
     private String taxCode;
     private String description;
     private CompanyStatus status;
@@ -37,6 +38,7 @@ public class CompanyAdminResponse {
                 .website(result.website())
                 .companySize(result.companySize())
                 .address(result.address())
+                .city(result.city())
                 .taxCode(result.taxCode())
                 .description(result.description())
                 .status(result.status() != null ? CompanyStatus.valueOf(result.status()) : null)

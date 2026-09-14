@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
 import vn.talentbridge.adapter.in.web.dto.request.ReviewJoinRequest;
@@ -70,6 +71,7 @@ public class CompanyPeerApprovalController {
 
     @PatchMapping("/join-requests/{requestId}")
     @PreAuthorize("hasRole('RECRUITER')")
+    @Transactional
     @Operation(summary = "HR phê duyệt hoặc từ chối yêu cầu gia nhập", description = "Phê duyệt (ACCEPTED) hoặc từ chối (REJECTED) yêu cầu gia nhập của HR khác vào công ty mình")
     public ResponseEntity<ApiResponse<CompanyJoinRequestResponse>> reviewJoinRequest(
             @AuthenticationPrincipal UserPrincipal principal,

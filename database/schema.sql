@@ -246,6 +246,24 @@ CREATE TABLE `recruiters` (
     INDEX `idx_recruiters_company` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 14.1. Bảng company_join_requests: Yêu cầu xin gia nhập công ty của HR
+CREATE TABLE `company_join_requests` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT NOT NULL,
+    `company_id` BIGINT NOT NULL,
+    `position` VARCHAR(100) NULL,
+    `message` TEXT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, CANCELLED
+    `reason` TEXT NULL, -- Lý do từ chối hoặc ghi chú phê duyệt
+    `approved_by_user_id` BIGINT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_join_req_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_join_req_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+    INDEX `idx_join_req_user` (`user_id`),
+    INDEX `idx_join_req_company_status` (`company_id`, `status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ====================================================================
 -- PHÂN HỆ 5: VIỆC LÀM & TÌM KIẾM (JOBS & CATEGORIES)
 -- ====================================================================

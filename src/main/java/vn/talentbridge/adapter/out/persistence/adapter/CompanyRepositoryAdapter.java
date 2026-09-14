@@ -45,6 +45,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
         entity.setDescription(domainCompany.getDescription());
         entity.setCompanySize(domainCompany.getCompanySize());
         entity.setAddress(domainCompany.getAddress());
+        entity.setCity(domainCompany.getCity());
         entity.setTaxCode(domainCompany.getTaxCode());
         entity.setStatus(domainCompany.getStatus());
         entity.setCreatedByUserId(domainCompany.getCreatedByUserId());
@@ -93,6 +94,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 entity.getDescription(),
                 entity.getCompanySize(),
                 entity.getAddress(),
+                entity.getCity(),
                 entity.getTaxCode(),
                 entity.getStatus(),
                 entity.getCreatedByUserId(),

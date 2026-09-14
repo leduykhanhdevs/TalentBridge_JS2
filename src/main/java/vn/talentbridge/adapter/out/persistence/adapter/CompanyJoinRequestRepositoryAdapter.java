@@ -147,6 +147,7 @@ public class CompanyJoinRequestRepositoryAdapter implements CompanyJoinRequestRe
                     c.getDescription(),
                     c.getCompanySize(),
                     c.getAddress(),
+                    c.getCity(),
                     c.getTaxCode(),
                     c.getStatus(),
                     c.getCreatedByUserId(),

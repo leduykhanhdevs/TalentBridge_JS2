@@ -12,6 +12,7 @@ public class Company {
     private String description;
     private String companySize;
     private String address;
+    private String city;
     private String taxCode;
     private CompanyStatus status;
     private Long createdByUserId;
@@ -25,6 +26,12 @@ public class Company {
     public Company(Long id, String name, String logoUrl, String website, String description,
                    String companySize, String address, String taxCode, CompanyStatus status,
                    Long createdByUserId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, name, logoUrl, website, description, companySize, address, null, taxCode, status, createdByUserId, createdAt, updatedAt);
+    }
+
+    public Company(Long id, String name, String logoUrl, String website, String description,
+                   String companySize, String address, String city, String taxCode, CompanyStatus status,
+                   Long createdByUserId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.logoUrl = logoUrl;
@@ -32,6 +39,7 @@ public class Company {
         this.description = description;
         this.companySize = companySize;
         this.address = address;
+        this.city = city;
         this.taxCode = taxCode;
         this.status = status != null ? status : CompanyStatus.PENDING;
         this.createdByUserId = createdByUserId;
@@ -62,6 +70,9 @@ public class Company {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 
     public String getTaxCode() { return taxCode; }
     public void setTaxCode(String taxCode) { this.taxCode = taxCode; }
