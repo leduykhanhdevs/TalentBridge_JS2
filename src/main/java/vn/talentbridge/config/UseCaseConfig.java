@@ -8,32 +8,41 @@ import vn.talentbridge.core.application.port.out.*;
 import vn.talentbridge.core.application.usecase.*;
 
 /**
- * Composition Root: Wires adapters into use cases via pure dependency injection.
+ * Composition Root: Wires adapters into use cases via pure dependency
+ * injection.
  * As taught in Clean/Hexagonal Architecture (Slide Day 2 - 3).
  */
 @Configuration
 public class UseCaseConfig {
-
+    // hiếu
     @Bean
-    public RegisterUseCase registerUseCase(UserRepositoryPort userRepository,
-                                           PasswordEncoderPort passwordEncoder,
-                                           TokenProviderPort tokenProvider,
-                                           @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
-        return new RegisterUseCaseImpl(userRepository, passwordEncoder, tokenProvider, expirationMs);
+    public RegisterUseCase registerUseCase(
+            UserRepositoryPort userRepository,
+            RecruiterRepositoryPort recruiterRepository,
+            PasswordEncoderPort passwordEncoder,
+            TokenProviderPort tokenProvider,
+            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
+
+        return new RegisterUseCaseImpl(
+                userRepository,
+                recruiterRepository,
+                passwordEncoder,
+                tokenProvider,
+                expirationMs);
     }
 
     @Bean
     public LoginUseCase loginUseCase(UserRepositoryPort userRepository,
-                                     PasswordEncoderPort passwordEncoder,
-                                     TokenProviderPort tokenProvider,
-                                     @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
+            PasswordEncoderPort passwordEncoder,
+            TokenProviderPort tokenProvider,
+            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
         return new LoginUseCaseImpl(userRepository, passwordEncoder, tokenProvider, expirationMs);
     }
 
     @Bean
     public RefreshTokenUseCase refreshTokenUseCase(UserRepositoryPort userRepository,
-                                                   TokenProviderPort tokenProvider,
-                                                   @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
+            TokenProviderPort tokenProvider,
+            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
         return new RefreshTokenUseCaseImpl(userRepository, tokenProvider, expirationMs);
     }
 
@@ -44,10 +53,33 @@ public class UseCaseConfig {
 
     @Bean
     public AdminManagementUseCase adminManagementUseCase(UserRepositoryPort userRepository,
-                                                         CompanyRepositoryPort companyRepository,
-                                                         JobRepositoryPort jobRepository,
-                                                         RecruiterRepositoryPort recruiterRepository,
-                                                         CandidateRepositoryPort candidateRepository) {
-        return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository, recruiterRepository, candidateRepository);
+            CompanyRepositoryPort companyRepository,
+            JobRepositoryPort jobRepository,
+            RecruiterRepositoryPort recruiterRepository,
+            CandidateRepositoryPort candidateRepository) {
+        return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository, recruiterRepository,
+                candidateRepository);
+    }
+
+    @Bean
+    public GetRecruiterProfileUseCase getRecruiterProfileUseCase(
+            RecruiterRepositoryPort recruiterRepository) {
+        return new GetRecruiterProfileUseCaseImpl(recruiterRepository);
+    }
+
+    @Bean
+    public UpdateRecruiterProfileUseCase updateRecruiterProfileUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            UserRepositoryPort userRepository) {
+        return new UpdateRecruiterProfileUseCaseImpl(
+                recruiterRepository,
+                userRepository);
+    }
+
+    @Bean
+    public RequestCreateCompanyUseCase requestCreateCompanyUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            CompanyRepositoryPort companyRepository) {
+        return new RequestCreateCompanyUseCaseImpl(recruiterRepository, companyRepository);
     }
 }
