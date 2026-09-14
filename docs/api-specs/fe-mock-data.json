@@ -1,0 +1,175 @@
+﻿{
+  "auth": {
+    "loginSuccess": {
+      "statusCode": 200,
+      "message": "Đăng nhập thành công",
+      "data": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYW5kaWRhdGVAdGFsZW50YnJpZGdlLnZuIiwidXNlcklkIjoxLCJyb2xlcyI6WyJST0xFX0NBTkRJREFURSJdLCJpYXQiOjE3MjYzMDA4MDAsImV4cCI6MTcyNjM4NzIwMH0.sampleToken",
+        "refreshToken": "sampleRefreshTokenString7Days",
+        "tokenType": "Bearer",
+        "expiresInMs": 86400000,
+        "user": {
+          "id": 1,
+          "email": "candidate@talentbridge.vn",
+          "fullName": "Đặng Trường Thịnh",
+          "phone": "0912345678",
+          "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Thinh",
+          "status": "ACTIVE",
+          "roles": ["ROLE_CANDIDATE"],
+          "createdAt": "2026-09-10T08:00:00"
+        }
+      }
+    },
+    "me": {
+      "statusCode": 200,
+      "message": "Thao tác thành công",
+      "data": {
+        "id": 1,
+        "email": "candidate@talentbridge.vn",
+        "fullName": "Đặng Trường Thịnh",
+        "phone": "0912345678",
+        "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Thinh",
+        "status": "ACTIVE",
+        "roles": ["ROLE_CANDIDATE"],
+        "createdAt": "2026-09-10T08:00:00"
+      }
+    }
+  },
+  "candidateList": {
+    "statusCode": 200,
+    "message": "Thao tác thành công",
+    "data": {
+      "content": [
+        {
+          "id": 1,
+          "userId": 2,
+          "fullName": "Trần Văn Nam",
+          "email": "nam.tran@example.com",
+          "phone": "0901234567",
+          "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Nam",
+          "status": "ACTIVE",
+          "title": "Senior Java Developer",
+          "dob": "1998-05-15",
+          "gender": "MALE",
+          "summary": "3 năm kinh nghiệm phát triển hệ thống microservices với Spring Boot",
+          "experienceYears": 3,
+          "currentSalary": 18000000,
+          "expectedSalary": 25000000,
+          "city": "Hồ Chí Minh",
+          "address": "Quận 1, TP.HCM",
+          "personalWebsite": "https://namtran.dev",
+          "linkedinUrl": "https://linkedin.com/in/namtran",
+          "githubUrl": "https://github.com/namtran",
+          "createdAt": "2026-09-08T10:00:00"
+        },
+        {
+          "id": 2,
+          "userId": 3,
+          "fullName": "Lê Thị Mai",
+          "email": "mai.le@example.com",
+          "phone": "0988776655",
+          "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Mai",
+          "status": "BANNED",
+          "title": "Frontend React Engineer",
+          "dob": "2000-11-20",
+          "gender": "FEMALE",
+          "summary": "Chuyên gia giao diện Next.js, Tailwind CSS và TypeScript",
+          "experienceYears": 2,
+          "currentSalary": 15000000,
+          "expectedSalary": 20000000,
+          "city": "Hà Nội",
+          "address": "Cầu Giấy, Hà Nội",
+          "personalWebsite": "https://maile.design",
+          "linkedinUrl": "https://linkedin.com/in/maile",
+          "githubUrl": "https://github.com/maile",
+          "createdAt": "2026-09-09T14:30:00"
+        }
+      ],
+      "pageNumber": 1,
+      "pageSize": 10,
+      "totalElements": 2,
+      "totalPages": 1,
+      "isLast": true
+    }
+  },
+  "recruiterList": {
+    "statusCode": 200,
+    "message": "Thao tác thành công",
+    "data": {
+      "content": [
+        {
+          "id": 1,
+          "userId": 4,
+          "fullName": "Nguyễn Phan Minh Hiếu",
+          "email": "hieu.nguyen@fpt.com",
+          "phone": "0911223344",
+          "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Hieu",
+          "status": "ACTIVE",
+          "position": "Talent Acquisition Lead",
+          "companyId": 1,
+          "companyName": "FPT Software",
+          "companyLogoUrl": "https://talentbridge.vn/logos/fpt.png",
+          "companyStatus": "APPROVED",
+          "createdAt": "2026-09-05T09:00:00"
+        }
+      ],
+      "pageNumber": 1,
+      "pageSize": 10,
+      "totalElements": 1,
+      "totalPages": 1,
+      "isLast": true
+    }
+  },
+  "companyList": {
+    "statusCode": 200,
+    "message": "Thao tác thành công",
+    "data": {
+      "content": [
+        {
+          "id": 1,
+          "name": "FPT Software",
+          "logoUrl": "https://talentbridge.vn/logos/fpt.png",
+          "website": "https://fptsoftware.com",
+          "companySize": "1000+",
+          "address": "Khu công nghệ cao, TP. Thủ Đức, TP.HCM",
+          "taxCode": "0101234567",
+          "description": "Tập đoàn công nghệ hàng đầu Việt Nam",
+          "status": "APPROVED",
+          "createdByUserId": 4,
+          "createdAt": "2026-09-05T09:00:00"
+        },
+        {
+          "id": 2,
+          "name": "VNG Corporation",
+          "logoUrl": "https://talentbridge.vn/logos/vng.png",
+          "website": "https://vng.com.vn",
+          "companySize": "500-1000",
+          "address": "Z06 Đường số 13, Tân Thuận Đông, Quận 7, TP.HCM",
+          "taxCode": "0304567890",
+          "description": "Kỳ lân công nghệ đầu tiên của Việt Nam",
+          "status": "PENDING",
+          "createdByUserId": 5,
+          "createdAt": "2026-09-12T11:00:00"
+        }
+      ],
+      "pageNumber": 1,
+      "pageSize": 10,
+      "totalElements": 2,
+      "totalPages": 1,
+      "isLast": true
+    }
+  },
+  "dashboardStats": {
+    "statusCode": 200,
+    "message": "Thao tác thành công",
+    "data": {
+      "totalUsers": 128,
+      "totalCandidates": 95,
+      "totalRecruiters": 30,
+      "totalCompanies": 15,
+      "pendingCompanies": 3,
+      "totalJobs": 48,
+      "activeJobs": 35
+    }
+  }
+}

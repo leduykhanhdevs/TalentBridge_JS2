@@ -1,0 +1,329 @@
+﻿{
+  "info": {
+    "name": "TalentBridge - Sprint 0 Complete API Collection & Mock",
+    "description": "Bộ Postman Collection chuẩn Sprint 0 có sẵn Mock Responses cho Frontend và Test Scripts cho Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication Module",
+      "item": [
+        {
+          "name": "Đăng ký Candidate (HRPM-8)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"candidate1@talentbridge.vn\",\n  \"password\": \"Password@123\",\n  \"fullName\": \"Đặng Trường Thịnh\",\n  \"phone\": \"0912345678\",\n  \"role\": \"ROLE_CANDIDATE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Đăng ký HR (HRPM-9)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hr1@fpt.com\",\n  \"password\": \"Password@123\",\n  \"fullName\": \"Nguyễn Phan Minh Hiếu\",\n  \"phone\": \"0987654321\",\n  \"role\": \"ROLE_RECRUITER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Đăng nhập Candidate (HRPM-10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"candidate1@talentbridge.vn\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Lấy thông tin tài khoản (/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Password Reset Module",
+      "item": [
+        {
+          "name": "Gửi OTP Quên mật khẩu (HRPM-11)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"candidate1@talentbridge.vn\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Đặt lại mật khẩu với OTP (HRPM-11)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"candidate1@talentbridge.vn\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewSecret@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Candidate Profile Module",
+      "item": [
+        {
+          "name": "Xem Profile Ứng viên (HRPM-14)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/candidates/profile", "host": ["{{baseUrl}}"], "path": ["candidates", "profile"] }
+          }
+        },
+        {
+          "name": "Cập nhật Profile Ứng viên (HRPM-14)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Java Developer\",\n  \"dob\": \"1998-05-15\",\n  \"gender\": \"MALE\",\n  \"summary\": \"3 năm kinh nghiệm phát triển Spring Boot\",\n  \"experienceYears\": 3,\n  \"expectedSalary\": 25000000,\n  \"city\": \"Hồ Chí Minh\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/candidates/profile", "host": ["{{baseUrl}}"], "path": ["candidates", "profile"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Recruiter & Company Request Module",
+      "item": [
+        {
+          "name": "Cập nhật Profile HR (HRPM-15)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Nguyễn Phan Minh Hiếu\",\n  \"phone\": \"0987654321\",\n  \"position\": \"HR Manager\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/recruiters/profile", "host": ["{{baseUrl}}"], "path": ["recruiters", "profile"] }
+          }
+        },
+        {
+          "name": "HR yêu cầu mở công ty mới (HRPM-21)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"FPT Software\",\n  \"taxCode\": \"0101234567\",\n  \"website\": \"https://fptsoftware.com\",\n  \"companySize\": \"1000+\",\n  \"address\": \"Khu CNC, TP. Thủ Đức\",\n  \"city\": \"Hồ Chí Minh\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/recruiters/companies/request-create", "host": ["{{baseUrl}}"], "path": ["recruiters", "companies", "request-create"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Company Join Request Module",
+      "item": [
+        {
+          "name": "Tìm kiếm công ty đã duyệt (HRPM-23)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/recruiters/companies/search?keyword=FPT&page=1&size=10&sortBy=name&sortDirection=ASC",
+              "host": ["{{baseUrl}}"],
+              "path": ["recruiters", "companies", "search"],
+              "query": [
+                { "key": "keyword", "value": "FPT" },
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "sortBy", "value": "name" },
+                { "key": "sortDirection", "value": "ASC" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Gửi yêu cầu xin gia nhập công ty (HRPM-23)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"position\": \"Senior Recruiter\",\n  \"message\": \"Tôi muốn gia nhập team tuyển dụng.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/recruiters/companies/1/join-request", "host": ["{{baseUrl}}"], "path": ["recruiters", "companies", "1", "join-request"] }
+          }
+        },
+        {
+          "name": "HR xem yêu cầu gia nhập chờ duyệt (HRPM-25)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/recruiters/companies/my-company/join-requests?page=1&size=10&status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["recruiters", "companies", "my-company", "join-requests"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "status", "value": "PENDING" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "HR phê duyệt yêu cầu gia nhập (HRPM-25)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\",\n  \"reason\": \"Chào mừng bạn đến với công ty!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/recruiters/companies/join-requests/1", "host": ["{{baseUrl}}"], "path": ["recruiters", "companies", "join-requests", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Admin Management Suite",
+      "item": [
+        {
+          "name": "Admin: Danh sách Ứng viên (HRPM-16)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/candidates?page=1&size=10&keyword=&status=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "candidates"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "keyword", "value": "" },
+                { "key": "status", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin: Khóa tài khoản User (HRPM-17)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"BANNED\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/users/1/status", "host": ["{{baseUrl}}"], "path": ["admin", "users", "1", "status"] }
+          }
+        },
+        {
+          "name": "Admin: Danh sách Nhà tuyển dụng HR (HRPM-18)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/recruiters?page=1&size=10&keyword=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "recruiters"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "keyword", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin: Danh sách Doanh nghiệp (HRPM-20)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/companies?page=1&size=10&status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "companies"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "status", "value": "PENDING" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin: Phê duyệt Doanh nghiệp (HRPM-22)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reason\": \"Thông tin pháp lý hợp lệ.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/companies/1/status", "host": ["{{baseUrl}}"], "path": ["admin", "companies", "1", "status"] }
+          }
+        },
+        {
+          "name": "Admin: Thống kê Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["admin", "dashboard", "stats"] }
+          }
+        }
+      ]
+    }
+  ]
+}

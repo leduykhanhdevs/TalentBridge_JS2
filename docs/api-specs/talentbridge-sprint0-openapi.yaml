@@ -1,0 +1,977 @@
+﻿openapi: 3.0.3
+info:
+  title: TalentBridge Sprint 0 Full API Specification & Contract
+  description: >
+    Tài liệu đặc tả hợp đồng API (API Spec) hoàn chỉnh cho Sprint 0 (Foundation, Auth, Profile & Admin Management).
+    Đáp ứng đầy đủ 3 tiêu chí:
+    1. Chuẩn hóa Backend (BE): Quy định rõ endpoint, headers, params, body, response, status codes tránh AI sinh code lệch.
+    2. Chuẩn hóa Frontend (FE): Cung cấp Mock Data chuẩn để FE dựng UI ngay không cần chờ BE.
+    3. Thiết kế API List chuẩn Enterprise: 100% API dạng danh sách đều có Pagination (page, size), Filter, Search (keyword), Sort (sortBy, sortDirection).
+  version: 1.0.0
+  contact:
+    name: Lê Duy Khánh (Tech Lead)
+    email: contact@talentbridge.vn
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Spring Boot Backend (Port 8080)
+  - url: https://api.talentbridge.vn/api/v1
+    description: Staging Environment
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: 1. Authentication (HRPM-8, HRPM-9, HRPM-10, HRPM-24)
+    description: Đăng ký, Đăng nhập, Quản lý JWT Token, Session
+  - name: 2. Password Reset (HRPM-11, HRPM-12)
+    description: Quên mật khẩu qua OTP Spring Mail & Đặt lại mật khẩu
+  - name: 3. Candidate Profile (HRPM-14)
+    description: Xem và cập nhật thông tin cá nhân Ứng viên
+  - name: 4. Recruiter Profile & Company Request (HRPM-15, HRPM-21)
+    description: Quản lý hồ sơ HR & Gửi yêu cầu mở công ty mới
+  - name: 5. Company Join Request & Peer Approval (HRPM-23, HRPM-25)
+    description: Tìm kiếm công ty đã duyệt, xin gia nhập & HR duyệt thành viên nội bộ
+  - name: 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+    description: Quản trị viên quản lý Ứng viên, HR, Duyệt công ty & Thống kê Dashboard
+
+paths:
+  # ==========================================
+  # 1. AUTHENTICATION MODULE
+  # ==========================================
+  /auth/register:
+    post:
+      tags:
+        - 1. Authentication (HRPM-8, HRPM-9, HRPM-10, HRPM-24)
+      summary: Đăng ký tài khoản mới (Candidate hoặc Recruiter)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthApiResponse'
+        '400':
+          description: Lỗi dữ liệu đầu vào (Validation Error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email đã tồn tại trong hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - 1. Authentication (HRPM-8, HRPM-9, HRPM-10, HRPM-24)
+      summary: Đăng nhập & Cấp cặp Access Token (24h) + Refresh Token (7d)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthApiResponse'
+        '401':
+          description: Sai email hoặc mật khẩu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tài khoản đã bị khóa (BANNED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - 1. Authentication (HRPM-8, HRPM-9, HRPM-10, HRPM-24)
+      summary: Cấp Access Token mới từ Refresh Token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Cấp Access Token mới thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthApiResponse'
+        '401':
+          description: Refresh Token không hợp lệ hoặc đã hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - 1. Authentication (HRPM-8, HRPM-9, HRPM-10, HRPM-24)
+      summary: Lấy thông tin tài khoản hiện tại từ JWT Token
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserApiResponse'
+        '401':
+          description: Token không hợp lệ / Chưa đăng nhập
+
+  # ==========================================
+  # 2. PASSWORD RESET MODULE
+  # ==========================================
+  /auth/forgot-password:
+    post:
+      tags:
+        - 2. Password Reset (HRPM-11, HRPM-12)
+      summary: Yêu cầu mã OTP đặt lại mật khẩu qua Email (Hạn 15 phút)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: candidate@talentbridge.vn
+      responses:
+        '200':
+          description: Mã OTP đã được gửi đến email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleApiResponse'
+        '404':
+          description: Email không tồn tại trên hệ thống
+
+  /auth/reset-password:
+    post:
+      tags:
+        - 2. Password Reset (HRPM-11, HRPM-12)
+      summary: Đặt lại mật khẩu mới bằng mã OTP
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp, newPassword]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: candidate@talentbridge.vn
+                otp:
+                  type: string
+                  example: "123456"
+                newPassword:
+                  type: string
+                  minLength: 6
+                  example: NewPassword@123
+      responses:
+        '200':
+          description: Đặt lại mật khẩu thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleApiResponse'
+        '400':
+          description: Mã OTP không chính xác hoặc đã hết hạn
+
+  # ==========================================
+  # 3. CANDIDATE PROFILE MODULE
+  # ==========================================
+  /candidates/profile:
+    get:
+      tags:
+        - 3. Candidate Profile (HRPM-14)
+      summary: Xem hồ sơ cá nhân của Ứng viên đang đăng nhập
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfileApiResponse'
+    put:
+      tags:
+        - 3. Candidate Profile (HRPM-14)
+      summary: Cập nhật thông tin hồ sơ Ứng viên
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCandidateProfileRequest'
+      responses:
+        '200':
+          description: Cập nhật hồ sơ thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateProfileApiResponse'
+
+  # ==========================================
+  # 4. RECRUITER & COMPANY MODULE
+  # ==========================================
+  /recruiters/profile:
+    get:
+      tags:
+        - 4. Recruiter Profile & Company Request (HRPM-15, HRPM-21)
+      summary: Xem hồ sơ cá nhân của Nhà tuyển dụng
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruiterProfileApiResponse'
+    put:
+      tags:
+        - 4. Recruiter Profile & Company Request (HRPM-15, HRPM-21)
+      summary: Cập nhật hồ sơ cá nhân Nhà tuyển dụng
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecruiterProfileRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+
+  /recruiters/companies/request-create:
+    post:
+      tags:
+        - 4. Recruiter Profile & Company Request (HRPM-15, HRPM-21)
+      summary: HR gửi yêu cầu tạo mới Doanh nghiệp (Chờ Admin duyệt - status PENDING)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompanyRequest'
+      responses:
+        '201':
+          description: Yêu cầu mở công ty đã được ghi nhận ở trạng thái PENDING
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyApiResponse'
+        '400':
+          description: HR hiện tại đã thuộc công ty khác
+        '409':
+          description: Mã số thuế công ty đã tồn tại
+
+  # ==========================================
+  # 5. COMPANY JOIN REQUEST & PEER APPROVAL
+  # ==========================================
+  /recruiters/companies/search:
+    get:
+      tags:
+        - 5. Company Join Request & Peer Approval (HRPM-23, HRPM-25)
+      summary: Tìm kiếm danh sách công ty đã được phê duyệt (status APPROVED)
+      parameters:
+        - name: keyword
+          in: query
+          description: Từ khóa tìm kiếm theo tên công ty hoặc mã số thuế
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Số trang (bắt đầu từ 1)
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: Số lượng bản ghi mỗi trang
+          schema:
+            type: integer
+            default: 10
+        - name: sortBy
+          in: query
+          description: Trường sắp xếp (name, createdAt)
+          schema:
+            type: string
+            default: name
+        - name: sortDirection
+          in: query
+          description: Hướng sắp xếp (ASC hoặc DESC)
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+      responses:
+        '200':
+          description: Danh sách công ty có phân trang
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyPageApiResponse'
+
+  /recruiters/companies/{companyId}/join-request:
+    post:
+      tags:
+        - 5. Company Join Request & Peer Approval (HRPM-23, HRPM-25)
+      summary: HR gửi yêu cầu xin gia nhập vào một công ty có sẵn
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [position]
+              properties:
+                position:
+                  type: string
+                  example: Senior Technical Recruiter
+                message:
+                  type: string
+                  example: Xin chào, tôi muốn gia nhập team tuyển dụng IT.
+      responses:
+        '201':
+          description: Gửi yêu cầu gia nhập thành công (status PENDING)
+        '400':
+          description: HR đã có công ty hoặc đang có yêu cầu PENDING khác
+
+  /recruiters/companies/my-company/join-requests:
+    get:
+      tags:
+        - 5. Company Join Request & Peer Approval (HRPM-23, HRPM-25)
+      summary: HR xem danh sách yêu cầu gia nhập vào công ty mình (Chờ duyệt)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, ACCEPTED, REJECTED]
+            default: PENDING
+      responses:
+        '200':
+          description: Danh sách yêu cầu gia nhập có phân trang
+
+  /recruiters/companies/join-requests/{requestId}:
+    patch:
+      tags:
+        - 5. Company Join Request & Peer Approval (HRPM-23, HRPM-25)
+      summary: HR phê duyệt (ACCEPTED) hoặc từ chối (REJECTED) yêu cầu gia nhập
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ACCEPTED, REJECTED]
+                  example: ACCEPTED
+                reason:
+                  type: string
+                  example: Chào mừng gia nhập đội ngũ tuyển dụng công ty!
+      responses:
+        '200':
+          description: Xử lý yêu cầu thành công
+        '403':
+          description: Không có quyền thao tác (không thuộc cùng công ty)
+
+  # ==========================================
+  # 6. ADMIN MANAGEMENT MODULE
+  # ==========================================
+  /admin/candidates:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin xem danh sách Ứng viên (Phân trang, Tìm kiếm, Lọc trạng thái)
+      parameters:
+        - name: page
+          in: query
+          description: Số thứ tự trang
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: Số bản ghi trên trang
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          description: Tìm kiếm theo họ tên, email, chức danh
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Lọc theo trạng thái tài khoản
+          schema:
+            type: string
+            enum: [ACTIVE, BANNED]
+      responses:
+        '200':
+          description: Danh sách ứng viên có phân trang
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateAdminPageApiResponse'
+
+  /admin/candidates/{id}:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin xem chi tiết hồ sơ Ứng viên
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết ứng viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateAdminDetailApiResponse'
+
+  /admin/recruiters:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin xem danh sách Nhà tuyển dụng (HR)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Danh sách HR có phân trang
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruiterAdminPageApiResponse'
+
+  /admin/recruiters/{id}:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin xem chi tiết Nhà tuyển dụng và công ty trực thuộc
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết HR
+
+  /admin/users/{id}/status:
+    patch:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Khóa (BANNED) hoặc Mở khóa (ACTIVE) tài khoản người dùng
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ACTIVE, BANNED]
+                  example: BANNED
+      responses:
+        '200':
+          description: Cập nhật trạng thái thành công
+
+  /admin/companies:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin xem danh sách doanh nghiệp (Lọc PENDING, APPROVED, REJECTED)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED]
+      responses:
+        '200':
+          description: Danh sách doanh nghiệp có phân trang
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyAdminPageApiResponse'
+
+  /admin/companies/{id}:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin xem chi tiết thông tin pháp lý doanh nghiệp
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết doanh nghiệp
+
+  /admin/companies/{id}/status:
+    patch:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Admin phê duyệt (APPROVED) hoặc Từ chối (REJECTED) doanh nghiệp
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [APPROVED, REJECTED]
+                  example: APPROVED
+                reason:
+                  type: string
+                  example: Thông tin pháp lý và mã số thuế hoàn toàn hợp lệ.
+      responses:
+        '200':
+          description: Phê duyệt doanh nghiệp thành công và tự động gán HR đại diện
+
+  /admin/dashboard/stats:
+    get:
+      tags:
+        - 6. Admin Management (HRPM-16 -> HRPM-20, HRPM-22)
+      summary: Số liệu thống kê tổng quan hệ thống cho Admin Dashboard
+      responses:
+        '200':
+          description: Thống kê số lượng users, candidates, recruiters, companies, jobs
+
+# ==========================================
+# COMPONENTS & SCHEMAS
+# ==========================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password, fullName, role]
+      properties:
+        email:
+          type: string
+          format: email
+          example: candidate@talentbridge.vn
+        password:
+          type: string
+          minLength: 6
+          example: Password@123
+        fullName:
+          type: string
+          example: Nguyễn Văn A
+        phone:
+          type: string
+          example: "0987654321"
+        role:
+          type: string
+          enum: [ROLE_CANDIDATE, ROLE_RECRUITER]
+          example: ROLE_CANDIDATE
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: candidate@talentbridge.vn
+        password:
+          type: string
+          example: Password@123
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    CreateCompanyRequest:
+      type: object
+      required: [name, taxCode]
+      properties:
+        name:
+          type: string
+          example: Công ty Cổ phần Công nghệ TalentBridge
+        taxCode:
+          type: string
+          example: "0312345678"
+        website:
+          type: string
+          example: https://talentbridge.vn
+        companySize:
+          type: string
+          example: "50-100"
+        address:
+          type: string
+          example: 123 Nguyễn Huệ, Quận 1
+        city:
+          type: string
+          example: Hồ Chí Minh
+        description:
+          type: string
+          example: Công ty chuyên giải pháp phần mềm tuyển dụng thông minh
+        logoUrl:
+          type: string
+          example: https://talentbridge.vn/logo.png
+
+    UpdateCandidateProfileRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Senior Fullstack Developer
+        dob:
+          type: string
+          format: date
+          example: "1998-05-15"
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          example: MALE
+        summary:
+          type: string
+          example: 4 năm kinh nghiệm làm việc với Java Spring Boot và Next.js
+        experienceYears:
+          type: integer
+          example: 4
+        currentSalary:
+          type: number
+          example: 20000000
+        expectedSalary:
+          type: number
+          example: 28000000
+        city:
+          type: string
+          example: Hồ Chí Minh
+        address:
+          type: string
+          example: Quận 7, TP.HCM
+        personalWebsite:
+          type: string
+          example: https://myportfolio.dev
+        linkedinUrl:
+          type: string
+          example: https://linkedin.com/in/myprofile
+        githubUrl:
+          type: string
+          example: https://github.com/myaccount
+
+    UpdateRecruiterProfileRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          example: Nguyễn Phan Minh Hiếu
+        phone:
+          type: string
+          example: "0911223344"
+        position:
+          type: string
+          example: Lead Talent Acquisition
+        avatarUrl:
+          type: string
+          example: https://talentbridge.vn/avatars/hr-1.png
+
+    AuthApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        message: { type: string, example: Đăng nhập thành công }
+        data:
+          type: object
+          properties:
+            accessToken: { type: string, example: eyJhbGciOiJIUzI1NiIsIn... }
+            refreshToken: { type: string, example: sampleRefreshToken7Days... }
+            tokenType: { type: string, example: Bearer }
+            expiresInMs: { type: integer, example: 86400000 }
+            user:
+              $ref: '#/components/schemas/UserDto'
+
+    UserDto:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        email: { type: string, example: candidate@talentbridge.vn }
+        fullName: { type: string, example: Nguyễn Văn A }
+        phone: { type: string, example: "0987654321" }
+        status: { type: string, example: ACTIVE }
+        roles: { type: array, items: { type: string }, example: ["ROLE_CANDIDATE"] }
+
+    UserApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        message: { type: string, example: Lấy thông tin thành công }
+        data:
+          $ref: '#/components/schemas/UserDto'
+
+    CandidateAdminPageApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        message: { type: string, example: Thao tác thành công }
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: integer, example: 1 }
+                  fullName: { type: string, example: Trần Văn Nam }
+                  email: { type: string, example: nam.tran@example.com }
+                  phone: { type: string, example: "0901234567" }
+                  status: { type: string, example: ACTIVE }
+                  title: { type: string, example: Senior Java Developer }
+                  city: { type: string, example: Hồ Chí Minh }
+            pageNumber: { type: integer, example: 1 }
+            pageSize: { type: integer, example: 10 }
+            totalElements: { type: integer, example: 45 }
+            totalPages: { type: integer, example: 5 }
+            isLast: { type: boolean, example: false }
+
+    CandidateAdminDetailApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        message: { type: string, example: Thao tác thành công }
+        data:
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            fullName: { type: string, example: Trần Văn Nam }
+            email: { type: string, example: nam.tran@example.com }
+            phone: { type: string, example: "0901234567" }
+            status: { type: string, example: ACTIVE }
+            title: { type: string, example: Senior Java Developer }
+            experienceYears: { type: integer, example: 3 }
+            expectedSalary: { type: number, example: 25000000 }
+
+    RecruiterAdminPageApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: integer, example: 1 }
+                  fullName: { type: string, example: Nguyễn Phan Minh Hiếu }
+                  email: { type: string, example: hieu.nguyen@fpt.com }
+                  companyName: { type: string, example: FPT Software }
+                  position: { type: string, example: Talent Acquisition Lead }
+                  status: { type: string, example: ACTIVE }
+            pageNumber: { type: integer, example: 1 }
+            pageSize: { type: integer, example: 10 }
+            totalElements: { type: integer, example: 12 }
+            totalPages: { type: integer, example: 2 }
+
+    CompanyAdminPageApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: integer, example: 1 }
+                  name: { type: string, example: FPT Software }
+                  taxCode: { type: string, example: "0101234567" }
+                  status: { type: string, example: PENDING }
+                  website: { type: string, example: https://fptsoftware.com }
+            pageNumber: { type: integer, example: 1 }
+            pageSize: { type: integer, example: 10 }
+            totalElements: { type: integer, example: 8 }
+            totalPages: { type: integer, example: 1 }
+
+    CompanyPageApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        data:
+          type: object
+          properties:
+            content:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: integer, example: 1 }
+                  name: { type: string, example: FPT Software }
+                  address: { type: string, example: Khu công nghệ cao, TP. Thủ Đức }
+                  companySize: { type: string, example: "1000+" }
+            pageNumber: { type: integer, example: 1 }
+            pageSize: { type: integer, example: 10 }
+            totalElements: { type: integer, example: 25 }
+
+    CandidateProfileApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        data:
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            title: { type: string, example: Senior Fullstack Developer }
+            summary: { type: string, example: 4 năm kinh nghiệm }
+            expectedSalary: { type: number, example: 28000000 }
+
+    RecruiterProfileApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        data:
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            fullName: { type: string, example: Nguyễn Phan Minh Hiếu }
+            position: { type: string, example: Lead Talent Acquisition }
+
+    CompanyApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 201 }
+        data:
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            name: { type: string, example: Công ty Cổ phần Công nghệ TalentBridge }
+            status: { type: string, example: PENDING }
+
+    SimpleApiResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 200 }
+        message: { type: string, example: Thao tác thành công }
+        timestamp: { type: string, example: "2026-09-14 10:00:00" }
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode: { type: integer, example: 400 }
+        message: { type: string, example: Dữ liệu gửi lên không hợp lệ }
+        timestamp: { type: string, example: "2026-09-14 10:00:00" }
