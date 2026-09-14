@@ -1,0 +1,322 @@
+﻿openapi: 3.0.3
+info:
+  title: TalentBridge Authentication & Token Management API Spec (HRPM-24)
+  description: >
+    Hợp đồng API chuẩn hóa (API Contract) cho toàn bộ hệ thống Xác thực, Phân quyền RBAC,
+    Quản lý JWT Access Token & Refresh Token, Đăng ký và Quản lý phiên người dùng.
+  version: 1.0.0
+  contact:
+    name: Lê Duy Khánh (Tech Lead)
+    email: contact@talentbridge.vn
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Máy chủ Local Development
+  - url: https://api.talentbridge.vn/api/v1
+    description: Máy chủ Production Staging
+
+tags:
+  - name: Authentication
+    description: Nghiệp vụ Đăng ký, Đăng nhập, Cấp Token và Quản lý phiên
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng ký tài khoản mới (Candidate / Recruiter)
+      description: >
+        Tạo tài khoản người dùng mới trên hệ thống. 
+        Tự động tạo bản ghi trong bảng `users`, cấp quyền vai trò trong `user_roles`
+        và khởi tạo hồ sơ tương ứng (`candidates` hoặc `recruiters`).
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Đăng ký tài khoản thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthApiResponse'
+        '400':
+          description: Dữ liệu gửi lên không hợp lệ (Validation Error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email đã tồn tại trên hệ thống (Duplicate Email)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng nhập hệ thống & Cấp cặp JWT Token
+      description: >
+        Xác thực thông tin email và mật khẩu bằng Spring Security AuthenticationManager.
+        Nếu chính xác, hệ thống sinh cặp JWT Access Token (hết hạn sau 24h) và Refresh Token (hết hạn sau 7 ngày).
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công, trả về Access Token và Refresh Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthApiResponse'
+        '400':
+          description: Email hoặc mật khẩu để trống / sai định dạng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Sai email hoặc mật khẩu (Bad Credentials)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tài khoản đã bị Quản trị viên khóa (BANNED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Làm mới Access Token
+      description: >
+        Nhận vào Refresh Token hợp lệ còn thời hạn để cấp một Access Token mới mà người dùng không cần đăng nhập lại.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Cấp Access Token mới thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthApiResponse'
+        '400':
+          description: Refresh Token không được để trống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Refresh Token không hợp lệ hoặc đã hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Lấy thông tin tài khoản hiện tại đang đăng nhập
+      description: >
+        Trích xuất Subject (email) từ JWT Bearer Token trong Header `Authorization`
+        để truy vấn thông tin cá nhân và danh sách quyền hạn.
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lấy thông tin thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserApiResponse'
+        '401':
+          description: Thiếu Token hoặc Token không hợp lệ / đã hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Không tìm thấy tài khoản người dùng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Nhập JWT Access Token định dạng Bearer <token>
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - fullName
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: candidate@talentbridge.vn
+          description: Địa chỉ email duy nhất trên hệ thống
+        password:
+          type: string
+          minLength: 6
+          example: Password@123
+          description: Mật khẩu bảo mật
+        fullName:
+          type: string
+          example: Nguyễn Văn A
+          description: Họ và tên đầy đủ
+        phone:
+          type: string
+          example: "0987654321"
+          description: Số điện thoại liên hệ
+        role:
+          type: string
+          enum: [ROLE_CANDIDATE, ROLE_RECRUITER]
+          example: ROLE_CANDIDATE
+          description: Vai trò đăng ký
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: candidate@talentbridge.vn
+        password:
+          type: string
+          example: Password@123
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi...
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        email:
+          type: string
+          example: candidate@talentbridge.vn
+        fullName:
+          type: string
+          example: Nguyễn Văn A
+        phone:
+          type: string
+          example: "0987654321"
+        avatarUrl:
+          type: string
+          nullable: true
+          example: https://talentbridge.vn/avatars/user-1.jpg
+        status:
+          type: string
+          enum: [ACTIVE, BANNED]
+          example: ACTIVE
+        roles:
+          type: array
+          items:
+            type: string
+          example: ["ROLE_CANDIDATE"]
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-14T10:00:00"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        tokenType:
+          type: string
+          example: Bearer
+        expiresInMs:
+          type: integer
+          format: int64
+          example: 86400000
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    AuthApiResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Thao tác thành công
+        data:
+          $ref: '#/components/schemas/AuthResponse'
+        timestamp:
+          type: string
+          example: "2026-09-14 10:00:00"
+
+    UserApiResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Lấy thông tin thành công
+        data:
+          $ref: '#/components/schemas/UserResponse'
+        timestamp:
+          type: string
+          example: "2026-09-14 10:00:00"
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Email đã tồn tại trên hệ thống
+        timestamp:
+          type: string
+          example: "2026-09-14 10:00:00"

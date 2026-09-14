@@ -1,6 +1,9 @@
 package vn.talentbridge.adapter.in.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,7 +31,7 @@ import vn.talentbridge.core.application.port.in.RegisterUseCase;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "ÄÄƒng kÃ½, ÄÄƒng nháº­p, Refresh Token & Há»“ sÆ¡ cÃ¡ nhÃ¢n")
+@Tag(name = "Authentication", description = "Đặc tả API Xác thực, Phân quyền, Quản lý Token & Session (HRPM-24)")
 public class AuthController {
 
     private final RegisterUseCase registerUseCase;
@@ -37,7 +40,15 @@ public class AuthController {
     private final GetCurrentUserUseCase getCurrentUserUseCase;
 
     @PostMapping("/register")
-    @Operation(summary = "ÄÄƒng kÃ½ tÃ i khoáº£n", description = "ÄÄƒng kÃ½ tÃ i khoáº£n má»›i cho á»¨ng viÃªn hoáº·c NhÃ  tuyá»ƒn dá»¥ng")
+    @Operation(summary = "Đăng ký tài khoản mới", description = "Đăng ký tài khoản cho Ứng viên (ROLE_CANDIDATE) hoặc Nhà tuyển dụng (ROLE_RECRUITER)")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Đăng ký tài khoản thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dữ liệu gửi lên không hợp lệ (Validation Error)",
+                    content = @Content(mediaType = "application/json")),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Email đã tồn tại trên hệ thống (Conflict)",
+                    content = @Content(mediaType = "application/json"))
+    })
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         AuthResult result = registerUseCase.register(new RegisterCommand(
                 request.getEmail(),
@@ -47,31 +58,49 @@ public class AuthController {
                 request.getRole()
         ));
         return new ResponseEntity<>(
-                ApiResponse.created("ÄÄƒng kÃ½ tÃ i khoáº£n thÃ nh cÃ´ng", AuthResponse.from(result)),
+                ApiResponse.created("Đăng ký tài khoản thành công", AuthResponse.from(result)),
                 HttpStatus.CREATED
         );
     }
 
     @PostMapping("/login")
-    @Operation(summary = "ÄÄƒng nháº­p", description = "XÃ¡c thá»±c tÃ i khoáº£n vÃ  tráº£ vá» JWT Access Token & Refresh Token")
+    @Operation(summary = "Đăng nhập hệ thống", description = "Xác thực email & mật khẩu, trả về cặp JWT Access Token (15p/24h) và Refresh Token (7 ngày)")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đăng nhập thành công, trả về Access & Refresh Token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Email hoặc mật khẩu để trống hoặc sai định dạng"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Email hoặc mật khẩu không chính xác (Bad Credentials)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Tài khoản đang bị khóa (BANNED)")
+    })
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResult result = loginUseCase.login(new LoginCommand(
                 request.getEmail(),
                 request.getPassword()
         ));
-        return ResponseEntity.ok(ApiResponse.success("ÄÄƒng nháº­p thÃ nh cÃ´ng", AuthResponse.from(result)));
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công", AuthResponse.from(result)));
     }
 
     @PostMapping("/refresh-token")
-    @Operation(summary = "LÃ m má»›i Access Token", description = "Cáº¥p Access Token má»›i tá»« Refresh Token há»£p lá»‡")
+    @Operation(summary = "Làm mới Access Token", description = "Cấp Access Token mới khi Access Token cũ đã hết hạn bằng Refresh Token hợp lệ")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cấp Access Token mới thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Refresh Token không được để trống"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Refresh Token không hợp lệ hoặc đã hết hạn")
+    })
     public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         AuthResult result = refreshTokenUseCase.refreshToken(request.getRefreshToken());
-        return ResponseEntity.ok(ApiResponse.success("LÃ m má»›i token thÃ nh cÃ´ng", AuthResponse.from(result)));
+        return ResponseEntity.ok(ApiResponse.success("Làm mới token thành công", AuthResponse.from(result)));
     }
 
     @GetMapping("/me")
     @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "Láº¥y thÃ´ng tin tÃ i khoáº£n hiá»‡n táº¡i", description = "YÃªu cáº§u JWT Bearer Token trong header Authorization")
+    @Operation(summary = "Lấy thông tin tài khoản hiện tại", description = "Trích xuất thông tin người dùng từ JWT Token trong header Authorization: Bearer <token>")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin tài khoản thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Chưa xác thực hoặc JWT Token không hợp lệ/hết hạn"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Không có quyền truy cập"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy người dùng")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         UserResult result = getCurrentUserUseCase.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(UserResponse.from(result)));

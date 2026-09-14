@@ -1,5 +1,6 @@
 package vn.talentbridge.adapter.in.web.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,15 +19,31 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "Thông tin chi tiết tài khoản người dùng")
 public class UserResponse {
 
+    @Schema(description = "ID định danh người dùng duy nhất", example = "1")
     private Long id;
+
+    @Schema(description = "Email tài khoản", example = "candidate@talentbridge.vn")
     private String email;
+
+    @Schema(description = "Họ và tên đầy đủ", example = "Nguyễn Văn A")
     private String fullName;
+
+    @Schema(description = "Số điện thoại", example = "0987654321")
     private String phone;
+
+    @Schema(description = "Đường dẫn ảnh đại diện", example = "https://talentbridge.vn/avatars/user-1.jpg")
     private String avatarUrl;
+
+    @Schema(description = "Trạng thái tài khoản", example = "ACTIVE")
     private UserStatus status;
+
+    @Schema(description = "Danh sách vai trò quyền hạn", example = "[\"ROLE_CANDIDATE\"]")
     private Set<String> roles;
+
+    @Schema(description = "Thời điểm khởi tạo tài khoản", example = "2026-09-14T10:00:00")
     private LocalDateTime createdAt;
 
     public static UserResponse from(UserResult result) {
