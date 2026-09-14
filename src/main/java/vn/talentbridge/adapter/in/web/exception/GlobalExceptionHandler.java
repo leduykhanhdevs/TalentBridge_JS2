@@ -24,13 +24,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleDomainException(DomainException ex) {
         log.warn("DomainException occurred: code={}, message={}", ex.getCode(), ex.getMessage());
         HttpStatus status = HttpStatus.BAD_REQUEST;
-        if (ex.getCode() == 40401) {
+        int statusGroup = ex.getCode() / 100;
+        if (statusGroup == 404) {
             status = HttpStatus.NOT_FOUND;
-        } else if (ex.getCode() == 40901) {
+        } else if (statusGroup == 409) {
             status = HttpStatus.CONFLICT;
-        } else if (ex.getCode() == 40102) {
+        } else if (statusGroup == 401) {
             status = HttpStatus.UNAUTHORIZED;
-        } else if (ex.getCode() == 40301) {
+        } else if (statusGroup == 403) {
             status = HttpStatus.FORBIDDEN;
         }
         ApiResponse<Object> response = ApiResponse.error(ex.getCode(), ex.getMessage());
