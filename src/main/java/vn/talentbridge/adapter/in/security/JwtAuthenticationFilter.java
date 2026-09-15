@@ -10,12 +10,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
+import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
+import vn.talentbridge.core.domain.model.AuthSession;
+import java.time.LocalDateTime;
 
 import java.io.IOException;
 
@@ -26,6 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final TokenProviderPort tokenProvider;
+    private final AuthSessionRepositoryPort authSessionRepository;
 
     @Override
     protected void doFilterInternal(
@@ -36,24 +39,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                String email = tokenProvider.getEmailFromToken(jwt);
-                Long userId = tokenProvider.getUserIdFromToken(jwt);
-                String role = tokenProvider.getRoleFromToken(jwt);
+            if (StringUtils.hasText(jwt)) {
+                SecurityContextHolder.clearContext();
 
-                UserPrincipal principal = new UserPrincipal(userId, email, role);
+                if (tokenProvider.validateToken(jwt)
+                        && "access".equals(tokenProvider.getTokenTypeFromToken(jwt))
+                        && hasActiveSession(jwt)) {
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    String email = tokenProvider.getEmailFromToken(jwt);
+                    Long userId = tokenProvider.getUserIdFromToken(jwt);
+                    String role = tokenProvider.getRoleFromToken(jwt);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UserPrincipal principal = new UserPrincipal(userId, email, role);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    principal,
+                                    null,
+                                    principal.getAuthorities()
+                            );
+
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context: {}", ex.getMessage());
+            SecurityContextHolder.clearContext();
+            log.debug("JWT authentication failed: {}", ex.getClass().getSimpleName());
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean hasActiveSession(String jwt) {
+        String sessionId = tokenProvider.getSessionIdFromToken(jwt);
+        Long userId = tokenProvider.getUserIdFromToken(jwt);
+
+        if (!StringUtils.hasText(sessionId) || userId == null) {
+            return false;
+        }
+
+        AuthSession authSession = authSessionRepository
+                .findActiveBySessionId(sessionId, LocalDateTime.now())
+                .orElse(null);
+
+        return authSession != null
+                && userId.equals(authSession.getUserId());
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
