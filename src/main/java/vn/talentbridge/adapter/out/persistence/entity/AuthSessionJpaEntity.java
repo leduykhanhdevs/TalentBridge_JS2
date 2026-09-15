@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(
@@ -48,6 +50,7 @@ public class AuthSessionJpaEntity extends BaseJpaEntity {
             name = "user_id",
             nullable = false
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UserJpaEntity user;
 
     @Column(

@@ -32,11 +32,24 @@ public class UseCaseConfig {
     }
 
     @Bean
-    public LoginUseCase loginUseCase(UserRepositoryPort userRepository,
+    public LoginUseCase loginUseCase(
+            UserRepositoryPort userRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
-            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
-        return new LoginUseCaseImpl(userRepository, passwordEncoder, tokenProvider, expirationMs);
+            AuthSessionRepositoryPort authSessionRepository,
+            @Value("${talentbridge.jwt.expiration-ms:86400000}")
+            long expirationMs,
+            @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
+            long refreshExpirationMs
+    ) {
+        return new LoginUseCaseImpl(
+                userRepository,
+                passwordEncoder,
+                tokenProvider,
+                authSessionRepository,
+                expirationMs,
+                refreshExpirationMs
+        );
     }
 
     @Bean
