@@ -4,10 +4,12 @@ import vn.talentbridge.core.application.dto.AuthResult;
 import vn.talentbridge.core.application.dto.RegisterCommand;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.RegisterUseCase;
+import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
 import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
 import vn.talentbridge.core.domain.exception.EmailAlreadyUsedException;
+import vn.talentbridge.core.domain.model.AuthSession;
 import vn.talentbridge.core.domain.model.Role;
 import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.RoleName;
@@ -17,7 +19,9 @@ import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.model.Recruiter;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class RegisterUseCaseImpl implements RegisterUseCase {
 
@@ -25,19 +29,26 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
     private final RecruiterRepositoryPort recruiterRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
+    private final AuthSessionRepositoryPort authSessionRepository;
     private final long tokenExpirationMs;
+    private final long refreshTokenExpirationMs;
 
     public RegisterUseCaseImpl(
             UserRepositoryPort userRepository,
             RecruiterRepositoryPort recruiterRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
-            long tokenExpirationMs) {
+            AuthSessionRepositoryPort authSessionRepository,
+            long tokenExpirationMs,
+            long refreshTokenExpirationMs
+    ) {
         this.userRepository = userRepository;
         this.recruiterRepository = recruiterRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
+        this.authSessionRepository = authSessionRepository;
         this.tokenExpirationMs = tokenExpirationMs;
+        this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
     @Override
@@ -79,9 +90,33 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
             recruiterRepository.save(recruiter);
         }
-        String accessToken = tokenProvider.generateAccessToken(savedUser.getId(), savedUser.getEmail(),
-                roleName.name());
-        String refreshToken = tokenProvider.generateRefreshToken(savedUser.getId(), savedUser.getEmail());
+        LocalDateTime now = LocalDateTime.now();
+        String sessionId = UUID.randomUUID().toString();
+
+        String accessToken = tokenProvider.generateAccessToken(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                roleName.name(),
+                sessionId
+        );
+
+        String refreshToken = tokenProvider.generateRefreshToken(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                sessionId
+        );
+
+        AuthSession authSession = new AuthSession(
+                null,
+                sessionId,
+                savedUser.getId(),
+                passwordEncoder.encode(refreshToken),
+                now,
+                now.plus(Duration.ofMillis(refreshTokenExpirationMs)),
+                null
+        );
+
+        authSessionRepository.save(authSession);
 
         return AuthResult.of(accessToken, refreshToken, tokenExpirationMs / 1000, UserResult.from(savedUser));
     }
