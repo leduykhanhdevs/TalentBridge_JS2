@@ -57,6 +57,47 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
                 .signWith(getSigningKey())
                 .compact();
     }
+    @Override
+    public String generateAccessToken(
+            Long userId,
+            String email,
+            String role,
+            String sessionId
+    ) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("userId", userId)
+                .claim("role", role)
+                .claim("sid", sessionId)
+                .claim("tokenType", "access")
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    @Override
+    public String generateRefreshToken(
+            Long userId,
+            String email,
+            String sessionId
+    ) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("userId", userId)
+                .claim("sid", sessionId)
+                .claim("tokenType", "refresh")
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
 
     @Override
     public boolean validateToken(String token) {
@@ -105,6 +146,27 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
                 .getPayload();
         Object role = claims.get("role");
         return role != null ? role.toString() : null;
+    }
+    @Override
+    public String getSessionIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("sid", String.class);
+    }
+
+    @Override
+    public String getTokenTypeFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("tokenType", String.class);
     }
 
     public long getExpirationMs() {
