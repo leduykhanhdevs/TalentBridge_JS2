@@ -64,7 +64,6 @@ public class UseCaseConfig {
             UserRepositoryPort userRepository,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
-            PasswordEncoderPort passwordEncoder,
             @Value("${talentbridge.jwt.expiration-ms:86400000}")
             long expirationMs
     ) {
@@ -72,7 +71,6 @@ public class UseCaseConfig {
                 userRepository,
                 tokenProvider,
                 authSessionRepository,
-                passwordEncoder,
                 expirationMs
         );
     }

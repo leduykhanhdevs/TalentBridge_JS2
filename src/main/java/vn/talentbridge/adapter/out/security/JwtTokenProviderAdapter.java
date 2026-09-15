@@ -10,6 +10,11 @@ import vn.talentbridge.core.application.port.out.TokenProviderPort;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -35,6 +40,7 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .claim("userId", userId)
                 .claim("role", role)
@@ -50,6 +56,7 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
         Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .claim("userId", userId)
                 .issuedAt(now)
@@ -68,6 +75,7 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .claim("userId", userId)
                 .claim("role", role)
@@ -89,6 +97,7 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
         Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .claim("userId", userId)
                 .claim("sid", sessionId)
@@ -167,6 +176,43 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
                 .getPayload();
 
         return claims.get("tokenType", String.class);
+    }
+
+    @Override
+    public String hashRefreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new IllegalArgumentException("Refresh token must not be empty");
+        }
+
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(refreshToken.getBytes(StandardCharsets.UTF_8));
+
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 is unavailable", ex);
+        }
+    }
+
+    @Override
+    public boolean matchesRefreshTokenHash(
+            String refreshToken,
+            String storedHash
+    ) {
+        if (refreshToken == null
+                || refreshToken.isBlank()
+                || storedHash == null
+                || !storedHash.matches("[0-9a-f]{64}")) {
+            return false;
+        }
+
+        byte[] actualHash = hashRefreshToken(refreshToken)
+                .getBytes(StandardCharsets.US_ASCII);
+
+        byte[] expectedHash = storedHash
+                .getBytes(StandardCharsets.US_ASCII);
+
+        return MessageDigest.isEqual(actualHash, expectedHash);
     }
 
     public long getExpirationMs() {

@@ -159,7 +159,7 @@ class CompanyJoinRequestIntegrationTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser3 = userRepository.save(hrUser3);
-        
+
         hrToken3 = loginUseCase.login(
                 new LoginCommand(hrUser3.getEmail(), "secret123")
         ).accessToken();

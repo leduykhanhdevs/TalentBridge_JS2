@@ -10,7 +10,6 @@ import vn.talentbridge.core.domain.exception.UserAccountLockedException;
 import vn.talentbridge.core.domain.model.Role;
 import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
-import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.domain.model.AuthSession;
 import java.time.LocalDateTime;
 
@@ -19,20 +18,17 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
     private final UserRepositoryPort userRepository;
     private final TokenProviderPort tokenProvider;
     private final AuthSessionRepositoryPort authSessionRepository;
-    private final PasswordEncoderPort passwordEncoder;
     private final long tokenExpirationMs;
 
     public RefreshTokenUseCaseImpl(
             UserRepositoryPort userRepository,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
-            PasswordEncoderPort passwordEncoder,
             long tokenExpirationMs
     ) {
         this.userRepository = userRepository;
         this.tokenProvider = tokenProvider;
         this.authSessionRepository = authSessionRepository;
-        this.passwordEncoder = passwordEncoder;
         this.tokenExpirationMs = tokenExpirationMs;
     }
 
@@ -57,8 +53,10 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
                 .findActiveBySessionId(sessionId, now)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (authSession.getRefreshTokenHash() == null
-                || !passwordEncoder.matches(refreshToken, authSession.getRefreshTokenHash())) {
+        if (!tokenProvider.matchesRefreshTokenHash(
+                refreshToken,
+                authSession.getRefreshTokenHash()
+        )) {
             throw new InvalidCredentialsException();
         }
 
@@ -100,7 +98,10 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
                 sessionId
         );
 
-        authSession.setRefreshTokenHash(passwordEncoder.encode(newRefreshToken));
+        authSession.setRefreshTokenHash(
+                tokenProvider.hashRefreshToken(newRefreshToken)
+        );
+
         authSessionRepository.save(authSession);
 
         return AuthResult.of(

@@ -80,7 +80,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 null,
                 sessionId,
                 user.getId(),
-                passwordEncoder.encode(refreshToken),
+                tokenProvider.hashRefreshToken(refreshToken),
                 now,
                 now.plus(Duration.ofMillis(refreshTokenExpirationMs)),
                 null

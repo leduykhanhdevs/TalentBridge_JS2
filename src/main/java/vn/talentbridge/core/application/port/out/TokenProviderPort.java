@@ -23,4 +23,8 @@ public interface TokenProviderPort {
     String getSessionIdFromToken(String token);
 
     String getTokenTypeFromToken(String token);
+
+    String hashRefreshToken(String refreshToken);
+
+    boolean matchesRefreshTokenHash(String refreshToken, String storedHash);
 }

@@ -110,7 +110,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
                 null,
                 sessionId,
                 savedUser.getId(),
-                passwordEncoder.encode(refreshToken),
+                tokenProvider.hashRefreshToken(refreshToken),
                 now,
                 now.plus(Duration.ofMillis(refreshTokenExpirationMs)),
                 null
