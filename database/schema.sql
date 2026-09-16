@@ -42,6 +42,32 @@ CREATE TABLE `user_roles` (
     CONSTRAINT `fk_user_roles_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 2.1. Bảng auth_sessions: Quản lý vòng đời phiên đăng nhập
+CREATE TABLE `auth_sessions` (
+                                 `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                 `session_id` VARCHAR(36) NOT NULL,
+                                 `user_id` BIGINT NOT NULL,
+                                 `refresh_token_hash` VARCHAR(255) NOT NULL,
+                                 `expires_at` DATETIME(6) NOT NULL,
+                                 `revoked_at` DATETIME(6) NULL,
+                                 `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+                                 `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
+
+                                 CONSTRAINT `uk_auth_sessions_session_id`
+                                     UNIQUE (`session_id`),
+
+                                 CONSTRAINT `fk_auth_sessions_user`
+                                     FOREIGN KEY (`user_id`)
+                                         REFERENCES `users` (`id`)
+                                         ON DELETE CASCADE,
+
+                                 INDEX `idx_auth_sessions_user_id` (`user_id`),
+                                 INDEX `idx_auth_sessions_expires_at` (`expires_at`)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
 -- ====================================================================
 -- PHÂN HỆ 2: HỒ SƠ ỨNG VIÊN CHI TIẾT & TOPCV PROFILE
 -- ====================================================================
