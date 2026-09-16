@@ -61,19 +61,34 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 .orElse("ROLE_CANDIDATE");
 
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime sessionExpiresAt = now.plus(
+                Duration.ofMillis(refreshTokenExpirationMs)
+        );
+
+        LocalDateTime configuredAccessExpiresAt = now.plus(
+                Duration.ofMillis(tokenExpirationMs)
+        );
+
+        LocalDateTime accessTokenExpiresAt =
+                configuredAccessExpiresAt.isBefore(sessionExpiresAt)
+                        ? configuredAccessExpiresAt
+                        : sessionExpiresAt;
+
         String sessionId = UUID.randomUUID().toString();
 
         String accessToken = tokenProvider.generateAccessToken(
                 user.getId(),
                 user.getEmail(),
                 primaryRole,
-                sessionId
+                sessionId,
+                accessTokenExpiresAt
         );
 
         String refreshToken = tokenProvider.generateRefreshToken(
                 user.getId(),
                 user.getEmail(),
-                sessionId
+                sessionId,
+                sessionExpiresAt
         );
 
         AuthSession authSession = new AuthSession(
@@ -82,12 +97,25 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 user.getId(),
                 tokenProvider.hashRefreshToken(refreshToken),
                 now,
-                now.plus(Duration.ofMillis(refreshTokenExpirationMs)),
+                sessionExpiresAt,
                 null
         );
 
         authSessionRepository.save(authSession);
 
-        return AuthResult.of(accessToken, refreshToken, tokenExpirationMs / 1000, UserResult.from(user));
+        long expiresInSeconds = Math.max(
+                0L,
+                Duration.between(
+                        now,
+                        accessTokenExpiresAt
+                ).toSeconds()
+        );
+
+        return AuthResult.of(
+                accessToken,
+                refreshToken,
+                expiresInSeconds,
+                UserResult.from(user)
+        );
     }
 }

@@ -91,19 +91,34 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             recruiterRepository.save(recruiter);
         }
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime sessionExpiresAt = now.plus(
+                Duration.ofMillis(refreshTokenExpirationMs)
+        );
+
+        LocalDateTime configuredAccessExpiresAt = now.plus(
+                Duration.ofMillis(tokenExpirationMs)
+        );
+
+        LocalDateTime accessTokenExpiresAt =
+                configuredAccessExpiresAt.isBefore(sessionExpiresAt)
+                        ? configuredAccessExpiresAt
+                        : sessionExpiresAt;
+
         String sessionId = UUID.randomUUID().toString();
 
         String accessToken = tokenProvider.generateAccessToken(
                 savedUser.getId(),
                 savedUser.getEmail(),
                 roleName.name(),
-                sessionId
+                sessionId,
+                accessTokenExpiresAt
         );
 
         String refreshToken = tokenProvider.generateRefreshToken(
                 savedUser.getId(),
                 savedUser.getEmail(),
-                sessionId
+                sessionId,
+                sessionExpiresAt
         );
 
         AuthSession authSession = new AuthSession(
@@ -112,12 +127,25 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
                 savedUser.getId(),
                 tokenProvider.hashRefreshToken(refreshToken),
                 now,
-                now.plus(Duration.ofMillis(refreshTokenExpirationMs)),
+                sessionExpiresAt,
                 null
         );
 
         authSessionRepository.save(authSession);
 
-        return AuthResult.of(accessToken, refreshToken, tokenExpirationMs / 1000, UserResult.from(savedUser));
+        long expiresInSeconds = Math.max(
+                0L,
+                Duration.between(
+                        now,
+                        accessTokenExpiresAt
+                ).toSeconds()
+        );
+
+        return AuthResult.of(
+                accessToken,
+                refreshToken,
+                expiresInSeconds,
+                UserResult.from(savedUser)
+        );
     }
 }
