@@ -88,6 +88,23 @@ public class AuthSessionRepositoryAdapter
                 .toList();
     }
 
+    @Override
+    public boolean rotateRefreshTokenIfActive(
+            String sessionId,
+            Long userId,
+            String expectedHash,
+            String newHash,
+            LocalDateTime now
+    ) {
+        return authSessionJpaRepository.rotateRefreshTokenIfActive(
+                sessionId,
+                userId,
+                expectedHash,
+                newHash,
+                now
+        ) == 1;
+    }
+
     private AuthSession toDomain(AuthSessionJpaEntity entity) {
         return new AuthSession(
                 entity.getId(),

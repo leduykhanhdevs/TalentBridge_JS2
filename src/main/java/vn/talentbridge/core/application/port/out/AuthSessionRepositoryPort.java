@@ -18,4 +18,12 @@ public interface AuthSessionRepositoryPort {
     );
 
     List<AuthSession> findAllByUserId(Long userId);
+
+    boolean rotateRefreshTokenIfActive(
+            String sessionId,
+            Long userId,
+            String expectedHash,
+            String newHash,
+            LocalDateTime now
+    );
 }

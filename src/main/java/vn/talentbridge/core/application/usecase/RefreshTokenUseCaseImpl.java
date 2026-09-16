@@ -98,11 +98,17 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
                 sessionId
         );
 
-        authSession.setRefreshTokenHash(
-                tokenProvider.hashRefreshToken(newRefreshToken)
+        boolean rotated = authSessionRepository.rotateRefreshTokenIfActive(
+                sessionId,
+                user.getId(),
+                authSession.getRefreshTokenHash(),
+                tokenProvider.hashRefreshToken(newRefreshToken),
+                LocalDateTime.now()
         );
 
-        authSessionRepository.save(authSession);
+        if (!rotated) {
+            throw new InvalidCredentialsException();
+        }
 
         return AuthResult.of(
                 newAccessToken,
