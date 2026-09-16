@@ -15,6 +15,10 @@ import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+
 class JwtTokenProviderAdapterTest {
 
     private JwtTokenProviderAdapter tokenProvider;
@@ -101,6 +105,90 @@ class JwtTokenProviderAdapterTest {
         assertFalse(tokenProvider.matchesRefreshTokenHash("", hash));
         assertFalse(tokenProvider.matchesRefreshTokenHash(token, null));
         assertFalse(tokenProvider.matchesRefreshTokenHash(token, legacyHash));
+    }
+
+    @Test
+    void sessionTokensUseRequestedExpiration() {
+        LocalDateTime expiresAt = LocalDateTime.now()
+                .plusMinutes(10)
+                .withNano(0);
+
+        String accessToken = tokenProvider.generateAccessToken(
+                1L,
+                "test@example.com",
+                "ROLE_CANDIDATE",
+                "test-session",
+                expiresAt
+        );
+
+        String refreshToken = tokenProvider.generateRefreshToken(
+                1L,
+                "test@example.com",
+                "test-session",
+                expiresAt
+        );
+
+        Date expectedExpiration = Date.from(
+                expiresAt.atZone(ZoneId.systemDefault())
+                        .toInstant()
+        );
+
+        Claims accessClaims = parse(accessToken);
+        Claims refreshClaims = parse(refreshToken);
+
+        assertEquals(
+                expectedExpiration,
+                accessClaims.getExpiration()
+        );
+        assertEquals(
+                expectedExpiration,
+                refreshClaims.getExpiration()
+        );
+
+        assertEquals(
+                "test-session",
+                accessClaims.get("sid", String.class)
+        );
+        assertEquals(
+                "access",
+                accessClaims.get("tokenType", String.class)
+        );
+
+        assertEquals(
+                "test-session",
+                refreshClaims.get("sid", String.class)
+        );
+        assertEquals(
+                "refresh",
+                refreshClaims.get("tokenType", String.class)
+        );
+    }
+
+    @Test
+    void rejectsSessionTokenExpirationThatIsNotFuture() {
+        LocalDateTime expiredAt =
+                LocalDateTime.now().minusSeconds(1);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> tokenProvider.generateAccessToken(
+                        1L,
+                        "test@example.com",
+                        "ROLE_CANDIDATE",
+                        "test-session",
+                        expiredAt
+                )
+        );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> tokenProvider.generateRefreshToken(
+                        1L,
+                        "test@example.com",
+                        "test-session",
+                        expiredAt
+                )
+        );
     }
 
     private Claims parse(String token) {

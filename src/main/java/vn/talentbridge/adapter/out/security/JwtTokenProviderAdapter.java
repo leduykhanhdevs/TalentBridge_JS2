@@ -15,6 +15,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Slf4j
 @Component
@@ -32,6 +34,30 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private Date toFutureExpiration(
+            LocalDateTime expiresAt,
+            Date issuedAt
+    ) {
+        if (expiresAt == null) {
+            throw new IllegalArgumentException(
+                    "Token expiration must not be null"
+            );
+        }
+
+        Date expiration = Date.from(
+                expiresAt.atZone(ZoneId.systemDefault())
+                        .toInstant()
+        );
+
+        if (!expiration.after(issuedAt)) {
+            throw new IllegalArgumentException(
+                    "Token expiration must be in the future"
+            );
+        }
+
+        return expiration;
     }
 
     @Override
@@ -95,6 +121,52 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
     ) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
+
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(email)
+                .claim("userId", userId)
+                .claim("sid", sessionId)
+                .claim("tokenType", "refresh")
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    @Override
+    public String generateAccessToken(
+            Long userId,
+            String email,
+            String role,
+            String sessionId,
+            LocalDateTime expiresAt
+    ) {
+        Date now = new Date();
+        Date expiryDate = toFutureExpiration(expiresAt, now);
+
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(email)
+                .claim("userId", userId)
+                .claim("role", role)
+                .claim("sid", sessionId)
+                .claim("tokenType", "access")
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    @Override
+    public String generateRefreshToken(
+            Long userId,
+            String email,
+            String sessionId,
+            LocalDateTime expiresAt
+    ) {
+        Date now = new Date();
+        Date expiryDate = toFutureExpiration(expiresAt, now);
 
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
