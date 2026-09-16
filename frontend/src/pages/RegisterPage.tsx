@@ -1,16 +1,188 @@
+import { useMutation } from '@tanstack/react-query'
 import {
+    AlertCircle,
     CheckCircle2,
+    LoaderCircle,
     LockKeyhole,
     Mail,
+    Phone,
     UserPlus,
     UserRound,
 } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { AuthApiError, registerCandidate } from '../features/auth/authApi'
+import { saveAuthTokens } from '../features/auth/tokenStorage'
 
 const inputClassName =
     'h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100'
 
+const invalidInputClassName =
+    'border-red-400 focus:border-red-500 focus:ring-red-100'
+
+type RegisterFormValues = {
+    fullName: string
+    email: string
+    phone: string
+    password: string
+    confirmPassword: string
+}
+
+type RegisterField = keyof RegisterFormValues | 'terms'
+type RegisterFormErrors = Partial<Record<RegisterField, string>>
+
+const initialFormValues: RegisterFormValues = {
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+}
+
+function validateForm(
+    values: RegisterFormValues,
+    acceptedTerms: boolean,
+): RegisterFormErrors {
+    const errors: RegisterFormErrors = {}
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const phonePattern = /^\d{10,11}$/
+
+    if (!values.fullName.trim()) {
+        errors.fullName = 'Vui lòng nhập họ và tên.'
+    }
+
+    if (!values.email.trim()) {
+        errors.email = 'Vui lòng nhập địa chỉ email.'
+    } else if (!emailPattern.test(values.email.trim())) {
+        errors.email = 'Địa chỉ email không đúng định dạng.'
+    }
+
+    if (values.phone.trim() && !phonePattern.test(values.phone.trim())) {
+        errors.phone = 'Số điện thoại phải gồm 10–11 chữ số.'
+    }
+
+    if (!values.password) {
+        errors.password = 'Vui lòng nhập mật khẩu.'
+    } else if (values.password.length < 6) {
+        errors.password = 'Mật khẩu phải có ít nhất 6 ký tự.'
+    }
+
+    if (!values.confirmPassword) {
+        errors.confirmPassword = 'Vui lòng nhập lại mật khẩu.'
+    } else if (values.confirmPassword !== values.password) {
+        errors.confirmPassword = 'Mật khẩu xác nhận không khớp.'
+    }
+
+    if (!acceptedTerms) {
+        errors.terms = 'Bạn cần đồng ý với điều khoản sử dụng.'
+    }
+
+    return errors
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+    if (!message) {
+        return null
+    }
+
+    return (
+        <p className="mt-1.5 text-sm text-red-600" id={id} role="alert">
+            {message}
+        </p>
+    )
+}
+
 export function RegisterPage() {
+    const [formValues, setFormValues] =
+        useState<RegisterFormValues>(initialFormValues)
+    const [acceptedTerms, setAcceptedTerms] = useState(false)
+    const [fieldErrors, setFieldErrors] = useState<RegisterFormErrors>({})
+    const [serverError, setServerError] = useState('')
+    const [successMessage, setSuccessMessage] = useState('')
+
+    const registerMutation = useMutation({
+        mutationFn: registerCandidate,
+        onSuccess: (authResponse) => {
+            saveAuthTokens(authResponse)
+            setFieldErrors({})
+            setServerError('')
+            setSuccessMessage(
+                `Đăng ký thành công. Chào mừng ${authResponse.user.fullName}!`,
+            )
+            setFormValues(initialFormValues)
+            setAcceptedTerms(false)
+        },
+        onError: (error) => {
+            setSuccessMessage('')
+
+            if (!(error instanceof AuthApiError)) {
+                setServerError('Đã xảy ra lỗi không xác định. Vui lòng thử lại.')
+                return
+            }
+
+            if (error.status === 409) {
+                setFieldErrors((currentErrors) => ({
+                    ...currentErrors,
+                    email: 'Email này đã được sử dụng.',
+                }))
+                setServerError('')
+                return
+            }
+
+            if (error.fieldErrors) {
+                setFieldErrors((currentErrors) => ({
+                    ...currentErrors,
+                    fullName: error.fieldErrors?.fullName,
+                    email: error.fieldErrors?.email,
+                    phone: error.fieldErrors?.phone,
+                    password: error.fieldErrors?.password,
+                }))
+                setServerError('Vui lòng kiểm tra lại các trường thông tin.')
+                return
+            }
+
+            setServerError(error.message)
+        },
+    })
+
+    function updateField(field: keyof RegisterFormValues, value: string) {
+        setFormValues((currentValues) => ({
+            ...currentValues,
+            [field]: value,
+        }))
+        setFieldErrors((currentErrors) => ({
+            ...currentErrors,
+            [field]: undefined,
+        }))
+        setServerError('')
+        setSuccessMessage('')
+    }
+
+    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+
+        const validationErrors = validateForm(formValues, acceptedTerms)
+        setFieldErrors(validationErrors)
+        setServerError('')
+        setSuccessMessage('')
+
+        if (Object.keys(validationErrors).length > 0) {
+            return
+        }
+
+        registerMutation.mutate({
+            fullName: formValues.fullName.trim(),
+            email: formValues.email.trim().toLowerCase(),
+            phone: formValues.phone.trim() || undefined,
+            password: formValues.password,
+            role: 'ROLE_CANDIDATE',
+        })
+    }
+
+    function getInputClassName(field: keyof RegisterFormValues) {
+        return `${inputClassName} ${fieldErrors[field] ? invalidInputClassName : ''}`
+    }
+
     return (
         <section className="relative overflow-hidden bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
             <div
@@ -84,7 +256,7 @@ export function RegisterPage() {
                             Điền thông tin bên dưới để tạo tài khoản TalentBridge.
                         </p>
 
-                        <form className="mt-8 space-y-5">
+                        <form className="mt-8 space-y-5" noValidate onSubmit={handleSubmit}>
                             <div>
                                 <label
                                     className="mb-2 block text-sm font-medium text-slate-700"
@@ -100,14 +272,19 @@ export function RegisterPage() {
                                         size={19}
                                     />
                                     <input
+                                        aria-describedby={fieldErrors.fullName ? 'full-name-error' : undefined}
+                                        aria-invalid={Boolean(fieldErrors.fullName)}
                                         autoComplete="name"
-                                        className={inputClassName}
+                                        className={getInputClassName('fullName')}
                                         id="full-name"
                                         name="fullName"
+                                        onChange={(event) => updateField('fullName', event.target.value)}
                                         placeholder="Nguyễn Văn A"
                                         type="text"
+                                        value={formValues.fullName}
                                     />
                                 </div>
+                                <FieldError id="full-name-error" message={fieldErrors.fullName} />
                             </div>
 
                             <div>
@@ -125,14 +302,50 @@ export function RegisterPage() {
                                         size={19}
                                     />
                                     <input
+                                        aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
+                                        aria-invalid={Boolean(fieldErrors.email)}
                                         autoComplete="email"
-                                        className={inputClassName}
+                                        className={getInputClassName('email')}
                                         id="register-email"
                                         name="email"
+                                        onChange={(event) => updateField('email', event.target.value)}
                                         placeholder="ban@example.com"
                                         type="email"
+                                        value={formValues.email}
                                     />
                                 </div>
+                                <FieldError id="register-email-error" message={fieldErrors.email} />
+                            </div>
+
+                            <div>
+                                <label
+                                    className="mb-2 block text-sm font-medium text-slate-700"
+                                    htmlFor="register-phone"
+                                >
+                                    Số điện thoại <span className="text-slate-400">(không bắt buộc)</span>
+                                </label>
+
+                                <div className="relative">
+                                    <Phone
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                        size={19}
+                                    />
+                                    <input
+                                        aria-describedby={fieldErrors.phone ? 'register-phone-error' : undefined}
+                                        aria-invalid={Boolean(fieldErrors.phone)}
+                                        autoComplete="tel"
+                                        className={getInputClassName('phone')}
+                                        id="register-phone"
+                                        inputMode="numeric"
+                                        name="phone"
+                                        onChange={(event) => updateField('phone', event.target.value)}
+                                        placeholder="0912345678"
+                                        type="tel"
+                                        value={formValues.phone}
+                                    />
+                                </div>
+                                <FieldError id="register-phone-error" message={fieldErrors.phone} />
                             </div>
 
                             <div className="grid gap-5 sm:grid-cols-2">
@@ -151,14 +364,19 @@ export function RegisterPage() {
                                             size={19}
                                         />
                                         <input
+                                            aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
+                                            aria-invalid={Boolean(fieldErrors.password)}
                                             autoComplete="new-password"
-                                            className={inputClassName}
+                                            className={getInputClassName('password')}
                                             id="register-password"
                                             name="password"
-                                            placeholder="Tối thiểu 8 ký tự"
+                                            onChange={(event) => updateField('password', event.target.value)}
+                                            placeholder="Tối thiểu 6 ký tự"
                                             type="password"
+                                            value={formValues.password}
                                         />
                                     </div>
+                                    <FieldError id="register-password-error" message={fieldErrors.password} />
                                 </div>
 
                                 <div>
@@ -176,41 +394,79 @@ export function RegisterPage() {
                                             size={19}
                                         />
                                         <input
+                                            aria-describedby={fieldErrors.confirmPassword ? 'confirm-password-error' : undefined}
+                                            aria-invalid={Boolean(fieldErrors.confirmPassword)}
                                             autoComplete="new-password"
-                                            className={inputClassName}
+                                            className={getInputClassName('confirmPassword')}
                                             id="confirm-password"
                                             name="confirmPassword"
+                                            onChange={(event) => updateField('confirmPassword', event.target.value)}
                                             placeholder="Nhập lại mật khẩu"
                                             type="password"
+                                            value={formValues.confirmPassword}
                                         />
                                     </div>
+                                    <FieldError id="confirm-password-error" message={fieldErrors.confirmPassword} />
                                 </div>
                             </div>
 
-                            <label className="flex items-start gap-3 text-sm leading-6 text-slate-600">
-                                <input
-                                    className="mt-1 size-4 shrink-0 rounded border-slate-300 accent-indigo-600"
-                                    type="checkbox"
-                                />
-                                <span>
-                  Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật của
-                  TalentBridge.
-                </span>
-                            </label>
+                            <div>
+                                <label className="flex items-start gap-3 text-sm leading-6 text-slate-600">
+                                    <input
+                                        aria-describedby={fieldErrors.terms ? 'terms-error' : undefined}
+                                        aria-invalid={Boolean(fieldErrors.terms)}
+                                        checked={acceptedTerms}
+                                        className="mt-1 size-4 shrink-0 rounded border-slate-300 accent-indigo-600"
+                                        onChange={(event) => {
+                                            setAcceptedTerms(event.target.checked)
+                                            setFieldErrors((currentErrors) => ({
+                                                ...currentErrors,
+                                                terms: undefined,
+                                            }))
+                                        }}
+                                        type="checkbox"
+                                    />
+                                    <span>
+                                        Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật của
+                                        TalentBridge.
+                                    </span>
+                                </label>
+                                <FieldError id="terms-error" message={fieldErrors.terms} />
+                            </div>
+
+                            {serverError && (
+                                <div
+                                    className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700"
+                                    role="alert"
+                                >
+                                    <AlertCircle aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                                    <span>{serverError}</span>
+                                </div>
+                            )}
+
+                            {successMessage && (
+                                <div
+                                    className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-700"
+                                    role="status"
+                                >
+                                    <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                                    <span>{successMessage}</span>
+                                </div>
+                            )}
 
                             <button
-                                className="inline-flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white opacity-70"
-                                disabled
-                                type="button"
+                                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-70"
+                                disabled={registerMutation.isPending}
+                                type="submit"
                             >
-                                <UserPlus aria-hidden="true" size={18} />
-                                Tạo tài khoản
+                                {registerMutation.isPending ? (
+                                    <LoaderCircle aria-hidden="true" className="animate-spin" size={18} />
+                                ) : (
+                                    <UserPlus aria-hidden="true" size={18} />
+                                )}
+                                {registerMutation.isPending ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
                             </button>
                         </form>
-
-                        <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
-                            Chức năng đăng ký sẽ được kết nối với backend trong HRPM-8.
-                        </div>
 
                         <p className="mt-7 text-center text-sm text-slate-600">
                             Đã có tài khoản?{' '}
