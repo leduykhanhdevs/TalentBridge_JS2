@@ -76,6 +76,17 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public LogoutUseCase logoutUseCase(
+            TokenProviderPort tokenProvider,
+            AuthSessionRepositoryPort authSessionRepository
+    ) {
+        return new LogoutUseCaseImpl(
+                tokenProvider,
+                authSessionRepository
+        );
+    }
+
+    @Bean
     public GetCurrentUserUseCase getCurrentUserUseCase(UserRepositoryPort userRepository) {
         return new GetCurrentUserUseCaseImpl(userRepository);
     }

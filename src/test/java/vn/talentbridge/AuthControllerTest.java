@@ -25,6 +25,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import vn.talentbridge.adapter.in.web.dto.request.RefreshTokenRequest;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -222,4 +224,184 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data.email").value("me@test.com"))
                 .andExpect(jsonPath("$.data.fullName").value("Current User Test"));
     }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/logout - Không có token trả về HTTP 401")
+    void testLogoutWithoutToken() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(40101));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/logout - Thu hồi Access Token và Refresh Token")
+    void testLogoutRevokesAccessAndRefreshToken() throws Exception {
+        TokenPair tokens = registerAndGetTokens(
+                "logout@test.com"
+        );
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header(
+                                "Authorization",
+                                "Bearer " + tokens.accessToken()
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.message")
+                        .value("Đăng xuất thành công"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        // Access token của phiên vừa logout không còn sử dụng được.
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header(
+                                "Authorization",
+                                "Bearer " + tokens.accessToken()
+                        ))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(40101));
+
+        RefreshTokenRequest refreshRequest =
+                RefreshTokenRequest.builder()
+                        .refreshToken(tokens.refreshToken())
+                        .build();
+
+        // Refresh token cùng phiên cũng không còn sử dụng được.
+        mockMvc.perform(post("/api/v1/auth/refresh-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                refreshRequest
+                        )))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/logout - Đăng xuất một phiên không ảnh hưởng phiên khác")
+    void testLogoutDoesNotRevokeOtherSession() throws Exception {
+        String email = "multiple-sessions@test.com";
+
+        TokenPair firstSession = registerAndGetTokens(email);
+        TokenPair secondSession = loginAndGetTokens(email);
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header(
+                                "Authorization",
+                                "Bearer " + firstSession.accessToken()
+                        ))
+                .andExpect(status().isOk());
+
+        // Phiên thứ hai vẫn gọi được API được bảo vệ.
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header(
+                                "Authorization",
+                                "Bearer " + secondSession.accessToken()
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value(email));
+
+        // Refresh token của phiên thứ hai vẫn hoạt động.
+        RefreshTokenRequest refreshRequest =
+                RefreshTokenRequest.builder()
+                        .refreshToken(secondSession.refreshToken())
+                        .build();
+
+        mockMvc.perform(post("/api/v1/auth/refresh-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                refreshRequest
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/logout - Phiên đã logout không thể logout lần nữa")
+    void testRepeatedLogoutReturnsUnauthorized() throws Exception {
+        TokenPair tokens = registerAndGetTokens(
+                "repeated-logout@test.com"
+        );
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header(
+                                "Authorization",
+                                "Bearer " + tokens.accessToken()
+                        ))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header(
+                                "Authorization",
+                                "Bearer " + tokens.accessToken()
+                        ))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(40101));
+    }
+
+    private TokenPair registerAndGetTokens(String email)
+            throws Exception {
+        RegisterRequest request = RegisterRequest.builder()
+                .email(email)
+                .password("password123")
+                .fullName("Logout Test")
+                .role("ROLE_CANDIDATE")
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/v1/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                        request
+                                ))
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return readTokens(result);
+    }
+
+    private TokenPair loginAndGetTokens(String email)
+            throws Exception {
+        LoginRequest request = LoginRequest.builder()
+                .email(email)
+                .password("password123")
+                .build();
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                        request
+                                ))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return readTokens(result);
+    }
+
+    private TokenPair readTokens(MvcResult result) throws Exception {
+        String responseBody =
+                result.getResponse().getContentAsString();
+
+        String accessToken =
+                com.jayway.jsonpath.JsonPath.read(
+                        responseBody,
+                        "$.data.accessToken"
+                );
+
+        String refreshToken =
+                com.jayway.jsonpath.JsonPath.read(
+                        responseBody,
+                        "$.data.refreshToken"
+                );
+
+        return new TokenPair(accessToken, refreshToken);
+    }
+
+    private record TokenPair(
+            String accessToken,
+            String refreshToken
+    ) {
+    }
+
 }

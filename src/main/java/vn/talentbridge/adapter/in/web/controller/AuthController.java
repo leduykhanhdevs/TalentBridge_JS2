@@ -27,6 +27,7 @@ import vn.talentbridge.core.application.port.in.GetCurrentUserUseCase;
 import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.application.port.in.RefreshTokenUseCase;
 import vn.talentbridge.core.application.port.in.RegisterUseCase;
+import vn.talentbridge.core.application.port.in.LogoutUseCase;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -37,6 +38,7 @@ public class AuthController {
     private final RegisterUseCase registerUseCase;
     private final LoginUseCase loginUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
+    private final LogoutUseCase logoutUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
 
     @PostMapping("/register")
@@ -91,6 +93,43 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         AuthResult result = refreshTokenUseCase.refreshToken(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success("Làm mới token thành công", AuthResponse.from(result)));
+    }
+
+    @PostMapping("/logout")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(
+            summary = "Đăng xuất",
+            description = "Thu hồi phiên đăng nhập tương ứng với Access Token hiện tại"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Đăng xuất thành công"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Token hoặc phiên đăng nhập không hợp lệ"
+            )
+    })
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader(
+                    value = "Authorization",
+                    required = false
+            ) String authorizationHeader
+    ) {
+        String accessToken = authorizationHeader != null
+                && authorizationHeader.startsWith("Bearer ")
+                ? authorizationHeader.substring(7)
+                : null;
+
+        logoutUseCase.logout(accessToken);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>success(
+                        "Đăng xuất thành công",
+                        null
+                )
+        );
     }
 
     @GetMapping("/me")
