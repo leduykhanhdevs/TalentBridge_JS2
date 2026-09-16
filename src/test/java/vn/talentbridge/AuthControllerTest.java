@@ -24,8 +24,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import vn.talentbridge.adapter.in.web.dto.request.RefreshTokenRequest;
+import org.springframework.test.util.ReflectionTestUtils;
+import vn.talentbridge.adapter.out.security.JwtTokenProviderAdapter;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -52,6 +53,9 @@ class AuthControllerTest {
 
     @Autowired
     private CompanyJpaRepository companyJpaRepository;
+
+    @Autowired
+    private JwtTokenProviderAdapter jwtTokenProviderAdapter;
 
     @BeforeEach
     void setUp() {
@@ -332,6 +336,58 @@ class AuthControllerTest {
                         .header(
                                 "Authorization",
                                 "Bearer " + tokens.accessToken()
+                        ))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(40101));
+    }
+
+    @Test
+    @DisplayName("Access Token hết hạn gọi API bảo vệ trả về HTTP 401")
+    void testExpiredAccessTokenReturnsUnauthorized() throws Exception {
+        String email = "expired-access@test.com";
+
+        TokenPair tokens = registerAndGetTokens(email);
+
+        Long userId = jwtTokenProviderAdapter.getUserIdFromToken(
+                tokens.accessToken()
+        );
+
+        String sessionId =
+                jwtTokenProviderAdapter.getSessionIdFromToken(
+                        tokens.accessToken()
+                );
+
+        long originalExpirationMs =
+                jwtTokenProviderAdapter.getExpirationMs();
+
+        String expiredAccessToken;
+
+        try {
+            ReflectionTestUtils.setField(
+                    jwtTokenProviderAdapter,
+                    "jwtExpirationMs",
+                    -1_000L
+            );
+
+            expiredAccessToken =
+                    jwtTokenProviderAdapter.generateAccessToken(
+                            userId,
+                            email,
+                            "ROLE_CANDIDATE",
+                            sessionId
+                    );
+        } finally {
+            ReflectionTestUtils.setField(
+                    jwtTokenProviderAdapter,
+                    "jwtExpirationMs",
+                    originalExpirationMs
+            );
+        }
+
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header(
+                                "Authorization",
+                                "Bearer " + expiredAccessToken
                         ))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.statusCode").value(40101));
