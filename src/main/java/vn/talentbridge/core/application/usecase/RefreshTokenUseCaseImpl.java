@@ -12,6 +12,7 @@ import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
 import vn.talentbridge.core.domain.model.AuthSession;
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 
 public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
@@ -85,17 +86,30 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
                 .map(Enum::name)
                 .orElse("ROLE_CANDIDATE");
 
+        LocalDateTime sessionExpiresAt =
+                authSession.getExpiresAt();
+
+        LocalDateTime configuredAccessExpiresAt =
+                now.plus(Duration.ofMillis(tokenExpirationMs));
+
+        LocalDateTime accessTokenExpiresAt =
+                configuredAccessExpiresAt.isBefore(sessionExpiresAt)
+                        ? configuredAccessExpiresAt
+                        : sessionExpiresAt;
+
         String newAccessToken = tokenProvider.generateAccessToken(
                 user.getId(),
                 user.getEmail(),
                 primaryRole,
-                sessionId
+                sessionId,
+                accessTokenExpiresAt
         );
 
         String newRefreshToken = tokenProvider.generateRefreshToken(
                 user.getId(),
                 user.getEmail(),
-                sessionId
+                sessionId,
+                sessionExpiresAt
         );
 
         boolean rotated = authSessionRepository.rotateRefreshTokenIfActive(
@@ -110,10 +124,18 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
             throw new InvalidCredentialsException();
         }
 
+        long expiresInSeconds = Math.max(
+                0L,
+                Duration.between(
+                        now,
+                        accessTokenExpiresAt
+                ).toSeconds()
+        );
+
         return AuthResult.of(
                 newAccessToken,
                 newRefreshToken,
-                tokenExpirationMs / 1000,
+                expiresInSeconds,
                 UserResult.from(user)
         );
     }

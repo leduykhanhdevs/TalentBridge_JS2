@@ -15,10 +15,8 @@ import vn.talentbridge.core.domain.model.AuthSession;
 import vn.talentbridge.core.domain.model.Role;
 import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.RoleName;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,6 +24,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenUseCaseImplTest {
@@ -101,16 +102,18 @@ class RefreshTokenUseCaseImplTest {
                 .thenReturn(Optional.of(user));
 
         when(tokenProvider.generateAccessToken(
-                1L,
-                "refresh-test@example.com",
-                "ROLE_CANDIDATE",
-                "test-session"
+                eq(1L),
+                eq("refresh-test@example.com"),
+                eq("ROLE_CANDIDATE"),
+                eq("test-session"),
+                any(LocalDateTime.class)
         )).thenReturn("new-access");
 
         when(tokenProvider.generateRefreshToken(
-                1L,
-                "refresh-test@example.com",
-                "test-session"
+                eq(1L),
+                eq("refresh-test@example.com"),
+                eq("test-session"),
+                eq(session.getExpiresAt())
         )).thenReturn("new-refresh");
 
         when(tokenProvider.hashRefreshToken("new-refresh"))
@@ -154,4 +157,48 @@ class RefreshTokenUseCaseImplTest {
         verify(authSessionRepository, never())
                 .save(any(AuthSession.class));
     }
+
+    @Test
+    void refreshedTokensNeverOutliveSession() {
+        when(authSessionRepository.rotateRefreshTokenIfActive(
+                eq("test-session"),
+                eq(1L),
+                eq("old-hash"),
+                eq("new-hash"),
+                any(LocalDateTime.class)
+        )).thenReturn(true);
+
+        AuthResult result =
+                useCase.refreshToken("old-refresh");
+
+        ArgumentCaptor<LocalDateTime> accessExpiryCaptor =
+                ArgumentCaptor.forClass(LocalDateTime.class);
+
+        ArgumentCaptor<LocalDateTime> refreshExpiryCaptor =
+                ArgumentCaptor.forClass(LocalDateTime.class);
+
+        verify(tokenProvider).generateAccessToken(
+                eq(1L),
+                eq("refresh-test@example.com"),
+                eq("ROLE_CANDIDATE"),
+                eq("test-session"),
+                accessExpiryCaptor.capture()
+        );
+
+        verify(tokenProvider).generateRefreshToken(
+                eq(1L),
+                eq("refresh-test@example.com"),
+                eq("test-session"),
+                refreshExpiryCaptor.capture()
+        );
+
+        assertFalse(
+                accessExpiryCaptor.getValue()
+                        .isAfter(refreshExpiryCaptor.getValue())
+        );
+
+        assertTrue(result.expiresIn() >= 0);
+        assertTrue(result.expiresIn() <= 3600);
+    }
+
 }
