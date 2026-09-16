@@ -2,7 +2,8 @@
 
 - Người thực hiện: Phan Thị Ánh Tuyền.
 - Nguồn yêu cầu: Jira HRPM-12.
-- Trạng thái: Đặc tả dự kiến, chưa triển khai.
+- Trạng thái backend: Đã triển khai và kiểm thử.
+- Trạng thái frontend: Đã thống nhất contract; chưa tích hợp vì frontend đang ở HRPM-5.
 - HRPM-12 là đăng xuất và quản lý vòng đời phiên.
   HRPM-11 là quên và đặt lại mật khẩu.
 
@@ -74,7 +75,7 @@ Response:
   hoặc thuộc phiên đã bị thu hồi hay hết hạn.
 - HTTP 403: tài khoản bị khóa, theo hành vi hiện có.
 
-## 4. Quy tắc vòng đời phiên dự kiến
+## 4. Quy tắc vòng đời phiên đã triển khai
 
 - Mỗi lần đăng nhập hoặc đăng ký có cấp token tạo một phiên riêng.
 - Access token và refresh token cùng thuộc một phiên.
@@ -105,27 +106,50 @@ Làm mới token:
 - Mọi access token và refresh token thuộc phiên đó mất hiệu lực.
 - Việc thu hồi toàn bộ phiên sau đặt lại mật khẩu sẽ thuộc HRPM-11.
 
-## 5. Hành vi phía giao diện
+## 5. Contract tích hợp frontend
 
-- Sau khi logout nhận HTTP 200, xóa thông tin đăng nhập
-  đang lưu ở client và chuyển về trang đăng nhập.
-- Nếu access token hết hạn, thử refresh tối đa một lần
-  rồi gọi lại logout.
-- Nếu refresh bị từ chối vì phiên không còn hợp lệ,
-  xóa thông tin đăng nhập và chuyển về trang đăng nhập.
-- Lỗi mạng không được coi là máy chủ đã thu hồi phiên thành công.
-- Phải kiểm tra hành vi chuyển trang khi tích hợp frontend;
-  kiểm thử backend đơn thuần chưa chứng minh tiêu chí này đã hoàn thành.
+Frontend hiện chưa triển khai login và auth store vì đang ở giai đoạn
+setup nền tảng HRPM-5. Hai bên đã thống nhất contract tích hợp sau:
 
-## 6. Các kiểm thử cần bổ sung
+- Dùng Zustand auth store và persist vào localStorage.
+- Chỉ sử dụng một key là `talentbridge-auth`.
+- Key lưu access token, refresh token và thông tin user.
+- Không tạo các key access token hoặc refresh token riêng.
+- Logout gọi `POST /api/v1/auth/logout`.
+- Gửi access token trong header `Authorization: Bearer <accessToken>`.
+- Không gửi request body.
 
-- Logout hợp lệ trả HTTP 200.
-- Access token của phiên vừa logout gọi /api/v1/auth/me nhận 401.
-- Refresh token của phiên vừa logout bị từ chối.
-- Access token hết hạn gọi API được bảo vệ nhận 401.
-- Phiên hết hạn không thể refresh.
-- Refresh hợp lệ trả cặp token mới; refresh token cũ bị từ chối.
-- Gửi nhầm loại token bị từ chối.
-- Đăng xuất một phiên không thu hồi phiên khác.
-- Trạng thái thu hồi được lưu bền vững.
-- Giao diện chuyển về trang đăng nhập sau khi đăng xuất.
+Sau khi logout:
+
+- HTTP 200: gọi `clearAuth()`, xóa state xác thực,
+  dữ liệu persist và cache riêng của người dùng;
+  sau đó chuyển đến `/login` bằng replace navigation.
+- HTTP 401: thử refresh tối đa một lần.
+- Refresh thành công: cập nhật cặp token mới
+  và gọi lại logout đúng một lần.
+- Refresh trả HTTP 401: xóa thông tin xác thực
+  và chuyển đến `/login`.
+- Lỗi mạng: không coi là máy chủ đã thu hồi phiên thành công;
+  giữ trạng thái hiện tại, thông báo lỗi và cho phép thử lại.
+- Frontend phải có cờ retry để tránh vòng lặp
+  refresh/logout hoặc gửi logout nhiều lần.
+
+Việc chuyển sang refresh token bằng HttpOnly Secure SameSite Cookie
+được ghi nhận là cải tiến tương lai và không thuộc phạm vi HRPM-12.
+
+## 6. Kết quả kiểm thử
+
+- [x] Logout hợp lệ trả HTTP 200.
+- [x] Access token của phiên vừa logout gọi API bảo vệ nhận HTTP 401.
+- [x] Refresh token của phiên vừa logout bị từ chối.
+- [x] Access token hết hạn gọi API bảo vệ nhận HTTP 401.
+- [x] Phiên hết hạn không thể được làm mới.
+- [x] Refresh hợp lệ trả cặp token mới.
+- [x] Refresh token cũ không thể sử dụng lại.
+- [x] Gửi sai loại token bị từ chối.
+- [x] Logout một phiên không thu hồi phiên khác.
+- [x] Trạng thái thu hồi được lưu trong cơ sở dữ liệu.
+- [x] Token mới không vượt quá thời hạn cố định của phiên.
+- [x] Toàn bộ 81 test backend đạt, không có failure hoặc error.
+- [ ] Giao diện xóa auth state và chuyển về `/login`.
+  Mục này chờ frontend triển khai authentication sau HRPM-5.
