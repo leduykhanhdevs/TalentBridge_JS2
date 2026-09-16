@@ -31,4 +31,10 @@ public interface AuthSessionRepositoryPort {
             Long userId,
             LocalDateTime now
     );
+
+    int revokeAllActiveSessions(
+            Long userId,
+            LocalDateTime now
+    );
+
 }

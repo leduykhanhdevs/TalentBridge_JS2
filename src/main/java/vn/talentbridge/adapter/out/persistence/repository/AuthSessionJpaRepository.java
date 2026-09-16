@@ -62,4 +62,20 @@ public interface AuthSessionJpaRepository
             @Param("userId") Long userId,
             @Param("now") LocalDateTime now
     );
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        update AuthSessionJpaEntity s
+        set s.revokedAt = :now,
+            s.updatedAt = :now
+        where s.user.id = :userId
+          and s.revokedAt is null
+          and s.expiresAt > :now
+        """)
+    int revokeAllActiveSessions(
+            @Param("userId") Long userId,
+            @Param("now") LocalDateTime now
+    );
+
 }

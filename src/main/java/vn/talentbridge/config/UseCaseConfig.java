@@ -87,6 +87,51 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public ForgotPasswordUseCase forgotPasswordUseCase(
+            UserRepositoryPort userRepository,
+            PasswordResetTokenRepositoryPort tokenRepository,
+            PasswordResetTokenGeneratorPort tokenGenerator,
+            PasswordResetEmailPort emailPort,
+            @Value(
+                    "${talentbridge.password-reset."
+                            + "token-expiration-minutes:15}"
+            )
+            long tokenExpirationMinutes,
+            @Value(
+                    "${talentbridge.password-reset."
+                            + "reset-password-url:"
+                            + "http://localhost:3000/reset-password}"
+            )
+            String resetPasswordUrl
+    ) {
+        return new ForgotPasswordUseCaseImpl(
+                userRepository,
+                tokenRepository,
+                tokenGenerator,
+                emailPort,
+                tokenExpirationMinutes,
+                resetPasswordUrl
+        );
+    }
+
+    @Bean
+    public ResetPasswordUseCase resetPasswordUseCase(
+            PasswordResetTokenRepositoryPort tokenRepository,
+            PasswordResetTokenGeneratorPort tokenGenerator,
+            UserRepositoryPort userRepository,
+            PasswordEncoderPort passwordEncoder,
+            AuthSessionRepositoryPort authSessionRepository
+    ) {
+        return new ResetPasswordUseCaseImpl(
+                tokenRepository,
+                tokenGenerator,
+                userRepository,
+                passwordEncoder,
+                authSessionRepository
+        );
+    }
+
+    @Bean
     public GetCurrentUserUseCase getCurrentUserUseCase(UserRepositoryPort userRepository) {
         return new GetCurrentUserUseCaseImpl(userRepository);
     }

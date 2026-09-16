@@ -118,6 +118,17 @@ public class AuthSessionRepositoryAdapter
         ) == 1;
     }
 
+    @Override
+    public int revokeAllActiveSessions(
+            Long userId,
+            LocalDateTime now
+    ) {
+        return authSessionJpaRepository.revokeAllActiveSessions(
+                userId,
+                now
+        );
+    }
+
     private AuthSession toDomain(AuthSessionJpaEntity entity) {
         return new AuthSession(
                 entity.getId(),
