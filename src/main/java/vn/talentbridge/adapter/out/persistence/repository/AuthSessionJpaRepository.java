@@ -45,4 +45,21 @@ public interface AuthSessionJpaRepository
             @Param("newHash") String newHash,
             @Param("now") LocalDateTime now
     );
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            update AuthSessionJpaEntity s
+            set s.revokedAt = :now,
+                s.updatedAt = :now
+            where s.sessionId = :sessionId
+              and s.user.id = :userId
+              and s.revokedAt is null
+              and s.expiresAt > :now
+            """)
+    int revokeActiveSession(
+            @Param("sessionId") String sessionId,
+            @Param("userId") Long userId,
+            @Param("now") LocalDateTime now
+    );
 }

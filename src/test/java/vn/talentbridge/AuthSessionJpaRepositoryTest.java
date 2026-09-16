@@ -145,6 +145,113 @@ class AuthSessionJpaRepositoryTest {
         assertEquals("old-hash", loadSession().getRefreshTokenHash());
     }
 
+    @Test
+    void revokesOnlyTargetSessionAndPreventsRefresh() {
+        AuthSessionJpaEntity otherSession = new AuthSessionJpaEntity();
+        otherSession.setSessionId("other-session");
+        otherSession.setUser(user);
+        otherSession.setRefreshTokenHash("other-hash");
+        otherSession.setExpiresAt(now.plusDays(1));
+        entityManager.persistAndFlush(otherSession);
+
+        int revoked = repository.revokeActiveSession(
+                "test-session", user.getId(), now
+        );
+
+        AuthSessionJpaEntity stored = loadSession();
+        AuthSessionJpaEntity otherStored = repository
+                .findBySessionId("other-session")
+                .orElseThrow();
+
+        assertEquals(1, revoked);
+        assertEquals(now, stored.getRevokedAt());
+        assertEquals("old-hash", stored.getRefreshTokenHash());
+        assertEquals(now.plusDays(1), stored.getExpiresAt());
+
+        assertNull(otherStored.getRevokedAt());
+        assertEquals("other-hash", otherStored.getRefreshTokenHash());
+        assertEquals(now.plusDays(1), otherStored.getExpiresAt());
+
+        int rotated = repository.rotateRefreshTokenIfActive(
+                "test-session",
+                user.getId(),
+                "old-hash",
+                "new-hash",
+                now
+        );
+
+        assertEquals(0, rotated);
+        assertEquals(now, loadSession().getRevokedAt());
+        assertEquals("old-hash", loadSession().getRefreshTokenHash());
+    }
+
+    @Test
+    void canRevokeSessionAfterRefreshRotation() {
+        int rotated = repository.rotateRefreshTokenIfActive(
+                "test-session",
+                user.getId(),
+                "old-hash",
+                "new-hash",
+                now
+        );
+
+        int revoked = repository.revokeActiveSession(
+                "test-session", user.getId(), now
+        );
+
+        AuthSessionJpaEntity stored = loadSession();
+
+        assertEquals(1, rotated);
+        assertEquals(1, revoked);
+        assertEquals(now, stored.getRevokedAt());
+        assertEquals("new-hash", stored.getRefreshTokenHash());
+        assertEquals(now.plusDays(1), stored.getExpiresAt());
+    }
+
+    @Test
+    void differentUserCannotRevokeSession() {
+        int revoked = repository.revokeActiveSession(
+                "test-session", user.getId() + 1, now
+        );
+
+        AuthSessionJpaEntity stored = loadSession();
+
+        assertEquals(0, revoked);
+        assertNull(stored.getRevokedAt());
+        assertEquals("old-hash", stored.getRefreshTokenHash());
+    }
+
+    @Test
+    void sessionExpiringExactlyNowCannotBeRevoked() {
+        session.setExpiresAt(now);
+        entityManager.flush();
+
+        int revoked = repository.revokeActiveSession(
+                "test-session", user.getId(), now
+        );
+
+        AuthSessionJpaEntity stored = loadSession();
+
+        assertEquals(0, revoked);
+        assertNull(stored.getRevokedAt());
+        assertEquals(now, stored.getExpiresAt());
+    }
+
+    @Test
+    void repeatedRevocationKeepsOriginalTime() {
+        int first = repository.revokeActiveSession(
+                "test-session", user.getId(), now
+        );
+
+        int second = repository.revokeActiveSession(
+                "test-session", user.getId(), now.plusMinutes(1)
+        );
+
+        assertEquals(1, first);
+        assertEquals(0, second);
+        assertEquals(now, loadSession().getRevokedAt());
+    }
+
     private AuthSessionJpaEntity loadSession() {
         return repository.findBySessionId("test-session")
                 .orElseThrow();
