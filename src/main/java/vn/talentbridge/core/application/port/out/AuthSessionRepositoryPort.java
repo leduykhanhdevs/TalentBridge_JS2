@@ -26,4 +26,9 @@ public interface AuthSessionRepositoryPort {
             String newHash,
             LocalDateTime now
     );
+    boolean revokeActiveSession(
+            String sessionId,
+            Long userId,
+            LocalDateTime now
+    );
 }
