@@ -71,7 +71,8 @@ public class AuthController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Email hoặc mật khẩu để trống hoặc sai định dạng"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Email hoặc mật khẩu không chính xác (Bad Credentials)"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Tài khoản đang bị khóa (BANNED)")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Tài khoản đang bị khóa (BANNED)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "Đăng nhập sai quá số lần cho phép")
     })
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResult result = loginUseCase.login(new LoginCommand(

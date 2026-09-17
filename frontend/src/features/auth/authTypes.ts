@@ -6,13 +6,20 @@ export type CandidateRegisterRequest = {
     role: 'ROLE_CANDIDATE'
 }
 
+export type LoginRequest = {
+    email: string
+    password: string
+}
+
+export type UserRole = 'ROLE_CANDIDATE' | 'ROLE_RECRUITER' | 'ROLE_ADMIN'
+
 export type UserResponse = {
     id: number
     email: string
     fullName: string
     phone?: string
-    status: 'ACTIVE' | 'BANNED'
-    roles: ('ROLE_CANDIDATE' | 'ROLE_RECRUITER' | 'ROLE_ADMIN')[]
+    status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'LOCKED' | 'PENDING'
+    roles: UserRole[]
 }
 
 export type AuthResponse = {

@@ -33,6 +33,10 @@ springdoc:
     operations-sorter: method
 
 talentbridge:
+  security:
+    login:
+      max-failed-attempts: 5
+      block-duration-seconds: 60
   jwt:
     secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
     expiration-ms: 86400000 # 24 hours

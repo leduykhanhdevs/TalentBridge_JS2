@@ -97,6 +97,7 @@ Hệ thống tuân thủ nghiêm ngặt định dạng phản hồi chuẩn hóa
 | **`400 Bad Request`** | Dữ liệu gửi lên thiếu trường bắt buộc hoặc sai định dạng | `{"statusCode": 400, "message": "Email không đúng định dạng", "timestamp": "..."}` |
 | **`401 Unauthorized`** | Sai mật khẩu, Token hết hạn, chữ ký không hợp lệ | `{"statusCode": 401, "message": "Email hoặc mật khẩu không chính xác", "timestamp": "..."}` |
 | **`403 Forbidden`** | Đã đăng nhập nhưng không đủ quyền hạn (hoặc tài khoản bị BANNED) | `{"statusCode": 403, "message": "Tài khoản của bạn đã bị khóa bởi Quản trị viên", "timestamp": "..."}` |
+| **`429 Too Many Requests`** | Đăng nhập sai quá ngưỡng cho phép | `{"statusCode": 42901, "message": "Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau", "timestamp": "..."}` |
 | **`409 Conflict`** | Đăng ký với email đã tồn tại trong CSDL | `{"statusCode": 409, "message": "Email candidate@talentbridge.vn đã tồn tại", "timestamp": "..."}` |
 
 ---

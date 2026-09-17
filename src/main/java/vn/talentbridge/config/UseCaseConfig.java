@@ -35,8 +35,14 @@ public class UseCaseConfig {
     public LoginUseCase loginUseCase(UserRepositoryPort userRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
+            LoginAttemptTrackerPort loginAttemptTracker,
             @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
-        return new LoginUseCaseImpl(userRepository, passwordEncoder, tokenProvider, expirationMs);
+        return new LoginUseCaseImpl(
+                userRepository,
+                passwordEncoder,
+                tokenProvider,
+                loginAttemptTracker,
+                expirationMs);
     }
 
     @Bean

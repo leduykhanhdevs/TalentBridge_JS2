@@ -3,6 +3,7 @@ import type {
     ApiValidationErrors,
     AuthResponse,
     CandidateRegisterRequest,
+    LoginRequest,
 } from './authTypes'
 
 export class AuthApiError extends Error {
@@ -86,6 +87,60 @@ export async function registerCandidate(
             response.status === 409
                 ? 'Email này đã được sử dụng.'
                 : 'Đăng ký không thành công. Vui lòng thử lại.'
+        const fieldErrors =
+            response.status === 400 && isValidationErrors(body?.data)
+                ? body.data
+                : undefined
+
+        throw new AuthApiError(
+            response.status,
+            body?.message || defaultMessage,
+            fieldErrors,
+        )
+    }
+
+    if (!isAuthResponse(body?.data)) {
+        throw new AuthApiError(500, 'Phản hồi từ máy chủ không hợp lệ.')
+    }
+
+    return body.data
+}
+
+export async function login(request: LoginRequest): Promise<AuthResponse> {
+    let response: Response
+
+    try {
+        response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify(request),
+        })
+    } catch {
+        throw new AuthApiError(
+            0,
+            'Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend và thử lại.',
+        )
+    }
+
+    let body: ApiResponse<AuthResponse | ApiValidationErrors> | undefined
+
+    try {
+        body = (await response.json()) as ApiResponse<
+            AuthResponse | ApiValidationErrors
+        >
+    } catch {
+        body = undefined
+    }
+
+    if (!response.ok) {
+        const defaultMessage =
+            response.status === 401
+                ? 'Email hoặc mật khẩu không chính xác.'
+                : response.status === 403
+                  ? 'Tài khoản chưa hoạt động hoặc đã bị khóa.'
+                  : 'Đăng nhập không thành công. Vui lòng thử lại.'
         const fieldErrors =
             response.status === 400 && isValidationErrors(body?.data)
                 ? body.data
