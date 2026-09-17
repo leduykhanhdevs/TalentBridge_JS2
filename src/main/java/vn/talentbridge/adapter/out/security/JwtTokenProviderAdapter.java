@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
@@ -30,6 +31,13 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
 
     @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
     private long refreshExpirationMs;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (jwtSecret == null || jwtSecret.trim().isEmpty() || jwtSecret.startsWith("${")) {
+            throw new IllegalStateException("JWT Secret must be configured via environment variable JWT_SECRET and cannot be blank");
+        }
+    }
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
