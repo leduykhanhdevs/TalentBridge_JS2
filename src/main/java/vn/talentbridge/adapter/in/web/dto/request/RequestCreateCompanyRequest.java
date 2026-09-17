@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.in.web.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,7 @@ public class RequestCreateCompanyRequest {
     private String taxCode;
 
     @Size(max = 255, message = "Website không được vượt quá 255 ký tự")
+    @Pattern(regexp = "^$|^https?://.*", message = "Website phải bắt đầu bằng http:// hoặc https://")
     @Schema(example = "https://fptsoftware.com")
     private String website;
 
@@ -45,6 +47,7 @@ public class RequestCreateCompanyRequest {
     private String description;
 
     @Size(max = 500, message = "URL logo không được vượt quá 500 ký tự")
+    @Pattern(regexp = "^$|^https?://.*", message = "URL logo phải bắt đầu bằng http:// hoặc https://")
     @Schema(example = "https://talentbridge.vn/logos/fpt.png")
     private String logoUrl;
 }
