@@ -105,7 +105,7 @@ public class UseCaseConfig {
             @Value(
                     "${talentbridge.password-reset."
                             + "reset-password-url:"
-                            + "http://localhost:3000/reset-password}"
+                            + "http://localhost:5173/reset-password}"
             )
             String resetPasswordUrl
     ) {
