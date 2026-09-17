@@ -1,12 +1,101 @@
+import { useState, type FormEvent } from 'react'
 import {
+    AlertCircle,
     CheckCircle2,
+    LoaderCircle,
     LockKeyhole,
+    LogIn,
     Mail,
     ShieldCheck,
 } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { useMutation } from '@tanstack/react-query'
+import { AuthApiError, loginUser } from '../features/auth/authApi'
+import { saveAuthTokens } from '../features/auth/tokenStorage'
+
+type FormField = 'email' | 'password'
+
+type FieldErrors = Partial<Record<FormField, string>>
 
 export function LoginPage() {
+    const navigate = useNavigate()
+    const [formValues, setFormValues] = useState({
+        email: '',
+        password: '',
+    })
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+    const [serverError, setServerError] = useState<string | null>(null)
+    const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+    const loginMutation = useMutation({
+        mutationFn: loginUser,
+        onSuccess: (data) => {
+            saveAuthTokens(data)
+            setServerError(null)
+            setSuccessMessage(`Đăng nhập thành công! Chào mừng ${data.user.fullName}.`)
+            setTimeout(() => {
+                navigate('/')
+            }, 1000)
+        },
+        onError: (error) => {
+            if (error instanceof AuthApiError) {
+                setServerError(error.message)
+                if (error.fieldErrors) {
+                    setFieldErrors(error.fieldErrors)
+                }
+            } else {
+                setServerError('Đã có lỗi xảy ra. Vui lòng thử lại sau.')
+            }
+        },
+    })
+
+    function validate(): boolean {
+        const errors: FieldErrors = {}
+        const emailTrimmed = formValues.email.trim()
+
+        if (!emailTrimmed) {
+            errors.email = 'Vui lòng nhập địa chỉ email.'
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+            errors.email = 'Địa chỉ email không đúng định dạng.'
+        }
+
+        if (!formValues.password) {
+            errors.password = 'Vui lòng nhập mật khẩu.'
+        }
+
+        setFieldErrors(errors)
+        return Object.keys(errors).length === 0
+    }
+
+    function handleSubmit(event: FormEvent) {
+        event.preventDefault()
+        setServerError(null)
+
+        if (!validate()) {
+            return
+        }
+
+        loginMutation.mutate({
+            email: formValues.email.trim(),
+            password: formValues.password,
+        })
+    }
+
+    function updateField(field: FormField, value: string) {
+        setFormValues((prev) => ({ ...prev, [field]: value }))
+        setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
+        if (serverError) setServerError(null)
+    }
+
+    function getInputClassName(field: FormField) {
+        const baseClass =
+            'h-12 w-full rounded-xl border bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400'
+        if (fieldErrors[field]) {
+            return `${baseClass} border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-100`
+        }
+        return `${baseClass} border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100`
+    }
+
     return (
         <section className="relative overflow-hidden bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
             <div
@@ -73,7 +162,7 @@ export function LoginPage() {
                                 className="text-emerald-400"
                                 size={19}
                             />
-                            Bảo vệ thông tin tài khoản
+                            Bảo vệ thông tin tài khoản và phiên đăng nhập
                         </p>
                     </div>
                 </div>
@@ -92,7 +181,7 @@ export function LoginPage() {
                             Nhập thông tin tài khoản TalentBridge của bạn.
                         </p>
 
-                        <form className="mt-8 space-y-5">
+                        <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
                             <div>
                                 <label
                                     className="mb-2 block text-sm font-medium text-slate-700"
@@ -109,13 +198,18 @@ export function LoginPage() {
                                     />
                                     <input
                                         autoComplete="email"
-                                        className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                                        className={getInputClassName('email')}
                                         id="email"
                                         name="email"
                                         placeholder="ban@example.com"
                                         type="email"
+                                        value={formValues.email}
+                                        onChange={(e) => updateField('email', e.target.value)}
                                     />
                                 </div>
+                                {fieldErrors.email && (
+                                    <p className="mt-1.5 text-xs text-red-600">{fieldErrors.email}</p>
+                                )}
                             </div>
 
                             <div>
@@ -127,9 +221,12 @@ export function LoginPage() {
                                         Mật khẩu
                                     </label>
 
-                                    <span className="text-sm text-slate-400">
-                    Quên mật khẩu?
-                  </span>
+                                    <Link
+                                        to="/forgot-password"
+                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                                    >
+                                        Quên mật khẩu?
+                                    </Link>
                                 </div>
 
                                 <div className="relative">
@@ -140,35 +237,53 @@ export function LoginPage() {
                                     />
                                     <input
                                         autoComplete="current-password"
-                                        className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                                        className={getInputClassName('password')}
                                         id="password"
                                         name="password"
                                         placeholder="Nhập mật khẩu"
                                         type="password"
+                                        value={formValues.password}
+                                        onChange={(e) => updateField('password', e.target.value)}
                                     />
                                 </div>
+                                {fieldErrors.password && (
+                                    <p className="mt-1.5 text-xs text-red-600">{fieldErrors.password}</p>
+                                )}
                             </div>
 
-                            <label className="flex items-center gap-3 text-sm text-slate-600">
-                                <input
-                                    className="size-4 rounded border-slate-300 text-indigo-600 accent-indigo-600"
-                                    type="checkbox"
-                                />
-                                Ghi nhớ đăng nhập
-                            </label>
+                            {serverError && (
+                                <div
+                                    className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700"
+                                    role="alert"
+                                >
+                                    <AlertCircle aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                                    <span>{serverError}</span>
+                                </div>
+                            )}
+
+                            {successMessage && (
+                                <div
+                                    className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-700"
+                                    role="status"
+                                >
+                                    <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                                    <span>{successMessage}</span>
+                                </div>
+                            )}
 
                             <button
-                                className="inline-flex h-12 w-full cursor-not-allowed items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white opacity-70"
-                                disabled
-                                type="button"
+                                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-70"
+                                disabled={loginMutation.isPending}
+                                type="submit"
                             >
-                                Đăng nhập
+                                {loginMutation.isPending ? (
+                                    <LoaderCircle aria-hidden="true" className="animate-spin" size={18} />
+                                ) : (
+                                    <LogIn aria-hidden="true" size={18} />
+                                )}
+                                {loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
                             </button>
                         </form>
-
-                        <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
-                            Chức năng xác thực sẽ được kết nối với backend trong HRPM-10.
-                        </div>
 
                         <p className="mt-7 text-center text-sm text-slate-600">
                             Chưa có tài khoản?{' '}

@@ -14,7 +14,7 @@ import vn.talentbridge.core.application.usecase.*;
  */
 @Configuration
 public class UseCaseConfig {
-    // hiếu
+
     @Bean
     public RegisterUseCase registerUseCase(
             UserRepositoryPort userRepository,

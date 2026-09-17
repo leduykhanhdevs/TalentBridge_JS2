@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.in.web.dto.request.ForgotPasswordRequest;
 import vn.talentbridge.adapter.in.web.dto.request.ResetPasswordRequest;
@@ -25,6 +26,7 @@ public class PasswordResetController {
     private final ResetPasswordUseCase resetPasswordUseCase;
 
     @PostMapping("/forgot-password")
+    @Transactional
     @Operation(summary = "Yêu cầu liên kết đặt lại mật khẩu")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
@@ -43,6 +45,7 @@ public class PasswordResetController {
     }
 
     @PostMapping("/reset-password")
+    @Transactional
     @Operation(summary = "Đặt lại mật khẩu bằng token")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
