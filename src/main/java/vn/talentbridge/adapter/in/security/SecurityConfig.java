@@ -34,6 +34,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthRateLimitFilter authRateLimitFilter;
     private final Environment environment;
 
     @Value("${talentbridge.cors.allowed-origins:http://localhost:5173}")
@@ -87,6 +88,7 @@ public class SecurityConfig {
                     }
                     auth.anyRequest().authenticated();
                 })
+                .addFilterAfter(authRateLimitFilter, org.springframework.web.filter.CorsFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
