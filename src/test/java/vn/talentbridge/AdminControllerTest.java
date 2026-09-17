@@ -27,7 +27,8 @@ import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
-import vn.talentbridge.core.application.port.out.TokenProviderPort;
+import vn.talentbridge.core.application.dto.LoginCommand;
+import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.JobStatus;
 import vn.talentbridge.core.domain.vo.UserStatus;
@@ -75,7 +76,7 @@ class AdminControllerTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private TokenProviderPort tokenProvider;
+    private LoginUseCase loginUseCase;
 
     private String adminToken;
     private String candidateToken;
@@ -106,7 +107,10 @@ class AdminControllerTest {
                 .roles(new HashSet<>(Collections.singletonList(adminRole)))
                 .build();
         adminUser = userRepository.save(adminUser);
-        adminToken = tokenProvider.generateAccessToken(adminUser.getId(), adminUser.getEmail(), "ROLE_ADMIN");
+
+        adminToken = loginUseCase.login(
+                new LoginCommand(adminUser.getEmail(), "admin123")
+        ).accessToken();
 
         // Create Candidate User & Token
         testUser = UserJpaEntity.builder()
@@ -117,7 +121,10 @@ class AdminControllerTest {
                 .roles(new HashSet<>(Collections.singletonList(candidateRole)))
                 .build();
         testUser = userRepository.save(testUser);
-        candidateToken = tokenProvider.generateAccessToken(testUser.getId(), testUser.getEmail(), "ROLE_CANDIDATE");
+
+        candidateToken = loginUseCase.login(
+                new LoginCommand(testUser.getEmail(), "user123")
+        ).accessToken();
 
         // Create Candidate Profile
         testCandidate = CandidateJpaEntity.builder()

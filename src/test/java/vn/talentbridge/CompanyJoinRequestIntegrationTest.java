@@ -24,7 +24,8 @@ import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
-import vn.talentbridge.core.application.port.out.TokenProviderPort;
+import vn.talentbridge.core.application.dto.LoginCommand;
+import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.domain.vo.CompanyJoinRequestStatus;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.UserStatus;
@@ -69,7 +70,7 @@ class CompanyJoinRequestIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private TokenProviderPort tokenProvider;
+    private LoginUseCase loginUseCase;
 
     private UserJpaEntity hrUser1;
     private UserJpaEntity hrUser2;
@@ -96,7 +97,10 @@ class CompanyJoinRequestIntegrationTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser1 = userRepository.save(hrUser1);
-        hrToken1 = tokenProvider.generateAccessToken(hrUser1.getId(), hrUser1.getEmail(), "ROLE_RECRUITER");
+
+        hrToken1 = loginUseCase.login(
+                new LoginCommand(hrUser1.getEmail(), "secret123")
+        ).accessToken();
 
         approvedCompany = CompanyJpaEntity.builder()
                 .name("TalentBridge Tech")
@@ -126,7 +130,10 @@ class CompanyJoinRequestIntegrationTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser2 = userRepository.save(hrUser2);
-        hrToken2 = tokenProvider.generateAccessToken(hrUser2.getId(), hrUser2.getEmail(), "ROLE_RECRUITER");
+
+        hrToken2 = loginUseCase.login(
+                new LoginCommand(hrUser2.getEmail(), "secret123")
+        ).accessToken();
 
         RecruiterJpaEntity recruiter2 = RecruiterJpaEntity.builder()
                 .user(hrUser2)
@@ -152,7 +159,10 @@ class CompanyJoinRequestIntegrationTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser3 = userRepository.save(hrUser3);
-        hrToken3 = tokenProvider.generateAccessToken(hrUser3.getId(), hrUser3.getEmail(), "ROLE_RECRUITER");
+
+        hrToken3 = loginUseCase.login(
+                new LoginCommand(hrUser3.getEmail(), "secret123")
+        ).accessToken();
 
         RecruiterJpaEntity recruiter3 = RecruiterJpaEntity.builder()
                 .user(hrUser3)

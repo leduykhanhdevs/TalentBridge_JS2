@@ -6,11 +6,6 @@ export type CandidateRegisterRequest = {
     role: 'ROLE_CANDIDATE'
 }
 
-export type LoginRequest = {
-    email: string
-    password: string
-}
-
 export type UserRole = 'ROLE_CANDIDATE' | 'ROLE_RECRUITER' | 'ROLE_ADMIN'
 
 export type UserResponse = {
@@ -38,3 +33,17 @@ export type ApiResponse<T> = {
 }
 
 export type ApiValidationErrors = Record<string, string>
+
+export type LoginRequest = {
+    email: string
+    password: string
+}
+
+export type ForgotPasswordRequest = {
+    email: string
+}
+
+export type ResetPasswordRequest = {
+    token: string
+    newPassword: string
+}

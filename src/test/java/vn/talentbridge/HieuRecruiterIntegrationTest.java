@@ -22,7 +22,8 @@ import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
-import vn.talentbridge.core.application.port.out.TokenProviderPort;
+import vn.talentbridge.core.application.dto.LoginCommand;
+import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
@@ -60,7 +61,7 @@ class HieuRecruiterIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private TokenProviderPort tokenProvider;
+    private LoginUseCase loginUseCase;
 
     private UserJpaEntity hrUser1;
     private UserJpaEntity hrUser2;
@@ -85,7 +86,10 @@ class HieuRecruiterIntegrationTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser1 = userRepository.save(hrUser1);
-        hrToken1 = tokenProvider.generateAccessToken(hrUser1.getId(), hrUser1.getEmail(), "ROLE_RECRUITER");
+
+        hrToken1 = loginUseCase.login(
+                new LoginCommand(hrUser1.getEmail(), "secret123")
+        ).accessToken();
 
         existingCompany = CompanyJpaEntity.builder()
                 .name("TalentBridge Tech")
@@ -115,7 +119,10 @@ class HieuRecruiterIntegrationTest {
                 .roles(new HashSet<>(Collections.singletonList(recruiterRole)))
                 .build();
         hrUser2 = userRepository.save(hrUser2);
-        hrToken2 = tokenProvider.generateAccessToken(hrUser2.getId(), hrUser2.getEmail(), "ROLE_RECRUITER");
+
+        hrToken2 = loginUseCase.login(
+                new LoginCommand(hrUser2.getEmail(), "secret123")
+        ).accessToken();
 
         RecruiterJpaEntity recruiter2 = RecruiterJpaEntity.builder()
                 .user(hrUser2)

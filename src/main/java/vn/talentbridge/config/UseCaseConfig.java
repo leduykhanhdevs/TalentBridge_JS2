@@ -14,42 +14,123 @@ import vn.talentbridge.core.application.usecase.*;
  */
 @Configuration
 public class UseCaseConfig {
-    // hiếu
+
     @Bean
     public RegisterUseCase registerUseCase(
             UserRepositoryPort userRepository,
             RecruiterRepositoryPort recruiterRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
-            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
-
+            AuthSessionRepositoryPort authSessionRepository,
+            @Value("${talentbridge.jwt.expiration-ms:86400000}")
+            long expirationMs,
+            @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
+            long refreshExpirationMs
+    ) {
         return new RegisterUseCaseImpl(
                 userRepository,
                 recruiterRepository,
                 passwordEncoder,
                 tokenProvider,
-                expirationMs);
+                authSessionRepository,
+                expirationMs,
+                refreshExpirationMs
+        );
     }
 
     @Bean
-    public LoginUseCase loginUseCase(UserRepositoryPort userRepository,
+    public LoginUseCase loginUseCase(
+            UserRepositoryPort userRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
+            AuthSessionRepositoryPort authSessionRepository,
             LoginAttemptTrackerPort loginAttemptTracker,
-            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
+            @Value("${talentbridge.jwt.expiration-ms:86400000}")
+            long expirationMs,
+            @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
+            long refreshExpirationMs
+    ) {
         return new LoginUseCaseImpl(
                 userRepository,
                 passwordEncoder,
                 tokenProvider,
+                authSessionRepository,
                 loginAttemptTracker,
-                expirationMs);
+                expirationMs,
+                refreshExpirationMs
+        );
     }
 
     @Bean
-    public RefreshTokenUseCase refreshTokenUseCase(UserRepositoryPort userRepository,
+    public RefreshTokenUseCase refreshTokenUseCase(
+            UserRepositoryPort userRepository,
             TokenProviderPort tokenProvider,
-            @Value("${talentbridge.jwt.expiration-ms:86400000}") long expirationMs) {
-        return new RefreshTokenUseCaseImpl(userRepository, tokenProvider, expirationMs);
+            AuthSessionRepositoryPort authSessionRepository,
+            @Value("${talentbridge.jwt.expiration-ms:86400000}")
+            long expirationMs
+    ) {
+        return new RefreshTokenUseCaseImpl(
+                userRepository,
+                tokenProvider,
+                authSessionRepository,
+                expirationMs
+        );
+    }
+
+    @Bean
+    public LogoutUseCase logoutUseCase(
+            TokenProviderPort tokenProvider,
+            AuthSessionRepositoryPort authSessionRepository
+    ) {
+        return new LogoutUseCaseImpl(
+                tokenProvider,
+                authSessionRepository
+        );
+    }
+
+    @Bean
+    public ForgotPasswordUseCase forgotPasswordUseCase(
+            UserRepositoryPort userRepository,
+            PasswordResetTokenRepositoryPort tokenRepository,
+            PasswordResetTokenGeneratorPort tokenGenerator,
+            PasswordResetEmailPort emailPort,
+            @Value(
+                    "${talentbridge.password-reset."
+                            + "token-expiration-minutes:15}"
+            )
+            long tokenExpirationMinutes,
+            @Value(
+                    "${talentbridge.password-reset."
+                            + "reset-password-url:"
+                            + "http://localhost:3000/reset-password}"
+            )
+            String resetPasswordUrl
+    ) {
+        return new ForgotPasswordUseCaseImpl(
+                userRepository,
+                tokenRepository,
+                tokenGenerator,
+                emailPort,
+                tokenExpirationMinutes,
+                resetPasswordUrl
+        );
+    }
+
+    @Bean
+    public ResetPasswordUseCase resetPasswordUseCase(
+            PasswordResetTokenRepositoryPort tokenRepository,
+            PasswordResetTokenGeneratorPort tokenGenerator,
+            UserRepositoryPort userRepository,
+            PasswordEncoderPort passwordEncoder,
+            AuthSessionRepositoryPort authSessionRepository
+    ) {
+        return new ResetPasswordUseCaseImpl(
+                tokenRepository,
+                tokenGenerator,
+                userRepository,
+                passwordEncoder,
+                authSessionRepository
+        );
     }
 
     @Bean

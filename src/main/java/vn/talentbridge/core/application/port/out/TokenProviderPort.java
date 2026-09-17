@@ -1,5 +1,7 @@
 package vn.talentbridge.core.application.port.out;
 
+import java.time.LocalDateTime;
+
 public interface TokenProviderPort {
     String generateAccessToken(Long userId, String email, String role);
     String generateRefreshToken(Long userId, String email);
@@ -7,4 +9,39 @@ public interface TokenProviderPort {
     String getEmailFromToken(String token);
     Long getUserIdFromToken(String token);
     String getRoleFromToken(String token);
+    String generateAccessToken(
+            Long userId,
+            String email,
+            String role,
+            String sessionId
+    );
+
+    String generateRefreshToken(
+            Long userId,
+            String email,
+            String sessionId
+    );
+
+    String getSessionIdFromToken(String token);
+
+    String getTokenTypeFromToken(String token);
+
+    String hashRefreshToken(String refreshToken);
+
+    boolean matchesRefreshTokenHash(String refreshToken, String storedHash);
+
+    String generateAccessToken(
+            Long userId,
+            String email,
+            String role,
+            String sessionId,
+            LocalDateTime expiresAt
+    );
+
+    String generateRefreshToken(
+            Long userId,
+            String email,
+            String sessionId,
+            LocalDateTime expiresAt
+    );
 }

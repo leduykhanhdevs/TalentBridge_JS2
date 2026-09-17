@@ -1,11 +1,8 @@
 import { BriefcaseBusiness, LogOut, ShieldCheck, UserRound } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router'
+import { logoutUser } from '../features/auth/authApi'
 import { getRoleHomePath } from '../features/auth/authRoutes'
-import {
-    clearAuthTokens,
-    getAccessToken,
-    getStoredUser,
-} from '../features/auth/tokenStorage'
+import { getAccessToken, getStoredUser } from '../features/auth/tokenStorage'
 import type { UserRole } from '../features/auth/authTypes'
 
 const roleContent: Record<
@@ -44,8 +41,8 @@ export function RoleHomePage({ role }: { role: UserRole }) {
 
     const content = roleContent[role]
 
-    function handleLogout() {
-        clearAuthTokens()
+    async function handleLogout() {
+        await logoutUser()
         navigate('/login', { replace: true })
     }
 

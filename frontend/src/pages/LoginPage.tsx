@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { AuthApiError, login } from '../features/auth/authApi'
+import { AuthApiError, loginUser } from '../features/auth/authApi'
 import { getRoleHomePath } from '../features/auth/authRoutes'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
 
@@ -70,7 +70,7 @@ export function LoginPage() {
     const [serverError, setServerError] = useState('')
 
     const loginMutation = useMutation({
-        mutationFn: login,
+        mutationFn: loginUser,
         onSuccess: (authResponse) => {
             saveAuthTokens(authResponse, rememberMe)
             navigate(getRoleHomePath(authResponse.user.roles), { replace: true })
@@ -264,7 +264,12 @@ export function LoginPage() {
                                     >
                                         Mật khẩu
                                     </label>
-                                    <span className="text-sm text-slate-400">Quên mật khẩu?</span>
+                                    <Link
+                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                                        to="/forgot-password"
+                                    >
+                                        Quên mật khẩu?
+                                    </Link>
                                 </div>
                                 <div className="relative">
                                     <LockKeyhole

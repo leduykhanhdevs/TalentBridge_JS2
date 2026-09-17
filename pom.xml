@@ -41,6 +41,11 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
@@ -51,11 +56,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 Database for In-Memory Unit & Integration Testing -->
+        <!-- H2 Database for In-Memory Testing & Local Development -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <!-- Lombok for Boilerplate Code Reduction -->

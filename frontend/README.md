@@ -1,75 +1,89 @@
-# React + TypeScript + Vite
+# 🚀 TalentBridge ATS – Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Giao diện người dùng nền tảng Tuyển dụng & Quản trị ứng viên (ATS) TalentBridge.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Công nghệ sử dụng
 
-## React Compiler
+- **Framework**: React 19 (`react`, `react-dom`)
+- **Build Tool**: Vite 8
+- **Ngôn ngữ**: TypeScript 6 (Strict Mode, Zero-Any)
+- **Styling**: Tailwind CSS v4 (`@tailwindcss/vite`)
+- **Routing**: React Router v8
+- **Server State Management**: TanStack React Query v5
+- **Local State**: Zustand v5
+- **Biểu tượng**: Lucide React
+- **Kiểm thử tự động**: Vitest 5
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 📦 Cài đặt & Chạy ứng dụng
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Cài đặt Dependencies
+Bạn có thể sử dụng `pnpm` (khuyên dùng) hoặc `npm`:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Sử dụng pnpm
+pnpm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+# Hoặc sử dụng npm
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Chạy môi trường phát triển (Development)
+```bash
+pnpm dev
+# hoặc
+npm run dev
+```
+Ứng dụng sẽ khởi chạy tại: `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 3. Kiểm thử tự động (Unit Tests)
+```bash
+pnpm test
+# hoặc
+npm run test
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 4. Kiểm tra cú pháp (Linting)
+```bash
+pnpm lint
+# hoặc
+npm run lint
+```
 
+### 5. Đóng gói ứng dụng (Production Build)
+```bash
+pnpm build
+# hoặc
+npm run build
+```
+
+---
+
+## 🧭 Cấu trúc thư mục
+
+```text
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── providers/    # AppProviders (QueryClientProvider)
+│   │   └── router/       # AppRouter (Cấu hình Route cho toàn ứng dụng)
+│   ├── features/
+│   │   └── auth/         # Module Xác thực (API, Types, TokenStorage, Tests)
+│   │       ├── __tests__/
+│   │       ├── authApi.ts
+│   │       ├── authTypes.ts
+│   │       └── tokenStorage.ts
+│   ├── layouts/          # Layout chung (MainLayout, Header, Footer, Auth State)
+│   └── pages/            # Các trang giao diện
+│       ├── HomePage.tsx
+│       ├── LoginPage.tsx
+│       ├── RegisterPage.tsx
+│       ├── ForgotPasswordPage.tsx
+│       ├── ResetPasswordPage.tsx
+│       └── NotFoundPage.tsx
+├── package.json
+└── vite.config.ts
 ```
