@@ -15,8 +15,10 @@ import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.RoleName;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
+import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.domain.exception.DomainException;
+import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.Recruiter;
 
 import java.time.Duration;
@@ -27,6 +29,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
 
     private final UserRepositoryPort userRepository;
     private final RecruiterRepositoryPort recruiterRepository;
+    private final CandidateRepositoryPort candidateRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final AuthSessionRepositoryPort authSessionRepository;
@@ -36,6 +39,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
     public RegisterUseCaseImpl(
             UserRepositoryPort userRepository,
             RecruiterRepositoryPort recruiterRepository,
+            CandidateRepositoryPort candidateRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
@@ -44,6 +48,7 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
     ) {
         this.userRepository = userRepository;
         this.recruiterRepository = recruiterRepository;
+        this.candidateRepository = candidateRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.authSessionRepository = authSessionRepository;
@@ -89,6 +94,13 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             recruiter.setCreatedAt(LocalDateTime.now());
 
             recruiterRepository.save(recruiter);
+        } else if (roleName == RoleName.ROLE_CANDIDATE) {
+            Candidate candidate = new Candidate();
+            candidate.setUser(savedUser);
+            candidate.setCreatedAt(LocalDateTime.now());
+            candidate.setUpdatedAt(LocalDateTime.now());
+
+            candidateRepository.save(candidate);
         }
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sessionExpiresAt = now.plus(

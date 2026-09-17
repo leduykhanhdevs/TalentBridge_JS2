@@ -76,6 +76,39 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
             const res = await apiRequest('/recruiters/profile', { method: 'GET' }, candidateToken)
             expect(res.status).toBe(403)
         })
+
+        it('1.4. Candidate views and updates profile details (HRPM-14)', async () => {
+            const getRes = await apiRequest('/candidates/profile', { method: 'GET' }, candidateToken)
+            expect(getRes.status).toBe(200)
+            expect(getRes.data?.data?.email).toBe(candidateEmail)
+
+            const updateRes = await apiRequest(
+                '/candidates/profile',
+                {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        fullName: 'Lê Văn Ứng Viên Pro',
+                        phone: '0912345678',
+                        title: 'Senior Fullstack Engineer',
+                        experienceYears: 4,
+                        currentSalary: 22000000,
+                        expectedSalary: 35000000,
+                        city: 'Đà Nẵng',
+                        address: 'Hải Châu, Đà Nẵng',
+                        summary: 'Lập trình viên đam mê công nghệ cao với kinh nghiệm Spring Boot & React.',
+                        githubUrl: 'https://github.com/ungvienpro',
+                        linkedinUrl: 'https://linkedin.com/in/ungvienpro',
+                    }),
+                },
+                candidateToken,
+            )
+
+            expect(updateRes.status).toBe(200)
+            expect(updateRes.data?.data?.fullName).toBe('Lê Văn Ứng Viên Pro')
+            expect(updateRes.data?.data?.title).toBe('Senior Fullstack Engineer')
+            expect(updateRes.data?.data?.experienceYears).toBe(4)
+            expect(updateRes.data?.data?.city).toBe('Đà Nẵng')
+        })
     })
 
     // --- PHASE 2: ADMIN OVERSIGHT ON CANDIDATE ---
@@ -96,17 +129,19 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
 
         it('2.2. Admin should view Candidates in Candidate Management Portal', async () => {
             const res = await apiRequest(
-                '/admin/candidates',
+                `/admin/candidates?keyword=${encodeURIComponent(candidateEmail)}`,
                 { method: 'GET' },
                 adminToken,
             )
 
             expect(res.status).toBe(200)
             expect(res.data?.data?.content?.length).toBeGreaterThan(0)
-            const candidate = res.data.data.content[0]
-            expect(candidate).toBeDefined()
-            expect(candidate.email).toBeDefined()
-            expect(candidate.status).toBe('ACTIVE')
+            const candidateFound = res.data.data.content.find(
+                (c: { email: string }) => c.email === candidateEmail,
+            )
+            expect(candidateFound).toBeDefined()
+            expect(candidateFound.title).toBe('Senior Fullstack Engineer')
+            expect(candidateFound.status).toBe('ACTIVE')
         })
 
         it('2.3. Admin should ban Candidate for policy violation', async () => {
