@@ -80,11 +80,7 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
             throw new UserAccountLockedException();
         }
 
-        String primaryRole = user.getRoles().stream()
-                .findFirst()
-                .map(Role::getName)
-                .map(Enum::name)
-                .orElse("ROLE_CANDIDATE");
+        String primaryRole = user.getPrimaryRoleName();
 
         LocalDateTime sessionExpiresAt =
                 authSession.getExpiresAt();

@@ -44,6 +44,16 @@ public class User {
         return roles.stream().anyMatch(r -> r.getName() == roleName);
     }
 
+    public String getPrimaryRoleName() {
+        if (hasRole(RoleName.ROLE_ADMIN)) {
+            return RoleName.ROLE_ADMIN.name();
+        }
+        if (hasRole(RoleName.ROLE_RECRUITER)) {
+            return RoleName.ROLE_RECRUITER.name();
+        }
+        return RoleName.ROLE_CANDIDATE.name();
+    }
+
     public void addRole(Role role) {
         this.roles.add(role);
     }
