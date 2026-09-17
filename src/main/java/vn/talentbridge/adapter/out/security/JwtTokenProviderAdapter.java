@@ -22,7 +22,7 @@ import java.time.ZoneId;
 @Component
 public class JwtTokenProviderAdapter implements TokenProviderPort {
 
-    @Value("${talentbridge.jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    @Value("${talentbridge.jwt.secret}")
     private String jwtSecret;
 
     @Value("${talentbridge.jwt.expiration-ms:86400000}")

@@ -5,6 +5,7 @@ import vn.talentbridge.core.application.dto.LoginCommand;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
+import vn.talentbridge.core.application.port.out.LoginAttemptTrackerPort;
 import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
@@ -18,10 +19,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class LoginUseCaseImpl implements LoginUseCase {
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+
     private final UserRepositoryPort userRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final AuthSessionRepositoryPort authSessionRepository;
+    private final LoginAttemptTrackerPort loginAttemptTracker;
     private final long tokenExpirationMs;
     private final long refreshTokenExpirationMs;
 
@@ -33,10 +37,23 @@ public class LoginUseCaseImpl implements LoginUseCase {
             long tokenExpirationMs,
             long refreshTokenExpirationMs
     ) {
+        this(userRepository, passwordEncoder, tokenProvider, authSessionRepository, null, tokenExpirationMs, refreshTokenExpirationMs);
+    }
+
+    public LoginUseCaseImpl(
+            UserRepositoryPort userRepository,
+            PasswordEncoderPort passwordEncoder,
+            TokenProviderPort tokenProvider,
+            AuthSessionRepositoryPort authSessionRepository,
+            LoginAttemptTrackerPort loginAttemptTracker,
+            long tokenExpirationMs,
+            long refreshTokenExpirationMs
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.authSessionRepository = authSessionRepository;
+        this.loginAttemptTracker = loginAttemptTracker;
         this.tokenExpirationMs = tokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
@@ -46,12 +63,24 @@ public class LoginUseCaseImpl implements LoginUseCase {
         User user = userRepository.findByEmail(command.email())
                 .orElseThrow(InvalidCredentialsException::new);
 
+        if (!user.isActive()) {
+            throw new UserAccountLockedException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên.");
+        }
+
         if (!passwordEncoder.matches(command.password(), user.getPasswordHash())) {
+            if (loginAttemptTracker != null) {
+                int failedAttempts = loginAttemptTracker.recordFailedAttempt(command.email());
+                if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+                    user.lock();
+                    userRepository.save(user);
+                    throw new UserAccountLockedException("Tài khoản của bạn đã bị khóa do nhập sai mật khẩu quá 5 lần.");
+                }
+            }
             throw new InvalidCredentialsException();
         }
 
-        if (!user.isActive()) {
-            throw new UserAccountLockedException();
+        if (loginAttemptTracker != null) {
+            loginAttemptTracker.resetAttempts(command.email());
         }
 
         String primaryRole = user.getRoles().stream()
