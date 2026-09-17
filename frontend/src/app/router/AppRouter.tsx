@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { MainLayout } from '../../layouts/MainLayout'
 import { AdminLayout } from '../../layouts/AdminLayout'
+import { RecruiterLayout } from '../../layouts/RecruiterLayout'
 import { HomePage } from '../../pages/HomePage'
 import { LoginPage } from '../../pages/LoginPage'
 import { NotFoundPage } from '../../pages/NotFoundPage'
@@ -10,6 +11,10 @@ import { ResetPasswordPage } from '../../pages/ResetPasswordPage'
 import { AdminCandidatesPage } from '../../pages/admin/AdminCandidatesPage'
 import { AdminRecruitersPage } from '../../pages/admin/AdminRecruitersPage'
 import { AdminCompaniesPage } from '../../pages/admin/AdminCompaniesPage'
+import { RecruiterProfilePage } from '../../pages/recruiter/RecruiterProfilePage'
+import { RecruiterCompanyPage } from '../../pages/recruiter/RecruiterCompanyPage'
+import { RecruiterJoinCompanyPage } from '../../pages/recruiter/RecruiterJoinCompanyPage'
+import { RecruiterPeerApprovalPage } from '../../pages/recruiter/RecruiterPeerApprovalPage'
 
 export function AppRouter() {
     return (
@@ -22,6 +27,15 @@ export function AppRouter() {
                 <Route element={<ForgotPasswordPage />} path="forgot-password" />
                 <Route element={<ResetPasswordPage />} path="reset-password" />
                 <Route element={<NotFoundPage />} path="*" />
+            </Route>
+
+            {/* Recruiter Management Routes */}
+            <Route element={<RecruiterLayout />} path="recruiter">
+                <Route element={<Navigate replace to="/recruiter/profile" />} index />
+                <Route element={<RecruiterProfilePage />} path="profile" />
+                <Route element={<RecruiterCompanyPage />} path="company" />
+                <Route element={<RecruiterJoinCompanyPage />} path="join-company" />
+                <Route element={<RecruiterPeerApprovalPage />} path="peer-approval" />
             </Route>
 
             {/* Admin Management Routes */}

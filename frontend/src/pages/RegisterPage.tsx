@@ -1,6 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
 import {
     AlertCircle,
+    Briefcase,
+    Building2,
     CheckCircle2,
     LoaderCircle,
     LockKeyhole,
@@ -26,6 +28,8 @@ type RegisterFormValues = {
     phone: string
     password: string
     confirmPassword: string
+    role: 'ROLE_CANDIDATE' | 'ROLE_RECRUITER'
+    position: string
 }
 
 type RegisterField = keyof RegisterFormValues | 'terms'
@@ -37,6 +41,8 @@ const initialFormValues: RegisterFormValues = {
     phone: '',
     password: '',
     confirmPassword: '',
+    role: 'ROLE_CANDIDATE',
+    position: '',
 }
 
 function validateForm(
@@ -75,6 +81,10 @@ function validateForm(
 
     if (!acceptedTerms) {
         errors.terms = 'Bạn cần đồng ý với điều khoản sử dụng.'
+    }
+
+    if (values.role === 'ROLE_RECRUITER' && values.position.trim().length > 100) {
+        errors.position = 'Chức danh không được vượt quá 100 ký tự.'
     }
 
     return errors
@@ -175,7 +185,11 @@ export function RegisterPage() {
             email: formValues.email.trim().toLowerCase(),
             phone: formValues.phone.trim() || undefined,
             password: formValues.password,
-            role: 'ROLE_CANDIDATE',
+            role: formValues.role,
+            position:
+                formValues.role === 'ROLE_RECRUITER'
+                    ? formValues.position.trim() || undefined
+                    : undefined,
         })
     }
 
@@ -195,61 +209,127 @@ export function RegisterPage() {
             />
 
             <div className="relative mx-auto grid w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="relative hidden overflow-hidden bg-indigo-600 p-12 text-white lg:flex lg:flex-col lg:justify-between">
+                <div
+                    className={`relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between transition-colors duration-300 ${
+                        formValues.role === 'ROLE_RECRUITER' ? 'bg-emerald-700' : 'bg-indigo-600'
+                    }`}
+                >
                     <div
                         aria-hidden="true"
                         className="absolute -right-20 -top-20 size-64 rounded-full bg-white/15 blur-3xl"
                     />
                     <div
                         aria-hidden="true"
-                        className="absolute -bottom-24 -left-16 size-72 rounded-full bg-violet-950/30 blur-3xl"
+                        className="absolute -bottom-24 -left-16 size-72 rounded-full bg-black/20 blur-3xl"
                     />
 
                     <div className="relative">
                         <div className="grid size-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-                            <UserPlus aria-hidden="true" size={25} />
+                            {formValues.role === 'ROLE_RECRUITER' ? (
+                                <Building2 aria-hidden="true" size={25} />
+                            ) : (
+                                <UserPlus aria-hidden="true" size={25} />
+                            )}
                         </div>
 
-                        <p className="mt-10 text-sm font-semibold uppercase tracking-wider text-indigo-100">
-                            Tài khoản ứng viên
+                        <p className="mt-10 text-sm font-semibold uppercase tracking-wider text-white/80">
+                            {formValues.role === 'ROLE_RECRUITER' ? 'Cổng Nhà tuyển dụng' : 'Tài khoản ứng viên'}
                         </p>
 
                         <h1 className="mt-4 text-4xl font-bold leading-tight">
-                            Khởi đầu hành trình mới cùng TalentBridge
+                            {formValues.role === 'ROLE_RECRUITER'
+                                ? 'Thu hút và tuyển chọn nhân tài cùng TalentBridge'
+                                : 'Khởi đầu hành trình mới cùng TalentBridge'}
                         </h1>
 
-                        <p className="mt-5 max-w-md leading-7 text-indigo-100">
-                            Tạo hồ sơ chuyên nghiệp, khám phá việc làm phù hợp và kết nối với
-                            những doanh nghiệp uy tín.
+                        <p className="mt-5 max-w-md leading-7 text-white/90">
+                            {formValues.role === 'ROLE_RECRUITER'
+                                ? 'Đại diện doanh nghiệp tiếp cận hàng nghìn hồ sơ ứng viên tiềm năng, quản lý tuyển dụng nội bộ hiệu quả.'
+                                : 'Tạo hồ sơ chuyên nghiệp, khám phá việc làm phù hợp và kết nối với những doanh nghiệp uy tín.'}
                         </p>
                     </div>
 
-                    <div className="relative mt-12 space-y-4 text-sm text-indigo-50">
-                        <p className="flex items-center gap-3">
-                            <CheckCircle2 aria-hidden="true" size={19} />
-                            Tạo và quản lý hồ sơ cá nhân
-                        </p>
-
-                        <p className="flex items-center gap-3">
-                            <CheckCircle2 aria-hidden="true" size={19} />
-                            Nhận gợi ý công việc phù hợp
-                        </p>
-
-                        <p className="flex items-center gap-3">
-                            <CheckCircle2 aria-hidden="true" size={19} />
-                            Theo dõi trạng thái ứng tuyển
-                        </p>
+                    <div className="relative mt-12 space-y-4 text-sm text-white/90">
+                        {formValues.role === 'ROLE_RECRUITER' ? (
+                            <>
+                                <p className="flex items-center gap-3">
+                                    <CheckCircle2 aria-hidden="true" size={19} />
+                                    Tạo mới hoặc gia nhập doanh nghiệp xác thực
+                                </p>
+                                <p className="flex items-center gap-3">
+                                    <CheckCircle2 aria-hidden="true" size={19} />
+                                    Duyệt thành viên đồng nghiệp HR trong công ty
+                                </p>
+                                <p className="flex items-center gap-3">
+                                    <CheckCircle2 aria-hidden="true" size={19} />
+                                    Đăng tin và quản lý quy trình tuyển dụng
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="flex items-center gap-3">
+                                    <CheckCircle2 aria-hidden="true" size={19} />
+                                    Tạo và quản lý hồ sơ cá nhân
+                                </p>
+                                <p className="flex items-center gap-3">
+                                    <CheckCircle2 aria-hidden="true" size={19} />
+                                    Nhận gợi ý công việc phù hợp
+                                </p>
+                                <p className="flex items-center gap-3">
+                                    <CheckCircle2 aria-hidden="true" size={19} />
+                                    Theo dõi trạng thái ứng tuyển
+                                </p>
+                            </>
+                        )}
                     </div>
                 </div>
 
                 <div className="p-6 sm:p-10 lg:p-12">
                     <div className="mx-auto w-full max-w-lg">
-                        <p className="text-sm font-semibold text-indigo-600">
-                            Candidate account
+                        {/* Role Switcher */}
+                        <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1.5">
+                            <button
+                                className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
+                                    formValues.role === 'ROLE_CANDIDATE'
+                                        ? 'bg-white text-indigo-700 shadow-sm'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                                onClick={() => {
+                                    setFormValues((prev) => ({ ...prev, role: 'ROLE_CANDIDATE' }))
+                                    setServerError('')
+                                }}
+                                type="button"
+                            >
+                                <UserRound size={16} />
+                                <span>Ứng viên tìm việc</span>
+                            </button>
+                            <button
+                                className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
+                                    formValues.role === 'ROLE_RECRUITER'
+                                        ? 'bg-white text-emerald-700 shadow-sm'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                                onClick={() => {
+                                    setFormValues((prev) => ({ ...prev, role: 'ROLE_RECRUITER' }))
+                                    setServerError('')
+                                }}
+                                type="button"
+                            >
+                                <Building2 size={16} />
+                                <span>Nhà tuyển dụng (HR)</span>
+                            </button>
+                        </div>
+
+                        <p
+                            className={`text-sm font-semibold ${
+                                formValues.role === 'ROLE_RECRUITER' ? 'text-emerald-600' : 'text-indigo-600'
+                            }`}
+                        >
+                            {formValues.role === 'ROLE_RECRUITER' ? 'Recruiter account' : 'Candidate account'}
                         </p>
 
                         <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-                            Đăng ký ứng viên
+                            {formValues.role === 'ROLE_RECRUITER' ? 'Đăng ký Nhà tuyển dụng' : 'Đăng ký ứng viên'}
                         </h2>
 
                         <p className="mt-3 leading-7 text-slate-600">
@@ -347,6 +427,37 @@ export function RegisterPage() {
                                 </div>
                                 <FieldError id="register-phone-error" message={fieldErrors.phone} />
                             </div>
+
+                            {formValues.role === 'ROLE_RECRUITER' && (
+                                <div>
+                                    <label
+                                        className="mb-2 block text-sm font-medium text-slate-700"
+                                        htmlFor="register-position"
+                                    >
+                                        Chức danh tuyển dụng <span className="text-slate-400">(không bắt buộc)</span>
+                                    </label>
+
+                                    <div className="relative">
+                                        <Briefcase
+                                            aria-hidden="true"
+                                            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                            size={19}
+                                        />
+                                        <input
+                                            aria-describedby={fieldErrors.position ? 'register-position-error' : undefined}
+                                            aria-invalid={Boolean(fieldErrors.position)}
+                                            className={getInputClassName('position')}
+                                            id="register-position"
+                                            name="position"
+                                            onChange={(event) => updateField('position', event.target.value)}
+                                            placeholder="Ví dụ: Talent Acquisition Specialist"
+                                            type="text"
+                                            value={formValues.position}
+                                        />
+                                    </div>
+                                    <FieldError id="register-position-error" message={fieldErrors.position} />
+                                </div>
+                            )}
 
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div>
