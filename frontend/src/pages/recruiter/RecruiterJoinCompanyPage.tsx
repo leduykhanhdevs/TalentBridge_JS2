@@ -37,6 +37,14 @@ export function RecruiterJoinCompanyPage() {
     const [formError, setFormError] = useState('')
     const [serverError, setServerError] = useState('')
     const [successMessage, setSuccessMessage] = useState('')
+    const [showAutocomplete, setShowAutocomplete] = useState(false)
+    const [hasPendingRequest, setHasPendingRequest] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem('tb_recruiter_pending_join') === 'true'
+        } catch {
+            return false
+        }
+    })
 
     const { data: profile } = useQuery({
         queryKey: ['recruiter-profile'],
@@ -62,6 +70,12 @@ export function RecruiterJoinCompanyPage() {
         mutationFn: ({ companyId, data }: { companyId: number; data: SubmitJoinCompanyRequest }) =>
             submitJoinCompanyRequest(companyId, data),
         onSuccess: () => {
+            setHasPendingRequest(true)
+            try {
+                localStorage.setItem('tb_recruiter_pending_join', 'true')
+            } catch {
+                // ignore
+            }
             setSuccessMessage(
                 `Đã gửi yêu cầu gia nhập ${selectedCompany?.name} thành công! Đang chờ HR công ty xét duyệt.`,
             )
@@ -73,6 +87,14 @@ export function RecruiterJoinCompanyPage() {
         },
         onError: (err) => {
             if (err instanceof RecruiterApiError) {
+                if (err.status === 409) {
+                    setHasPendingRequest(true)
+                    try {
+                        localStorage.setItem('tb_recruiter_pending_join', 'true')
+                    } catch {
+                        // ignore
+                    }
+                }
                 setServerError(err.message)
             } else {
                 setServerError('Không thể gửi yêu cầu xin gia nhập. Vui lòng thử lại.')
@@ -84,6 +106,7 @@ export function RecruiterJoinCompanyPage() {
         e.preventDefault()
         setSearchTerm(keyword.trim())
         setCurrentPage(1)
+        setShowAutocomplete(false)
     }
 
     function openJoinModal(company: CompanyResponse) {
@@ -162,6 +185,18 @@ export function RecruiterJoinCompanyPage() {
                 </div>
             )}
 
+            {hasPendingRequest && (
+                <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    <AlertCircle className="shrink-0 text-amber-600" size={20} />
+                    <div className="flex-1">
+                        <p className="font-semibold">Bạn đang có yêu cầu xin gia nhập đang chờ xét duyệt</p>
+                        <p className="text-xs text-amber-700">
+                            Hệ thống tạm thời khóa nút gửi yêu cầu gia nhập mới cho đến khi có phản hồi từ Ban quản trị công ty.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Search Toolbar */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                 <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleSearchSubmit}>
@@ -169,11 +204,57 @@ export function RecruiterJoinCompanyPage() {
                         <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             className="h-11 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                            onChange={(e) => setKeyword(e.target.value)}
-                            placeholder="Tìm theo tên công ty hoặc từ khóa..."
+                            onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
+                            onChange={(e) => {
+                                setKeyword(e.target.value)
+                                setShowAutocomplete(e.target.value.trim().length > 0)
+                            }}
+                            onFocus={() => {
+                                if (keyword.trim().length > 0) setShowAutocomplete(true)
+                            }}
+                            placeholder="Tìm kiếm công ty dạng Auto-complete / Danh sách thẻ công ty..."
                             type="text"
                             value={keyword}
                         />
+
+                        {/* Auto-complete Dropdown */}
+                        {showAutocomplete && companyPage?.content && companyPage.content.length > 0 && (
+                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                                {companyPage.content
+                                    .filter((c) =>
+                                        c.name.toLowerCase().includes(keyword.toLowerCase()),
+                                    )
+                                    .slice(0, 5)
+                                    .map((company) => (
+                                        <button
+                                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-emerald-50"
+                                            key={company.id}
+                                            onClick={() => {
+                                                setKeyword(company.name)
+                                                setSearchTerm(company.name)
+                                                setShowAutocomplete(false)
+                                                openJoinModal(company)
+                                            }}
+                                            type="button"
+                                        >
+                                            <div className="grid size-8 shrink-0 place-items-center rounded bg-emerald-100 text-xs font-bold text-emerald-700">
+                                                {company.logoUrl ? (
+                                                    <img alt="" className="size-8 rounded object-contain" src={company.logoUrl} />
+                                                ) : (
+                                                    <Building2 size={16} />
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-xs font-semibold text-slate-800">{company.name}</p>
+                                                <p className="truncate text-[11px] text-slate-500">{company.address || company.city || 'Doanh nghiệp đã duyệt'}</p>
+                                            </div>
+                                            <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800">
+                                                Xin gia nhập
+                                            </span>
+                                        </button>
+                                    ))}
+                            </div>
+                        )}
                     </div>
 
                     <button
@@ -298,9 +379,9 @@ export function RecruiterJoinCompanyPage() {
                             <div className="mt-5 pt-3 border-t border-slate-100">
                                 <button
                                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-600 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={hasCompany}
+                                    disabled={hasCompany || hasPendingRequest}
                                     onClick={() => openJoinModal(company)}
-                                    title={hasCompany ? 'Bạn đã thuộc về một công ty' : 'Gửi đơn xin gia nhập'}
+                                    title={hasCompany ? 'Bạn đã thuộc về một công ty' : hasPendingRequest ? 'Bạn đang có yêu cầu khác đang chờ duyệt' : 'Gửi đơn xin gia nhập'}
                                     type="button"
                                 >
                                     <UserPlus size={15} />
@@ -410,8 +491,9 @@ export function RecruiterJoinCompanyPage() {
                                     Hủy bỏ
                                 </button>
                                 <button
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow transition hover:bg-emerald-700 disabled:opacity-70"
-                                    disabled={joinMutation.isPending}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={joinMutation.isPending || hasPendingRequest || hasCompany}
+                                    title={hasPendingRequest ? 'Bạn đã có yêu cầu khác đang chờ duyệt' : undefined}
                                     type="submit"
                                 >
                                     {joinMutation.isPending ? (

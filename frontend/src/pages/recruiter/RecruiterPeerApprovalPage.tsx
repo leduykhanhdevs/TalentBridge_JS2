@@ -64,11 +64,28 @@ export function RecruiterPeerApprovalPage() {
         enabled: Boolean(profile?.companyId && profile?.companyStatus === 'APPROVED'),
     })
 
+    const { data: pendingCountData } = useQuery({
+        queryKey: ['company-join-requests-pending-count'],
+        queryFn: () =>
+            getCompanyJoinRequests({
+                status: 'PENDING',
+                page: 1,
+                size: 1,
+            }),
+        enabled: Boolean(profile?.companyId && profile?.companyStatus === 'APPROVED'),
+    })
+
+    const pendingCount =
+        pendingCountData?.totalElements ??
+        (selectedStatus === 'PENDING' ? requestsPage?.totalElements : 0) ??
+        0
+
     const reviewMutation = useMutation({
         mutationFn: ({ requestId, data }: { requestId: number; data: ReviewJoinRequest }) =>
             reviewJoinRequest(requestId, data),
         onSuccess: (_res, variables) => {
             queryClient.invalidateQueries({ queryKey: ['company-join-requests'] })
+            queryClient.invalidateQueries({ queryKey: ['company-join-requests-pending-count'] })
             const actionText = variables.data.status === 'ACCEPTED' ? 'Phê duyệt' : 'Từ chối'
             setActionMessage(`${actionText} yêu cầu gia nhập thành công!`)
             setRejectingRequest(null)
@@ -213,14 +230,14 @@ export function RecruiterPeerApprovalPage() {
 
                 {(
                     [
-                        { key: 'PENDING', label: 'Chờ xét duyệt' },
+                        { key: 'PENDING', label: 'Yêu cầu chờ duyệt' },
                         { key: 'ACCEPTED', label: 'Đã phê duyệt' },
                         { key: 'REJECTED', label: 'Đã từ chối' },
                         { key: 'ALL', label: 'Tất cả' },
                     ] as const
                 ).map((tab) => (
                     <button
-                        className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+                        className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
                             selectedStatus === tab.key
                                 ? 'bg-emerald-600 text-white shadow-sm'
                                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -232,7 +249,18 @@ export function RecruiterPeerApprovalPage() {
                         }}
                         type="button"
                     >
-                        {tab.label}
+                        <span>{tab.label}</span>
+                        {tab.key === 'PENDING' && Number(pendingCount) > 0 && (
+                            <span
+                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                                    selectedStatus === tab.key
+                                        ? 'bg-white text-emerald-700'
+                                        : 'bg-amber-500 text-white'
+                                }`}
+                            >
+                                {pendingCount}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>

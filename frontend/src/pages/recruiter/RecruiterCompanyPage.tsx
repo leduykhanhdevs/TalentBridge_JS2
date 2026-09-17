@@ -140,6 +140,20 @@ export function RecruiterCompanyPage() {
         })
     }
 
+    function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                if (typeof reader.result === 'string') {
+                    setFormValues((prev) => ({ ...prev, logoUrl: reader.result as string }))
+                    setFieldErrors((prev) => ({ ...prev, logoUrl: undefined }))
+                }
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="flex h-64 items-center justify-center">
@@ -509,16 +523,50 @@ export function RecruiterCompanyPage() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="comp-logo">
-                                URL ảnh Logo công ty
+                                Logo công ty (Upload ảnh hoặc nhập URL)
                             </label>
-                            <input
-                                className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                                id="comp-logo"
-                                onChange={(e) => setFormValues((prev) => ({ ...prev, logoUrl: e.target.value }))}
-                                placeholder="https://example.com/logo.png"
-                                type="url"
-                                value={formValues.logoUrl}
-                            />
+                            <div className="space-y-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <input
+                                        className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                                        id="comp-logo"
+                                        onChange={(e) => setFormValues((prev) => ({ ...prev, logoUrl: e.target.value }))}
+                                        placeholder="Nhập link ảnh (https://...) hoặc bấm nút tải ảnh bên cạnh"
+                                        type="url"
+                                        value={formValues.logoUrl}
+                                    />
+                                    <label className="inline-flex items-center justify-center gap-2 cursor-pointer h-11 px-4 rounded-xl border border-dashed border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition shrink-0">
+                                        <span>Tải ảnh lên</span>
+                                        <input
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleLogoFileChange}
+                                            type="file"
+                                        />
+                                    </label>
+                                </div>
+
+                                {formValues.logoUrl && (
+                                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                        <span className="text-xs font-medium text-slate-500">Xem trước logo:</span>
+                                        <img
+                                            alt="Logo preview"
+                                            className="size-14 rounded-lg border border-slate-200 bg-white object-contain p-1 shadow-sm"
+                                            onError={(e) => {
+                                                ;(e.target as HTMLElement).style.display = 'none'
+                                            }}
+                                            src={formValues.logoUrl}
+                                        />
+                                        <button
+                                            className="ml-auto text-xs font-medium text-red-600 hover:text-red-700"
+                                            onClick={() => setFormValues((prev) => ({ ...prev, logoUrl: '' }))}
+                                            type="button"
+                                        >
+                                            Xóa logo
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div>
