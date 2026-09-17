@@ -32,11 +32,14 @@ public enum ErrorCode {
     RESUME_NOT_FOUND(40406, "KhÃ´ng tÃ¬m tháº¥y CV", HttpStatus.NOT_FOUND),
 
     // 409 Conflict
-    EMAIL_ALREADY_EXISTS(40901, "Email nÃ y Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng", HttpStatus.CONFLICT),
-    APPLICATION_ALREADY_EXISTS(40902, "Báº¡n Ä‘Ã£ ná»™p há»“ sÆ¡ vÃ o vá»‹ trÃ­ nÃ y rá»“i", HttpStatus.CONFLICT),
+    EMAIL_ALREADY_EXISTS(40901, "Email này đã được sử dụng", HttpStatus.CONFLICT),
+    APPLICATION_ALREADY_EXISTS(40902, "Bạn đã nộp hồ sơ vào vị trí này rồi", HttpStatus.CONFLICT),
+
+    // 429 Too Many Requests
+    TOO_MANY_REQUESTS(42901, "Quá nhiều yêu cầu. Vui lòng thử lại sau.", HttpStatus.TOO_MANY_REQUESTS),
 
     // 500 Internal Server Error
-    INTERNAL_SERVER_ERROR(50001, "Lá»—i mÃ¡y chá»§ ná»™i bá»™. Vui lÃ²ng thá»­ láº¡i sau", HttpStatus.INTERNAL_SERVER_ERROR);
+    INTERNAL_SERVER_ERROR(50001, "Lỗi máy chủ nội bộ. Vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;
