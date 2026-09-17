@@ -62,6 +62,16 @@
             <artifactId>h2</artifactId>
         </dependency>
 
+        <!-- Flyway Database Migration -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
         <!-- Lombok for Boilerplate Code Reduction -->
         <dependency>
             <groupId>org.projectlombok</groupId>
