@@ -132,6 +132,72 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 
 ---
 
+## ⚡ Hướng Dẫn Khởi Chạy Nhanh (Quick Start Guide)
+
+### 1. Yêu Cầu Môi Trường (Prerequisites)
+- **Java**: JDK 21 LTS (Eclipse Temurin hoặc Oracle OpenJDK).
+- **Maven**: Maven 3.9+ (hoặc sử dụng wrapper `./mvnw` / `mvnw.cmd` có sẵn trong repo).
+- **Node.js**: Node.js 20+ LTS.
+- **Package Manager**: `pnpm` 9+ (khuyên dùng) hoặc `npm`.
+- **Cơ sở dữ liệu**: H2 Database (in-memory, tích hợp sẵn ở profile `local`) hoặc MySQL 8.0+ / MariaDB (ở profile `mysql`).
+
+### 2. Bảng Biến Môi Trường (Environment Variables)
+
+| Tên Biến Môi Trường | Bắt Buộc | Giá Trị Mặc Định / Gợi Ý | Mô Tả |
+| :--- | :---: | :--- | :--- |
+| `JWT_SECRET` | **Có** | `DevJwtSecretMustBeAtLeast256BitsLong32Chars!` | Khóa bí mật ký JWT (tối thiểu 32 ký tự). Hệ thống fail-fast khi khởi động nếu thiếu. |
+| `SPRING_PROFILES_ACTIVE` | Không | `local` | Profile cấu hình Spring Boot (`local` dùng H2 DB, `mysql` dùng MySQL thực tế). |
+| `CORS_ALLOWED_ORIGINS` | Không | `http://localhost:5173,http://127.0.0.1:5173` | Danh sách domain Frontend được phép kết nối qua CORS. |
+| `SPRING_DATASOURCE_URL` | Khi `mysql` | `jdbc:mysql://localhost:3306/talentbridge_db` | URL kết nối MySQL khi chạy profile `mysql`. |
+| `SPRING_DATASOURCE_USERNAME`| Khi `mysql` | `root` | Tài khoản kết nối MySQL. |
+| `SPRING_DATASOURCE_PASSWORD`| Khi `mysql` | `password` | Mật khẩu tài khoản kết nối MySQL. |
+| `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
+| `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
+| `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
+| `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
+| `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |
+
+### 3. Khởi Chạy Backend (Spring Boot 3)
+
+```bash
+# Trên Linux / macOS
+export JWT_SECRET="MySuperSecretKeyForTalentBridgeDevEnvironmentMustBe32CharsLong!"
+./mvnw spring-boot:run
+
+# Trên Windows (PowerShell)
+$env:JWT_SECRET="MySuperSecretKeyForTalentBridgeDevEnvironmentMustBe32CharsLong!"
+.\mvnw.cmd spring-boot:run
+```
+
+- **API Base URL**: `http://localhost:8080`
+- **Tài liệu Swagger / OpenAPI**: `http://localhost:8080/swagger-ui/index.html`
+- **H2 Console** (chỉ ở profile `local`): `http://localhost:8080/h2-console`
+
+### 4. Khởi Chạy Frontend (React 19 + Vite)
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+- **Frontend Portal**: `http://localhost:5173` (tự động proxy request `/api/v1/*` sang backend `http://localhost:8080`).
+
+### 5. Kiểm Thử & Kiểm Tra Toàn Diện (Testing & Verification)
+
+```bash
+# 1. Kiểm thử toàn bộ Backend (Unit Tests, Slice Tests, Integration Tests)
+./mvnw verify
+
+# 2. Kiểm thử toàn bộ Frontend (Unit Tests, E2E Flow Tests, Linting & Production Build)
+cd frontend
+pnpm test --run
+pnpm lint
+pnpm build
+```
+
+---
+
 ## 🤖 QUY CHUẨN BẮT BUỘC KHI SỬ DỤNG AI ĐỂ CODE (CHUẨN CEO)
 
 Nếu thành viên sử dụng AI (ChatGPT, Gemini, Claude, Cursor, Copilot...) hỗ trợ lập trình, **BẮT BUỘC** phải tuân thủ 5 nguyên tắc thép:
