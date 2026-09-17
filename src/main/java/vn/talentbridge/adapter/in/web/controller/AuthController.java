@@ -69,7 +69,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Đăng nhập hệ thống", description = "Xác thực email & mật khẩu, trả về cặp JWT Access Token (15p/24h) và Refresh Token (7 ngày)")
+    @Operation(summary = "Đăng nhập hệ thống", description = "Xác thực email & mật khẩu, trả về cặp JWT Access Token (24h) và Refresh Token (7 ngày)")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đăng nhập thành công, trả về Access & Refresh Token",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class))),
