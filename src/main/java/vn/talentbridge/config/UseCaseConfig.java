@@ -19,6 +19,7 @@ public class UseCaseConfig {
     public RegisterUseCase registerUseCase(
             UserRepositoryPort userRepository,
             RecruiterRepositoryPort recruiterRepository,
+            CandidateRepositoryPort candidateRepository,
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
@@ -30,6 +31,7 @@ public class UseCaseConfig {
         return new RegisterUseCaseImpl(
                 userRepository,
                 recruiterRepository,
+                candidateRepository,
                 passwordEncoder,
                 tokenProvider,
                 authSessionRepository,
@@ -168,5 +170,19 @@ public class UseCaseConfig {
             RecruiterRepositoryPort recruiterRepository,
             CompanyRepositoryPort companyRepository) {
         return new RequestCreateCompanyUseCaseImpl(recruiterRepository, companyRepository);
+    }
+
+    @Bean
+    public GetCandidateProfileUseCase getCandidateProfileUseCase(
+            CandidateRepositoryPort candidateRepository,
+            UserRepositoryPort userRepository) {
+        return new GetCandidateProfileUseCaseImpl(candidateRepository, userRepository);
+    }
+
+    @Bean
+    public UpdateCandidateProfileUseCase updateCandidateProfileUseCase(
+            CandidateRepositoryPort candidateRepository,
+            UserRepositoryPort userRepository) {
+        return new UpdateCandidateProfileUseCaseImpl(candidateRepository, userRepository);
     }
 }

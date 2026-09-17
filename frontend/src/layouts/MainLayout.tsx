@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BriefcaseBusiness, Building2, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -31,6 +31,8 @@ export function MainLayout() {
     }
 
     const isAdmin = authenticated && user?.roles?.includes('ROLE_ADMIN')
+    const isRecruiter = authenticated && user?.roles?.includes('ROLE_RECRUITER')
+    const isCandidate = authenticated && (user?.roles?.includes('ROLE_CANDIDATE') || (!isAdmin && !isRecruiter))
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
@@ -72,6 +74,38 @@ export function MainLayout() {
                         >
                             Trang chủ
                         </NavLink>
+
+                        {isCandidate && (
+                            <NavLink
+                                className={({ isActive }) =>
+                                    `inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                        isActive
+                                            ? 'bg-blue-600 text-white shadow-sm'
+                                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                                    }`
+                                }
+                                to="/candidate/profile"
+                            >
+                                <User size={16} />
+                                <span>Hồ sơ của tôi</span>
+                            </NavLink>
+                        )}
+
+                        {isRecruiter && (
+                            <NavLink
+                                className={({ isActive }) =>
+                                    `inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                        isActive
+                                            ? 'bg-emerald-600 text-white shadow-sm'
+                                            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                    }`
+                                }
+                                to="/recruiter/profile"
+                            >
+                                <Building2 size={16} />
+                                <span>Kênh Tuyển dụng</span>
+                            </NavLink>
+                        )}
 
                         {isAdmin && (
                             <NavLink

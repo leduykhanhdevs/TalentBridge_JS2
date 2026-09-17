@@ -3,10 +3,13 @@ export type CandidateRegisterRequest = {
     password: string
     fullName: string
     phone?: string
-    role: 'ROLE_CANDIDATE'
+    role: 'ROLE_CANDIDATE' | 'ROLE_RECRUITER'
+    position?: string
 }
 
 export type UserRole = 'ROLE_CANDIDATE' | 'ROLE_RECRUITER' | 'ROLE_ADMIN'
+
+export type RegisterRequest = CandidateRegisterRequest
 
 export type UserResponse = {
     id: number
