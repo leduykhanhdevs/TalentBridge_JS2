@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BriefcaseBusiness, Building2, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -31,6 +31,7 @@ export function MainLayout() {
     }
 
     const isAdmin = authenticated && user?.roles?.includes('ROLE_ADMIN')
+    const isRecruiter = authenticated && user?.roles?.includes('ROLE_RECRUITER')
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
@@ -72,6 +73,22 @@ export function MainLayout() {
                         >
                             Trang chủ
                         </NavLink>
+
+                        {isRecruiter && (
+                            <NavLink
+                                className={({ isActive }) =>
+                                    `inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                        isActive
+                                            ? 'bg-emerald-600 text-white shadow-sm'
+                                            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                    }`
+                                }
+                                to="/recruiter/profile"
+                            >
+                                <Building2 size={16} />
+                                <span>Kênh Tuyển dụng</span>
+                            </NavLink>
+                        )}
 
                         {isAdmin && (
                             <NavLink

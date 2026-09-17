@@ -1,4 +1,4 @@
-﻿*.class
+*.class
 *.log
 target/
 .idea/
@@ -8,3 +8,6 @@ target/
 Thumbs.db
 ~$*
 temp_*
+data/
+*.mv.db
+*.trace.db
