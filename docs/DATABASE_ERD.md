@@ -1,14 +1,14 @@
 # 📊 BẢN VẼ THIẾT KẾ CƠ SỞ DỮ LIỆU (ERD) – DỰ ÁN TALENTBRIDGE
 
 > **Dự án**: TalentBridge – Nền tảng tuyển dụng trực tuyến, Quản lý ứng viên (ATS) & Trình tạo CV (CV Builder)  
-> **Chuẩn hóa**: 3NF (Third Normal Form) – **23 Bảng hoàn chỉnh**  
+> **Chuẩn hóa**: 3NF (Third Normal Form) – **27 Bảng hoàn chỉnh**  
 > **Hệ quản trị CSDL**: MySQL 8.0+ / MariaDB (`utf8mb4_unicode_ci`)  
 > **Script DDL thực thi**: [`database/schema.sql`](../database/schema.sql)  
 > **Mã nguồn DBML (vẽ online tương tác)**: [`docs/talentbridge_erd.dbml`](./talentbridge_erd.dbml)
 
 ---
 
-## 1. 🖼️ SƠ ĐỒ THỰC THỂ QUAN HỆ CHI TIẾT (FULL MERMAID ERD - 23 TABLES)
+## 1. 🖼️ SƠ ĐỒ THỰC THỂ QUAN HỆ CHI TIẾT (FULL MERMAID ERD - 27 TABLES)
 
 ```mermaid
 erDiagram
@@ -28,17 +28,41 @@ erDiagram
     }
 
     ROLES {
-        int id PK
+        bigint id PK
         varchar name UK
+        varchar description
     }
 
     USER_ROLES {
         bigint user_id PK,FK
-        int role_id PK,FK
+        bigint role_id PK,FK
+    }
+
+    AUTH_SESSIONS {
+        bigint id PK
+        varchar session_id UK
+        bigint user_id FK
+        varchar refresh_token_hash
+        varchar ip_address
+        varchar user_agent
+        timestamp expires_at
+        timestamp revoked_at
+        timestamp created_at
+    }
+
+    PASSWORD_RESET_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        varchar token_hash UK
+        timestamp expires_at
+        timestamp used_at
+        timestamp created_at
     }
 
     USERS ||--o{ USER_ROLES : "assigned_to"
     ROLES ||--o{ USER_ROLES : "belongs_to"
+    USERS ||--o{ AUTH_SESSIONS : "holds_session"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "requests_reset"
 
     %% ====================================================
     %% 2. CANDIDATE PROFILE (TOPCV STANDARD)
@@ -210,8 +234,23 @@ erDiagram
         timestamp created_at
     }
 
+    COMPANY_JOIN_REQUESTS {
+        bigint id PK
+        bigint company_id FK
+        bigint recruiter_id FK
+        varchar status
+        varchar request_note
+        varchar response_note
+        bigint reviewed_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
     USERS ||--o| RECRUITERS : "is_recruiter"
     COMPANIES ||--o{ RECRUITERS : "employs"
+    COMPANIES ||--o{ COMPANY_JOIN_REQUESTS : "receives_join_request"
+    RECRUITERS ||--o{ COMPANY_JOIN_REQUESTS : "submits_join_request"
+    USERS ||--o{ COMPANY_JOIN_REQUESTS : "reviews_request"
 
     %% ====================================================
     %% 5. JOBS, CATEGORIES & SKILLS
@@ -341,7 +380,7 @@ Nếu bạn muốn có một bản vẽ đồ họa có màu sắc, kéo thả c
 1. Truy cập trang web miễn phí: 👉 **[https://dbdiagram.io/d](https://dbdiagram.io/d)**
 2. Mở file [docs/talentbridge_erd.dbml](file:///D:/Mon%20hoc%20ITC/Java%20Spring%202/TalentBridge_JS2/docs/talentbridge_erd.dbml) đã được tạo sẵn trong dự án.
 3. Copy toàn bộ nội dung và dán (paste) vào khung code bên trái của `dbdiagram.io`.
-4. Màn hình bên phải sẽ lập tức tự động dựng nên sơ đồ CSDL hoàn chỉnh 23 bảng:
+4. Màn hình bên phải sẽ lập tức tự động dựng nên sơ đồ CSDL hoàn chỉnh 27 bảng:
    - Các đường nối quan hệ Khóa ngoại (FK) rõ ràng.
    - Hiển thị từng trường, kiểu dữ liệu, ràng buộc PK/UK.
    - Bạn có thể bấm **Export** $\to$ **Export to PNG / PDF** để chèn vào Word đề tài hoặc Slide báo cáo bảo vệ đồ án!
@@ -353,6 +392,8 @@ Nếu bạn muốn có một bản vẽ đồ họa có màu sắc, kéo thả c
 ### Cụm 1: Phân quyền & Xác thực (Authentication & RBAC)
 - `users`: Bảng trung tâm xác thực cho cả 3 Actor (`ROLE_CANDIDATE`, `ROLE_RECRUITER`, `ROLE_ADMIN`).
 - `roles` & `user_roles`: Thiết kế N-N hỗ trợ người dùng sở hữu nhiều vai trò linh hoạt.
+- `auth_sessions`: Quản lý phiên đăng nhập, thiết bị, IP và refresh token hash.
+- `password_reset_tokens`: Lưu trữ token/OTP đặt lại mật khẩu với cơ chế băm SHA-256.
 
 ### Cụm 2: Hồ sơ Ứng viên Chuẩn TopCV (TopCV Candidate Profile)
 - `candidates`: Bổ sung thông tin cá nhân mở rộng (`dob`, `gender`, `bio`, `personal_website`, `linkedin_url`, `github_url`).
@@ -372,6 +413,7 @@ Nếu bạn muốn có một bản vẽ đồ họa có màu sắc, kéo thả c
 ### Cụm 4: Doanh nghiệp & Nhà tuyển dụng (Company & Recruiters)
 - `companies`: Hồ sơ pháp nhân, trạng thái duyệt `PENDING` $\to$ `APPROVED`/`REJECTED` do Admin quản lý.
 - `recruiters`: Quan hệ 1-1 với `users` và N-1 với `companies`. Một công ty có thể có nhiều HR tuyển dụng.
+- `company_join_requests`: Quản lý các yêu cầu xin gia nhập doanh nghiệp của HR Recruiter.
 
 ### Cụm 5: Việc làm & Tìm kiếm (Jobs, Categories & Skills)
 - `jobs`: Tin tuyển dụng thuộc về `companies`, do một `recruiters` tạo ra, thuộc một danh mục `categories`.

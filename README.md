@@ -11,7 +11,7 @@
 ### 1. 👑 Lê Duy Khánh – Trưởng nhóm (Tech Lead & Security / Admin Module)
 - [x] Đọc và phân tích kỹ tài liệu đề tài `02.docx`.
 - [x] Thiết kế kiến trúc tổng thể, danh mục 4 Actor, 7 Feature Modules và các luồng nghiệp vụ.
-- [x] Thiết kế CSDL chuẩn hóa 3NF 16 bảng (`docs/DATABASE_DESIGN.md` & `database/schema.sql`).
+- [x] Thiết kế CSDL chuẩn hóa 3NF 27 bảng (`docs/DATABASE_DESIGN.md` & `database/schema.sql`).
 - [x] Xây dựng bộ quy tắc làm việc nhóm, Git Flow & Quy chuẩn AI Code (`TEAM_RULES_AND_GITFLOW.md`).
 - [x] Khởi tạo Repository GitHub, cấu hình `.gitignore`, bảo vệ nhánh `main`, tạo nhánh `dev` và push lên remote.
 - [x] Khởi tạo Skeleton Spring Boot 3 (Maven/Gradle, Spring Web, Spring Data JPA, Lombok, Validation).
@@ -118,13 +118,14 @@ flowchart LR
 
 ## 🗄️ Thiết Kế Cơ Sở Dữ Liệu (Hoàn Thành Trước 14/09/2026)
 
-Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **16 bảng** liên kết chặt chẽ:
-- `users`, `roles`, `user_roles`: Quản lý tài khoản & phân quyền.
-- `candidates`, `resumes`: Hồ sơ ứng viên và file CV.
-- `companies`, `recruiters`: Hồ sơ doanh nghiệp và nhân sự HR.
-- `categories`, `skills`, `jobs`, `job_skills`, `saved_jobs`: Việc làm và tìm kiếm.
-- `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS.
-- `interviews`, `notifications`: Lịch phỏng vấn và thông báo.
+Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bảng** liên kết chặt chẽ:
+- `users`, `roles`, `user_roles`, `auth_sessions`, `password_reset_tokens`: Quản lý tài khoản, phân quyền & bảo mật phiên đăng nhập.
+- `candidates`, `work_experiences`, `educations`, `candidate_skills`, `candidate_projects`, `candidate_certificates`, `candidate_awards`: Hồ sơ ứng viên chuẩn TopCV.
+- `cv_templates`, `resumes`: Quản lý mẫu CV & tạo/tải CV.
+- `companies`, `recruiters`, `company_join_requests`: Doanh nghiệp, nhân sự HR & yêu cầu gia nhập công ty.
+- `categories`, `skills`, `jobs`, `job_skills`, `saved_jobs`: Việc làm, kỹ năng & tìm kiếm.
+- `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS pipeline.
+- `interviews`, `notifications`: Lịch phỏng vấn và thông báo hệ thống.
 
 > 📖 **Xem chi tiết tài liệu CSDL**: [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)  
 > 💾 **File script DDL MySQL**: [database/schema.sql](database/schema.sql)
