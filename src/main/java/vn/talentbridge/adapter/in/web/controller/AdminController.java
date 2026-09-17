@@ -50,8 +50,8 @@ public class AdminController {
             @RequestParam(required = false) UserStatus status
     ) {
         int pageIndex = Math.max(0, page - 1);
-        List<UserResult> users = adminManagementUseCase.getAllUsers(pageIndex, size);
-        long totalElements = adminManagementUseCase.countUsers();
+        List<UserResult> users = adminManagementUseCase.getAllUsers(pageIndex, size, status);
+        long totalElements = adminManagementUseCase.countUsers(status);
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
         List<UserResponse> content = users.stream().map(UserResponse::from).toList();
