@@ -28,7 +28,7 @@ public class UseCaseConfig {
             @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
             long refreshExpirationMs
     ) {
-        return new RegisterUseCaseImpl(
+        RegisterUseCase core = new RegisterUseCaseImpl(
                 userRepository,
                 recruiterRepository,
                 candidateRepository,
@@ -38,6 +38,7 @@ public class UseCaseConfig {
                 expirationMs,
                 refreshExpirationMs
         );
+        return new TransactionalRegisterUseCase(core);
     }
 
     @Bean
