@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, LogIn, LogOut, User, UserPlus } from 'lucide-react'
+import { BriefcaseBusiness, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -29,6 +29,8 @@ export function MainLayout() {
         await logoutUser()
         navigate('/login')
     }
+
+    const isAdmin = authenticated && user?.roles?.includes('ROLE_ADMIN')
 
     return (
         <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
@@ -70,6 +72,22 @@ export function MainLayout() {
                         >
                             Trang chủ
                         </NavLink>
+
+                        {isAdmin && (
+                            <NavLink
+                                className={({ isActive }) =>
+                                    `inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                        isActive
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                    }`
+                                }
+                                to="/admin/candidates"
+                            >
+                                <ShieldCheck size={16} />
+                                <span>Quản trị</span>
+                            </NavLink>
+                        )}
 
                         {authenticated && user ? (
                             <div className="flex items-center gap-2 sm:gap-3">
