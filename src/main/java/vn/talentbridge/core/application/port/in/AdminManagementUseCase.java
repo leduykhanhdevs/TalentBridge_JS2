@@ -9,7 +9,9 @@ import java.util.List;
 
 public interface AdminManagementUseCase {
     List<UserResult> getAllUsers(int page, int size);
+    List<UserResult> getAllUsers(int page, int size, UserStatus status);
     long countUsers();
+    long countUsers(UserStatus status);
     UserResult updateUserStatus(Long userId, UserStatus status);
 
     List<CompanyResult> getAllCompanies(int page, int size, String keyword, CompanyStatus status);
