@@ -83,11 +83,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
             loginAttemptTracker.resetAttempts(command.email());
         }
 
-        String primaryRole = user.getRoles().stream()
-                .findFirst()
-                .map(Role::getName)
-                .map(Enum::name)
-                .orElse("ROLE_CANDIDATE");
+        String primaryRole = user.getPrimaryRoleName();
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sessionExpiresAt = now.plus(
