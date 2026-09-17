@@ -33,6 +33,8 @@ public class GlobalExceptionHandler {
             status = HttpStatus.UNAUTHORIZED;
         } else if (statusGroup == 403) {
             status = HttpStatus.FORBIDDEN;
+        } else if (statusGroup == 429) {
+            status = HttpStatus.TOO_MANY_REQUESTS;
         }
         ApiResponse<Object> response = ApiResponse.error(ex.getCode(), ex.getMessage());
         return new ResponseEntity<>(response, status);

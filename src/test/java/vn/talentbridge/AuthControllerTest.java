@@ -27,6 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import vn.talentbridge.adapter.in.web.dto.request.RefreshTokenRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import vn.talentbridge.adapter.out.security.JwtTokenProviderAdapter;
+import vn.talentbridge.core.domain.vo.UserStatus;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -194,6 +197,118 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.statusCode").value(40102));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login - Sai mật khẩu và email không tồn tại trả về cùng thông báo")
+    void testLoginReturnsGenericErrorForInvalidCredentials() throws Exception {
+        RegisterRequest registerReq = RegisterRequest.builder()
+                .email("generic-error@test.com")
+                .password("password123")
+                .fullName("Generic Error User")
+                .role("ROLE_CANDIDATE")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated());
+
+        MvcResult wrongPasswordResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(LoginRequest.builder()
+                                .email("generic-error@test.com")
+                                .password("wrongpassword")
+                                .build())))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+
+        MvcResult missingAccountResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(LoginRequest.builder()
+                                .email("missing-account@test.com")
+                                .password("wrongpassword")
+                                .build())))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+
+        String wrongPasswordMessage = objectMapper.readTree(
+                wrongPasswordResult.getResponse().getContentAsString()).path("message").asText();
+        String missingAccountMessage = objectMapper.readTree(
+                missingAccountResult.getResponse().getContentAsString()).path("message").asText();
+
+        assertEquals(wrongPasswordMessage, missingAccountMessage);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login - Tài khoản bị khóa trả về HTTP 403 Forbidden")
+    void testLoginLockedAccount() throws Exception {
+        RegisterRequest registerReq = RegisterRequest.builder()
+                .email("locked@test.com")
+                .password("password123")
+                .fullName("Locked User")
+                .role("ROLE_CANDIDATE")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated());
+
+        var user = userJpaRepository.findByEmail("locked@test.com").orElseThrow();
+        user.setStatus(UserStatus.LOCKED);
+        userJpaRepository.save(user);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(LoginRequest.builder()
+                                .email("locked@test.com")
+                                .password("password123")
+                                .build())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.statusCode").value(40301));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/login - Sai 5 lần trả về HTTP 429 Too Many Requests")
+    void testLoginRepeatedFailuresAreRateLimited() throws Exception {
+        RegisterRequest registerReq = RegisterRequest.builder()
+                .email("rate-limit@test.com")
+                .password("correct123")
+                .fullName("Rate Limit User")
+                .role("ROLE_CANDIDATE")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated());
+
+        LoginRequest invalidLogin = LoginRequest.builder()
+                .email("rate-limit@test.com")
+                .password("wrongpassword")
+                .build();
+
+        for (int attempt = 1; attempt < 5; attempt++) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(invalidLogin)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidLogin)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.statusCode").value(42901));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(LoginRequest.builder()
+                                .email("rate-limit@test.com")
+                                .password("correct123")
+                                .build())))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

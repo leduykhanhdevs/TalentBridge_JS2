@@ -122,7 +122,11 @@ Tất cả các API lấy danh sách (`/admin/candidates`, `/admin/recruiters`, 
     "password": "Password@123"
   }
   ```
-* **Response Status**: `200 OK` (hoặc `401 Unauthorized` nếu sai mật khẩu).
+* **Response Status**:
+  * `200 OK`: Đăng nhập thành công.
+  * `401 Unauthorized`: Email hoặc mật khẩu không chính xác.
+  * `403 Forbidden`: Tài khoản chưa hoạt động hoặc đã bị khóa.
+  * `429 Too Many Requests`: Đăng nhập sai từ 5 lần; tạm giới hạn trong 60 giây.
 
 #### 3. Làm mới Access Token (`POST /api/v1/auth/refresh-token`)
 * **Request Body**: `{"refreshToken": "eyJhbGciOi..."}`

@@ -5,16 +5,19 @@ import vn.talentbridge.core.application.dto.LoginCommand;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
+import vn.talentbridge.core.application.port.out.LoginAttemptTrackerPort;
 import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
 import vn.talentbridge.core.domain.exception.InvalidCredentialsException;
+import vn.talentbridge.core.domain.exception.TooManyLoginAttemptsException;
 import vn.talentbridge.core.domain.exception.UserAccountLockedException;
 import vn.talentbridge.core.domain.model.AuthSession;
 import vn.talentbridge.core.domain.model.Role;
 import vn.talentbridge.core.domain.model.User;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 public class LoginUseCaseImpl implements LoginUseCase {
@@ -22,6 +25,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final AuthSessionRepositoryPort authSessionRepository;
+    private final LoginAttemptTrackerPort loginAttemptTracker;
     private final long tokenExpirationMs;
     private final long refreshTokenExpirationMs;
 
@@ -30,6 +34,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
+            LoginAttemptTrackerPort loginAttemptTracker,
             long tokenExpirationMs,
             long refreshTokenExpirationMs
     ) {
@@ -37,22 +42,33 @@ public class LoginUseCaseImpl implements LoginUseCase {
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.authSessionRepository = authSessionRepository;
+        this.loginAttemptTracker = loginAttemptTracker;
         this.tokenExpirationMs = tokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
     @Override
     public AuthResult login(LoginCommand command) {
-        User user = userRepository.findByEmail(command.email())
-                .orElseThrow(InvalidCredentialsException::new);
+        String normalizedEmail = command.email()
+                .trim()
+                .toLowerCase(Locale.ROOT);
+
+        if (loginAttemptTracker.isBlocked(normalizedEmail)) {
+            throw new TooManyLoginAttemptsException();
+        }
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> invalidCredentials(normalizedEmail));
 
         if (!passwordEncoder.matches(command.password(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
+            throw invalidCredentials(normalizedEmail);
         }
 
         if (!user.isActive()) {
             throw new UserAccountLockedException();
         }
+
+        loginAttemptTracker.reset(normalizedEmail);
 
         String primaryRole = user.getRoles().stream()
                 .findFirst()
@@ -117,5 +133,12 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 expiresInSeconds,
                 UserResult.from(user)
         );
+    }
+
+    private RuntimeException invalidCredentials(String identifier) {
+        if (loginAttemptTracker.recordFailure(identifier)) {
+            return new TooManyLoginAttemptsException();
+        }
+        return new InvalidCredentialsException();
     }
 }

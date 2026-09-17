@@ -143,7 +143,11 @@ export async function loginUser(
         const defaultMessage =
             response.status === 401
                 ? 'Email hoặc mật khẩu không chính xác.'
-                : 'Đăng nhập không thành công. Vui lòng thử lại.'
+                : response.status === 403
+                  ? 'Tài khoản chưa hoạt động hoặc đã bị khóa.'
+                  : response.status === 429
+                    ? 'Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau.'
+                    : 'Đăng nhập không thành công. Vui lòng thử lại.'
         const fieldErrors =
             response.status === 400 && isValidationErrors(body?.data)
                 ? body.data
@@ -263,4 +267,3 @@ export async function resetPassword(
         )
     }
 }
-
