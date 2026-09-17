@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RefreshTokenRequest;
@@ -51,6 +52,7 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Email đã tồn tại trên hệ thống (Conflict)",
                     content = @Content(mediaType = "application/json"))
     })
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         AuthResult result = registerUseCase.register(new RegisterCommand(
                 request.getEmail(),
