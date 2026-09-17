@@ -37,7 +37,6 @@ public class RegisterRequest {
     private String phone;
 
     @NotBlank(message = "Vai trò đăng ký không được để trống")
-    @Pattern(regexp = "^(ROLE_CANDIDATE|ROLE_RECRUITER)$", message = "Vai trò chỉ được là ROLE_CANDIDATE hoặc ROLE_RECRUITER")
     @Schema(description = "Vai trò người dùng đăng ký", example = "ROLE_CANDIDATE", allowableValues = {
             "ROLE_CANDIDATE", "ROLE_RECRUITER" }, requiredMode = Schema.RequiredMode.REQUIRED)
     private String role;

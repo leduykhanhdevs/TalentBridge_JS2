@@ -7,10 +7,11 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     // 400 Bad Request
-    INVALID_REQUEST(40001, "YÃªu cáº§u khÃ´ng há»£p lá»‡", HttpStatus.BAD_REQUEST),
-    VALIDATION_FAILED(40002, "Dá»¯ liá»‡u Ä‘áº§u vÃ o khÃ´ng há»£p lá»‡", HttpStatus.BAD_REQUEST),
-    INVALID_INPUT_FORMAT(40003, "Äá»‹nh dáº¡ng dá»¯ liá»‡u khÃ´ng Ä‘Ãºng", HttpStatus.BAD_REQUEST),
-    PASSWORD_NOT_MATCH(40004, "Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p", HttpStatus.BAD_REQUEST),
+    INVALID_REQUEST(40001, "Yêu cầu không hợp lệ", HttpStatus.BAD_REQUEST),
+    VALIDATION_FAILED(40002, "Dữ liệu đầu vào không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_INPUT_FORMAT(40003, "Định dạng dữ liệu không đúng", HttpStatus.BAD_REQUEST),
+    PASSWORD_NOT_MATCH(40004, "Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
+    INVALID_ROLE(40005, "Vai trò không hợp lệ", HttpStatus.BAD_REQUEST),
 
     // 401 Unauthorized
     UNAUTHORIZED(40101, "Báº¡n chÆ°a Ä‘Äƒng nháº­p hoáº·c phiÃªn lÃ m viá»‡c Ä‘Ã£ háº¿t háº¡n", HttpStatus.UNAUTHORIZED),

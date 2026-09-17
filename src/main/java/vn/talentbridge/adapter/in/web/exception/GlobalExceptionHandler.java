@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.core.domain.exception.DomainException;
+import vn.talentbridge.core.domain.exception.InvalidRoleException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,13 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(InvalidRoleException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidRoleException(InvalidRoleException ex) {
+        log.warn("InvalidRoleException occurred: code={}, message={}", ex.getCode(), ex.getMessage());
+        ApiResponse<Object> response = ApiResponse.error(ex.getCode(), ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiResponse<Object>> handleDomainException(DomainException ex) {

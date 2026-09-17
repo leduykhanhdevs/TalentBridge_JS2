@@ -18,6 +18,7 @@ import vn.talentbridge.core.domain.vo.UserStatus;
 import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.domain.exception.DomainException;
+import vn.talentbridge.core.domain.exception.InvalidRoleException;
 import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.Recruiter;
 
@@ -62,11 +63,19 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             throw new EmailAlreadyUsedException(command.email());
         }
 
+        if (command.role() == null || command.role().isBlank()) {
+            throw new InvalidRoleException(command.role());
+        }
+
         RoleName roleName;
         try {
-            roleName = RoleName.valueOf(command.role());
-        } catch (Exception e) {
-            roleName = RoleName.ROLE_CANDIDATE;
+            roleName = RoleName.valueOf(command.role().trim());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRoleException(command.role());
+        }
+
+        if (roleName != RoleName.ROLE_CANDIDATE && roleName != RoleName.ROLE_RECRUITER) {
+            throw new InvalidRoleException(command.role());
         }
 
         User user = new User();
