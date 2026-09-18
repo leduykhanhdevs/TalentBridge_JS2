@@ -194,4 +194,19 @@ public class UseCaseConfig {
             UserRepositoryPort userRepository) {
         return new UpdateCandidateProfileUseCaseImpl(candidateRepository, userRepository);
     }
+
+    @Bean
+    public WorkExperienceUseCase workExperienceUseCase(
+            CandidateRepositoryPort candidateRepository,
+            WorkExperienceRepositoryPort workExperienceRepository) {
+        return new WorkExperienceUseCaseImpl(candidateRepository, workExperienceRepository);
+    }
+
+    @Bean
+    public CandidateSkillUseCase candidateSkillUseCase(
+            CandidateRepositoryPort candidateRepository,
+            CandidateSkillRepositoryPort candidateSkillRepository,
+            SkillRepositoryPort skillRepository) {
+        return new CandidateSkillUseCaseImpl(candidateRepository, candidateSkillRepository, skillRepository);
+    }
 }
