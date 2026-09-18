@@ -6,6 +6,7 @@ import type {
     CandidateSkill,
     CandidateSkillRequest,
     SkillItem,
+    ResumeItem,
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 
@@ -235,3 +236,119 @@ export async function getAllMasterSkills(): Promise<SkillItem[]> {
     const payload: ApiResponse<SkillItem[]> = await res.json()
     return payload.data || []
 }
+
+// ==========================================
+// RESUMES (CV UPLOAD & MANAGEMENT)
+// ==========================================
+
+export async function getCandidateResumes(): Promise<ResumeItem[]> {
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể lấy danh sách CV',
+        )
+    }
+
+    const payload: ApiResponse<ResumeItem[]> = await res.json()
+    return payload.data || []
+}
+
+export async function uploadResume(file: File, title?: string): Promise<ResumeItem> {
+    const token = getAccessToken()
+    if (!token) {
+        throw new CandidateApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+    if (title && title.trim()) {
+        formData.append('title', title.trim())
+    }
+
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes/upload`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể tải lên file CV.',
+        )
+    }
+
+    const payload: ApiResponse<ResumeItem> = await res.json()
+    return payload.data
+}
+
+export async function deleteResume(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể xóa CV',
+        )
+    }
+}
+
+export async function setDefaultResume(id: number): Promise<ResumeItem> {
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes/${id}/default`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể đặt làm CV mặc định',
+        )
+    }
+
+    const payload: ApiResponse<ResumeItem> = await res.json()
+    return payload.data
+}
+
+export async function downloadResumeFile(id: number, fileName: string): Promise<void> {
+    const token = getAccessToken()
+    if (!token) {
+        throw new CandidateApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    }
+
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes/${id}/download`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
+
+    if (!res.ok) {
+        throw new CandidateApiError(res.status, 'Không thể tải xuống file CV.')
+    }
+
+    const blob = await res.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    window.URL.revokeObjectURL(downloadUrl)
+    document.body.removeChild(link)
+}
+
