@@ -50,3 +50,50 @@ export interface CandidateProfileFormErrors {
     github?: string
     linkedin?: string
 }
+
+export interface WorkExperience {
+    id: number
+    candidateId: number
+    companyName: string
+    position: string
+    startDate: string
+    endDate: string | null
+    isCurrent: boolean
+    description: string | null
+    achievements: string | null
+    createdAt?: string
+    updatedAt?: string
+}
+
+export interface WorkExperienceRequest {
+    companyName: string
+    position: string
+    startDate: string
+    endDate?: string | null
+    isCurrent?: boolean
+    description?: string
+    achievements?: string
+}
+
+export interface CandidateSkill {
+    id: number
+    candidateId: number
+    skillId: number
+    skillName: string
+    proficiencyLevel: string
+    rating: number
+    yearsOfExperience: number
+}
+
+export interface CandidateSkillRequest {
+    skillId?: number
+    skillName?: string
+    proficiencyLevel?: string
+    rating: number
+    yearsOfExperience?: number
+}
+
+export interface SkillItem {
+    id: number
+    name: string
+}

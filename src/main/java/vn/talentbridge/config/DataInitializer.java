@@ -16,6 +16,7 @@ import vn.talentbridge.core.domain.vo.UserStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -29,6 +30,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CandidateJpaRepository candidateJpaRepository;
     private final CompanyJpaRepository companyJpaRepository;
     private final RecruiterJpaRepository recruiterJpaRepository;
+    private final SkillJpaRepository skillJpaRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -152,6 +154,20 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
             candidateJpaRepository.save(candidate);
             log.info(">>> [DataInitializer] Tạo tài khoản Ứng viên mẫu: candidate@talentbridge.vn / Password123!");
+        }
+
+        // 6. Initialize Standard Skills Catalog
+        if (skillJpaRepository.count() == 0) {
+            List<String> defaultSkills = List.of(
+                    "Java", "Spring Boot", "React", "TypeScript", "JavaScript",
+                    "Node.js", "Python", "SQL / MySQL", "PostgreSQL", "Docker",
+                    "AWS", "Git / GitHub", "RESTful API", "Microservices",
+                    "Figma / UI-UX", "HTML5 & CSS3", "TailwindCSS", "Agile / Scrum"
+            );
+            for (String skillName : defaultSkills) {
+                skillJpaRepository.save(SkillJpaEntity.builder().name(skillName).build());
+            }
+            log.info(">>> [DataInitializer] Đã khởi tạo danh mục {} kỹ năng tiêu chuẩn.", defaultSkills.size());
         }
     }
 

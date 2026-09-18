@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     AlertCircle,
+    Award,
     Briefcase,
+    Building2,
     Calendar,
     CheckCircle2,
     Code2,
@@ -12,22 +14,44 @@ import {
     Mail,
     MapPin,
     Phone,
+    Plus,
     RefreshCw,
     Save,
     Share2,
     Sparkles,
+    Star,
+    Trash2,
     User,
     X,
 } from 'lucide-react'
-import { getCandidateProfile, updateCandidateProfile } from '../../features/candidate/candidateApi'
-import type { UpdateCandidateProfileRequest } from '../../features/candidate/candidateTypes'
+import {
+    deleteCandidateSkill,
+    deleteWorkExperience,
+    getAllMasterSkills,
+    getCandidateProfile,
+    getCandidateSkills,
+    getWorkExperiences,
+    updateCandidateProfile,
+} from '../../features/candidate/candidateApi'
+import type {
+    CandidateSkill,
+    UpdateCandidateProfileRequest,
+    WorkExperience,
+} from '../../features/candidate/candidateTypes'
 import { validateCandidateProfile } from '../../features/candidate/candidateValidation'
+import { WorkExperienceModal } from '../../features/candidate/components/WorkExperienceModal'
+import { CandidateSkillModal } from '../../features/candidate/components/CandidateSkillModal'
 
 export function CandidateProfilePage() {
     const queryClient = useQueryClient()
     const [isEditing, setIsEditing] = useState(false)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+    // Modals state for Work Experience and Skills
+    const [isExpModalOpen, setIsExpModalOpen] = useState(false)
+    const [editingExp, setEditingExp] = useState<WorkExperience | null>(null)
+    const [isSkillModalOpen, setIsSkillModalOpen] = useState(false)
 
     const {
         data: profile,
@@ -39,6 +63,44 @@ export function CandidateProfilePage() {
         queryKey: ['candidate-profile'],
         queryFn: getCandidateProfile,
     })
+
+    const { data: experiences = [], refetch: refetchExperiences } = useQuery({
+        queryKey: ['work-experiences'],
+        queryFn: getWorkExperiences,
+    })
+
+    const { data: skills = [], refetch: refetchSkills } = useQuery({
+        queryKey: ['candidate-skills'],
+        queryFn: getCandidateSkills,
+    })
+
+    const { data: masterSkills = [] } = useQuery({
+        queryKey: ['master-skills'],
+        queryFn: getAllMasterSkills,
+    })
+
+    async function handleDeleteExp(id: number) {
+        if (window.confirm('Bạn có chắc chắn muốn xóa kinh nghiệm làm việc này không?')) {
+            try {
+                await deleteWorkExperience(id)
+                refetchExperiences()
+                refetch()
+            } catch {
+                setErrorMessage('Không thể xóa kinh nghiệm làm việc.')
+            }
+        }
+    }
+
+    async function handleDeleteSkill(id: number) {
+        if (window.confirm('Bạn có chắc chắn muốn xóa kỹ năng này không?')) {
+            try {
+                await deleteCandidateSkill(id)
+                refetchSkills()
+            } catch {
+                setErrorMessage('Không thể xóa kỹ năng.')
+            }
+        }
+    }
 
     const [formData, setFormData] = useState<UpdateCandidateProfileRequest>({})
     const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -385,47 +447,16 @@ export function CandidateProfilePage() {
                                     </label>
                                     <input
                                         type="number"
-                                        min="0"
+                                        disabled
                                         value={formData.experienceYears ?? 0}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                experienceYears: parseInt(e.target.value, 10) || 0,
-                                            })
-                                        }
-                                        className={`w-full rounded-xl border px-3.5 py-2 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 ${
-                                            formErrors.experienceYears
-                                                ? 'border-rose-300 focus:ring-rose-400'
-                                                : 'border-slate-200 focus:ring-blue-500'
-                                        }`}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-500 shadow-sm cursor-not-allowed"
                                     />
-                                    {formErrors.experienceYears && (
-                                        <p className="mt-1 text-xs text-rose-500">{formErrors.experienceYears}</p>
-                                    )}
+                                    <p className="mt-1 text-xs text-slate-400">Tự động tính từ quá trình làm việc</p>
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                        Mức lương hiện tại (VND/tháng)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.currentSalary ?? ''}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                currentSalary: e.target.value ? Number(e.target.value) : undefined,
-                                            })
-                                        }
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="VD: 20000000"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                        Mức lương mong muốn (VND/tháng)
+                                        Mức lương kỳ vọng (VND/tháng)
                                     </label>
                                     <input
                                         type="number"
@@ -568,12 +599,8 @@ export function CandidateProfilePage() {
                                     <div className="flex justify-between border-b border-slate-100 pb-2">
                                         <span className="text-slate-500">Kinh nghiệm làm việc:</span>
                                         <span className="font-semibold text-slate-800">
-                                            {profile.experienceYears ? `${profile.experienceYears} năm` : 'Chưa có kinh nghiệm'}
+                                            {profile.experienceYears ? `${profile.experienceYears} năm (tự động tính)` : 'Chưa có kinh nghiệm (0 năm)'}
                                         </span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-slate-100 pb-2">
-                                        <span className="text-slate-500">Mức lương hiện tại:</span>
-                                        <span className="font-semibold text-slate-800">{formatCurrency(profile.currentSalary)}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-slate-100 pb-2">
                                         <span className="text-slate-500">Mức lương kỳ vọng:</span>
@@ -587,6 +614,208 @@ export function CandidateProfilePage() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Work Experience Section (TopCV Standard) */}
+                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                    <Building2 className="h-5 w-5 text-blue-600" /> Kinh nghiệm làm việc
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingExp(null)
+                                        setIsExpModalOpen(true)
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                                >
+                                    <Plus className="h-4 w-4" /> Thêm kinh nghiệm
+                                </button>
+                            </div>
+
+                            {experiences.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+                                    <Briefcase className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                                    <p className="text-sm font-medium text-slate-600">Chưa có lịch sử kinh nghiệm làm việc</p>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        Thêm kinh nghiệm giúp nhà tuyển dụng đánh giá năng lực và tự động tính số năm kinh nghiệm của bạn.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingExp(null)
+                                            setIsExpModalOpen(true)
+                                        }}
+                                        className="mt-4 inline-flex items-center gap-1 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition shadow-sm"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Thêm ngay
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {experiences.map((exp: WorkExperience) => (
+                                        <div
+                                            key={exp.id}
+                                            className="relative rounded-2xl border border-slate-200 bg-slate-50/50 p-5 hover:border-slate-300 transition"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="space-y-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h4 className="text-base font-bold text-slate-900">{exp.position}</h4>
+                                                        {exp.isCurrent ? (
+                                                            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                                                Hiện tại
+                                                            </span>
+                                                        ) : (
+                                                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                                                                Đã kết thúc
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-blue-600 flex items-center gap-1.5">
+                                                        <Building2 className="h-4 w-4" /> {exp.companyName}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 flex items-center gap-1">
+                                                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                        {exp.startDate} &mdash; {exp.isCurrent ? 'Hiện tại' : (exp.endDate || 'Chưa ghi')}
+                                                    </p>
+                                                </div>
+
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setEditingExp(exp)
+                                                            setIsExpModalOpen(true)
+                                                        }}
+                                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-blue-600 hover:shadow-sm transition"
+                                                        title="Chỉnh sửa"
+                                                    >
+                                                        <Edit3 className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteExp(exp.id)}
+                                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-rose-600 hover:shadow-sm transition"
+                                                        title="Xóa"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {exp.description && (
+                                                <div className="mt-3 text-xs leading-relaxed text-slate-600 whitespace-pre-line border-t border-slate-200/60 pt-3">
+                                                    {exp.description}
+                                                </div>
+                                            )}
+
+                                            {exp.achievements && (
+                                                <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-amber-50/70 p-3 text-xs text-amber-900 border border-amber-100">
+                                                    <Award className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                                                    <div>
+                                                        <span className="font-semibold text-amber-800">Thành tích nổi bật: </span>
+                                                        <span className="whitespace-pre-line">{exp.achievements}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Professional Skills Section (TopCV Standard) */}
+                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                    <Award className="h-5 w-5 text-indigo-600" /> Kỹ năng chuyên môn
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSkillModalOpen(true)}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+                                >
+                                    <Plus className="h-4 w-4" /> Thêm kỹ năng
+                                </button>
+                            </div>
+
+                            {skills.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+                                    <Award className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                                    <p className="text-sm font-medium text-slate-600">Chưa có kỹ năng nào được cập nhật</p>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        Làm nổi bật hồ sơ của bạn với danh sách kỹ năng chuyên môn và đánh giá mức độ thành thạo (1-5 sao).
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSkillModalOpen(true)}
+                                        className="mt-4 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition shadow-sm"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Thêm kỹ năng ngay
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    {skills.map((s: CandidateSkill) => (
+                                        <div
+                                            key={s.id}
+                                            className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/40 p-4 hover:border-indigo-300 hover:bg-white hover:shadow-sm transition"
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-slate-900">{s.skillName}</h4>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                                                            {s.proficiencyLevel === 'BEGINNER'
+                                                                ? 'Cơ bản'
+                                                                : s.proficiencyLevel === 'ELEMENTARY'
+                                                                ? 'Sơ cấp'
+                                                                : s.proficiencyLevel === 'INTERMEDIATE'
+                                                                ? 'Trung cấp'
+                                                                : s.proficiencyLevel === 'ADVANCED'
+                                                                ? 'Cao cấp'
+                                                                : 'Chuyên gia'}
+                                                        </span>
+                                                        {s.yearsOfExperience != null && s.yearsOfExperience > 0 && (
+                                                            <span className="text-[11px] text-slate-400 font-medium">
+                                                                {s.yearsOfExperience} năm kn
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteSkill(s.id)}
+                                                    className="opacity-0 group-hover:opacity-100 rounded-lg p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                                                    title="Xóa kỹ năng"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+
+                                            {/* Golden star rating 1-5 */}
+                                            <div className="flex items-center gap-1 mt-3 pt-2.5 border-t border-slate-200/60">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <Star
+                                                        key={star}
+                                                        className={`h-3.5 w-3.5 ${
+                                                            star <= (s.rating || 0)
+                                                                ? 'fill-amber-400 text-amber-400'
+                                                                : 'fill-slate-200 text-slate-200'
+                                                        }`}
+                                                    />
+                                                ))}
+                                                <span className="text-xs font-bold text-amber-600 ml-1.5">
+                                                    {s.rating || 0}/5
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Social & Portfolio Links Card */}
@@ -664,6 +893,32 @@ export function CandidateProfilePage() {
                         </div>
                     </div>
                 )}
+
+                {/* Modals */}
+                <WorkExperienceModal
+                    isOpen={isExpModalOpen}
+                    onClose={() => {
+                        setIsExpModalOpen(false)
+                        setEditingExp(null)
+                    }}
+                    onSuccess={() => {
+                        setIsExpModalOpen(false)
+                        setEditingExp(null)
+                        refetchExperiences()
+                        refetch()
+                    }}
+                    initialData={editingExp}
+                />
+
+                <CandidateSkillModal
+                    isOpen={isSkillModalOpen}
+                    onClose={() => setIsSkillModalOpen(false)}
+                    onSuccess={() => {
+                        setIsSkillModalOpen(false)
+                        refetchSkills()
+                    }}
+                    availableSkills={masterSkills.filter((ms) => !skills.some((s) => s.skillId === ms.id))}
+                />
             </div>
         </div>
     )
