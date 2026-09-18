@@ -168,8 +168,8 @@ CREATE TABLE `candidate_skills` (
     `candidate_id` BIGINT NOT NULL,
     `skill_id` INT NOT NULL,
     `proficiency_level` VARCHAR(30) DEFAULT 'INTERMEDIATE', -- BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
-    `rating` TINYINT DEFAULT 3, -- Đánh giá sao (1-5 sao như TopCV)
-    `years_of_experience` DECIMAL(3,1) DEFAULT 1.0,
+    `rating` INT DEFAULT 3, -- Đánh giá sao (1-5 sao như TopCV)
+    `years_of_experience` DOUBLE DEFAULT 1.0,
     CONSTRAINT `fk_cand_skills_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_cand_skills_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE CASCADE,
     UNIQUE KEY `uk_cand_skill` (`candidate_id`, `skill_id`),
@@ -429,7 +429,7 @@ CREATE TABLE `application_notes` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `application_id` BIGINT NOT NULL,
     `recruiter_id` BIGINT NOT NULL,
-    `rating` TINYINT NULL, -- 1 đến 5 sao
+    `rating` INT NULL, -- 1 đến 5 sao
     `tag` VARCHAR(50) NULL, -- vd: "Ưu tiên", "Pass Technical", "Lương thỏa thuận"
     `comment` TEXT NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
