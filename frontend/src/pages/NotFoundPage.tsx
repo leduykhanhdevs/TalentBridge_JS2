@@ -1,57 +1,52 @@
-import { Home, LogIn, SearchX } from 'lucide-react'
+import { Home, LogIn } from 'lucide-react'
 import { Link } from 'react-router'
+import { NotFoundIllustration } from '../components/illustrations'
 
 export function NotFoundPage() {
     return (
-        <section className="relative flex min-h-[calc(100vh-9rem)] items-center justify-center overflow-hidden bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-            <div
-                aria-hidden="true"
-                className="absolute -left-20 top-10 size-72 rounded-full bg-indigo-100/80 blur-3xl"
-            />
-            <div
-                aria-hidden="true"
-                className="absolute -right-20 bottom-10 size-72 rounded-full bg-violet-100/80 blur-3xl"
-            />
-
-            <div className="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl shadow-slate-200/60 sm:p-12">
-                <div className="mx-auto grid size-20 place-items-center rounded-3xl bg-indigo-50 text-indigo-600">
-                    <SearchX aria-hidden="true" size={38} />
+        <section className="bg-bento-canvas min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+            <div className="bento-card mx-auto max-w-lg w-full p-8 sm:p-10 text-center bg-white shadow-xl rounded-3xl border border-slate-200/80">
+                <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-3 text-left">
+                    <div className="flex items-center gap-2">
+                        <span className="size-2.5 rounded-full bg-rose-400" />
+                        <span className="size-2.5 rounded-full bg-amber-400" />
+                        <span className="size-2.5 rounded-full bg-emerald-400" />
+                        <span className="text-xs font-semibold text-slate-500 ml-1">Lỗi điều hướng</span>
+                    </div>
+                    <span className="bento-badge bg-rose-50 text-rose-700 border-rose-200/60 text-[11px]">
+                        404 Not Found
+                    </span>
                 </div>
 
-                <p className="mt-8 text-7xl font-black tracking-tight text-indigo-600 sm:text-8xl">
-                    404
-                </p>
+                <div className="mx-auto my-2">
+                    <NotFoundIllustration className="w-48 h-auto mx-auto" />
+                </div>
 
-                <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+                <h1 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
                     Không tìm thấy trang
                 </h1>
 
-                <p className="mx-auto mt-4 max-w-lg leading-7 text-slate-600">
-                    Địa chỉ bạn truy cập không tồn tại, đã được di chuyển hoặc không còn
-                    khả dụng. Hãy kiểm tra lại đường dẫn hoặc quay về trang chủ.
+                <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+                    Địa chỉ bạn truy cập không tồn tại hoặc đã được di chuyển. Vui lòng kiểm tra lại đường dẫn hoặc quay về trang chủ.
                 </p>
 
                 <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                     <Link
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                        className="btn-bento-primary h-11 px-5 text-sm font-semibold"
                         to="/"
                     >
-                        <Home aria-hidden="true" size={18} />
-                        Quay về trang chủ
+                        <Home aria-hidden="true" size={16} />
+                        <span>Quay về trang chủ</span>
                     </Link>
 
                     <Link
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                        className="btn-bento-secondary h-11 px-5 text-sm font-semibold"
                         to="/login"
                     >
-                        <LogIn aria-hidden="true" size={18} />
-                        Đi đến đăng nhập
+                        <LogIn aria-hidden="true" size={16} />
+                        <span>Đi đến đăng nhập</span>
                     </Link>
                 </div>
-
-                <p className="mt-8 text-sm text-slate-400">
-                    Mã lỗi: ROUTE_NOT_FOUND
-                </p>
             </div>
         </section>
     )

@@ -64,7 +64,7 @@ function validateForm(
     }
 
     if (values.phone.trim() && !phonePattern.test(values.phone.trim())) {
-        errors.phone = 'Số điện thoại phải gồm 10–11 chữ số.'
+        errors.phone = 'Số điện thoại phải gồm 10-11 chữ số.'
     }
 
     if (!values.password) {

@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import {
     CheckCircle2,
     Download,
-    FileText,
     Plus,
     Star,
     Trash2,
@@ -18,6 +17,7 @@ import {
     CandidateApiError,
 } from '../candidateApi'
 import type { ResumeItem } from '../candidateTypes'
+import { EmptyStateIllustration, CvManagerIllustration } from '../../../components/illustrations'
 
 interface ResumeUploadSectionProps {
     resumes: ResumeItem[]
@@ -131,9 +131,13 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
     return (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-rose-600" /> Hồ sơ CV đã tải lên
-                </h3>
+                <div className="flex items-center gap-3">
+                    <CvManagerIllustration className="size-8 shrink-0" />
+                    <div>
+                        <h3 className="text-base font-bold text-slate-900">Hồ sơ CV đã tải lên</h3>
+                        <p className="text-xs text-slate-500 font-medium">TopCV Standard - ATS Ready</p>
+                    </div>
+                </div>
                 <button
                     type="button"
                     onClick={() => {
@@ -164,7 +168,7 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
 
             {resumes.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-                    <UploadCloud className="mx-auto h-10 w-10 text-slate-300 mb-2" />
+                    <EmptyStateIllustration className="w-24 h-auto mx-auto mb-3" />
                     <p className="text-sm font-medium text-slate-600">Bạn chưa có CV tải lên nào</p>
                     <p className="text-xs text-slate-400 mt-1">
                         Hỗ trợ file PDF hoặc DOCX (tối đa 10MB). Tải lên CV giúp nhà tuyển dụng tiếp cận hồ sơ của bạn nhanh chóng.

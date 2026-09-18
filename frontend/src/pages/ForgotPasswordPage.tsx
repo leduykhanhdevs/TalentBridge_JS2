@@ -54,34 +54,37 @@ export function ForgotPasswordPage() {
     }
 
     return (
-        <section className="relative overflow-hidden bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-            <div
-                aria-hidden="true"
-                className="absolute -left-32 top-20 size-80 rounded-full bg-indigo-100/70 blur-3xl"
-            />
-            <div
-                aria-hidden="true"
-                className="absolute -right-32 bottom-10 size-80 rounded-full bg-violet-100/70 blur-3xl"
-            />
-
-            <div className="relative mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60 sm:p-10">
-                <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-indigo-600 text-white">
-                    <KeyRound size={24} />
+        <section className="bg-bento-canvas min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+            <div className="bento-card relative mx-auto max-w-lg w-full rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-10 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div className="flex items-center gap-2">
+                        <span className="size-2.5 rounded-full bg-rose-400" />
+                        <span className="size-2.5 rounded-full bg-amber-400" />
+                        <span className="size-2.5 rounded-full bg-emerald-400" />
+                        <span className="ml-2 text-xs font-semibold text-slate-500">Khôi phục mật khẩu</span>
+                    </div>
+                    <span className="bento-badge bg-amber-50 text-amber-700 border-amber-200/60 text-[11px]">
+                        Bảo mật tài khoản
+                    </span>
                 </div>
 
-                <div className="mt-6 text-center">
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                <div className="mx-auto grid size-12 place-items-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+                    <KeyRound size={22} />
+                </div>
+
+                <div className="mt-4 text-center">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                         Quên mật khẩu?
                     </h1>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Nhập địa chỉ email đã đăng ký. Chúng tôi sẽ gửi cho bạn liên kết an toàn để đặt lại mật khẩu mới.
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600">
+                        Nhập địa chỉ email đã đăng ký để nhận liên kết an toàn đặt lại mật khẩu.
                     </p>
                 </div>
 
-                <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+                <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
                     <div>
                         <label
-                            className="mb-2 block text-sm font-medium text-slate-700"
+                            className="mb-1.5 block text-xs font-semibold text-slate-700"
                             htmlFor="forgot-email"
                         >
                             Địa chỉ email
@@ -90,15 +93,15 @@ export function ForgotPasswordPage() {
                         <div className="relative">
                             <Mail
                                 aria-hidden="true"
-                                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                                size={19}
+                                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
+                                size={18}
                             />
                             <input
                                 autoComplete="email"
-                                className={`h-12 w-full rounded-xl border bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 ${
+                                className={`h-12 w-full rounded-xl border-2 bg-white pl-11 pr-4 text-slate-900 outline-none font-mono text-sm transition placeholder:text-slate-400 ${
                                     emailError
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-100'
-                                        : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100'
+                                        ? 'border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:shadow-[2px_2px_0px_0px_#f43f5e]'
+                                        : 'border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100'
                                 }`}
                                 id="forgot-email"
                                 name="email"
@@ -113,32 +116,32 @@ export function ForgotPasswordPage() {
                             />
                         </div>
                         {emailError && (
-                            <p className="mt-1.5 text-xs text-red-600">{emailError}</p>
+                            <p className="mt-1 text-xs font-bold text-rose-600 font-mono">{emailError}</p>
                         )}
                     </div>
 
                     {serverError && (
                         <div
-                            className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm leading-6 text-red-700"
+                            className="flex gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800"
                             role="alert"
                         >
-                            <AlertCircle aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                            <AlertCircle aria-hidden="true" className="mt-0.5 shrink-0 text-rose-700" size={16} />
                             <span>{serverError}</span>
                         </div>
                     )}
 
                     {successMessage && (
                         <div
-                            className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm leading-6 text-emerald-700"
+                            className="flex gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800"
                             role="status"
                         >
-                            <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                            <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" size={16} />
                             <span>{successMessage}</span>
                         </div>
                     )}
 
                     <button
-                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-70"
+                        className="btn-bento-primary w-full h-12 text-sm mt-2 font-semibold"
                         disabled={forgotMutation.isPending}
                         type="submit"
                     >
@@ -147,16 +150,16 @@ export function ForgotPasswordPage() {
                         ) : (
                             <Send aria-hidden="true" size={18} />
                         )}
-                        {forgotMutation.isPending ? 'Đang gửi yêu cầu...' : 'Gửi liên kết đặt lại'}
+                        <span>{forgotMutation.isPending ? 'Đang gửi yêu cầu...' : 'Gửi liên kết đặt lại'}</span>
                     </button>
                 </form>
 
-                <div className="mt-8 border-t border-slate-100 pt-6 text-center">
+                <div className="mt-6 border-t border-slate-100 pt-4 text-center">
                     <Link
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-indigo-600"
+                        className="inline-flex items-center gap-2 text-xs font-bold text-slate-800 hover:text-indigo-600 underline"
                         to="/login"
                     >
-                        <ArrowLeft size={16} /> Quay lại trang Đăng nhập
+                        <ArrowLeft size={14} /> Quay lại trang Đăng nhập
                     </Link>
                 </div>
             </div>

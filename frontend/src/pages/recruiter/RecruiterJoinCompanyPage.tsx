@@ -25,6 +25,7 @@ import type {
     CompanyResponse,
     SubmitJoinCompanyRequest,
 } from '../../features/recruiter/recruiterTypes'
+import { EmptyStateIllustration } from '../../components/illustrations'
 
 export function RecruiterJoinCompanyPage() {
     const [keyword, setKeyword] = useState('')
@@ -323,7 +324,7 @@ export function RecruiterJoinCompanyPage() {
                 </div>
             ) : companyPage?.content?.length === 0 ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-                    <Building2 className="mx-auto text-slate-300 mb-3" size={44} />
+                    <EmptyStateIllustration className="w-24 h-auto mx-auto mb-3" />
                     <h3 className="font-bold text-slate-800">Không tìm thấy doanh nghiệp phù hợp</h3>
                     <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
                         {searchTerm

@@ -59,6 +59,11 @@ frontend/
 │   ├── app/
 │   │   ├── providers/              # AppProviders (React Query, Error Boundaries)
 │   │   └── router/                 # AppRouter & Cấu hình Route tập trung
+│   ├── components/                 # UI Components dùng chung & Illustrations
+│   │   └── illustrations/          # Vector phẳng & 3D Soft Badges (Chuẩn Bento Grid)
+│   │       ├── AdminControlCenterIllustration.tsx
+│   │       ├── Soft3DBadges.tsx    # 3D Soft Badges (User, Active, Shield, Verified, Building)
+│   │       └── index.ts
 │   ├── features/                   # Kiến trúc Feature-Driven Modules
 │   │   ├── admin/                  # Module Quản trị viên (API, Types, Validation, Tests)
 │   │   │   ├── __tests__/
@@ -104,7 +109,7 @@ frontend/
 │   │   ├── RegisterPage.tsx
 │   │   └── ResetPasswordPage.tsx
 │   └── __tests__/
-│       └── e2e-ecosystem.test.ts   # Kiểm thử E2E tích hợp toàn bộ hệ sinh thái (58+ tests)
+│       └── e2e-ecosystem.test.ts   # Kiểm thử E2E tích hợp toàn bộ hệ sinh thái (59 tests)
 ├── package.json
 ├── tsconfig.json
 └── vite.config.ts

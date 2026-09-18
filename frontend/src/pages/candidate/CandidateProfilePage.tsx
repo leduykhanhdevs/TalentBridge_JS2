@@ -43,6 +43,7 @@ import { validateCandidateProfile } from '../../features/candidate/candidateVali
 import { WorkExperienceModal } from '../../features/candidate/components/WorkExperienceModal'
 import { CandidateSkillModal } from '../../features/candidate/components/CandidateSkillModal'
 import { ResumeUploadSection } from '../../features/candidate/components/ResumeUploadSection'
+import { EmptyStateIllustration } from '../../components/illustrations'
 
 export function CandidateProfilePage() {
     const queryClient = useQueryClient()
@@ -649,7 +650,7 @@ export function CandidateProfilePage() {
 
                             {experiences.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-                                    <Briefcase className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                                    <EmptyStateIllustration className="w-20 h-auto mx-auto mb-2" />
                                     <p className="text-sm font-medium text-slate-600">Chưa có lịch sử kinh nghiệm làm việc</p>
                                     <p className="text-xs text-slate-400 mt-1">
                                         Thêm kinh nghiệm giúp nhà tuyển dụng đánh giá năng lực và tự động tính số năm kinh nghiệm của bạn.
@@ -691,7 +692,7 @@ export function CandidateProfilePage() {
                                                     </p>
                                                     <p className="text-xs text-slate-500 flex items-center gap-1">
                                                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                        {exp.startDate} &mdash; {exp.isCurrent ? 'Hiện tại' : (exp.endDate || 'Chưa ghi')}
+                                                        {exp.startDate} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate || 'Chưa ghi')}
                                                     </p>
                                                 </div>
 
@@ -756,7 +757,7 @@ export function CandidateProfilePage() {
 
                             {skills.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-                                    <Award className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                                    <EmptyStateIllustration className="w-20 h-auto mx-auto mb-2" />
                                     <p className="text-sm font-medium text-slate-600">Chưa có kỹ năng nào được cập nhật</p>
                                     <p className="text-xs text-slate-400 mt-1">
                                         Làm nổi bật hồ sơ của bạn với danh sách kỹ năng chuyên môn và đánh giá mức độ thành thạo (1-5 sao).

@@ -75,7 +75,7 @@ function ProfileEditForm({ profile }: { profile: RecruiterProfile }) {
         }
 
         if (formValues.phone.trim() && !phonePattern.test(formValues.phone.trim())) {
-            errors.phone = 'Số điện thoại phải gồm 10–11 chữ số.'
+            errors.phone = 'Số điện thoại phải gồm 10-11 chữ số.'
         }
 
         if (formValues.position.trim().length > 100) {

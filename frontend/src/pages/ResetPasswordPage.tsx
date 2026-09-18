@@ -6,6 +6,7 @@ import {
     LoaderCircle,
     LockKeyhole,
     ShieldCheck,
+    ArrowLeft,
 } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -28,7 +29,7 @@ export function ResetPasswordPage() {
         onSuccess: () => {
             setServerError(null)
             setSuccessMessage(
-                'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.'
+                'Đặt lại mật khẩu thành công! Đang chuyển hướng đến trang đăng nhập...'
             )
             setTimeout(() => {
                 navigate('/login')
@@ -90,18 +91,33 @@ export function ResetPasswordPage() {
 
     if (!token) {
         return (
-            <section className="px-4 py-16 sm:px-6 lg:px-8">
-                <div className="mx-auto max-w-md rounded-3xl border border-red-200 bg-white p-8 text-center shadow-lg">
-                    <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-red-100 text-red-600">
+            <section className="px-4 py-12 sm:px-6 lg:px-8">
+                <div className="bento-card mx-auto max-w-md p-6 sm:p-8 text-center">
+                    {/* Modern Bento Header */}
+                    <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-3 text-left">
+                        <div className="flex items-center gap-2">
+                            <div className="size-2.5 rounded-full bg-rose-400" />
+                            <div className="size-2.5 rounded-full bg-amber-400" />
+                            <div className="size-2.5 rounded-full bg-emerald-400" />
+                            <span className="text-xs font-bold text-slate-700 ml-1">Lỗi liên kết</span>
+                        </div>
+                        <span className="bento-badge border-rose-200 bg-rose-50 text-rose-700 text-[10px]">
+                            INVALID_TOKEN
+                        </span>
+                    </div>
+
+                    <div className="mx-auto grid size-12 place-items-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 shadow-sm">
                         <AlertCircle size={24} />
                     </div>
-                    <h2 className="mt-4 text-xl font-bold text-slate-900">Liên kết không hợp lệ</h2>
-                    <p className="mt-2 text-sm text-slate-600">
-                        Đường dẫn này thiếu mã đặt lại mật khẩu hoặc đã bị thay đổi.
+                    <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-900">
+                        Liên kết không hợp lệ
+                    </h2>
+                    <p className="mt-2 text-xs font-medium text-slate-600">
+                        Đường dẫn này thiếu mã đặt lại mật khẩu hoặc đã hết hạn.
                     </p>
                     <Link
                         to="/forgot-password"
-                        className="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                        className="btn-bento-primary inline-flex mt-6 px-5 py-2.5 text-xs font-bold"
                     >
                         Yêu cầu liên kết mới
                     </Link>
@@ -111,34 +127,37 @@ export function ResetPasswordPage() {
     }
 
     return (
-        <section className="relative overflow-hidden bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-            <div
-                aria-hidden="true"
-                className="absolute -left-32 top-20 size-80 rounded-full bg-indigo-100/70 blur-3xl"
-            />
-            <div
-                aria-hidden="true"
-                className="absolute -right-32 bottom-10 size-80 rounded-full bg-violet-100/70 blur-3xl"
-            />
-
-            <div className="relative mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60 sm:p-10">
-                <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-indigo-600 text-white">
-                    <KeyRound size={24} />
+        <section className="px-4 py-12 sm:px-6 lg:px-8">
+            <div className="bento-card mx-auto max-w-md p-6 sm:p-8">
+                {/* Modern Bento Header */}
+                <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                        <div className="size-2.5 rounded-full bg-rose-400" />
+                        <div className="size-2.5 rounded-full bg-amber-400" />
+                        <div className="size-2.5 rounded-full bg-emerald-400" />
+                        <span className="text-xs font-bold text-slate-700 ml-1">Đặt lại mật khẩu</span>
+                    </div>
+                    <span className="bento-badge border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]">
+                        TOKEN VERIFIED
+                    </span>
                 </div>
 
-                <div className="mt-6 text-center">
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                <div className="text-center">
+                    <div className="mx-auto inline-flex p-2.5 border border-slate-200 bg-amber-300 text-slate-950 shadow-xs mb-3">
+                        <KeyRound size={22} />
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-950 font-mono">
                         Thiết lập mật khẩu mới
                     </h1>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Vui lòng nhập mật khẩu mới cho tài khoản của bạn (tối thiểu 6 ký tự).
+                    <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-600">
+                        Nhập mật khẩu mới cho tài khoản TalentBridge của bạn (tối thiểu 6 ký tự).
                     </p>
                 </div>
 
-                <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+                <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
                     <div>
                         <label
-                            className="mb-2 block text-sm font-medium text-slate-700"
+                            className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-800 font-mono"
                             htmlFor="reset-new-password"
                         >
                             Mật khẩu mới
@@ -147,16 +166,12 @@ export function ResetPasswordPage() {
                         <div className="relative">
                             <LockKeyhole
                                 aria-hidden="true"
-                                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                                size={19}
+                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                                size={17}
                             />
                             <input
                                 autoComplete="new-password"
-                                className={`h-12 w-full rounded-xl border bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 ${
-                                    passwordError
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-100'
-                                        : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100'
-                                }`}
+                                className="h-11 w-full rounded-none border border-slate-200 bg-slate-50 pl-10 pr-3 font-mono text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
                                 id="reset-new-password"
                                 name="newPassword"
                                 placeholder="Tối thiểu 6 ký tự"
@@ -169,13 +184,13 @@ export function ResetPasswordPage() {
                             />
                         </div>
                         {passwordError && (
-                            <p className="mt-1.5 text-xs text-red-600">{passwordError}</p>
+                            <p className="mt-1 text-[11px] font-bold text-rose-600">{passwordError}</p>
                         )}
                     </div>
 
                     <div>
                         <label
-                            className="mb-2 block text-sm font-medium text-slate-700"
+                            className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-800 font-mono"
                             htmlFor="reset-confirm-password"
                         >
                             Xác nhận mật khẩu mới
@@ -184,16 +199,12 @@ export function ResetPasswordPage() {
                         <div className="relative">
                             <LockKeyhole
                                 aria-hidden="true"
-                                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                                size={19}
+                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                                size={17}
                             />
                             <input
                                 autoComplete="new-password"
-                                className={`h-12 w-full rounded-xl border bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 ${
-                                    confirmError
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-100'
-                                        : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100'
-                                }`}
+                                className="h-11 w-full rounded-none border border-slate-200 bg-slate-50 pl-10 pr-3 font-mono text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
                                 id="reset-confirm-password"
                                 name="confirmPassword"
                                 placeholder="Nhập lại mật khẩu mới"
@@ -206,32 +217,32 @@ export function ResetPasswordPage() {
                             />
                         </div>
                         {confirmError && (
-                            <p className="mt-1.5 text-xs text-red-600">{confirmError}</p>
+                            <p className="mt-1 text-[11px] font-bold text-rose-600">{confirmError}</p>
                         )}
                     </div>
 
                     {serverError && (
                         <div
-                            className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm leading-6 text-red-700"
+                            className="flex gap-2.5 rounded-lg border-2 border-rose-950 bg-rose-100 p-3 text-xs font-bold text-rose-950 shadow-xs"
                             role="alert"
                         >
-                            <AlertCircle aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                            <AlertCircle aria-hidden="true" className="mt-0.5 shrink-0 text-rose-700" size={16} />
                             <span>{serverError}</span>
                         </div>
                     )}
 
                     {successMessage && (
                         <div
-                            className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm leading-6 text-emerald-700"
+                            className="flex gap-2.5 rounded-lg border-2 border-emerald-950 bg-emerald-100 p-3 text-xs font-bold text-emerald-950 shadow-xs"
                             role="status"
                         >
-                            <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+                            <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" size={16} />
                             <span>{successMessage}</span>
                         </div>
                     )}
 
                     <button
-                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-70"
+                        className="btn-bento-primary w-full h-12 text-sm mt-2 font-bold"
                         disabled={resetMutation.isPending}
                         type="submit"
                     >
@@ -240,9 +251,18 @@ export function ResetPasswordPage() {
                         ) : (
                             <ShieldCheck aria-hidden="true" size={18} />
                         )}
-                        {resetMutation.isPending ? 'Đang cập nhật mật khẩu...' : 'Lưu mật khẩu mới'}
+                        <span>{resetMutation.isPending ? 'Đang cập nhật mật khẩu...' : 'Lưu mật khẩu mới'}</span>
                     </button>
                 </form>
+
+                <div className="mt-6 border-t border-slate-100 pt-4 text-center">
+                    <Link
+                        className="inline-flex items-center gap-2 text-xs font-bold text-slate-800 hover:text-indigo-600 underline"
+                        to="/login"
+                    >
+                        <ArrowLeft size={14} /> Quay lại trang Đăng nhập
+                    </Link>
+                </div>
             </div>
         </section>
     )
