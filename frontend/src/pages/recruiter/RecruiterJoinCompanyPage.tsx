@@ -6,6 +6,7 @@ import {
     Globe,
     LoaderCircle,
     MapPin,
+    PlusCircle,
     Search,
     Send,
     UserPlus,
@@ -139,11 +140,22 @@ export function RecruiterJoinCompanyPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900">Tìm & Xin gia nhập Doanh nghiệp</h1>
-                <p className="text-sm text-slate-500">
-                    Tìm kiếm các doanh nghiệp đã được xác thực trên hệ thống và nộp đơn gia nhập đội ngũ tuyển dụng.
-                </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Tìm & Xin gia nhập Doanh nghiệp</h1>
+                    <p className="text-sm text-slate-500">
+                        Tìm kiếm các doanh nghiệp đã được xác thực trên hệ thống và nộp đơn gia nhập đội ngũ tuyển dụng.
+                    </p>
+                </div>
+                {!hasCompany && (
+                    <Link
+                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 shrink-0"
+                        to="/recruiter/company"
+                    >
+                        <PlusCircle size={18} />
+                        <span>Tạo doanh nghiệp mới</span>
+                    </Link>
+                )}
             </div>
 
             {/* If recruiter already belongs to an approved company */}
@@ -278,6 +290,16 @@ export function RecruiterJoinCompanyPage() {
                             Xóa lọc
                         </button>
                     )}
+
+                    {!hasCompany && (
+                        <Link
+                            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 shrink-0"
+                            to="/recruiter/company"
+                        >
+                            <PlusCircle size={16} />
+                            <span>Tạo doanh nghiệp</span>
+                        </Link>
+                    )}
                 </form>
             </div>
 
@@ -303,11 +325,22 @@ export function RecruiterJoinCompanyPage() {
                 <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                     <Building2 className="mx-auto text-slate-300 mb-3" size={44} />
                     <h3 className="font-bold text-slate-800">Không tìm thấy doanh nghiệp phù hợp</h3>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
                         {searchTerm
-                            ? `Không có kết quả nào cho "${searchTerm}". Vui lòng thử từ khóa khác.`
-                            : 'Hiện chưa có doanh nghiệp nào được kích hoạt trên hệ thống.'}
+                            ? `Không có kết quả nào cho "${searchTerm}". Doanh nghiệp của bạn chưa có trên hệ thống?`
+                            : 'Hiện chưa có doanh nghiệp nào phù hợp với tìm kiếm của bạn.'}
                     </p>
+                    {!hasCompany && (
+                        <div className="mt-5">
+                            <Link
+                                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                to="/recruiter/company"
+                            >
+                                <PlusCircle size={18} />
+                                <span>Tạo hồ sơ doanh nghiệp mới ngay</span>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
