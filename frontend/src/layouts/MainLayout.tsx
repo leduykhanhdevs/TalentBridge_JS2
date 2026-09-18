@@ -41,7 +41,7 @@ export function MainLayout() {
                     <NavLink
                         className="flex items-center gap-3"
                         end
-                        to="/"
+                        to={isRecruiter ? '/recruiter/profile' : isAdmin ? '/admin/candidates' : '/'}
                     >
                         <span className="grid size-10 place-items-center rounded-xl bg-indigo-600 text-white shadow-sm">
                             <BriefcaseBusiness aria-hidden="true" size={21} />
@@ -70,7 +70,7 @@ export function MainLayout() {
                                 }`
                             }
                             end
-                            to="/"
+                            to={isRecruiter ? '/recruiter/profile' : isAdmin ? '/admin/candidates' : '/'}
                         >
                             Trang chủ
                         </NavLink>

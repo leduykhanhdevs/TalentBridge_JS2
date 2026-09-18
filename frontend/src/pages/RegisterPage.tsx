@@ -12,7 +12,7 @@ import {
     UserRound,
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { AuthApiError, registerCandidate } from '../features/auth/authApi'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
 
@@ -103,6 +103,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 }
 
 export function RegisterPage() {
+    const navigate = useNavigate()
     const [formValues, setFormValues] =
         useState<RegisterFormValues>(initialFormValues)
     const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -117,10 +118,20 @@ export function RegisterPage() {
             setFieldErrors({})
             setServerError('')
             setSuccessMessage(
-                `Đăng ký thành công. Chào mừng ${authResponse.user.fullName}!`,
+                `Đăng ký thành công. Đang chuyển hướng... Chào mừng ${authResponse.user.fullName}!`,
             )
             setFormValues(initialFormValues)
             setAcceptedTerms(false)
+            setTimeout(() => {
+                const roles = authResponse.user.roles || []
+                if (roles.includes('ROLE_RECRUITER')) {
+                    navigate('/recruiter/profile')
+                } else if (roles.includes('ROLE_ADMIN')) {
+                    navigate('/admin/candidates')
+                } else {
+                    navigate('/')
+                }
+            }, 800)
         },
         onError: (error) => {
             setSuccessMessage('')

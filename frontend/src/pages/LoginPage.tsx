@@ -34,8 +34,15 @@ export function LoginPage() {
             setServerError(null)
             setSuccessMessage(`Đăng nhập thành công! Chào mừng ${data.user.fullName}.`)
             setTimeout(() => {
-                navigate('/')
-            }, 1000)
+                const roles = data.user.roles || []
+                if (roles.includes('ROLE_RECRUITER')) {
+                    navigate('/recruiter/profile')
+                } else if (roles.includes('ROLE_ADMIN')) {
+                    navigate('/admin/candidates')
+                } else {
+                    navigate('/')
+                }
+            }, 800)
         },
         onError: (error) => {
             if (error instanceof AuthApiError) {

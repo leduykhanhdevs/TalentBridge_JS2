@@ -7,7 +7,8 @@ import {
     ShieldCheck,
     Users,
 } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, Navigate } from 'react-router'
+import { getStoredUser } from '../features/auth/tokenStorage'
 
 const features = [
     {
@@ -31,6 +32,14 @@ const features = [
 ] as const
 
 export function HomePage() {
+    const user = getStoredUser()
+    if (user?.roles?.includes('ROLE_RECRUITER')) {
+        return <Navigate replace to="/recruiter/profile" />
+    }
+    if (user?.roles?.includes('ROLE_ADMIN')) {
+        return <Navigate replace to="/admin/candidates" />
+    }
+
     return (
         <>
             <section className="relative overflow-hidden border-b border-slate-200 bg-white">
