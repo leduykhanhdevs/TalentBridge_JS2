@@ -251,7 +251,7 @@ CREATE TABLE `resumes` (
     `title` VARCHAR(200) NOT NULL DEFAULT 'My Resume', -- Tiêu đề hồ sơ (vd: "CV Java Backend - 2026")
     `file_name` VARCHAR(255) NOT NULL,
     `file_url` VARCHAR(500) NOT NULL, -- Đường dẫn file PDF tải lên hoặc PDF do hệ thống render
-    `file_type` VARCHAR(50) DEFAULT 'application/pdf',
+    `file_type` VARCHAR(150) DEFAULT 'application/pdf',
     `is_default` BOOLEAN DEFAULT FALSE,
     `customization_json` JSON NULL, -- Tùy chọn giao diện: màu sắc, font, thứ tự hiển thị các khối section...
     `parsed_text` LONGTEXT NULL, -- Dùng cho tìm kiếm/AI matching

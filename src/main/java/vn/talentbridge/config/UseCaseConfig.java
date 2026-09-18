@@ -209,4 +209,13 @@ public class UseCaseConfig {
             SkillRepositoryPort skillRepository) {
         return new CandidateSkillUseCaseImpl(candidateRepository, candidateSkillRepository, skillRepository);
     }
+
+    @Bean
+    public ResumeUseCase resumeUseCase(
+            ResumeRepositoryPort resumeRepository,
+            CandidateRepositoryPort candidateRepository,
+            UserRepositoryPort userRepository,
+            FileStoragePort fileStoragePort) {
+        return new ResumeUseCaseImpl(resumeRepository, candidateRepository, userRepository, fileStoragePort);
+    }
 }

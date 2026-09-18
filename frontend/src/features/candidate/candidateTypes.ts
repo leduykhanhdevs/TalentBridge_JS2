@@ -97,3 +97,15 @@ export interface SkillItem {
     id: number
     name: string
 }
+
+export interface ResumeItem {
+    id: number
+    candidateId: number
+    title: string
+    fileName: string
+    fileUrl: string
+    fileType: string
+    resumeType: string
+    isDefault: boolean
+    createdAt: string
+}

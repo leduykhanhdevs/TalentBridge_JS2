@@ -8,6 +8,10 @@ spring:
     name: TalentBridge
   profiles:
     active: "${SPRING_PROFILES_ACTIVE:local}"
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 15MB
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -55,6 +59,8 @@ talentbridge:
     enabled: "${RATE_LIMIT_ENABLED:true}"
     auth-limit: "${AUTH_RATE_LIMIT:10}"
     window-seconds: "${RATE_LIMIT_WINDOW_SECONDS:60}"
+  upload:
+    dir: "${UPLOAD_DIR:uploads}"
 
 ---
 spring:

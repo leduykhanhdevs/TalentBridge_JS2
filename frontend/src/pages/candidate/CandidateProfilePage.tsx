@@ -29,6 +29,7 @@ import {
     deleteWorkExperience,
     getAllMasterSkills,
     getCandidateProfile,
+    getCandidateResumes,
     getCandidateSkills,
     getWorkExperiences,
     updateCandidateProfile,
@@ -41,6 +42,7 @@ import type {
 import { validateCandidateProfile } from '../../features/candidate/candidateValidation'
 import { WorkExperienceModal } from '../../features/candidate/components/WorkExperienceModal'
 import { CandidateSkillModal } from '../../features/candidate/components/CandidateSkillModal'
+import { ResumeUploadSection } from '../../features/candidate/components/ResumeUploadSection'
 
 export function CandidateProfilePage() {
     const queryClient = useQueryClient()
@@ -77,6 +79,11 @@ export function CandidateProfilePage() {
     const { data: masterSkills = [] } = useQuery({
         queryKey: ['master-skills'],
         queryFn: getAllMasterSkills,
+    })
+
+    const { data: resumes = [], refetch: refetchResumes } = useQuery({
+        queryKey: ['candidate-resumes'],
+        queryFn: getCandidateResumes,
     })
 
     async function handleDeleteExp(id: number) {
@@ -615,6 +622,12 @@ export function CandidateProfilePage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Uploaded Resumes (TopCV CV Files) */}
+                        <ResumeUploadSection
+                            resumes={resumes}
+                            onRefresh={refetchResumes}
+                        />
 
                         {/* Work Experience Section (TopCV Standard) */}
                         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
