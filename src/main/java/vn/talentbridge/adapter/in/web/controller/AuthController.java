@@ -10,10 +10,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import vn.talentbridge.adapter.in.security.UserPrincipal;
+import vn.talentbridge.adapter.in.web.dto.request.ChangePasswordRequest;
 import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RefreshTokenRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
@@ -21,9 +24,11 @@ import vn.talentbridge.adapter.in.web.dto.response.AuthResponse;
 import vn.talentbridge.adapter.in.web.dto.response.UserResponse;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.core.application.dto.AuthResult;
+import vn.talentbridge.core.application.dto.ChangePasswordCommand;
 import vn.talentbridge.core.application.dto.LoginCommand;
 import vn.talentbridge.core.application.dto.RegisterCommand;
 import vn.talentbridge.core.application.dto.UserResult;
+import vn.talentbridge.core.application.port.in.ChangePasswordUseCase;
 import vn.talentbridge.core.application.port.in.GetCurrentUserUseCase;
 import vn.talentbridge.core.application.port.in.LoginUseCase;
 import vn.talentbridge.core.application.port.in.RefreshTokenUseCase;
@@ -41,6 +46,7 @@ public class AuthController {
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
 
     @PostMapping("/register")
     @Operation(summary = "Đăng ký tài khoản mới", description = "Đăng ký tài khoản cho Ứng viên (ROLE_CANDIDATE) hoặc Nhà tuyển dụng (ROLE_RECRUITER)")
@@ -146,5 +152,29 @@ public class AuthController {
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         UserResult result = getCurrentUserUseCase.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(UserResponse.from(result)));
+    }
+
+    @PostMapping("/change-password")
+    @SecurityRequirement(name = "BearerAuth")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Đổi mật khẩu người dùng", description = "Cho phép người dùng đã đăng nhập thay đổi mật khẩu tài khoản")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đổi mật khẩu thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Mật khẩu hiện tại không đúng hoặc xác nhận không khớp"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Chưa xác thực")
+    })
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        changePasswordUseCase.changePassword(
+                principal.getId(),
+                new ChangePasswordCommand(
+                        request.getCurrentPassword(),
+                        request.getNewPassword(),
+                        request.getConfirmPassword()
+                )
+        );
+        return ResponseEntity.ok(ApiResponse.success("Đổi mật khẩu thành công", null));
     }
 }

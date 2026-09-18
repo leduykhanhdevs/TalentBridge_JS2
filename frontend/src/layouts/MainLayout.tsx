@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, Building2, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BriefcaseBusiness, Building2, KeyRound, LogIn, LogOut, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
 import type { UserResponse } from '../features/auth/authTypes'
+import { ChangePasswordModal } from '../features/auth/components/ChangePasswordModal'
 
 export function MainLayout() {
     const navigate = useNavigate()
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
 
     useEffect(() => {
         function syncAuth() {
@@ -135,6 +137,16 @@ export function MainLayout() {
                                 </div>
 
                                 <button
+                                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                                    onClick={() => setIsChangePasswordOpen(true)}
+                                    title="Đổi mật khẩu"
+                                    type="button"
+                                >
+                                    <KeyRound size={15} />
+                                    <span className="hidden sm:inline">Đổi MK</span>
+                                </button>
+
+                                <button
                                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
                                     onClick={handleLogout}
                                     title="Đăng xuất"
@@ -183,6 +195,11 @@ export function MainLayout() {
                     <p>Kết nối đúng tài năng với đúng cơ hội.</p>
                 </div>
             </footer>
+
+            <ChangePasswordModal
+                isOpen={isChangePasswordOpen}
+                onClose={() => setIsChangePasswordOpen(false)}
+            />
         </div>
     )
 }

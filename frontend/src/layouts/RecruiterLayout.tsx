@@ -3,6 +3,7 @@ import {
     ArrowLeft,
     Building2,
     CheckSquare,
+    KeyRound,
     LogOut,
     Search,
     ShieldAlert,
@@ -13,11 +14,13 @@ import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
 import type { UserResponse } from '../features/auth/authTypes'
+import { ChangePasswordModal } from '../features/auth/components/ChangePasswordModal'
 
 export function RecruiterLayout() {
     const navigate = useNavigate()
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
 
     useEffect(() => {
         function syncAuth() {
@@ -138,6 +141,16 @@ export function RecruiterLayout() {
 
                         <button
                             className="inline-flex items-center gap-1 rounded-lg border border-emerald-800 bg-emerald-900/60 px-2.5 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-800 hover:text-white"
+                            onClick={() => setIsChangePasswordOpen(true)}
+                            title="Đổi mật khẩu"
+                            type="button"
+                        >
+                            <KeyRound size={14} />
+                            <span className="hidden sm:inline">Đổi MK</span>
+                        </button>
+
+                        <button
+                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-800 bg-emerald-900/60 px-2.5 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-800 hover:text-white"
                             onClick={handleLogout}
                             title="Đăng xuất"
                             type="button"
@@ -178,6 +191,11 @@ export function RecruiterLayout() {
             <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                 <Outlet />
             </main>
+
+            <ChangePasswordModal
+                isOpen={isChangePasswordOpen}
+                onClose={() => setIsChangePasswordOpen(false)}
+            />
         </div>
     )
 }

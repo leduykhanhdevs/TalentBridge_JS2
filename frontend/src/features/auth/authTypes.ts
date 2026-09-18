@@ -48,3 +48,9 @@ export type ResetPasswordRequest = {
     token: string
     newPassword: string
 }
+
+export type ChangePasswordRequest = {
+    currentPassword: string
+    newPassword: string
+    confirmPassword: string
+}
