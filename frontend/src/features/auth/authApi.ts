@@ -3,6 +3,7 @@ import type {
     ApiValidationErrors,
     AuthResponse,
     CandidateRegisterRequest,
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
     ResetPasswordRequest,
@@ -260,6 +261,54 @@ export async function resetPassword(
         throw new AuthApiError(
             response.status,
             body?.message || defaultMessage,
+        )
+    }
+}
+
+export async function changePassword(
+    request: ChangePasswordRequest,
+): Promise<void> {
+    const token = getAccessToken()
+    if (!token) {
+        throw new AuthApiError(401, 'Bạn chưa đăng nhập.')
+    }
+
+    let response: Response
+
+    try {
+        response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(request),
+        })
+    } catch {
+        throw new AuthApiError(
+            0,
+            'Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend và thử lại.',
+        )
+    }
+
+    let body: ApiResponse<void | ApiValidationErrors> | undefined
+
+    try {
+        body = (await response.json()) as ApiResponse<void | ApiValidationErrors>
+    } catch {
+        body = undefined
+    }
+
+    if (!response.ok) {
+        const fieldErrors =
+            response.status === 400 && isValidationErrors(body?.data)
+                ? body.data
+                : undefined
+
+        throw new AuthApiError(
+            response.status,
+            body?.message || 'Đổi mật khẩu không thành công. Vui lòng thử lại.',
+            fieldErrors,
         )
     }
 }

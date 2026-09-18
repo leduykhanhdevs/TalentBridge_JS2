@@ -137,6 +137,14 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public ChangePasswordUseCase changePasswordUseCase(
+            UserRepositoryPort userRepository,
+            PasswordEncoderPort passwordEncoder
+    ) {
+        return new ChangePasswordUseCaseImpl(userRepository, passwordEncoder);
+    }
+
+    @Bean
     public GetCurrentUserUseCase getCurrentUserUseCase(UserRepositoryPort userRepository) {
         return new GetCurrentUserUseCaseImpl(userRepository);
     }

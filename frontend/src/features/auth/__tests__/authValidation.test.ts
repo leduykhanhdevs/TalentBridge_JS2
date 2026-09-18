@@ -43,4 +43,21 @@ describe('Authentication Form Validation Rules', () => {
         expect(passwordsMatch('secret123', 'different123')).toBe(false)
         expect(passwordsMatch('', '')).toBe(false)
     })
+
+    it('should validate change password rules', () => {
+        const validateChangePassword = (current: string, next: string, confirm: string) => {
+            if (!current.trim()) return 'Vui lòng nhập mật khẩu hiện tại.'
+            if (next.length < 6) return 'Mật khẩu mới phải có ít nhất 6 ký tự.'
+            if (next === current) return 'Mật khẩu mới không được trùng với mật khẩu hiện tại.'
+            if (next !== confirm) return 'Mật khẩu xác nhận không khớp.'
+            return null
+        }
+
+        expect(validateChangePassword('OldPass123!', 'NewPass456!', 'NewPass456!')).toBeNull()
+        expect(validateChangePassword('', 'NewPass456!', 'NewPass456!')).toBe('Vui lòng nhập mật khẩu hiện tại.')
+        expect(validateChangePassword('OldPass123!', '12345', '12345')).toBe('Mật khẩu mới phải có ít nhất 6 ký tự.')
+        expect(validateChangePassword('OldPass123!', 'OldPass123!', 'OldPass123!')).toBe('Mật khẩu mới không được trùng với mật khẩu hiện tại.')
+        expect(validateChangePassword('OldPass123!', 'NewPass456!', 'WrongConfirm!')).toBe('Mật khẩu xác nhận không khớp.')
+    })
 })
+
