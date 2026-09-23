@@ -14,22 +14,22 @@ public enum ErrorCode {
     INVALID_ROLE(40005, "Vai trò không hợp lệ", HttpStatus.BAD_REQUEST),
 
     // 401 Unauthorized
-    UNAUTHORIZED(40101, "Báº¡n chÆ°a Ä‘Äƒng nháº­p hoáº·c phiÃªn lÃ m viá»‡c Ä‘Ã£ háº¿t háº¡n", HttpStatus.UNAUTHORIZED),
-    INVALID_CREDENTIALS(40102, "Email hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c", HttpStatus.UNAUTHORIZED),
-    INVALID_TOKEN(40103, "Token xÃ¡c thá»±c khÃ´ng há»£p lá»‡", HttpStatus.UNAUTHORIZED),
-    TOKEN_EXPIRED(40104, "Token xÃ¡c thá»±c Ä‘Ã£ háº¿t háº¡n", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(40101, "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn", HttpStatus.UNAUTHORIZED),
+    INVALID_CREDENTIALS(40102, "Email hoặc mật khẩu không chính xác", HttpStatus.UNAUTHORIZED),
+    INVALID_TOKEN(40103, "Token xác thực không hợp lệ", HttpStatus.UNAUTHORIZED),
+    TOKEN_EXPIRED(40104, "Token xác thực đã hết hạn", HttpStatus.UNAUTHORIZED),
 
     // 403 Forbidden
-    FORBIDDEN(40301, "Báº¡n khÃ´ng cÃ³ quyá»n thá»±c hiá»‡n thao tÃ¡c nÃ y", HttpStatus.FORBIDDEN),
-    ACCOUNT_BANNED(40302, "TÃ i khoáº£n cá»§a báº¡n Ä‘Ã£ bá»‹ táº¡m khÃ³a bá»Ÿi Quáº£n trá»‹ viÃªn", HttpStatus.FORBIDDEN),
+    FORBIDDEN(40301, "Bạn không có quyền thực hiện thao tác này", HttpStatus.FORBIDDEN),
+    ACCOUNT_BANNED(40302, "Tài khoản của bạn đã bị tạm khóa bởi Quản trị viên", HttpStatus.FORBIDDEN),
 
     // 404 Not Found
-    USER_NOT_FOUND(40401, "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng", HttpStatus.NOT_FOUND),
-    JOB_NOT_FOUND(40402, "KhÃ´ng tÃ¬m tháº¥y tin tuyá»ƒn dá»¥ng", HttpStatus.NOT_FOUND),
-    COMPANY_NOT_FOUND(40403, "KhÃ´ng tÃ¬m tháº¥y doanh nghiá»‡p", HttpStatus.NOT_FOUND),
-    CANDIDATE_NOT_FOUND(40404, "KhÃ´ng tÃ¬m tháº¥y há»“ sÆ¡ á»©ng viÃªn", HttpStatus.NOT_FOUND),
-    APPLICATION_NOT_FOUND(40405, "KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n á»©ng tuyá»ƒn", HttpStatus.NOT_FOUND),
-    RESUME_NOT_FOUND(40406, "KhÃ´ng tÃ¬m tháº¥y CV", HttpStatus.NOT_FOUND),
+    USER_NOT_FOUND(40401, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
+    JOB_NOT_FOUND(40402, "Không tìm thấy tin tuyển dụng", HttpStatus.NOT_FOUND),
+    COMPANY_NOT_FOUND(40403, "Không tìm thấy doanh nghiệp", HttpStatus.NOT_FOUND),
+    CANDIDATE_NOT_FOUND(40404, "Không tìm thấy hồ sơ ứng viên", HttpStatus.NOT_FOUND),
+    APPLICATION_NOT_FOUND(40405, "Không tìm thấy đơn ứng tuyển", HttpStatus.NOT_FOUND),
+    RESUME_NOT_FOUND(40406, "Không tìm thấy CV", HttpStatus.NOT_FOUND),
 
     // 409 Conflict
     EMAIL_ALREADY_EXISTS(40901, "Email này đã được sử dụng", HttpStatus.CONFLICT),

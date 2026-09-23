@@ -218,4 +218,11 @@ public class UseCaseConfig {
             FileStoragePort fileStoragePort) {
         return new ResumeUseCaseImpl(resumeRepository, candidateRepository, userRepository, fileStoragePort);
     }
+
+    @Bean
+    public JobUseCase jobUseCase(
+            JobRepositoryPort jobRepository,
+            RecruiterRepositoryPort recruiterRepository) {
+        return new JobUseCaseImpl(jobRepository, recruiterRepository);
+    }
 }

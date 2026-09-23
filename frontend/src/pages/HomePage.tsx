@@ -24,7 +24,12 @@ import {
     CvManagerIllustration,
 } from '../components/illustrations'
 
-const TYPEWRITER_PHRASES = ['đúng cơ hội', 'đúng ngành nghề']
+const TYPEWRITER_PHRASES = [
+    'đúng cơ hội',
+    'đúng ngành nghề',
+    'đúng mức đãi ngộ',
+    'đúng văn hóa',
+]
 
 function useTypewriter(words: string[], typingSpeed = 95, deletingSpeed = 45, pauseDuration = 2000) {
     const [wordIndex, setWordIndex] = useState(0)
@@ -178,31 +183,19 @@ export function HomePage() {
                     {/* Bento Cell 1: Hero Main (col-span-7) */}
                     <div className="bento-card flex flex-col justify-between p-6 sm:p-8 lg:col-span-7 min-h-[480px] lg:min-h-[510px]">
                         <div>
-                            {/* Headline with Smooth Typewriter Box */}
-                            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-[40px] xl:text-[45px] leading-tight sm:leading-tight">
+                            {/* Headline with Clean Fluid Gradient Typewriter (Gradient Tự Nhiên - Không đóng hộp, không gạch chân) */}
+                            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-4xl lg:text-[40px] xl:text-[45px] leading-tight sm:leading-tight">
                                 <span className="block">Kết nối tài năng công nghệ</span>
-                                <span className="mt-2 inline-flex items-center gap-2.5 whitespace-nowrap min-h-[1.45em]">
-                                    <span className="font-bold text-slate-800">với</span>
-                                    <span className="relative inline-flex items-center">
-                                        {/* Ambient Backlight Glow for Semi-Square Box */}
+                                <span className="mt-2 inline-flex flex-wrap items-baseline gap-2.5 whitespace-nowrap min-h-[1.45em]">
+                                    <span className="font-black text-slate-900">với</span>
+                                    <span className="relative inline-flex items-baseline">
+                                        <span className="font-display font-black tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-rose-500 bg-clip-text text-transparent whitespace-pre">
+                                            {typedHeadline}
+                                        </span>
                                         <span
                                             aria-hidden="true"
-                                            className="absolute -inset-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-500/40 via-violet-500/40 to-indigo-600/40 blur-md pointer-events-none"
+                                            className="inline-block w-[2.5px] h-[0.85em] ml-1.5 bg-violet-600 rounded-full animate-caret select-none align-baseline translate-y-[2px]"
                                         />
-
-                                        {/* High-End Bento Semi-Square Box (Ô hình bán vuông tạo điểm nhấn) */}
-                                        <span className="relative inline-flex items-center h-[1.38em] px-3.5 sm:px-4.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white shadow-[0_8px_22px_-4px_rgba(79,70,229,0.45),inset_0_1px_1px_rgba(255,255,255,0.45)] border border-indigo-300/50 backdrop-blur-xs before:absolute before:inset-x-2 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/70 before:to-transparent">
-                                            {/* Typed text with beautiful font styling */}
-                                            <span className="whitespace-pre font-black tracking-tight text-white drop-shadow-xs">
-                                                {typedHeadline}
-                                            </span>
-
-                                            {/* Glowing Neon Beam Caret */}
-                                            <span
-                                                aria-hidden="true"
-                                                className="inline-block w-[3px] h-[0.9em] ml-2 bg-gradient-to-b from-amber-200 via-amber-300 to-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.95)] animate-pulse select-none"
-                                            />
-                                        </span>
                                     </span>
                                 </span>
                             </h1>

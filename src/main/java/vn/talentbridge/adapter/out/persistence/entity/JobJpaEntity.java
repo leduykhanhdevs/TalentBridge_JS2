@@ -39,6 +39,12 @@ public class JobJpaEntity extends BaseJpaEntity {
     @Column(name = "location", length = 150)
     private String location;
 
+    @Column(name = "city", length = 100)
+    private String city;
+
+    @Column(name = "address", length = 300)
+    private String address;
+
     @Column(name = "job_type", length = 50)
     private String jobType;
 
@@ -51,14 +57,27 @@ public class JobJpaEntity extends BaseJpaEntity {
     @Column(name = "max_salary", precision = 15, scale = 2)
     private BigDecimal maxSalary;
 
+    @Column(name = "is_negotiable")
+    @Builder.Default
+    private Boolean isNegotiable = false;
+
     @Column(name = "deadline")
     private LocalDate deadline;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private JobStatus status = JobStatus.PENDING;
+    private JobStatus status = JobStatus.ACTIVE;
 
     @Column(name = "recruiter_user_id")
     private Long recruiterUserId;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "job_skills",
+        joinColumns = @JoinColumn(name = "job_id"),
+        inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+    @Builder.Default
+    private java.util.Set<SkillJpaEntity> skills = new java.util.HashSet<>();
 }
