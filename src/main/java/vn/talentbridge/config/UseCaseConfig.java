@@ -225,4 +225,19 @@ public class UseCaseConfig {
             RecruiterRepositoryPort recruiterRepository) {
         return new JobUseCaseImpl(jobRepository, recruiterRepository);
     }
+
+    @Bean
+    public ApplyJobUseCase applyJobUseCase(
+            ApplicationRepositoryPort applicationRepository,
+            CandidateRepositoryPort candidateRepository,
+            JobRepositoryPort jobRepository,
+            ResumeRepositoryPort resumeRepository) {
+        return new ApplyJobUseCaseImpl(
+                applicationRepository,
+                candidateRepository,
+                jobRepository,
+                resumeRepository
+        );
+    }
+
 }
