@@ -10,17 +10,17 @@ import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
 import vn.talentbridge.core.domain.exception.InvalidCredentialsException;
-import vn.talentbridge.core.domain.exception.TooManyLoginAttemptsException;
 import vn.talentbridge.core.domain.exception.UserAccountLockedException;
 import vn.talentbridge.core.domain.model.AuthSession;
 import vn.talentbridge.core.domain.model.Role;
 import vn.talentbridge.core.domain.model.User;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.UUID;
 
 public class LoginUseCaseImpl implements LoginUseCase {
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+
     private final UserRepositoryPort userRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
@@ -28,6 +28,17 @@ public class LoginUseCaseImpl implements LoginUseCase {
     private final LoginAttemptTrackerPort loginAttemptTracker;
     private final long tokenExpirationMs;
     private final long refreshTokenExpirationMs;
+
+    public LoginUseCaseImpl(
+            UserRepositoryPort userRepository,
+            PasswordEncoderPort passwordEncoder,
+            TokenProviderPort tokenProvider,
+            AuthSessionRepositoryPort authSessionRepository,
+            long tokenExpirationMs,
+            long refreshTokenExpirationMs
+    ) {
+        this(userRepository, passwordEncoder, tokenProvider, authSessionRepository, null, tokenExpirationMs, refreshTokenExpirationMs);
+    }
 
     public LoginUseCaseImpl(
             UserRepositoryPort userRepository,
@@ -49,32 +60,30 @@ public class LoginUseCaseImpl implements LoginUseCase {
 
     @Override
     public AuthResult login(LoginCommand command) {
-        String normalizedEmail = command.email()
-                .trim()
-                .toLowerCase(Locale.ROOT);
-
-        if (loginAttemptTracker.isBlocked(normalizedEmail)) {
-            throw new TooManyLoginAttemptsException();
-        }
-
-        User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> invalidCredentials(normalizedEmail));
-
-        if (!passwordEncoder.matches(command.password(), user.getPasswordHash())) {
-            throw invalidCredentials(normalizedEmail);
-        }
+        User user = userRepository.findByEmail(command.email())
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!user.isActive()) {
-            throw new UserAccountLockedException();
+            throw new UserAccountLockedException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên.");
         }
 
-        loginAttemptTracker.reset(normalizedEmail);
+        if (!passwordEncoder.matches(command.password(), user.getPasswordHash())) {
+            if (loginAttemptTracker != null) {
+                int failedAttempts = loginAttemptTracker.recordFailedAttempt(command.email());
+                if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+                    user.lock();
+                    userRepository.save(user);
+                    throw new UserAccountLockedException("Tài khoản của bạn đã bị khóa do nhập sai mật khẩu quá 5 lần.");
+                }
+            }
+            throw new InvalidCredentialsException();
+        }
 
-        String primaryRole = user.getRoles().stream()
-                .findFirst()
-                .map(Role::getName)
-                .map(Enum::name)
-                .orElse("ROLE_CANDIDATE");
+        if (loginAttemptTracker != null) {
+            loginAttemptTracker.resetAttempts(command.email());
+        }
+
+        String primaryRole = user.getPrimaryRoleName();
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sessionExpiresAt = now.plus(
@@ -133,12 +142,5 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 expiresInSeconds,
                 UserResult.from(user)
         );
-    }
-
-    private RuntimeException invalidCredentials(String identifier) {
-        if (loginAttemptTracker.recordFailure(identifier)) {
-            return new TooManyLoginAttemptsException();
-        }
-        return new InvalidCredentialsException();
     }
 }

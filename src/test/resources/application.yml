@@ -12,9 +12,13 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+  flyway:
+    enabled: false
 
 talentbridge:
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    secret: "dGVzdC1zZWNyZXQta2V5LWZvci10YWxlbnRicmlkZ2UtdGVzdGluZy0xMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA="
     expiration-ms: 3600000
     refresh-expiration-ms: 7200000
+  rate-limit:
+    enabled: false

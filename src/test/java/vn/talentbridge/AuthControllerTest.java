@@ -270,8 +270,8 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/login - Sai 5 lần trả về HTTP 429 Too Many Requests")
-    void testLoginRepeatedFailuresAreRateLimited() throws Exception {
+    @DisplayName("POST /api/v1/auth/login - Fifth failed attempt locks account and returns 403 Forbidden")
+    void testFifthFailedLoginLocksAccount() throws Exception {
         RegisterRequest registerReq = RegisterRequest.builder()
                 .email("rate-limit@test.com")
                 .password("correct123")
@@ -299,8 +299,8 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidLogin)))
-                .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.statusCode").value(42901));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.statusCode").value(40301));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -308,7 +308,7 @@ class AuthControllerTest {
                                 .email("rate-limit@test.com")
                                 .password("correct123")
                                 .build())))
-                .andExpect(status().isTooManyRequests());
+                .andExpect(status().isForbidden());
     }
 
     @Test

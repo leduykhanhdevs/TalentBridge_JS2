@@ -9,12 +9,14 @@
 
 ---
 
-## 1. Sơ Đồ Thực Thể Quan Hệ (ERD - 23 Bảng Chuẩn Hóa 3NF)
+## 1. Sơ Đồ Thực Thể Quan Hệ (ERD - 27 Bảng Chuẩn Hóa 3NF)
 
 ```mermaid
 erDiagram
     USERS ||--o{ USER_ROLES : "assigned_to"
     ROLES ||--o{ USER_ROLES : "belongs_to"
+    USERS ||--o{ AUTH_SESSIONS : "holds_session"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "requests_reset"
     USERS ||--o| CANDIDATES : "is_candidate"
     CANDIDATES ||--o{ WORK_EXPERIENCES : "has_experience"
     CANDIDATES ||--o{ EDUCATIONS : "has_education"
@@ -27,6 +29,9 @@ erDiagram
     CANDIDATES ||--o{ RESUMES : "owns_resume"
     USERS ||--o| RECRUITERS : "is_recruiter"
     COMPANIES ||--o{ RECRUITERS : "employs"
+    COMPANIES ||--o{ COMPANY_JOIN_REQUESTS : "receives_join_request"
+    RECRUITERS ||--o{ COMPANY_JOIN_REQUESTS : "submits_join_request"
+    USERS ||--o{ COMPANY_JOIN_REQUESTS : "reviews_request"
     COMPANIES ||--o{ JOBS : "posts"
     CATEGORIES ||--o{ JOBS : "classifies"
     JOBS ||--o{ JOB_SKILLS : "requires"
@@ -46,7 +51,7 @@ erDiagram
 
 ---
 
-## 2. Từ Điển Dữ Liệu (Data Dictionary) & 23 Bảng Chuẩn Hóa 3NF
+## 2. Từ Điển Dữ Liệu (Data Dictionary) & 27 Bảng Chuẩn Hóa 3NF
 
 ### 2.1. Nhóm Xác thực & Phân quyền (Authentication & RBAC)
 
@@ -67,8 +72,35 @@ Lưu trữ thông tin xác thực tài khoản chung cho cả 3 tác nhân (`ROL
 
 #### Bảng `roles` & `user_roles`
 Hỗ trợ phân quyền linh hoạt theo mô hình Role-Based Access Control (RBAC).
-- `roles`: `id` (INT, PK), `name` (VARCHAR(50), UNIQUE - `ROLE_CANDIDATE`, `ROLE_RECRUITER`, `ROLE_ADMIN`).
-- `user_roles`: `user_id` (BIGINT, FK `users(id)`), `role_id` (INT, FK `roles(id)`), PK(`user_id`, `role_id`).
+- `roles`: `id` (BIGINT, PK), `name` (VARCHAR(50), UNIQUE - `ROLE_CANDIDATE`, `ROLE_RECRUITER`, `ROLE_ADMIN`), `description` (VARCHAR(255)).
+- `user_roles`: `user_id` (BIGINT, FK `users(id)`), `role_id` (BIGINT, FK `roles(id)`), PK(`user_id`, `role_id`).
+
+#### Bảng `auth_sessions`
+Quản lý vòng đời phiên đăng nhập và refresh token của người dùng.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Mô Tả |
+| :--- | :--- | :--- | :--- |
+| `id` | BIGINT | PK, AUTO_INCREMENT | Mã định danh phiên đăng nhập |
+| `session_id` | VARCHAR(36) | UNIQUE, NOT NULL, INDEX | Session UUID định danh duy nhất |
+| `user_id` | BIGINT | NOT NULL, FK `users(id)`, INDEX | Khóa ngoại người dùng |
+| `refresh_token_hash` | VARCHAR(64) | NOT NULL, INDEX | Mã băm SHA-256 của refresh token |
+| `ip_address` | VARCHAR(45) | NULL | Địa chỉ IP đăng nhập (IPv4/IPv6) |
+| `user_agent` | VARCHAR(500) | NULL | Thông tin trình duyệt/thiết bị đăng nhập |
+| `expires_at` | TIMESTAMP | NOT NULL | Thời gian hết hạn phiên |
+| `revoked_at` | TIMESTAMP | NULL | Thời gian thu hồi phiên (đăng xuất) |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Thời gian khởi tạo phiên |
+
+#### Bảng `password_reset_tokens`
+Quản lý mã OTP / token đặt lại mật khẩu với cơ chế băm bảo mật SHA-256.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Mô Tả |
+| :--- | :--- | :--- | :--- |
+| `id` | BIGINT | PK, AUTO_INCREMENT | Mã bản ghi token |
+| `user_id` | BIGINT | NOT NULL, FK `users(id)`, INDEX | Khóa ngoại người dùng yêu cầu reset |
+| `token_hash` | VARCHAR(64) | UNIQUE, NOT NULL, INDEX | Mã băm SHA-256 của token/OTP |
+| `expires_at` | TIMESTAMP | NOT NULL | Thời hạn hiệu lực của mã OTP/token |
+| `used_at` | TIMESTAMP | NULL | Thời điểm mã được sử dụng |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Thời điểm tạo yêu cầu reset |
 
 ---
 
@@ -201,6 +233,7 @@ Quản lý cả CV tải lên từ máy tính (`UPLOADED`) và CV tạo tự đ�
 ### 2.4. Nhóm Doanh nghiệp & Nhà tuyển dụng (Companies & Recruiters)
 - `companies`: Hồ sơ doanh nghiệp tuyển dụng (`id`, `name`, `logo_url`, `banner_url`, `website`, `company_size`, `address`, `city`, `status`).
 - `recruiters`: Nhân viên tuyển dụng thuộc một doanh nghiệp cụ thể (quan hệ 1-1 với `users`, N-1 với `companies`).
+- `company_join_requests`: Quản lý yêu cầu xin gia nhập doanh nghiệp của HR Recruiter (`id`, `company_id`, `recruiter_id`, `status` [PENDING, APPROVED, REJECTED], `request_note`, `response_note`, `reviewed_by`, `created_at`, `updated_at`).
 
 ---
 

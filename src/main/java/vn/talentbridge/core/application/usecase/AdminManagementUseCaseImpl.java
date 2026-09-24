@@ -46,14 +46,24 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
 
     @Override
     public List<UserResult> getAllUsers(int page, int size) {
-        return userRepository.findAll(page, size).stream()
+        return getAllUsers(page, size, null);
+    }
+
+    @Override
+    public List<UserResult> getAllUsers(int page, int size, UserStatus status) {
+        return userRepository.findAll(page, size, status).stream()
                 .map(UserResult::from)
                 .collect(Collectors.toList());
     }
 
     @Override
     public long countUsers() {
-        return userRepository.count();
+        return countUsers(null);
+    }
+
+    @Override
+    public long countUsers(UserStatus status) {
+        return userRepository.count(status);
     }
 
     @Override

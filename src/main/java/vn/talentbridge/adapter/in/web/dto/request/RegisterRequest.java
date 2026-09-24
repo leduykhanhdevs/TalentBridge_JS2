@@ -33,11 +33,12 @@ public class RegisterRequest {
     @Schema(description = "Họ và tên đầy đủ", example = "Nguyễn Văn A", requiredMode = Schema.RequiredMode.REQUIRED)
     private String fullName;
 
+    @Pattern(regexp = "^$|^(0|\\+84)[0-9]{9,10}$", message = "Số điện thoại không đúng định dạng (VD: 0912345678)")
+    @Size(max = 20, message = "Số điện thoại không được vượt quá 20 ký tự")
     @Schema(description = "Số điện thoại liên hệ (10-11 chữ số)", example = "0987654321")
     private String phone;
 
     @NotBlank(message = "Vai trò đăng ký không được để trống")
-    @Pattern(regexp = "^(ROLE_CANDIDATE|ROLE_RECRUITER)$", message = "Vai trò chỉ được là ROLE_CANDIDATE hoặc ROLE_RECRUITER")
     @Schema(description = "Vai trò người dùng đăng ký", example = "ROLE_CANDIDATE", allowableValues = {
             "ROLE_CANDIDATE", "ROLE_RECRUITER" }, requiredMode = Schema.RequiredMode.REQUIRED)
     private String role;

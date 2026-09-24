@@ -28,7 +28,7 @@ public class UseCaseConfig {
             @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
             long refreshExpirationMs
     ) {
-        return new RegisterUseCaseImpl(
+        RegisterUseCase core = new RegisterUseCaseImpl(
                 userRepository,
                 recruiterRepository,
                 candidateRepository,
@@ -38,6 +38,7 @@ public class UseCaseConfig {
                 expirationMs,
                 refreshExpirationMs
         );
+        return new TransactionalRegisterUseCase(core);
     }
 
     @Bean
@@ -104,7 +105,7 @@ public class UseCaseConfig {
             @Value(
                     "${talentbridge.password-reset."
                             + "reset-password-url:"
-                            + "http://localhost:3000/reset-password}"
+                            + "http://localhost:5173/reset-password}"
             )
             String resetPasswordUrl
     ) {

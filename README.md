@@ -11,7 +11,7 @@
 ### 1. 👑 Lê Duy Khánh – Trưởng nhóm (Tech Lead & Security / Admin Module)
 - [x] Đọc và phân tích kỹ tài liệu đề tài `02.docx`.
 - [x] Thiết kế kiến trúc tổng thể, danh mục 4 Actor, 7 Feature Modules và các luồng nghiệp vụ.
-- [x] Thiết kế CSDL chuẩn hóa 3NF 16 bảng (`docs/DATABASE_DESIGN.md` & `database/schema.sql`).
+- [x] Thiết kế CSDL chuẩn hóa 3NF 27 bảng (`docs/DATABASE_DESIGN.md` & `database/schema.sql`).
 - [x] Xây dựng bộ quy tắc làm việc nhóm, Git Flow & Quy chuẩn AI Code (`TEAM_RULES_AND_GITFLOW.md`).
 - [x] Khởi tạo Repository GitHub, cấu hình `.gitignore`, bảo vệ nhánh `main`, tạo nhánh `dev` và push lên remote.
 - [x] Khởi tạo Skeleton Spring Boot 3 (Maven/Gradle, Spring Web, Spring Data JPA, Lombok, Validation).
@@ -118,16 +118,83 @@ flowchart LR
 
 ## 🗄️ Thiết Kế Cơ Sở Dữ Liệu (Hoàn Thành Trước 14/09/2026)
 
-Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **16 bảng** liên kết chặt chẽ:
-- `users`, `roles`, `user_roles`: Quản lý tài khoản & phân quyền.
-- `candidates`, `resumes`: Hồ sơ ứng viên và file CV.
-- `companies`, `recruiters`: Hồ sơ doanh nghiệp và nhân sự HR.
-- `categories`, `skills`, `jobs`, `job_skills`, `saved_jobs`: Việc làm và tìm kiếm.
-- `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS.
-- `interviews`, `notifications`: Lịch phỏng vấn và thông báo.
+Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bảng** liên kết chặt chẽ:
+- `users`, `roles`, `user_roles`, `auth_sessions`, `password_reset_tokens`: Quản lý tài khoản, phân quyền & bảo mật phiên đăng nhập.
+- `candidates`, `work_experiences`, `educations`, `candidate_skills`, `candidate_projects`, `candidate_certificates`, `candidate_awards`: Hồ sơ ứng viên chuẩn TopCV.
+- `cv_templates`, `resumes`: Quản lý mẫu CV & tạo/tải CV.
+- `companies`, `recruiters`, `company_join_requests`: Doanh nghiệp, nhân sự HR & yêu cầu gia nhập công ty.
+- `categories`, `skills`, `jobs`, `job_skills`, `saved_jobs`: Việc làm, kỹ năng & tìm kiếm.
+- `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS pipeline.
+- `interviews`, `notifications`: Lịch phỏng vấn và thông báo hệ thống.
 
 > 📖 **Xem chi tiết tài liệu CSDL**: [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)  
 > 💾 **File script DDL MySQL**: [database/schema.sql](database/schema.sql)
+
+---
+
+## ⚡ Hướng Dẫn Khởi Chạy Nhanh (Quick Start Guide)
+
+### 1. Yêu Cầu Môi Trường (Prerequisites)
+- **Java**: JDK 21 LTS (Eclipse Temurin hoặc Oracle OpenJDK).
+- **Maven**: Maven 3.9+ (hoặc sử dụng wrapper `./mvnw` / `mvnw.cmd` có sẵn trong repo).
+- **Node.js**: Node.js 20+ LTS.
+- **Package Manager**: `pnpm` 9+ (khuyên dùng) hoặc `npm`.
+- **Cơ sở dữ liệu**: H2 Database (in-memory, tích hợp sẵn ở profile `local`) hoặc MySQL 8.0+ / MariaDB (ở profile `mysql`).
+
+### 2. Bảng Biến Môi Trường (Environment Variables)
+
+| Tên Biến Môi Trường | Bắt Buộc | Giá Trị Mặc Định / Gợi Ý | Mô Tả |
+| :--- | :---: | :--- | :--- |
+| `JWT_SECRET` | **Có** | `DevJwtSecretMustBeAtLeast256BitsLong32Chars!` | Khóa bí mật ký JWT (tối thiểu 32 ký tự). Hệ thống fail-fast khi khởi động nếu thiếu. |
+| `SPRING_PROFILES_ACTIVE` | Không | `local` | Profile cấu hình Spring Boot (`local` dùng H2 DB, `mysql` dùng MySQL thực tế). |
+| `CORS_ALLOWED_ORIGINS` | Không | `http://localhost:5173,http://127.0.0.1:5173` | Danh sách domain Frontend được phép kết nối qua CORS. |
+| `SPRING_DATASOURCE_URL` | Khi `mysql` | `jdbc:mysql://localhost:3306/talentbridge_db` | URL kết nối MySQL khi chạy profile `mysql`. |
+| `SPRING_DATASOURCE_USERNAME`| Khi `mysql` | `root` | Tài khoản kết nối MySQL. |
+| `SPRING_DATASOURCE_PASSWORD`| Khi `mysql` | `password` | Mật khẩu tài khoản kết nối MySQL. |
+| `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
+| `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
+| `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
+| `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
+| `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |
+
+### 3. Khởi Chạy Backend (Spring Boot 3)
+
+```bash
+# Trên Linux / macOS
+export JWT_SECRET="MySuperSecretKeyForTalentBridgeDevEnvironmentMustBe32CharsLong!"
+./mvnw spring-boot:run
+
+# Trên Windows (PowerShell)
+$env:JWT_SECRET="MySuperSecretKeyForTalentBridgeDevEnvironmentMustBe32CharsLong!"
+.\mvnw.cmd spring-boot:run
+```
+
+- **API Base URL**: `http://localhost:8080`
+- **Tài liệu Swagger / OpenAPI**: `http://localhost:8080/swagger-ui/index.html`
+- **H2 Console** (chỉ ở profile `local`): `http://localhost:8080/h2-console`
+
+### 4. Khởi Chạy Frontend (React 19 + Vite)
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+- **Frontend Portal**: `http://localhost:5173` (tự động proxy request `/api/v1/*` sang backend `http://localhost:8080`).
+
+### 5. Kiểm Thử & Kiểm Tra Toàn Diện (Testing & Verification)
+
+```bash
+# 1. Kiểm thử toàn bộ Backend (Unit Tests, Slice Tests, Integration Tests)
+./mvnw verify
+
+# 2. Kiểm thử toàn bộ Frontend (Unit Tests, E2E Flow Tests, Linting & Production Build)
+cd frontend
+pnpm test --run
+pnpm lint
+pnpm build
+```
 
 ---
 

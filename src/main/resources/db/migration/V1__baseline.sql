@@ -2,12 +2,9 @@
 -- DỰ ÁN: TalentBridge - Nền tảng tuyển dụng trực tuyến (Online ATS)
 -- HỌC PHẦN: Java Spring 2
 -- MỤC TIÊU: Thiết kế CSDL chuẩn hóa 3NF tích hợp Hồ sơ TopCV & Bộ sinh CV (CV Builder)
--- HỆ QUẢN TRỊ CSDL: MySQL 8.0+ / MariaDB
+-- HỆ QUẢN TRỊ CSDL: MySQL 8.0+ / MariaDB / H2 (MODE=MySQL)
+-- FLYWAY MIGRATION: V1__baseline.sql
 -- ====================================================================
-
-DROP DATABASE IF EXISTS `talentbridge_db`;
-CREATE DATABASE `talentbridge_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `talentbridge_db`;
 
 -- ====================================================================
 -- PHÂN HỆ 1: XÁC THỰC & PHÂN QUYỀN (AUTHENTICATION & RBAC)
@@ -22,7 +19,7 @@ CREATE TABLE `users` (
     `phone` VARCHAR(20) NULL,
     `phone_number` VARCHAR(20) NULL,
     `avatar_url` VARCHAR(500) NULL,
-    `status` VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, BANNED
+    `status` VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, BANNED, LOCKED
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX `idx_users_email` (`email`),
@@ -46,54 +43,34 @@ CREATE TABLE `user_roles` (
 
 -- 2.1. Bảng auth_sessions: Quản lý vòng đời phiên đăng nhập
 CREATE TABLE `auth_sessions` (
-                                 `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                 `session_id` VARCHAR(36) NOT NULL,
-                                 `user_id` BIGINT NOT NULL,
-                                 `refresh_token_hash` VARCHAR(255) NOT NULL,
-                                 `expires_at` DATETIME(6) NOT NULL,
-                                 `revoked_at` DATETIME(6) NULL,
-                                 `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                                 `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
-        ON UPDATE CURRENT_TIMESTAMP(6),
-
-                                 CONSTRAINT `uk_auth_sessions_session_id`
-                                     UNIQUE (`session_id`),
-
-                                 CONSTRAINT `fk_auth_sessions_user`
-                                     FOREIGN KEY (`user_id`)
-                                         REFERENCES `users` (`id`)
-                                         ON DELETE CASCADE,
-
-                                 INDEX `idx_auth_sessions_user_id` (`user_id`),
-                                 INDEX `idx_auth_sessions_expires_at` (`expires_at`)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `session_id` VARCHAR(36) NOT NULL,
+    `user_id` BIGINT NOT NULL,
+    `refresh_token_hash` VARCHAR(255) NOT NULL,
+    `expires_at` DATETIME(6) NOT NULL,
+    `revoked_at` DATETIME(6) NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    CONSTRAINT `uk_auth_sessions_session_id` UNIQUE (`session_id`),
+    CONSTRAINT `fk_auth_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    INDEX `idx_auth_sessions_user_id` (`user_id`),
+    INDEX `idx_auth_sessions_expires_at` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2.2. Bảng password_reset_tokens: Quản lý token đặt lại mật khẩu
 CREATE TABLE `password_reset_tokens` (
-                                         `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                         `user_id` BIGINT NOT NULL,
-                                         `token_hash` VARCHAR(64) NOT NULL,
-                                         `expires_at` DATETIME(6) NOT NULL,
-                                         `used_at` DATETIME(6) NULL,
-                                         `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                                         `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
-        ON UPDATE CURRENT_TIMESTAMP(6),
-
-                                         CONSTRAINT `uk_password_reset_tokens_token_hash`
-                                             UNIQUE (`token_hash`),
-
-                                         CONSTRAINT `fk_password_reset_tokens_user`
-                                             FOREIGN KEY (`user_id`)
-                                                 REFERENCES `users` (`id`)
-                                                 ON DELETE CASCADE,
-
-                                         INDEX `idx_password_reset_tokens_user_id` (`user_id`),
-                                         INDEX `idx_password_reset_tokens_expires_at` (`expires_at`)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT NOT NULL,
+    `token_hash` VARCHAR(64) NOT NULL,
+    `expires_at` DATETIME(6) NOT NULL,
+    `used_at` DATETIME(6) NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    CONSTRAINT `uk_password_reset_tokens_token_hash` UNIQUE (`token_hash`),
+    CONSTRAINT `fk_password_reset_tokens_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    INDEX `idx_password_reset_tokens_user_id` (`user_id`),
+    INDEX `idx_password_reset_tokens_expires_at` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================================================================
 -- PHÂN HỆ 2: HỒ SƠ ỨNG VIÊN CHI TIẾT & TOPCV PROFILE
@@ -103,16 +80,16 @@ CREATE TABLE `password_reset_tokens` (
 CREATE TABLE `candidates` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `user_id` BIGINT NOT NULL UNIQUE,
-    `title` VARCHAR(150) NULL, -- Vị trí nghề nghiệp mong muốn (vd: "Senior Java Developer")
-    `dob` DATE NULL, -- Ngày sinh
-    `gender` VARCHAR(10) NULL DEFAULT 'OTHER', -- MALE, FEMALE, OTHER
-    `summary` TEXT NULL, -- Tóm tắt bản thân / Mục tiêu nghề nghiệp (Career Objective)
+    `title` VARCHAR(150) NULL,
+    `dob` DATE NULL,
+    `gender` VARCHAR(10) NULL DEFAULT 'OTHER',
+    `summary` TEXT NULL,
     `experience_years` INT DEFAULT 0,
     `current_salary` DECIMAL(12,2) NULL,
     `expected_salary` DECIMAL(12,2) NULL,
     `city` VARCHAR(100) NULL,
     `address` VARCHAR(255) NULL,
-    `personal_website` VARCHAR(255) NULL, -- Portfolio / Website cá nhân
+    `personal_website` VARCHAR(255) NULL,
     `linkedin_url` VARCHAR(255) NULL,
     `github_url` VARCHAR(255) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -132,12 +109,12 @@ CREATE TABLE `work_experiences` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
     `company_name` VARCHAR(200) NOT NULL,
-    `position` VARCHAR(150) NOT NULL, -- Chức danh công việc (vd: Backend Developer, Tech Lead)
+    `position` VARCHAR(150) NOT NULL,
     `start_date` DATE NOT NULL,
-    `end_date` DATE NULL, -- NULL nếu là công việc hiện tại
+    `end_date` DATE NULL,
     `is_current` BOOLEAN DEFAULT FALSE,
-    `description` TEXT NULL, -- Mô tả trách nhiệm & công việc đảm nhận
-    `achievements` TEXT NULL, -- Thành tựu nổi bật / Key Accomplishments
+    `description` TEXT NULL,
+    `achievements` TEXT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_work_exp_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
@@ -148,14 +125,14 @@ CREATE TABLE `work_experiences` (
 CREATE TABLE `educations` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
-    `institution_name` VARCHAR(200) NOT NULL, -- Tên trường đại học / cao đẳng / viện đào tạo
-    `degree` VARCHAR(100) NOT NULL, -- Cử nhân, Kỹ sư, Thạc sĩ, Bằng nghề...
-    `field_of_study` VARCHAR(150) NOT NULL, -- Chuyên ngành (vd: Kỹ thuật phần mềm, CNTT)
+    `institution_name` VARCHAR(200) NOT NULL,
+    `degree` VARCHAR(100) NOT NULL,
+    `field_of_study` VARCHAR(150) NOT NULL,
     `start_date` DATE NOT NULL,
     `end_date` DATE NULL,
     `is_current` BOOLEAN DEFAULT FALSE,
-    `gpa` VARCHAR(20) NULL, -- Điểm trung bình (vd: "3.6 / 4.0" hoặc "Xuất sắc")
-    `description` TEXT NULL, -- Đề tài khóa luận hoặc hoạt động nổi bật
+    `gpa` VARCHAR(20) NULL,
+    `description` TEXT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_educations_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
@@ -167,8 +144,8 @@ CREATE TABLE `candidate_skills` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
     `skill_id` INT NOT NULL,
-    `proficiency_level` VARCHAR(30) DEFAULT 'INTERMEDIATE', -- BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
-    `rating` TINYINT DEFAULT 3, -- Đánh giá sao (1-5 sao như TopCV)
+    `proficiency_level` VARCHAR(30) DEFAULT 'INTERMEDIATE',
+    `rating` TINYINT DEFAULT 3,
     `years_of_experience` DECIMAL(3,1) DEFAULT 1.0,
     CONSTRAINT `fk_cand_skills_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_cand_skills_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE CASCADE,
@@ -182,16 +159,16 @@ CREATE TABLE `candidate_projects` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
     `project_name` VARCHAR(200) NOT NULL,
-    `role` VARCHAR(100) NOT NULL, -- Vai trò trong dự án (vd: Backend Lead, Fullstack)
-    `team_size` INT NULL, -- Số lượng thành viên nhóm
+    `role` VARCHAR(100) NOT NULL,
+    `team_size` INT NULL,
     `start_date` DATE NOT NULL,
     `end_date` DATE NULL,
     `is_current` BOOLEAN DEFAULT FALSE,
-    `technologies` VARCHAR(500) NULL, -- Công nghệ sử dụng (vd: Java 21, Spring Boot, MySQL, Redis, Docker)
-    `project_url` VARCHAR(500) NULL, -- Link website dự án / Demo
-    `github_url` VARCHAR(500) NULL, -- Link mã nguồn
-    `description` TEXT NULL, -- Giới thiệu dự án
-    `responsibilities` TEXT NULL, -- Trách nhiệm & đóng góp cụ thể
+    `technologies` VARCHAR(500) NULL,
+    `project_url` VARCHAR(500) NULL,
+    `github_url` VARCHAR(500) NULL,
+    `description` TEXT NULL,
+    `responsibilities` TEXT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_projects_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
@@ -202,12 +179,12 @@ CREATE TABLE `candidate_projects` (
 CREATE TABLE `candidate_certificates` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
-    `certificate_name` VARCHAR(200) NOT NULL, -- vd: "AWS Certified Solutions Architect"
-    `issuing_organization` VARCHAR(200) NOT NULL, -- vd: "Amazon Web Services"
+    `certificate_name` VARCHAR(200) NOT NULL,
+    `issuing_organization` VARCHAR(200) NOT NULL,
     `issue_date` DATE NOT NULL,
-    `expiration_date` DATE NULL, -- NULL nếu chứng chỉ vĩnh viễn
-    `credential_id` VARCHAR(100) NULL, -- Mã tra cứu chứng chỉ
-    `credential_url` VARCHAR(500) NULL, -- Link xác thực trực tuyến
+    `expiration_date` DATE NULL,
+    `credential_id` VARCHAR(100) NULL,
+    `credential_url` VARCHAR(500) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_certificates_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
     INDEX `idx_certificates_candidate` (`candidate_id`)
@@ -217,8 +194,8 @@ CREATE TABLE `candidate_certificates` (
 CREATE TABLE `candidate_awards` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
-    `title` VARCHAR(200) NOT NULL, -- vd: "Giải Nhất Olympic Tin học Sinh viên"
-    `organization` VARCHAR(200) NOT NULL, -- vd: "Hội Tin học Việt Nam"
+    `title` VARCHAR(200) NOT NULL,
+    `organization` VARCHAR(200) NOT NULL,
     `issue_date` DATE NOT NULL,
     `description` TEXT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -233,11 +210,11 @@ CREATE TABLE `candidate_awards` (
 -- 11. Bảng cv_templates: Kho mẫu CV cho tính năng Generate Resume từ Profile
 CREATE TABLE `cv_templates` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(100) NOT NULL, -- Tên hiển thị (vd: "Modern IT Standard", "Executive Professional")
-    `template_code` VARCHAR(50) NOT NULL UNIQUE, -- Mã code (MODERN_IT, CLASSIC_ELEGANT, MINIMALIST_TECH)
-    `thumbnail_url` VARCHAR(500) NULL, -- Ảnh xem trước mẫu CV
+    `name` VARCHAR(100) NOT NULL,
+    `template_code` VARCHAR(50) NOT NULL UNIQUE,
+    `thumbnail_url` VARCHAR(500) NULL,
     `description` VARCHAR(255) NULL,
-    `default_config` JSON NULL, -- Cấu hình mặc định: primary_color, font_family, layout_type
+    `default_config` JSON NULL,
     `is_active` BOOLEAN DEFAULT TRUE,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -246,15 +223,15 @@ CREATE TABLE `cv_templates` (
 CREATE TABLE `resumes` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
-    `template_id` INT NULL, -- FK tới cv_templates nếu là CV sinh tự động
-    `resume_type` VARCHAR(20) NOT NULL DEFAULT 'UPLOADED', -- UPLOADED (tải lên PDF), GENERATED (sinh từ profile)
-    `title` VARCHAR(200) NOT NULL DEFAULT 'My Resume', -- Tiêu đề hồ sơ (vd: "CV Java Backend - 2026")
+    `template_id` INT NULL,
+    `resume_type` VARCHAR(20) NOT NULL DEFAULT 'UPLOADED',
+    `title` VARCHAR(200) NOT NULL DEFAULT 'My Resume',
     `file_name` VARCHAR(255) NOT NULL,
-    `file_url` VARCHAR(500) NOT NULL, -- Đường dẫn file PDF tải lên hoặc PDF do hệ thống render
+    `file_url` VARCHAR(500) NOT NULL,
     `file_type` VARCHAR(50) DEFAULT 'application/pdf',
     `is_default` BOOLEAN DEFAULT FALSE,
-    `customization_json` JSON NULL, -- Tùy chọn giao diện: màu sắc, font, thứ tự hiển thị các khối section...
-    `parsed_text` LONGTEXT NULL, -- Dùng cho tìm kiếm/AI matching
+    `customization_json` JSON NULL,
+    `parsed_text` LONGTEXT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_resumes_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
@@ -275,12 +252,12 @@ CREATE TABLE `companies` (
     `banner_url` VARCHAR(500) NULL,
     `website` VARCHAR(255) NULL,
     `industry` VARCHAR(150) NULL,
-    `company_size` VARCHAR(50) NULL, -- ví dụ: "50-150 nhân viên"
+    `company_size` VARCHAR(50) NULL,
     `address` VARCHAR(300) NOT NULL,
     `city` VARCHAR(100) NOT NULL,
     `tax_code` VARCHAR(50) NULL,
     `description` TEXT NULL,
-    `status` VARCHAR(20) DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    `status` VARCHAR(20) DEFAULT 'PENDING',
     `created_by_user_id` BIGINT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -309,8 +286,8 @@ CREATE TABLE `company_join_requests` (
     `company_id` BIGINT NOT NULL,
     `position` VARCHAR(100) NULL,
     `message` TEXT NULL,
-    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, CANCELLED
-    `reason` TEXT NULL, -- Lý do từ chối hoặc ghi chú phê duyệt
+    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    `reason` TEXT NULL,
     `approved_by_user_id` BIGINT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -346,22 +323,20 @@ CREATE TABLE `jobs` (
     `location` VARCHAR(150) NULL,
     `city` VARCHAR(100) NULL,
     `address` VARCHAR(300) NULL,
-    `job_type` VARCHAR(50) NULL, -- FULL_TIME, PART_TIME, REMOTE, HYBRID
-    `experience_level` VARCHAR(50) NULL, -- INTERN, FRESHER, JUNIOR, MIDDLE, SENIOR
+    `job_type` VARCHAR(50) NULL,
+    `experience_level` VARCHAR(50) NULL,
     `salary_min` DECIMAL(15,2) NULL,
     `salary_max` DECIMAL(15,2) NULL,
     `min_salary` DECIMAL(15,2) NULL,
     `max_salary` DECIMAL(15,2) NULL,
     `is_negotiable` BOOLEAN DEFAULT FALSE,
-    `status` VARCHAR(20) DEFAULT 'ACTIVE', -- DRAFT, PENDING, ACTIVE, EXPIRED, CLOSED
+    `status` VARCHAR(20) DEFAULT 'ACTIVE',
     `deadline` DATE NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_jobs_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
     INDEX `idx_jobs_company` (`company_id`),
-    INDEX `idx_jobs_category` (`category_id`),
     INDEX `idx_jobs_status` (`status`),
-    INDEX `idx_jobs_city` (`city`),
     INDEX `idx_jobs_deadline` (`deadline`),
     INDEX `idx_jobs_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -397,9 +372,9 @@ CREATE TABLE `applications` (
     `candidate_id` BIGINT NOT NULL,
     `resume_id` BIGINT NOT NULL,
     `cover_letter` TEXT NULL,
-    `current_stage` VARCHAR(30) DEFAULT 'APPLIED', -- APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED
-    `status` VARCHAR(20) DEFAULT 'SUBMITTED', -- SUBMITTED, IN_REVIEW, ACCEPTED, DECLINED
-    `ai_match_score` DECIMAL(5,2) NULL, -- Điểm tương thích AI (0.00 - 100.00%)
+    `current_stage` VARCHAR(30) DEFAULT 'APPLIED',
+    `status` VARCHAR(20) DEFAULT 'SUBMITTED',
+    `ai_match_score` DECIMAL(5,2) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_applications_job` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE,
@@ -415,7 +390,7 @@ CREATE TABLE `applications` (
 CREATE TABLE `application_stages` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `application_id` BIGINT NOT NULL,
-    `stage` VARCHAR(30) NOT NULL, -- APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED
+    `stage` VARCHAR(30) NOT NULL,
     `note` TEXT NULL,
     `changed_by_user_id` BIGINT NOT NULL,
     `changed_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -429,8 +404,8 @@ CREATE TABLE `application_notes` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `application_id` BIGINT NOT NULL,
     `recruiter_id` BIGINT NOT NULL,
-    `rating` TINYINT NULL, -- 1 đến 5 sao
-    `tag` VARCHAR(50) NULL, -- vd: "Ưu tiên", "Pass Technical", "Lương thỏa thuận"
+    `rating` TINYINT NULL,
+    `tag` VARCHAR(50) NULL,
     `comment` TEXT NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_app_notes_app` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`) ON DELETE CASCADE,
@@ -443,10 +418,10 @@ CREATE TABLE `interviews` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `application_id` BIGINT NOT NULL,
     `interview_time` DATETIME NOT NULL,
-    `location_type` VARCHAR(20) NOT NULL DEFAULT 'ONLINE', -- ONLINE, OFFLINE
+    `location_type` VARCHAR(20) NOT NULL DEFAULT 'ONLINE',
     `meeting_link_or_address` VARCHAR(500) NOT NULL,
     `notes` TEXT NULL,
-    `status` VARCHAR(20) DEFAULT 'SCHEDULED', -- SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
+    `status` VARCHAR(20) DEFAULT 'SCHEDULED',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_interviews_app` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`) ON DELETE CASCADE,
     INDEX `idx_interviews_app` (`application_id`),
@@ -459,49 +434,9 @@ CREATE TABLE `notifications` (
     `user_id` BIGINT NOT NULL,
     `title` VARCHAR(200) NOT NULL,
     `message` TEXT NOT NULL,
-    `type` VARCHAR(50) NOT NULL, -- APPLICATION_STATUS, INTERVIEW_INVITE, SYSTEM
+    `type` VARCHAR(50) NOT NULL,
     `is_read` BOOLEAN DEFAULT FALSE,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
     INDEX `idx_notifications_user` (`user_id`, `is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ====================================================================
--- DỮ LIỆU KHỞI TẠO BAN ĐẦU (SEED DATA)
--- ====================================================================
-
--- 1. Chèn roles
-INSERT INTO `roles` (`id`, `name`) VALUES 
-(1, 'ROLE_ADMIN'),
-(2, 'ROLE_RECRUITER'),
-(3, 'ROLE_CANDIDATE');
-
--- 2. Chèn tài khoản Admin mặc định (Password: admin123 -> BCrypt hash)
-INSERT INTO `users` (`id`, `email`, `password_hash`, `full_name`, `phone`, `status`) VALUES
-(1, 'admin@talentbridge.vn', '$2a$10$eO0V4eL33S5jK79a5lM/kOCgN3w8wWdGqCqfK5yv3d0sYkMlh2D4.', 'Quản Trị Viên', '0901234567', 'ACTIVE');
-
-INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES (1, 1);
-
--- 3. Chèn danh mục ngành nghề phổ biến
-INSERT INTO `categories` (`name`, `slug`, `description`) VALUES
-('Công nghệ Thông tin / Phần mềm', 'it-phan-mem', 'Lập trình viên, Kiểm thử, DevOps, AI Engineer'),
-('Kinh doanh / Bán hàng', 'kinh-doanh-ban-hang', 'Sales B2B, B2C, Quản lý kinh doanh'),
-('Marketing / Truyền thông', 'marketing-truyen-thong', 'Digital Marketing, Content, SEO, Brand Manager'),
-('Kế toán / Tài chính', 'ke-toan-tai-chinh', 'Kế toán viên, Kiểm toán viên, Phân tích tài chính'),
-('Thiết kế / UI-UX', 'thiet-ke-ui-ux', 'UI/UX Designer, Graphic Designer, 3D Artist'),
-('Nhân sự / Tuyển dụng', 'nhan-su-tuyen-dung', 'Chuyên viên tuyển dụng, C&B, HR Generalist');
-
--- 4. Chèn danh mục kỹ năng chuyên môn phong phú
-INSERT INTO `skills` (`name`) VALUES
-('Java'), ('Spring Boot'), ('Spring Security'), ('MySQL'), ('PostgreSQL'),
-('RESTful API'), ('Docker'), ('Git'), ('ReactJS'), ('Next.js'),
-('TypeScript'), ('HTML5/CSS3'), ('Tailwind CSS'), ('Microservices'),
-('Python'), ('Data Analysis'), ('Project Management'), ('Agile/Scrum'),
-('Kubernetes'), ('Redis'), ('RabbitMQ'), ('Kafka'), ('AWS'),
-('CI/CD'), ('Unit Testing / JUnit'), ('Figma'), ('Clean Architecture');
-
--- 5. Chèn danh mục Mẫu CV (CV Templates cho Resume Generator)
-INSERT INTO `cv_templates` (`id`, `name`, `template_code`, `thumbnail_url`, `description`, `default_config`, `is_active`) VALUES
-(1, 'Modern IT Professional', 'MODERN_IT_01', 'https://talentbridge.vn/templates/modern_it.png', 'Mẫu CV hiện đại chuyên biệt cho ngành IT & Phần mềm, tối ưu hiển thị kỹ năng và dự án', '{"primaryColor": "#1E40AF", "fontFamily": "Inter", "columns": 2, "layout": "sidebar-left"}', TRUE),
-(2, 'Classic Elegant', 'CLASSIC_01', 'https://talentbridge.vn/templates/classic.png', 'Mẫu CV phong cách cổ điển, trang trọng, phù hợp cho ngành Kinh doanh, Quản lý & Tài chính', '{"primaryColor": "#1F2937", "fontFamily": "Merriweather", "columns": 1, "layout": "single-column"}', TRUE),
-(3, 'Creative Minimalist', 'MINIMALIST_01', 'https://talentbridge.vn/templates/minimalist.png', 'Mẫu CV tối giản tinh tế, tập trung vào điểm nhấn kinh nghiệm và thành tựu cá nhân', '{"primaryColor": "#059669", "fontFamily": "Roboto", "columns": 2, "layout": "grid"}', TRUE);

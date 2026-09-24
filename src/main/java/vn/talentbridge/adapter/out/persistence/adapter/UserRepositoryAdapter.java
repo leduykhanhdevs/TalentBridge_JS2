@@ -85,7 +85,17 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     @Override
     @Transactional(readOnly = true)
     public List<User> findAll(int page, int size) {
-        return userJpaRepository.findAll(PageRequest.of(page, size)).stream()
+        return findAll(page, size, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAll(int page, int size, vn.talentbridge.core.domain.vo.UserStatus status) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        org.springframework.data.domain.Page<UserJpaEntity> resultPage = (status != null)
+                ? userJpaRepository.findByStatus(status, pageRequest)
+                : userJpaRepository.findAll(pageRequest);
+        return resultPage.stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
@@ -94,6 +104,14 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     @Transactional(readOnly = true)
     public long count() {
         return userJpaRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long count(vn.talentbridge.core.domain.vo.UserStatus status) {
+        return (status != null)
+                ? userJpaRepository.countByStatus(status)
+                : userJpaRepository.count();
     }
 
     private User toDomain(UserJpaEntity entity) {
