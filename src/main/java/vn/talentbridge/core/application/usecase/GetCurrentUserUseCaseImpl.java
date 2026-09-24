@@ -16,7 +16,7 @@ public class GetCurrentUserUseCaseImpl implements GetCurrentUserUseCase {
     @Override
     public UserResult getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("NgÆ°á»i dÃ¹ng", email));
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", email));
         return UserResult.from(user);
     }
 }

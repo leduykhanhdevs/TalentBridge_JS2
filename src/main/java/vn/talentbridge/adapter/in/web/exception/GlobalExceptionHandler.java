@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
         log.warn("Validation error: {}", errors);
         ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
                 .statusCode(ErrorCode.VALIDATION_FAILED.getCode())
-                .message("Dá»¯ liá»‡u Ä‘áº§u vÃ o khÃ´ng há»£p lá»‡")
+                .message(ErrorCode.VALIDATION_FAILED.getMessage())
                 .data(errors)
                 .build();
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);

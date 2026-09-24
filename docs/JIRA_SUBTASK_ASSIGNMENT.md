@@ -1,4 +1,4 @@
-﻿# 📋 BẢNG PHÂN CHIA SUB-TASK (FE & BE) & ASSIGN CÔNG VIỆC TRÊN JIRA SPRINT 1
+# 📋 BẢNG PHÂN CHIA SUB-TASK (FE & BE) & ASSIGN CÔNG VIỆC TRÊN JIRA SPRINT 1
 
 > **Dự án**: TalentBridge – Nền tảng tuyển dụng & Quản trị ứng viên (ATS)  
 > **Jira Board**: [HRPM Board 5](https://khanhdevs19.atlassian.net/jira/software/projects/HRPM/boards/5?filter=&groupBy=none)  
@@ -287,3 +287,32 @@ Nhóm trưởng đã tạo sẵn file CSV chuẩn hóa tại:
 
 Khi thầy kiểm tra Jira Board, nhóm báo cáo tóm tắt như sau:
 > *"Thưa thầy, nhóm em đã phân rã toàn bộ 11 User Stories trong Sprint 1 thành 22 Sub-tasks cụ thể (gồm 11 Sub-task Frontend và 11 Sub-task Backend). Tất cả các vị trí 'Unassigned' đều đã được gán đích danh cho 5 thành viên theo nguyên tắc Feature Ownership (mỗi bạn làm trọn vẹn FE & BE cho phân hệ của mình để hiểu sâu nghiệp vụ và có đủ khối lượng công việc đánh giá). Hiện tại phần Backend Admin (TB-1, TB-2, TB-3) đã được Tech Lead hoàn thiện 100% kiểm thử theo kiến trúc Clean/Hexagonal Architecture; các thành viên khác đang tiến hành thực hiện các sub-task tiếp theo theo đúng kế hoạch."*
+
+---
+
+## 6. 🚀 MA TRẬN PHÂN CÔNG SPRINT 2 (ATS & RECRUITMENT PIPELINE)
+
+### 📌 Nguyên tắc phân bổ Sprint 2:
+1. **Tech Lead (Lê Duy Khánh)**: Xây dựng nền tảng Backend Core, Kiến trúc Hexagonal và các API xử lý đăng tin tuyển dụng (`HRPM-27`, `HRPM-28`, `HRPM-29`, `HRPM-30`, `HRPM-31`, `HRPM-32`, `HRPM-34`). Toàn bộ đã đạt `Done` với 154/154 unit & integration tests pass 100%.
+2. **Đặng Trường Thịnh** (4 stories Candidate Discovery & Status):
+   - `HRPM-35`: Filter Jobs by Location Salary Experience and Type
+   - `HRPM-36`: Job List Sorting and Pagination
+   - `HRPM-37`: Job Detail Page UI
+   - `HRPM-42`: Candidate View My Applications (Xem lịch sử đơn đã nộp)
+3. **Phan Thị Ánh Tuyền** (4 stories Candidate Application Lifecycle):
+   - `HRPM-39`: Candidate Apply to Job
+   - `HRPM-40`: Attach CV and Cover Letter to Application
+   - `HRPM-41`: Prevent Duplicate Application (`UNIQUE(candidate_id, job_id)`)
+   - `HRPM-43`: Candidate Withdraw Application
+4. **Trần Đình Tình** (5 stories Recruiter ATS Screening Pipeline):
+   - `HRPM-45`: HR View Applicants of a Job
+   - `HRPM-46`: Filter Applicants by Criteria
+   - `HRPM-47`: Sort Applicants
+   - `HRPM-48`: Update Applicant Status (Kanban / ATS Stage Pipeline)
+   - `HRPM-49`: Rate and Note Applicant (Đánh giá sao & Ghi chú nội bộ HR)
+5. **Nguyễn Phan Minh Hiếu** (4 subtasks Recruiter Job Portal Frontend):
+   - `HRPM-51` (Parent `HRPM-28`): [FE] Giao diện Form HR Đăng tin tuyển dụng mới
+   - `HRPM-52` (Parent `HRPM-29`): [FE] Giao diện Form HR Chỉnh sửa tin tuyển dụng
+   - `HRPM-53` (Parent `HRPM-30`): [FE] Giao diện Thao tác Đóng và Quản lý trạng thái tin tuyển dụng
+   - `HRPM-54` (Parent `HRPM-31`): [FE] Giao diện Bảng danh sách tin tuyển dụng của công ty (My Jobs Dashboard)
+

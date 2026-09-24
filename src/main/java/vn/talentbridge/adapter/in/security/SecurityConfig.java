@@ -1,6 +1,7 @@
 package vn.talentbridge.adapter.in.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -84,6 +85,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(PUBLIC_URLS).permitAll();
+                    auth.requestMatchers(HttpMethod.GET, "/api/v1/jobs", "/api/v1/jobs/{id:[0-9]+}").permitAll();
                     if (isLocal) {
                         auth.requestMatchers("/h2-console/**").permitAll();
                     }
