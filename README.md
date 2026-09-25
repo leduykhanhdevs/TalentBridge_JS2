@@ -191,7 +191,7 @@ pnpm dev
 
 # 2. Kiểm thử toàn bộ Frontend (Unit Tests, E2E Flow Tests, Linting & Production Build)
 cd frontend
-pnpm test --run
+pnpm test
 pnpm lint
 pnpm build
 ```
