@@ -24,6 +24,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -138,6 +139,91 @@ class ApplicationControllerIntegrationTest {
                 .andExpect(jsonPath("$.statusCode").value(40902));
 
         assertEquals(1, applicationRepository.count());
+    }
+
+    @Test
+    void candidateCanWithdrawOwnApplicationAndCannotWithdrawItTwice() throws Exception {
+        Long applicationId = submitApplication();
+
+        mockMvc.perform(patch(URL + "/" + applicationId + "/withdraw")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("WITHDRAWN"));
+
+        assertEquals("WITHDRAWN", applicationRepository.findById(applicationId).orElseThrow().getStatus());
+
+        mockMvc.perform(patch(URL + "/" + applicationId + "/withdraw")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(40903));
+    }
+
+    @Test
+    void anotherCandidateCannotWithdrawApplication() throws Exception {
+        Long applicationId = submitApplication();
+        RoleJpaEntity candidateRole = roleRepository.findByName("ROLE_CANDIDATE").orElseThrow();
+        UserJpaEntity otherUser = new UserJpaEntity();
+        otherUser.setEmail("other_apply_test@talentbridge.vn");
+        otherUser.setPasswordHash(passwordEncoder.encode("Password123!"));
+        otherUser.setFullName("Ứng viên khác");
+        otherUser.setStatus(UserStatus.ACTIVE);
+        otherUser.setRoles(Set.of(candidateRole));
+        otherUser = userRepository.save(otherUser);
+
+        CandidateJpaEntity otherCandidate = new CandidateJpaEntity();
+        otherCandidate.setUser(otherUser);
+        candidateRepository.save(otherCandidate);
+        String otherToken = loginUseCase.login(
+                new LoginCommand(otherUser.getEmail(), "Password123!")).accessToken();
+
+        mockMvc.perform(patch(URL + "/" + applicationId + "/withdraw")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isNotFound());
+
+        assertEquals("SUBMITTED", applicationRepository.findById(applicationId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void completedApplicationCannotBeWithdrawn() throws Exception {
+        Long applicationId = submitApplication();
+        ApplicationJpaEntity application = applicationRepository.findById(applicationId).orElseThrow();
+        application.setCurrentStage("HIRED");
+        applicationRepository.saveAndFlush(application);
+
+        mockMvc.perform(patch(URL + "/" + applicationId + "/withdraw")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(40904));
+
+        assertEquals("SUBMITTED", applicationRepository.findById(applicationId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void missingApplicationCannotBeWithdrawn() throws Exception {
+        mockMvc.perform(patch(URL + "/999999/withdraw")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isNotFound());
+
+        assertEquals(0, applicationRepository.count());
+    }
+
+    @Test
+    void unauthenticatedCandidateCannotWithdrawApplication() throws Exception {
+        Long applicationId = submitApplication();
+
+        mockMvc.perform(patch(URL + "/" + applicationId + "/withdraw"))
+                .andExpect(status().isUnauthorized());
+
+        assertEquals("SUBMITTED", applicationRepository.findById(applicationId).orElseThrow().getStatus());
+    }
+
+    private Long submitApplication() throws Exception {
+        mockMvc.perform(post(URL)
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest()))
+                .andExpect(status().isCreated());
+        return applicationRepository.findAll().getFirst().getId();
     }
 
     @Test

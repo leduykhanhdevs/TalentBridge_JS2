@@ -1,5 +1,7 @@
 package vn.talentbridge.core.domain.model;
 
+import vn.talentbridge.core.domain.exception.DomainException;
+
 import java.time.LocalDateTime;
 
 public class Application {
@@ -28,6 +30,17 @@ public class Application {
         this.status = status != null ? status : "SUBMITTED";
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void withdraw() {
+        if ("WITHDRAWN".equals(status)) {
+            throw new DomainException(40903, "Đơn ứng tuyển đã được rút trước đó");
+        }
+        if ("HIRED".equals(currentStage) || "REJECTED".equals(currentStage)
+                || "ACCEPTED".equals(status) || "DECLINED".equals(status)) {
+            throw new DomainException(40904, "Đơn ứng tuyển đã có kết quả, không thể rút");
+        }
+        status = "WITHDRAWN";
     }
 
     public Long getId() { return id; }

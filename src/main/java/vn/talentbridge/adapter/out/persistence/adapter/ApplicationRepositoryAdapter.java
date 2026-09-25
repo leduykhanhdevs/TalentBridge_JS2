@@ -17,6 +17,7 @@ import vn.talentbridge.core.domain.exception.DuplicateApplicationException;
 import vn.talentbridge.core.domain.model.Application;
 
 import java.util.Locale;
+import java.util.Optional;
 
 @Component
 @Transactional
@@ -42,6 +43,11 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
     @Transactional(readOnly = true)
     public boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId) {
         return applicationJpaRepository.existsByJobIdAndCandidateId(jobId, candidateId);
+    }
+
+    @Override
+    public Optional<Application> findByIdForUpdate(Long id) {
+        return applicationJpaRepository.findByIdForUpdate(id).map(this::toDomain);
     }
 
     @Override
