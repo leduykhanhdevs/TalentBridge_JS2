@@ -13,6 +13,7 @@ import vn.talentbridge.core.application.port.out.JobRepositoryPort;
 import vn.talentbridge.core.application.port.out.ResumeRepositoryPort;
 import vn.talentbridge.core.application.usecase.ApplyJobUseCaseImpl;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
+import vn.talentbridge.core.domain.exception.DuplicateApplicationException;
 import vn.talentbridge.core.domain.model.Application;
 import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.Job;
@@ -108,6 +109,18 @@ class ApplyJobUseCaseImplTest {
         assertThrows(IllegalArgumentException.class,
                 () -> useCase.apply(10L, 5L, 30L, null));
 
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
+    void duplicateApplicationIsRejectedBeforeSaving() {
+        stubCandidateAndJob(activeJob(LocalDate.now().plusDays(1)));
+        when(applicationRepository.existsByJobIdAndCandidateId(5L, 20L)).thenReturn(true);
+
+        assertThrows(DuplicateApplicationException.class,
+                () -> useCase.apply(10L, 5L, 30L, null));
+
+        verifyNoInteractions(resumeRepository);
         verify(applicationRepository, never()).save(any());
     }
 

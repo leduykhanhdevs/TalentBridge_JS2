@@ -6,4 +6,5 @@ import vn.talentbridge.adapter.out.persistence.entity.ApplicationJpaEntity;
 
 @Repository
 public interface ApplicationJpaRepository extends JpaRepository<ApplicationJpaEntity, Long> {
+    boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId);
 }

@@ -1,6 +1,7 @@
 package vn.talentbridge.adapter.out.persistence.adapter;
 
 import org.springframework.stereotype.Component;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import vn.talentbridge.adapter.out.persistence.entity.ApplicationJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
@@ -12,7 +13,10 @@ import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.ResumeJpaRepository;
 import vn.talentbridge.core.application.port.out.ApplicationRepositoryPort;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
+import vn.talentbridge.core.domain.exception.DuplicateApplicationException;
 import vn.talentbridge.core.domain.model.Application;
+
+import java.util.Locale;
 
 @Component
 @Transactional
@@ -32,6 +36,12 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
         this.jobJpaRepository = jobJpaRepository;
         this.candidateJpaRepository = candidateJpaRepository;
         this.resumeJpaRepository = resumeJpaRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId) {
+        return applicationJpaRepository.existsByJobIdAndCandidateId(jobId, candidateId);
     }
 
     @Override
@@ -61,7 +71,24 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
         entity.setStatus(application.getStatus() != null
                 ? application.getStatus() : "SUBMITTED");
 
-        return toDomain(applicationJpaRepository.save(entity));
+        try {
+            return toDomain(applicationJpaRepository.saveAndFlush(entity));
+        } catch (DataIntegrityViolationException ex) {
+            if (isDuplicateApplicationConstraint(ex)) {
+                throw new DuplicateApplicationException();
+            }
+            throw ex;
+        }
+    }
+
+    private boolean isDuplicateApplicationConstraint(Throwable error) {
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+            String message = cause.getMessage();
+            if (message != null && message.toLowerCase(Locale.ROOT).contains("uk_job_candidate")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Application toDomain(ApplicationJpaEntity entity) {

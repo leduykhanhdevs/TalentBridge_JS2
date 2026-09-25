@@ -7,6 +7,7 @@ import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
 import vn.talentbridge.core.application.port.out.ResumeRepositoryPort;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
+import vn.talentbridge.core.domain.exception.DuplicateApplicationException;
 import vn.talentbridge.core.domain.model.Application;
 import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.Job;
@@ -55,6 +56,10 @@ public class ApplyJobUseCaseImpl implements ApplyJobUseCase {
         if (job.getStatus() != JobStatus.ACTIVE
                 || (job.getDeadline() != null && job.getDeadline().isBefore(LocalDate.now()))) {
             throw new IllegalArgumentException("Tin tuyển dụng không còn nhận hồ sơ.");
+        }
+
+        if (applicationRepository.existsByJobIdAndCandidateId(jobId, candidate.getId())) {
+            throw new DuplicateApplicationException();
         }
 
         Resume resume = resumeRepository.findById(resumeId)

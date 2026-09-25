@@ -123,6 +123,24 @@ class ApplicationControllerIntegrationTest {
     }
 
     @Test
+    void duplicateApplicationReturnsConflictAndKeepsOnlyFirstSubmission() throws Exception {
+        mockMvc.perform(post(URL)
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post(URL)
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.statusCode").value(40902));
+
+        assertEquals(1, applicationRepository.count());
+    }
+
+    @Test
     void negativeJobIdReturnsBadRequest() throws Exception {
         String request = "{\"jobId\":-1,\"resumeId\":" + resume.getId() + "}";
 
