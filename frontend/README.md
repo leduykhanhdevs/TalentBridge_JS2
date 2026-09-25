@@ -148,11 +148,13 @@ Chạy bộ kiểm thử tự động toàn diện bao gồm Unit Tests và E2E 
 
 ```bash
 # Chạy toàn bộ test suite một lần (CI mode)
-pnpm test --run
+pnpm test
 
 # Hoặc chạy ở chế độ watch khi phát triển
-pnpm test
+pnpm exec vitest watch
 ```
+
+Bài kiểm thử E2E cần Backend Spring Boot đang chạy tại `http://localhost:8080`.
 
 ### 4. Kiểm Tra Quy Chuẩn Mã Nguồn (Linting)
 
