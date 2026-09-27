@@ -16,6 +16,7 @@ import { RecruiterCompanyPage } from '../../pages/recruiter/RecruiterCompanyPage
 import { RecruiterJoinCompanyPage } from '../../pages/recruiter/RecruiterJoinCompanyPage'
 import { RecruiterPeerApprovalPage } from '../../pages/recruiter/RecruiterPeerApprovalPage'
 import { CandidateProfilePage } from '../../pages/candidate/CandidateProfilePage'
+import { JobSearchPage } from '../../pages/jobs/JobSearchPage'
 
 export function AppRouter() {
     return (
@@ -27,6 +28,7 @@ export function AppRouter() {
                 <Route element={<RegisterPage />} path="register" />
                 <Route element={<ForgotPasswordPage />} path="forgot-password" />
                 <Route element={<ResetPasswordPage />} path="reset-password" />
+                <Route element={<JobSearchPage />} path="jobs" />
                 <Route element={<CandidateProfilePage />} path="candidate/profile" />
                 <Route element={<NotFoundPage />} path="*" />
             </Route>
