@@ -31,6 +31,10 @@ public class DataInitializer implements CommandLineRunner {
     private final CompanyJpaRepository companyJpaRepository;
     private final RecruiterJpaRepository recruiterJpaRepository;
     private final SkillJpaRepository skillJpaRepository;
+    private final JobJpaRepository jobJpaRepository;
+    private final ResumeJpaRepository resumeJpaRepository;
+    private final ApplicationJpaRepository applicationJpaRepository;
+    private final org.springframework.core.env.Environment environment;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -169,6 +173,269 @@ public class DataInitializer implements CommandLineRunner {
             }
             log.info(">>> [DataInitializer] Đã khởi tạo danh mục {} kỹ năng tiêu chuẩn.", defaultSkills.size());
         }
+
+        // 7. Seed Sample Jobs, Resumes and Candidates for Local/Dev environment
+        boolean isTestProfile = List.of(environment.getActiveProfiles()).contains("test");
+        if (!isTestProfile) {
+            seedLocalDevData(candidateRole, fptCompany);
+        }
+    }
+
+    private void seedLocalDevData(RoleJpaEntity candidateRole, CompanyJpaEntity fptCompany) {
+        if (fptCompany == null) {
+            fptCompany = companyJpaRepository.findAll().stream()
+                    .filter(c -> "FPT Software".equals(c.getName()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (fptCompany == null) return;
+
+        UserJpaEntity hrUser = userJpaRepository.findByEmail("recruiter@fpt.com").orElse(null);
+        Long hrUserId = hrUser != null ? hrUser.getId() : 1L;
+
+        // 7.1. Seed 5 Sample Jobs for FPT Software
+        List<JobJpaEntity> createdJobs = new java.util.ArrayList<>();
+        if (jobJpaRepository.count() == 0) {
+            JobJpaEntity job1 = JobJpaEntity.builder()
+                    .company(fptCompany)
+                    .recruiterUserId(hrUserId)
+                    .title("Senior Java Spring Boot Engineer")
+                    .description("Tham gia phát triển kiến trúc backend microservices cho các dự án FinTech và E-commerce quy mô lớn. Tối ưu hóa hiệu năng cơ sở dữ liệu MySQL và cache Redis.")
+                    .requirements("Tối thiểu 4 năm kinh nghiệm với Java và Spring Boot. Thành thạo Spring Data JPA, Spring Security, Hibernate, MySQL, Docker, RESTful API.")
+                    .benefits("Thu nhập 35 - 50 triệu/tháng + tháng lương 13 và thưởng dự án. Bảo hiểm FPT Care cho bản thân và gia đình. Môi trường quốc tế, hỗ trợ thi chứng chỉ AWS.")
+                    .location("Khu Công Nghệ Cao, TP. Thủ Đức")
+                    .city("TP. Hồ Chí Minh")
+                    .jobType("FULL_TIME")
+                    .experienceLevel("SENIOR")
+                    .minSalary(new BigDecimal("35000000"))
+                    .maxSalary(new BigDecimal("50000000"))
+                    .isNegotiable(false)
+                    .deadline(LocalDate.now().plusDays(30))
+                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
+                    .skills(getSkillsByNames("Java", "Spring Boot", "SQL / MySQL", "Docker", "Microservices"))
+                    .build();
+            createdJobs.add(jobJpaRepository.save(job1));
+
+            JobJpaEntity job2 = JobJpaEntity.builder()
+                    .company(fptCompany)
+                    .recruiterUserId(hrUserId)
+                    .title("Frontend React / TypeScript Developer")
+                    .description("Phát triển giao diện web portal responsive sử dụng React 18/19, TypeScript, TailwindCSS và TanStack Query. Đảm bảo trải nghiệm mượt mà 60fps và đạt chuẩn Core Web Vitals.")
+                    .requirements("Có từ 2-3 năm kinh nghiệm lập trình React & TypeScript. Sử dụng thành thạo HTML5/CSS3, TailwindCSS, REST API, Git.")
+                    .benefits("Lương cạnh tranh 20 - 32 triệu. Xét tăng lương định kỳ 2 lần/năm. Được cấp MacBook Pro làm việc. Tham gia các khóa đào tạo công nghệ mới.")
+                    .location("FPT Tower, Cầu Giấy")
+                    .city("Hà Nội")
+                    .jobType("FULL_TIME")
+                    .experienceLevel("MIDDLE")
+                    .minSalary(new BigDecimal("20000000"))
+                    .maxSalary(new BigDecimal("32000000"))
+                    .isNegotiable(false)
+                    .deadline(LocalDate.now().plusDays(25))
+                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
+                    .skills(getSkillsByNames("React", "TypeScript", "TailwindCSS", "HTML5 & CSS3", "Git / GitHub"))
+                    .build();
+            createdJobs.add(jobJpaRepository.save(job2));
+
+            JobJpaEntity job3 = JobJpaEntity.builder()
+                    .company(fptCompany)
+                    .recruiterUserId(hrUserId)
+                    .title("Cloud & DevOps Engineer (AWS / Docker)")
+                    .description("Xây dựng và tự động hóa hạ tầng đám mây AWS, triển khai hệ thống CI/CD pipeline với GitHub Actions và Docker. Giám sát hệ thống và đảm bảo độ sẵn sàng 99.99%.")
+                    .requirements("Từ 3 năm kinh nghiệm với AWS, Docker, Linux, CI/CD. Có kinh nghiệm triển khai Microservices.")
+                    .benefits("Làm việc từ xa linh hoạt (Remote 100%). Lương 30 - 45 triệu. Gói bảo hiểm quốc tế cao cấp.")
+                    .location("FPT Complex, Ngũ Hành Sơn")
+                    .city("Đà Nẵng")
+                    .jobType("REMOTE")
+                    .experienceLevel("SENIOR")
+                    .minSalary(new BigDecimal("30000000"))
+                    .maxSalary(new BigDecimal("45000000"))
+                    .isNegotiable(false)
+                    .deadline(LocalDate.now().plusDays(40))
+                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
+                    .skills(getSkillsByNames("AWS", "Docker", "Git / GitHub", "Microservices"))
+                    .build();
+            createdJobs.add(jobJpaRepository.save(job3));
+
+            JobJpaEntity job4 = JobJpaEntity.builder()
+                    .company(fptCompany)
+                    .recruiterUserId(hrUserId)
+                    .title("Fresher / Junior Java Developer")
+                    .description("Dành cho các bạn mới tốt nghiệp hoặc dưới 1 năm kinh nghiệm. Tham gia khóa đào tạo chuyên sâu và thực chiến trên các dự án phần mềm doanh nghiệp của FPT.")
+                    .requirements("Nắm vững kiến thức Java Core, OOP, CSDL quan hệ SQL. Tinh thần học hỏi cao, đam mê lập trình.")
+                    .benefits("Lương đào tạo và khởi điểm hấp dẫn từ 10 - 15 triệu. Lộ trình thăng tiến rõ ràng lên Junior/Middle sau 6 tháng.")
+                    .location("Quận 9, TP. Thủ Đức")
+                    .city("TP. Hồ Chí Minh")
+                    .jobType("FULL_TIME")
+                    .experienceLevel("FRESHER")
+                    .minSalary(new BigDecimal("10000000"))
+                    .maxSalary(new BigDecimal("15000000"))
+                    .isNegotiable(false)
+                    .deadline(LocalDate.now().plusDays(20))
+                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
+                    .skills(getSkillsByNames("Java", "SQL / MySQL", "RESTful API"))
+                    .build();
+            createdJobs.add(jobJpaRepository.save(job4));
+
+            JobJpaEntity job5 = JobJpaEntity.builder()
+                    .company(fptCompany)
+                    .recruiterUserId(hrUserId)
+                    .title("UI/UX Product Designer (Figma)")
+                    .description("Thiết kế trải nghiệm người dùng (UX) và giao diện trực quan (UI) cho các sản phẩm web/mobile. Xây dựng Design System chuẩn chỉn trên Figma.")
+                    .requirements("Thành thạo Figma, Design Tokens, wireframing, prototyping. Có portfolio dự án thực tế.")
+                    .benefits("Lương thỏa thuận không giới hạn theo năng lực. Môi trường làm việc sáng tạo, năng động.")
+                    .location("Toàn quốc (Hybrid)")
+                    .city("TP. Hồ Chí Minh")
+                    .jobType("HYBRID")
+                    .experienceLevel("JUNIOR")
+                    .isNegotiable(true)
+                    .deadline(LocalDate.now().plusDays(35))
+                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
+                    .skills(getSkillsByNames("Figma / UI-UX"))
+                    .build();
+            createdJobs.add(jobJpaRepository.save(job5));
+
+            log.info(">>> [DataInitializer] Đã khởi tạo {} tin tuyển dụng mẫu cho FPT Software.", createdJobs.size());
+        } else {
+            createdJobs.addAll(jobJpaRepository.findAll());
+        }
+
+        // 7.2. Seed Default Resume for Candidate 1 (Trần Minh Anh - candidate@talentbridge.vn)
+        UserJpaEntity candidateUser1 = userJpaRepository.findByEmail("candidate@talentbridge.vn").orElse(null);
+        if (candidateUser1 != null) {
+            CandidateJpaEntity candidate1 = candidateJpaRepository.findByUserId(candidateUser1.getId()).orElse(null);
+            if (candidate1 != null && resumeJpaRepository.findByCandidateIdOrderByIsDefaultDescCreatedAtDesc(candidate1.getId()).isEmpty()) {
+                resumeJpaRepository.save(ResumeJpaEntity.builder()
+                        .candidate(candidate1)
+                        .title("CV Lập Trình Viên Fullstack (Spring Boot & React)")
+                        .fileName("CV_TranMinhAnh_Fullstack.pdf")
+                        .fileUrl("/uploads/resumes/CV_TranMinhAnh_Fullstack.pdf")
+                        .fileType("application/pdf")
+                        .isDefault(true)
+                        .resumeType("UPLOADED")
+                        .build());
+                log.info(">>> [DataInitializer] Đã tạo CV mặc định cho ứng viên Trần Minh Anh.");
+            }
+        }
+
+        // 7.3. Seed Candidate 2 (Lê Thị Thu Hà)
+        if (userJpaRepository.findByEmail("lethithuha@gmail.com").isEmpty()) {
+            UserJpaEntity user2 = UserJpaEntity.builder()
+                    .email("lethithuha@gmail.com")
+                    .fullName("Lê Thị Thu Hà")
+                    .passwordHash(passwordEncoder.encode("Password123!"))
+                    .phoneNumber("0971234567")
+                    .status(UserStatus.ACTIVE)
+                    .roles(new HashSet<>(Set.of(candidateRole)))
+                    .build();
+            user2 = userJpaRepository.save(user2);
+
+            CandidateJpaEntity cand2 = CandidateJpaEntity.builder()
+                    .user(user2)
+                    .title("Senior Frontend Engineer (React/TypeScript)")
+                    .dob(LocalDate.of(1998, 8, 20))
+                    .gender("NU")
+                    .experienceYears(4)
+                    .currentSalary(new BigDecimal("28000000"))
+                    .expectedSalary(new BigDecimal("35000000"))
+                    .city("Hà Nội")
+                    .address("Tòa nhà Keangnam, Cầu Giấy")
+                    .summary("Chuyên gia phát triển giao diện người dùng với React, Next.js và TailwindCSS. Đam mê thiết kế UI/UX.")
+                    .build();
+            cand2 = candidateJpaRepository.save(cand2);
+
+            ResumeJpaEntity resume2 = resumeJpaRepository.save(ResumeJpaEntity.builder()
+                    .candidate(cand2)
+                    .title("CV Lê Thị Thu Hà - Senior Frontend.pdf")
+                    .fileName("CV_LeThiThuHa_Frontend.pdf")
+                    .fileUrl("/uploads/resumes/CV_LeThiThuHa_Frontend.pdf")
+                    .fileType("application/pdf")
+                    .isDefault(true)
+                    .resumeType("UPLOADED")
+                    .build());
+
+            // Apply to Job 2 (Frontend) if available
+            if (!createdJobs.isEmpty()) {
+                JobJpaEntity targetJob = createdJobs.stream()
+                        .filter(j -> j.getTitle().contains("Frontend"))
+                        .findFirst()
+                        .orElse(createdJobs.getFirst());
+                if (!applicationJpaRepository.existsByJobIdAndCandidateId(targetJob.getId(), cand2.getId())) {
+                    applicationJpaRepository.save(ApplicationJpaEntity.builder()
+                            .job(targetJob)
+                            .candidate(cand2)
+                            .resume(resume2)
+                            .coverLetter("Kính gửi bộ phận Tuyển dụng FPT Software, tôi có 4 năm kinh nghiệm làm việc chuyên sâu với React và TypeScript. Tôi rất mong muốn được đồng hành cùng dự án.")
+                            .currentStage("APPLIED")
+                            .status("SUBMITTED")
+                            .build());
+                }
+            }
+            log.info(">>> [DataInitializer] Tạo tài khoản Ứng viên 2: lethithuha@gmail.com / Password123!");
+        }
+
+        // 7.4. Seed Candidate 3 (Phạm Hoàng Nam)
+        if (userJpaRepository.findByEmail("phamhoangnam@gmail.com").isEmpty()) {
+            UserJpaEntity user3 = UserJpaEntity.builder()
+                    .email("phamhoangnam@gmail.com")
+                    .fullName("Phạm Hoàng Nam")
+                    .passwordHash(passwordEncoder.encode("Password123!"))
+                    .phoneNumber("0934567890")
+                    .status(UserStatus.ACTIVE)
+                    .roles(new HashSet<>(Set.of(candidateRole)))
+                    .build();
+            user3 = userJpaRepository.save(user3);
+
+            CandidateJpaEntity cand3 = CandidateJpaEntity.builder()
+                    .user(user3)
+                    .title("Backend Java & Cloud Architect")
+                    .dob(LocalDate.of(1996, 12, 10))
+                    .gender("NAM")
+                    .experienceYears(6)
+                    .currentSalary(new BigDecimal("38000000"))
+                    .expectedSalary(new BigDecimal("48000000"))
+                    .city("TP. Hồ Chí Minh")
+                    .address("123 Lê Lợi, Quận 1")
+                    .summary("Chuyên viên phát triển hệ thống phân tán High Concurrency với Spring Boot, Kafka và AWS.")
+                    .build();
+            cand3 = candidateJpaRepository.save(cand3);
+
+            ResumeJpaEntity resume3 = resumeJpaRepository.save(ResumeJpaEntity.builder()
+                    .candidate(cand3)
+                    .title("CV Phạm Hoàng Nam - Backend Architect.pdf")
+                    .fileName("CV_PhamHoangNam_Backend.pdf")
+                    .fileUrl("/uploads/resumes/CV_PhamHoangNam_Backend.pdf")
+                    .fileType("application/pdf")
+                    .isDefault(true)
+                    .resumeType("UPLOADED")
+                    .build());
+
+            // Apply to Job 1 (Senior Java) if available
+            if (!createdJobs.isEmpty()) {
+                JobJpaEntity targetJob = createdJobs.stream()
+                        .filter(j -> j.getTitle().contains("Java Spring Boot"))
+                        .findFirst()
+                        .orElse(createdJobs.getFirst());
+                if (!applicationJpaRepository.existsByJobIdAndCandidateId(targetJob.getId(), cand3.getId())) {
+                    applicationJpaRepository.save(ApplicationJpaEntity.builder()
+                            .job(targetJob)
+                            .candidate(cand3)
+                            .resume(resume3)
+                            .coverLetter("Chào anh/chị tuyển dụng, với hơn 5 năm kinh nghiệm backend microservices và chứng chỉ AWS Certified Solutions Architect, tôi tin mình sẽ đóng góp tốt cho hệ thống của FPT.")
+                            .currentStage("SCREENING")
+                            .status("IN_REVIEW")
+                            .build());
+                }
+            }
+            log.info(">>> [DataInitializer] Tạo tài khoản Ứng viên 3: phamhoangnam@gmail.com / Password123!");
+        }
+    }
+
+    private Set<SkillJpaEntity> getSkillsByNames(String... names) {
+        Set<SkillJpaEntity> set = new HashSet<>();
+        for (String name : names) {
+            skillJpaRepository.findByNameIgnoreCase(name).ifPresent(set::add);
+        }
+        return set;
     }
 
     private RoleJpaEntity getOrCreateRole(String name, String description) {
