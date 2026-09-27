@@ -240,4 +240,13 @@ public class UseCaseConfig {
         );
     }
 
+    @Bean
+    public WithdrawApplicationUseCase withdrawApplicationUseCase(
+            ApplicationRepositoryPort applicationRepository,
+            CandidateRepositoryPort candidateRepository) {
+        WithdrawApplicationUseCase core = new WithdrawApplicationUseCaseImpl(
+                applicationRepository, candidateRepository);
+        return new TransactionalWithdrawApplicationUseCase(core);
+    }
+
 }
