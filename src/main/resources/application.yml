@@ -87,6 +87,10 @@ spring:
       enabled: true
       path: /h2-console
 
+talentbridge:
+  jwt:
+    secret: "${JWT_SECRET:dGVzdC1zZWNyZXQta2V5LWZvci10YWxlbnRicmlkZ2UtdGVzdGluZy0xMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA=}"
+
 ---
 spring:
   config:
