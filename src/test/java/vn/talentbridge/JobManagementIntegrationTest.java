@@ -19,6 +19,7 @@ import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RecruiterJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.UserJpaEntity;
+import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
@@ -60,6 +61,9 @@ class JobManagementIntegrationTest {
 
     @Autowired
     private CompanyJpaRepository companyRepository;
+
+    @Autowired
+    private CandidateJpaRepository candidateRepository;
 
     @Autowired
     private RecruiterJpaRepository recruiterRepository;
@@ -169,6 +173,7 @@ class JobManagementIntegrationTest {
 
     private void cleanup() {
         jobRepository.deleteAll();
+        candidateRepository.deleteAll();
         recruiterRepository.deleteAll();
         companyRepository.deleteAll();
         userRepository.deleteAll();
@@ -346,6 +351,59 @@ class JobManagementIntegrationTest {
     }
 
     @Test
+    @DisplayName("HRPM-35: GET /api/v1/jobs - Lọc theo loại việc làm và cấp độ kinh nghiệm")
+    void testPublicSearchJobsByJobTypeAndExperienceLevel() throws Exception {
+        saveJob("Junior Java Developer", "Remote", "Đà Nẵng", "PART_TIME", "JUNIOR",
+                new BigDecimal("15000000"), new BigDecimal("25000000"), false, JobStatus.ACTIVE);
+
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("jobType", "part_time")
+                        .param("experienceLevel", "junior"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].title").value("Junior Java Developer"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("HRPM-35: GET /api/v1/jobs - Lọc theo khoảng lương và vẫn hiển thị việc làm thỏa thuận")
+    void testPublicSearchJobsBySalaryRangeIncludesNegotiableJobs() throws Exception {
+        saveJob("Remote React Developer", "Remote", "Hà Nội", "REMOTE", "MIDDLE",
+                new BigDecimal("15000000"), new BigDecimal("25000000"), false, JobStatus.ACTIVE);
+        saveJob("Cloud Engineer Negotiable", "Hybrid", "Hà Nội", "HYBRID", "SENIOR",
+                null, null, true, JobStatus.ACTIVE);
+
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("minSalary", "40000000")
+                        .param("maxSalary", "45000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.content[*].title", containsInAnyOrder(
+                        "Senior Spring Boot Architect", "Cloud Engineer Negotiable")))
+                .andExpect(jsonPath("$.data.totalElements").value(2));
+    }
+
+    @Test
+    @DisplayName("HRPM-35: GET /api/v1/jobs - Kết hợp bộ lọc và chỉ trả về tin ACTIVE")
+    void testPublicSearchJobsCombinesFiltersAndExcludesInactiveJobs() throws Exception {
+        saveJob("Senior Spring Boot Closed", "Tại văn phòng", "Hồ Chí Minh", "FULL_TIME", "SENIOR",
+                new BigDecimal("35000000"), new BigDecimal("45000000"), false, JobStatus.CLOSED);
+
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("keyword", "Spring Boot")
+                        .param("location", "Hồ Chí Minh")
+                        .param("jobType", "FULL_TIME")
+                        .param("experienceLevel", "SENIOR")
+                        .param("minSalary", "40000000")
+                        .param("maxSalary", "45000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].title").value("Senior Spring Boot Architect"))
+                .andExpect(jsonPath("$.data.content[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
     @DisplayName("HRPM-34: GET /api/v1/jobs/{id} - Khách xem chi tiết việc làm công khai")
     void testPublicGetJobDetail() throws Exception {
         mockMvc.perform(get("/api/v1/jobs/" + sampleJob.getId()))
@@ -354,5 +412,27 @@ class JobManagementIntegrationTest {
                 .andExpect(jsonPath("$.data.id").value(sampleJob.getId()))
                 .andExpect(jsonPath("$.data.title").value("Senior Spring Boot Architect"))
                 .andExpect(jsonPath("$.data.companyName").value("TalentBridge AI Global"));
+    }
+
+    private JobJpaEntity saveJob(String title, String location, String city, String jobType,
+                                 String experienceLevel, BigDecimal minSalary, BigDecimal maxSalary,
+                                 boolean isNegotiable, JobStatus status) {
+        return jobRepository.save(JobJpaEntity.builder()
+                .company(company)
+                .recruiterUserId(hrUser.getId())
+                .title(title)
+                .description("Mô tả " + title)
+                .requirements("Yêu cầu phù hợp")
+                .benefits("Phúc lợi cạnh tranh")
+                .location(location)
+                .city(city)
+                .jobType(jobType)
+                .experienceLevel(experienceLevel)
+                .minSalary(minSalary)
+                .maxSalary(maxSalary)
+                .isNegotiable(isNegotiable)
+                .deadline(LocalDate.now().plusMonths(1))
+                .status(status)
+                .build());
     }
 }
