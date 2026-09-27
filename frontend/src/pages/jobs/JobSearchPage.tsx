@@ -24,8 +24,26 @@ import {
     formatSalary,
 } from '../../features/jobs/jobSearchFormatters'
 import type { JobSearchParams } from '../../features/jobs/jobSearchTypes'
+import { CustomSelect, type SelectOption } from '../../components/ui/CustomSelect'
 
-const inputClassName = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
+const JOB_TYPE_OPTIONS: SelectOption[] = [
+    { value: '', label: 'Tất cả hình thức' },
+    { value: 'FULL_TIME', label: 'Toàn thời gian' },
+    { value: 'PART_TIME', label: 'Bán thời gian' },
+    { value: 'REMOTE', label: 'Làm việc từ xa' },
+    { value: 'HYBRID', label: 'Làm việc kết hợp' },
+]
+
+const EXPERIENCE_LEVEL_OPTIONS: SelectOption[] = [
+    { value: '', label: 'Tất cả kinh nghiệm' },
+    { value: 'INTERN', label: 'Thực tập sinh' },
+    { value: 'FRESHER', label: 'Fresher' },
+    { value: 'JUNIOR', label: 'Junior' },
+    { value: 'MIDDLE', label: 'Middle' },
+    { value: 'SENIOR', label: 'Senior' },
+]
+
+const inputClassName = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 hover:border-slate-300'
 
 export function JobSearchPage() {
     const [formValues, setFormValues] = useState<JobFilterFormValues>(EMPTY_JOB_FILTERS)
@@ -109,36 +127,25 @@ export function JobSearchPage() {
                             />
                         </label>
 
-                        <label className="block text-sm font-semibold text-slate-700">
-                            Hình thức làm việc
-                            <select
-                                className={inputClassName}
-                                onChange={(event) => updateField('jobType', event.target.value)}
+                        <div>
+                            <span className="block text-sm font-semibold text-slate-700">Hình thức làm việc</span>
+                            <CustomSelect
+                                options={JOB_TYPE_OPTIONS}
                                 value={formValues.jobType}
-                            >
-                                <option value="">Tất cả</option>
-                                <option value="FULL_TIME">Toàn thời gian</option>
-                                <option value="PART_TIME">Bán thời gian</option>
-                                <option value="REMOTE">Làm việc từ xa</option>
-                                <option value="HYBRID">Làm việc kết hợp</option>
-                            </select>
-                        </label>
+                                onChange={(val) => updateField('jobType', val)}
+                                placeholder="Tất cả hình thức"
+                            />
+                        </div>
 
-                        <label className="block text-sm font-semibold text-slate-700">
-                            Kinh nghiệm
-                            <select
-                                className={inputClassName}
-                                onChange={(event) => updateField('experienceLevel', event.target.value)}
+                        <div>
+                            <span className="block text-sm font-semibold text-slate-700">Kinh nghiệm</span>
+                            <CustomSelect
+                                options={EXPERIENCE_LEVEL_OPTIONS}
                                 value={formValues.experienceLevel}
-                            >
-                                <option value="">Tất cả</option>
-                                <option value="INTERN">Thực tập sinh</option>
-                                <option value="FRESHER">Fresher</option>
-                                <option value="JUNIOR">Junior</option>
-                                <option value="MIDDLE">Middle</option>
-                                <option value="SENIOR">Senior</option>
-                            </select>
-                        </label>
+                                onChange={(val) => updateField('experienceLevel', val)}
+                                placeholder="Tất cả kinh nghiệm"
+                            />
+                        </div>
 
                         <div>
                             <span className="text-sm font-semibold text-slate-700">Mức lương (triệu VNĐ)</span>
