@@ -178,3 +178,17 @@ export async function reviewJoinRequest(
         'Không thể xử lý yêu cầu gia nhập công ty.',
     )
 }
+
+export async function getMyPendingJoinRequest(): Promise<CompanyJoinRequestResponse | null> {
+    const url = `${API_BASE_URL}/recruiters/companies/my-pending-request`
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    return handleResponse<CompanyJoinRequestResponse | null>(
+        response,
+        'Không thể kiểm tra yêu cầu gia nhập của bạn.',
+    )
+}
+

@@ -2,6 +2,7 @@ package vn.talentbridge.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import vn.talentbridge.core.application.port.in.GetMyPendingJoinRequestUseCase;
 import vn.talentbridge.core.application.port.in.GetCompanyJoinRequestsUseCase;
 import vn.talentbridge.core.application.port.in.ReviewJoinRequestUseCase;
 import vn.talentbridge.core.application.port.in.SearchApprovedCompaniesUseCase;
@@ -10,6 +11,7 @@ import vn.talentbridge.core.application.port.out.CompanyJoinRequestRepositoryPor
 import vn.talentbridge.core.application.port.out.CompanyRepositoryPort;
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.application.usecase.GetCompanyJoinRequestsUseCaseImpl;
+import vn.talentbridge.core.application.usecase.GetMyPendingJoinRequestUseCaseImpl;
 import vn.talentbridge.core.application.usecase.ReviewJoinRequestUseCaseImpl;
 import vn.talentbridge.core.application.usecase.SearchApprovedCompaniesUseCaseImpl;
 import vn.talentbridge.core.application.usecase.SubmitJoinCompanyRequestUseCaseImpl;
@@ -43,5 +45,11 @@ public class CompanyJoinRequestUseCaseConfig {
             RecruiterRepositoryPort recruiterRepository,
             CompanyJoinRequestRepositoryPort companyJoinRequestRepository) {
         return new ReviewJoinRequestUseCaseImpl(recruiterRepository, companyJoinRequestRepository);
+    }
+
+    @Bean
+    public GetMyPendingJoinRequestUseCase getMyPendingJoinRequestUseCase(
+            CompanyJoinRequestRepositoryPort companyJoinRequestRepository) {
+        return new GetMyPendingJoinRequestUseCaseImpl(companyJoinRequestRepository);
     }
 }

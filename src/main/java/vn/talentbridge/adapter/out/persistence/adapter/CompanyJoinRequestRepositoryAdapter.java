@@ -86,6 +86,16 @@ public class CompanyJoinRequestRepositoryAdapter implements CompanyJoinRequestRe
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<CompanyJoinRequest> findPendingByUserId(Long userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return companyJoinRequestJpaRepository.findFirstByUserIdAndStatusOrderByCreatedAtDesc(userId, CompanyJoinRequestStatus.PENDING)
+                .map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<CompanyJoinRequest> findByCompanyId(Long companyId, CompanyJoinRequestStatus status, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<CompanyJoinRequestJpaEntity> entityPage;

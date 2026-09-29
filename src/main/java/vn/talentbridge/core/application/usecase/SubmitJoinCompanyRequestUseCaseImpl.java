@@ -32,6 +32,10 @@ public class SubmitJoinCompanyRequestUseCaseImpl implements SubmitJoinCompanyReq
 
     @Override
     public CompanyJoinRequestResult submitJoinRequest(Long userId, Long companyId, SubmitJoinCompanyRequestCommand command) {
+        if (userId == null || companyId == null || command == null) {
+            throw new IllegalArgumentException("Thông tin yêu cầu gia nhập không hợp lệ");
+        }
+
         Recruiter recruiter = recruiterRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
 

@@ -264,6 +264,34 @@ class CompanyJoinRequestIntegrationTest {
                 .andExpect(jsonPath("$.statusCode").value(40901));
     }
 
+    @Test
+    @DisplayName("GET /api/v1/recruiters/companies/my-pending-request - Trả về yêu cầu PENDING hiện tại của HR")
+    void testGetMyPendingRequestWhenExists() throws Exception {
+        CompanyJoinRequestJpaEntity existingRequest = CompanyJoinRequestJpaEntity.builder()
+                .user(hrUser2)
+                .company(approvedCompany)
+                .position("Senior Talent Specialist")
+                .status(CompanyJoinRequestStatus.PENDING)
+                .build();
+        companyJoinRequestRepository.save(existingRequest);
+
+        mockMvc.perform(get("/api/v1/recruiters/companies/my-pending-request")
+                        .header("Authorization", "Bearer " + hrToken2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.companyName").value("TalentBridge Tech"))
+                .andExpect(jsonPath("$.data.position").value("Senior Talent Specialist"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/recruiters/companies/my-pending-request - Trả về null khi HR không có yêu cầu nào PENDING")
+    void testGetMyPendingRequestWhenNone() throws Exception {
+        mockMvc.perform(get("/api/v1/recruiters/companies/my-pending-request")
+                        .header("Authorization", "Bearer " + hrToken2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
     // ==========================================
     // STORY 9: HR PEER APPROVAL
     // ==========================================

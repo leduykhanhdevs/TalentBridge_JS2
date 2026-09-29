@@ -24,6 +24,10 @@ public class GetCompanyJoinRequestsUseCaseImpl implements GetCompanyJoinRequests
 
     @Override
     public List<CompanyJoinRequestResult> getCompanyJoinRequests(Long userId, CompanyJoinRequestStatus status, int page, int size) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID không được để trống");
+        }
+
         Recruiter recruiter = recruiterRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
 
@@ -31,8 +35,11 @@ public class GetCompanyJoinRequestsUseCaseImpl implements GetCompanyJoinRequests
             throw new DomainException(40001, "Nhà tuyển dụng chưa thuộc công ty nào");
         }
 
+        int validPage = Math.max(0, page);
+        int validSize = size <= 0 ? 10 : size;
+
         Long companyId = recruiter.getCompany().getId();
-        return companyJoinRequestRepository.findByCompanyId(companyId, status, page, size)
+        return companyJoinRequestRepository.findByCompanyId(companyId, status, validPage, validSize)
                 .stream()
                 .map(CompanyJoinRequestResult::from)
                 .toList();
@@ -40,6 +47,10 @@ public class GetCompanyJoinRequestsUseCaseImpl implements GetCompanyJoinRequests
 
     @Override
     public long countCompanyJoinRequests(Long userId, CompanyJoinRequestStatus status) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID không được để trống");
+        }
+
         Recruiter recruiter = recruiterRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
 

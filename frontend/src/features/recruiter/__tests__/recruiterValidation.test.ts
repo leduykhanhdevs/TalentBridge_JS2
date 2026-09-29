@@ -96,6 +96,15 @@ describe('Recruiter Validation and Domain Logic Rules', () => {
             expect(validateJoinRequest({ position: 'P'.repeat(101) }).valid).toBe(false)
         })
 
+        it('should reject message longer than 1000 characters', () => {
+            expect(
+                validateJoinRequest({
+                    position: 'Senior Recruiter',
+                    message: 'M'.repeat(1001),
+                }).valid,
+            ).toBe(false)
+        })
+
         it('should accept optional message within limit', () => {
             const result = validateJoinRequest({
                 position: 'Senior Recruiter',
@@ -115,6 +124,9 @@ describe('Recruiter Validation and Domain Logic Rules', () => {
             if (req.status === 'REJECTED' && (!req.reason || !req.reason.trim())) {
                 return { valid: false, error: 'Lý do từ chối không được để trống' }
             }
+            if (req.reason && req.reason.length > 1000) {
+                return { valid: false, error: 'Lý do không được vượt quá 1000 ký tự' }
+            }
             return { valid: true }
         }
 
@@ -123,13 +135,28 @@ describe('Recruiter Validation and Domain Logic Rules', () => {
             expect(result.valid).toBe(true)
         })
 
-        it('should require a reason when REJECTED', () => {
+        it('should reject invalid status or PENDING status in review command', () => {
+            expect(validateReviewRequest({ status: 'PENDING' as any }).valid).toBe(false)
+            expect(validateReviewRequest({ status: '' as any }).valid).toBe(false)
+        })
+
+        it('should require a non-empty reason when REJECTED', () => {
             expect(validateReviewRequest({ status: 'REJECTED' }).valid).toBe(false)
             expect(validateReviewRequest({ status: 'REJECTED', reason: '' }).valid).toBe(false)
+            expect(validateReviewRequest({ status: 'REJECTED', reason: '    ' }).valid).toBe(false)
             expect(
                 validateReviewRequest({ status: 'REJECTED', reason: 'Không phù hợp tiêu chí tuyển chọn' })
                     .valid,
             ).toBe(true)
+        })
+
+        it('should reject reason exceeding 1000 characters', () => {
+            expect(
+                validateReviewRequest({
+                    status: 'REJECTED',
+                    reason: 'R'.repeat(1001),
+                }).valid,
+            ).toBe(false)
         })
     })
 

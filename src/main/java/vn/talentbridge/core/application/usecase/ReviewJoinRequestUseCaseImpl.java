@@ -24,6 +24,10 @@ public class ReviewJoinRequestUseCaseImpl implements ReviewJoinRequestUseCase {
 
     @Override
     public CompanyJoinRequestResult reviewJoinRequest(Long reviewerUserId, Long requestId, ReviewJoinRequestCommand command) {
+        if (reviewerUserId == null || requestId == null || command == null) {
+            throw new IllegalArgumentException("Thông tin xét duyệt yêu cầu gia nhập không hợp lệ");
+        }
+
         Recruiter reviewer = recruiterRepository.findByUserId(reviewerUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
 

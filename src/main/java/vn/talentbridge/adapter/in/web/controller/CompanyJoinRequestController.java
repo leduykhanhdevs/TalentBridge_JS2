@@ -19,6 +19,7 @@ import vn.talentbridge.common.PageResponse;
 import vn.talentbridge.core.application.dto.CompanyJoinRequestResult;
 import vn.talentbridge.core.application.dto.CompanyResult;
 import vn.talentbridge.core.application.dto.SubmitJoinCompanyRequestCommand;
+import vn.talentbridge.core.application.port.in.GetMyPendingJoinRequestUseCase;
 import vn.talentbridge.core.application.port.in.SearchApprovedCompaniesUseCase;
 import vn.talentbridge.core.application.port.in.SubmitJoinCompanyRequestUseCase;
 
@@ -33,6 +34,7 @@ public class CompanyJoinRequestController {
 
     private final SearchApprovedCompaniesUseCase searchApprovedCompaniesUseCase;
     private final SubmitJoinCompanyRequestUseCase submitJoinCompanyRequestUseCase;
+    private final GetMyPendingJoinRequestUseCase getMyPendingJoinRequestUseCase;
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('RECRUITER')")
@@ -83,5 +85,17 @@ public class CompanyJoinRequestController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Gửi yêu cầu xin gia nhập công ty thành công", CompanyJoinRequestResponse.from(result)));
+    }
+
+    @GetMapping("/my-pending-request")
+    @PreAuthorize("hasRole('RECRUITER')")
+    @Operation(summary = "Lấy yêu cầu xin gia nhập đang chờ duyệt của HR hiện tại", description = "Kiểm tra xem HR hiện tại có yêu cầu xin gia nhập công ty nào đang ở trạng thái PENDING hay không")
+    public ResponseEntity<ApiResponse<CompanyJoinRequestResponse>> getMyPendingRequest(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(ApiResponse.success(
+                getMyPendingJoinRequestUseCase.getMyPendingJoinRequest(principal.getId())
+                        .map(CompanyJoinRequestResponse::from)
+                        .orElse(null)
+        ));
     }
 }

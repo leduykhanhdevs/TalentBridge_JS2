@@ -16,6 +16,7 @@ import {
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import {
+    getMyPendingJoinRequest,
     getRecruiterProfile,
     RecruiterApiError,
     searchApprovedCompanies,
@@ -40,13 +41,16 @@ export function RecruiterJoinCompanyPage() {
     const [serverError, setServerError] = useState('')
     const [successMessage, setSuccessMessage] = useState('')
     const [showAutocomplete, setShowAutocomplete] = useState(false)
-    const [hasPendingRequest, setHasPendingRequest] = useState<boolean>(() => {
-        try {
-            return localStorage.getItem('tb_recruiter_pending_join') === 'true'
-        } catch {
-            return false
-        }
+
+    const {
+        data: pendingRequest,
+        refetch: refetchPendingRequest,
+    } = useQuery({
+        queryKey: ['my-pending-join-request'],
+        queryFn: getMyPendingJoinRequest,
     })
+
+    const hasPendingRequest = Boolean(pendingRequest)
 
     const { data: profile } = useQuery({
         queryKey: ['recruiter-profile'],
@@ -72,9 +76,9 @@ export function RecruiterJoinCompanyPage() {
         mutationFn: ({ companyId, data }: { companyId: number; data: SubmitJoinCompanyRequest }) =>
             submitJoinCompanyRequest(companyId, data),
         onSuccess: () => {
-            setHasPendingRequest(true)
+            refetchPendingRequest()
             try {
-                localStorage.setItem('tb_recruiter_pending_join', 'true')
+                localStorage.removeItem('tb_recruiter_pending_join')
             } catch {
                 // ignore
             }
@@ -90,12 +94,7 @@ export function RecruiterJoinCompanyPage() {
         onError: (err) => {
             if (err instanceof RecruiterApiError) {
                 if (err.status === 409) {
-                    setHasPendingRequest(true)
-                    try {
-                        localStorage.setItem('tb_recruiter_pending_join', 'true')
-                    } catch {
-                        // ignore
-                    }
+                    refetchPendingRequest()
                 }
                 setServerError(err.message)
             } else {
@@ -202,8 +201,18 @@ export function RecruiterJoinCompanyPage() {
                 <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                     <AlertCircle className="shrink-0 text-amber-600" size={20} />
                     <div className="flex-1">
-                        <p className="font-semibold">Bạn đang có yêu cầu xin gia nhập đang chờ xét duyệt</p>
-                        <p className="text-xs text-amber-700">
+                        <p className="font-semibold">
+                            {pendingRequest?.companyName
+                                ? `Bạn đang có yêu cầu xin gia nhập công ty ${pendingRequest.companyName} đang chờ xét duyệt`
+                                : 'Bạn đang có yêu cầu xin gia nhập đang chờ xét duyệt'}
+                        </p>
+                        {pendingRequest?.position && (
+                            <p className="text-xs text-amber-800 mt-0.5">
+                                Vị trí ứng tuyển: <span className="font-medium">{pendingRequest.position}</span>
+                                {pendingRequest?.createdAt && ` • Ngày nộp: ${new Date(pendingRequest.createdAt).toLocaleDateString('vi-VN')}`}
+                            </p>
+                        )}
+                        <p className="text-xs text-amber-700 mt-1">
                             Hệ thống tạm thời khóa nút gửi yêu cầu gia nhập mới cho đến khi có phản hồi từ Ban quản trị công ty.
                         </p>
                     </div>
