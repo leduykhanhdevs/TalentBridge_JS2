@@ -4,7 +4,9 @@ import type {
     CompanyJoinRequestFilterParams,
     CompanyJoinRequestResponse,
     CompanyResponse,
+    JobApplicant,
     PageResponse,
+    RecruiterJob,
     RecruiterProfile,
     RequestCreateCompanyRequest,
     ReviewJoinRequest,
@@ -176,5 +178,31 @@ export async function reviewJoinRequest(
     return handleResponse<CompanyJoinRequestResponse>(
         response,
         'Không thể xử lý yêu cầu gia nhập công ty.',
+    )
+}
+
+export async function getJobApplicants(jobId: number): Promise<JobApplicant[]> {
+    const url = `${API_BASE_URL}/jobs/${jobId}/applicants`
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    return handleResponse<JobApplicant[]>(
+        response,
+        'Không thể tải danh sách ứng viên của tin tuyển dụng.',
+    )
+}
+
+export async function getMyCompanyJobs(): Promise<RecruiterJob[]> {
+    const url = `${API_BASE_URL}/jobs/my-company`
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    return handleResponse<RecruiterJob[]>(
+        response,
+        'Không thể tải danh sách tin tuyển dụng của công ty.',
     )
 }

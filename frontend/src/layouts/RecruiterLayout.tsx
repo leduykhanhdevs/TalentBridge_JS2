@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
     ArrowLeft,
+    Briefcase,
     Building2,
     CheckSquare,
     LogOut,
@@ -79,6 +80,12 @@ export function RecruiterLayout() {
             label: 'Hồ sơ HR',
             icon: UserCircle,
             desc: 'Thông tin cá nhân & chức vụ',
+        },
+        {
+            to: '/recruiter/jobs',
+            label: 'Tin tuyển dụng',
+            icon: Briefcase,
+            desc: 'Quản lý việc làm & xem ứng viên',
         },
         {
             to: '/recruiter/company',

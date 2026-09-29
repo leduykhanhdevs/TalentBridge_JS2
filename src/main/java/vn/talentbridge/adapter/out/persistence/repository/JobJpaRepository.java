@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
 import vn.talentbridge.core.domain.vo.JobStatus;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,6 +22,9 @@ public interface JobJpaRepository extends JpaRepository<JobJpaEntity, Long> {
 
     @EntityGraph(attributePaths = {"company"})
     Page<JobJpaEntity> findByStatus(JobStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"company"})
+    List<JobJpaEntity> findByCompanyId(Long companyId);
 
     long countByStatus(JobStatus status);
 }

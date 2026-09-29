@@ -10,6 +10,7 @@ public interface JobRepositoryPort {
     Optional<Job> findById(Long id);
     Job save(Job job);
     List<Job> findAll(int page, int size, JobStatus status);
+    List<Job> findByCompanyId(Long companyId);
     long count();
     long countByStatus(JobStatus status);
 }

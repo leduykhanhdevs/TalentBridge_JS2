@@ -167,4 +167,19 @@ public class UseCaseConfig {
             CompanyRepositoryPort companyRepository) {
         return new RequestCreateCompanyUseCaseImpl(recruiterRepository, companyRepository);
     }
+
+    @Bean
+    public GetJobApplicantsUseCase getJobApplicantsUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort jobApplicationRepository) {
+        return new GetJobApplicantsUseCaseImpl(recruiterRepository, jobRepository, jobApplicationRepository);
+    }
+
+    @Bean
+    public GetCompanyJobsUseCase getCompanyJobsUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository) {
+        return new GetCompanyJobsUseCaseImpl(recruiterRepository, jobRepository);
+    }
 }

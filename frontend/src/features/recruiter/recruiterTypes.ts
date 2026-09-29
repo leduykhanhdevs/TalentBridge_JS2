@@ -105,3 +105,36 @@ export type PageResponse<T> = {
     totalPages: number
     isLast: boolean
 }
+
+export type JobApplicant = {
+    id: number
+    jobId: number
+    candidateId: number
+    fullName: string
+    email: string
+    phone?: string
+    avatar?: string
+    title?: string
+    yearsOfExperience?: number
+    city?: string
+    coverLetter?: string
+    currentStage?: string
+    status?: string
+    aiMatchScore?: number
+    appliedAt?: string
+}
+
+export type RecruiterJob = {
+    id: number
+    companyId: number
+    companyName?: string
+    title: string
+    location?: string
+    jobType?: string
+    experienceLevel?: string
+    minSalary?: number
+    maxSalary?: number
+    deadline?: string
+    status?: string
+    createdAt?: string
+}

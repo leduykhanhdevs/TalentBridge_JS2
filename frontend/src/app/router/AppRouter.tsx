@@ -15,6 +15,7 @@ import { RecruiterProfilePage } from '../../pages/recruiter/RecruiterProfilePage
 import { RecruiterCompanyPage } from '../../pages/recruiter/RecruiterCompanyPage'
 import { RecruiterJoinCompanyPage } from '../../pages/recruiter/RecruiterJoinCompanyPage'
 import { RecruiterPeerApprovalPage } from '../../pages/recruiter/RecruiterPeerApprovalPage'
+import { RecruiterJobsPage } from '../../pages/recruiter/RecruiterJobsPage'
 
 export function AppRouter() {
     return (
@@ -33,6 +34,7 @@ export function AppRouter() {
             <Route element={<RecruiterLayout />} path="recruiter">
                 <Route element={<Navigate replace to="/recruiter/profile" />} index />
                 <Route element={<RecruiterProfilePage />} path="profile" />
+                <Route element={<RecruiterJobsPage />} path="jobs" />
                 <Route element={<RecruiterCompanyPage />} path="company" />
                 <Route element={<RecruiterJoinCompanyPage />} path="join-company" />
                 <Route element={<RecruiterPeerApprovalPage />} path="peer-approval" />

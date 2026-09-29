@@ -80,6 +80,14 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Job> findByCompanyId(Long companyId) {
+        return jobJpaRepository.findByCompanyId(companyId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long count() {
         return jobJpaRepository.count();
     }
