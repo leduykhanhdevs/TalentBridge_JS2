@@ -1,0 +1,390 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090D16"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#0B0F19"/>
+    </linearGradient>
+
+    <linearGradient id="cardGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+
+    <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+
+    <!-- Filters & Drop Shadows -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+
+    <filter id="glowIndigo" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Markers for Arrows -->
+    <marker id="arrowIndigo" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#818CF8"/>
+    </marker>
+    <marker id="arrowEmerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399"/>
+    </marker>
+    <marker id="arrowRose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F87171"/>
+    </marker>
+    <marker id="arrowSlate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748B"/>
+    </marker>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8"/>
+    </marker>
+  </defs>
+
+  <style>
+    .font-title { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 800; }
+    .font-heading { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 700; }
+    .font-medium { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 600; }
+    .font-regular { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 400; }
+    .font-code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 11px; }
+  </style>
+
+  <!-- Background Base -->
+  <rect width="1600" height="1200" fill="url(#bgGrad)"/>
+
+  <!-- Subtle Blueprint Grid Pattern -->
+  <g opacity="0.05">
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+    </pattern>
+    <rect width="1600" height="1200" fill="url(#grid)"/>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- HEADER ZONE -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 40)">
+    <!-- Logo Badge -->
+    <rect x="0" y="0" width="48" height="48" rx="14" fill="url(#primaryGrad)" filter="url(#shadow)"/>
+    <path d="M 14 24 L 22 32 L 34 16" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Title Text -->
+    <text x="64" y="24" class="font-title" font-size="24" fill="#F8FAFC" letter-spacing="0.5">TALENTBRIDGE SECURITY ARCHITECTURE</text>
+    <text x="64" y="44" class="font-regular" font-size="14" fill="#94A3B8">Quy trình Xác thực (Authentication) &amp; Phân quyền (Authorization) với Spring Security, JWT &amp; Clean Architecture</text>
+    
+    <!-- Top Right Meta Badges -->
+    <g transform="translate(1120, 4)">
+      <rect x="0" y="0" width="130" height="34" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <circle cx="16" cy="17" r="4" fill="#10B981"/>
+      <text x="28" y="21" class="font-medium" font-size="12" fill="#E2E8F0">Spring Boot 3.3</text>
+
+      <rect x="140" y="0" width="100" height="34" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <circle cx="156" cy="17" r="4" fill="#6366F1"/>
+      <text x="168" y="21" class="font-medium" font-size="12" fill="#E2E8F0">JWT HS256</text>
+
+      <rect x="250" y="0" width="110" height="34" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <circle cx="266" cy="17" r="4" fill="#EC4899"/>
+      <text x="278" y="21" class="font-medium" font-size="12" fill="#E2E8F0">RBAC 3 Roles</text>
+    </g>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- SECTION A: AUTHENTICATION FLOW (XÁC THỰC - "BẠN LÀ AI?") -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 120)">
+    <!-- Container Card -->
+    <rect x="0" y="0" width="1480" height="460" rx="20" fill="url(#cardGradDark)" stroke="#312E81" stroke-width="1.5" filter="url(#shadow)"/>
+    
+    <!-- Section Title Banner -->
+    <g transform="translate(24, 20)">
+      <rect x="0" y="0" width="300" height="32" rx="8" fill="#4338CA" fill-opacity="0.3" stroke="#6366F1" stroke-width="1"/>
+      <text x="12" y="21" class="font-heading" font-size="13" fill="#A5B4FC" letter-spacing="1">PHẦN 1: AUTHENTICATION (XÁC THỰC DANH TÍNH)</text>
+      <text x="320" y="21" class="font-regular" font-size="13" fill="#64748B">Endpoint: POST /api/v1/auth/login | Cấp phát Bearer Access Token &amp; Quản lý Phiên</text>
+    </g>
+
+    <!-- Node 1: Client / Login Request -->
+    <g transform="translate(40, 80)">
+      <rect x="0" y="0" width="190" height="150" rx="14" fill="#0F172A" stroke="#38BDF8" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#0284C7"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">1</text>
+      <text x="50" y="32" class="font-heading" font-size="14" fill="#F8FAFC">Client (React UI)</text>
+      
+      <rect x="14" y="52" width="162" height="42" rx="6" fill="#1E293B"/>
+      <text x="22" y="68" class="font-code" fill="#93C5FD">POST /api/v1/auth/login</text>
+      <text x="22" y="84" class="font-code" fill="#64748B">email, password</text>
+
+      <text x="14" y="112" class="font-regular" font-size="11" fill="#94A3B8">• Candidate / HR / Admin</text>
+      <text x="14" y="128" class="font-regular" font-size="11" fill="#94A3B8">• Gửi thông tin đăng nhập</text>
+    </g>
+
+    <!-- Arrow 1 -> 2 -->
+    <path d="M 230 155 L 290 155" fill="none" stroke="#38BDF8" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowCyan)"/>
+
+    <!-- Node 2: Rate Limiter Filter -->
+    <g transform="translate(300, 80)">
+      <rect x="0" y="0" width="180" height="150" rx="14" fill="#0F172A" stroke="#F59E0B" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#D97706"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">2</text>
+      <text x="50" y="32" class="font-heading" font-size="13" fill="#FDE68A">AuthRateLimitFilter</text>
+      
+      <text x="14" y="66" class="font-medium" font-size="12" fill="#E2E8F0">Kiểm tra Tần suất</text>
+      <text x="14" y="86" class="font-regular" font-size="11" fill="#94A3B8">• Chống Brute-force</text>
+      <text x="14" y="102" class="font-regular" font-size="11" fill="#94A3B8">• InMemoryLoginAttempt</text>
+      <text x="14" y="122" class="font-code" fill="#FCD34D">&gt; 5 lần sai: 429 Too Many</text>
+    </g>
+
+    <!-- Arrow 2 -> 3 -->
+    <path d="M 480 155 L 530 155" fill="none" stroke="#818CF8" stroke-width="2" marker-end="url(#arrowIndigo)"/>
+
+    <!-- Node 3: AuthController & UseCase -->
+    <g transform="translate(540, 80)">
+      <rect x="0" y="0" width="200" height="150" rx="14" fill="#0F172A" stroke="#6366F1" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#4F46E5"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">3</text>
+      <text x="50" y="32" class="font-heading" font-size="13" fill="#C7D2FE">Inbound Controller</text>
+      
+      <text x="14" y="66" class="font-medium" font-size="12" fill="#E2E8F0">AuthController.login()</text>
+      <text x="14" y="86" class="font-regular" font-size="11" fill="#94A3B8">• Gọi Inbound Port:</text>
+      <text x="14" y="102" class="font-code" fill="#A5B4FC">  LoginUseCase</text>
+      <text x="14" y="122" class="font-regular" font-size="11" fill="#94A3B8">• Validate @Valid payload</text>
+    </g>
+
+    <!-- Arrow 3 -> 4 -->
+    <path d="M 740 155 L 790 155" fill="none" stroke="#818CF8" stroke-width="2" marker-end="url(#arrowIndigo)"/>
+
+    <!-- Node 4: Spring AuthenticationManager & BCrypt -->
+    <g transform="translate(800, 70)">
+      <rect x="0" y="0" width="240" height="170" rx="14" fill="#0F172A" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#7C3AED"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">4</text>
+      <text x="50" y="32" class="font-heading" font-size="13" fill="#DDD6FE">AuthenticationManager</text>
+      
+      <text x="14" y="64" class="font-medium" font-size="12" fill="#E2E8F0">DaoAuthenticationProvider</text>
+      <text x="14" y="84" class="font-code" fill="#C4B5FD">BCryptPasswordEncoder</text>
+      <text x="14" y="104" class="font-regular" font-size="11" fill="#94A3B8">• Load UserDetails qua Email</text>
+      <text x="14" y="120" class="font-regular" font-size="11" fill="#94A3B8">• Đối soát hash trong bảng users</text>
+      <text x="14" y="140" class="font-medium" font-size="11" fill="#FBBF24">Kiểm tra Status: ACTIVE / BANNED</text>
+    </g>
+
+    <!-- Branching Arrows from Node 4 -->
+    <!-- Up/Right to Failure (401) -->
+    <path d="M 1040 120 L 1110 120" fill="none" stroke="#EF4444" stroke-width="2" marker-end="url(#arrowRose)"/>
+    
+    <!-- Down/Right to Success (JWT Generation) -->
+    <path d="M 1040 190 L 1080 190 L 1080 290 L 1110 290" fill="none" stroke="#10B981" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+
+    <!-- Failure Node -->
+    <g transform="translate(1120, 70)">
+      <rect x="0" y="0" width="310" height="90" rx="12" fill="#1C1917" stroke="#EF4444" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="12" y="12" width="24" height="24" rx="6" fill="#DC2626"/>
+      <text x="19" y="28" class="font-title" font-size="12" fill="#FFFFFF">✕</text>
+      <text x="44" y="28" class="font-heading" font-size="13" fill="#FCA5A5">Sai mật khẩu / Bị khóa</text>
+      <text x="14" y="52" class="font-code" fill="#F87171">HTTP 401 Unauthorized / 403 Forbidden</text>
+      <text x="14" y="70" class="font-regular" font-size="11" fill="#A8A29E">Trả RFC 7807 problem+json; ghi nhận lần thử sai</text>
+    </g>
+
+    <!-- Success Node: JWT Generation -->
+    <g transform="translate(1120, 200)">
+      <rect x="0" y="0" width="310" height="230" rx="14" fill="#064E3B" fill-opacity="0.2" stroke="#10B981" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#059669"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">5</text>
+      <text x="50" y="32" class="font-heading" font-size="14" fill="#6EE7B7">JwtTokenProviderAdapter</text>
+
+      <text x="14" y="64" class="font-medium" font-size="12" fill="#A7F3D0">Sinh JWT Access Token (HS256):</text>
+      <rect x="14" y="72" width="280" height="70" rx="6" fill="#022C22"/>
+      <text x="22" y="90" class="font-code" fill="#34D399">• sub: "khanh@talentbridge.vn"</text>
+      <text x="22" y="105" class="font-code" fill="#34D399">• userId: 101 | exp: +24 Hours</text>
+      <text x="22" y="120" class="font-code" fill="#34D399">• roles: ["ROLE_RECRUITER"]</text>
+      <text x="22" y="134" class="font-code" fill="#34D399">• iss: "talentbridge"</text>
+
+      <text x="14" y="160" class="font-medium" font-size="11" fill="#E2E8F0">Lưu Session DB (auth_sessions):</text>
+      <text x="14" y="176" class="font-regular" font-size="11" fill="#94A3B8">• SHA-256 hash của Refresh Token</text>
+      <text x="14" y="192" class="font-regular" font-size="11" fill="#94A3B8">• IP Address, User-Agent, Thời hạn phiên</text>
+      <text x="14" y="212" class="font-heading" font-size="11" fill="#34D399">➔ Response 200 OK kèm Bearer Tokens</text>
+    </g>
+
+    <!-- Arrow Feedback back to Client LocalStorage -->
+    <path d="M 1120 370 L 135 370 L 135 240" fill="none" stroke="#10B981" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrowEmerald)"/>
+    <rect x="420" y="358" width="340" height="24" rx="6" fill="#0F172A" stroke="#10B981" stroke-width="1"/>
+    <text x="430" y="374" class="font-code" fill="#6EE7B7">Client nhận Token ➔ Lưu vào LocalStorage / Memory</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- SECTION B: AUTHORIZATION FLOW (PHÂN QUYỀN - "BẠN ĐƯỢC LÀM GÌ?") -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 610)">
+    <!-- Container Card -->
+    <rect x="0" y="0" width="1480" height="460" rx="20" fill="url(#cardGradDark)" stroke="#831843" stroke-width="1.5" filter="url(#shadow)"/>
+    
+    <!-- Section Title Banner -->
+    <g transform="translate(24, 20)">
+      <rect x="0" y="0" width="280" height="32" rx="8" fill="#831843" fill-opacity="0.3" stroke="#F43F5E" stroke-width="1"/>
+      <text x="12" y="21" class="font-heading" font-size="13" fill="#FDA4AF" letter-spacing="1">PHẦN 2: AUTHORIZATION (PHÂN QUYỀN RBAC)</text>
+      <text x="300" y="21" class="font-regular" font-size="13" fill="#64748B">Header: Authorization: Bearer &lt;Token&gt; | Bảo vệ Endpoint theo vai trò (Role Guards)</text>
+    </g>
+
+    <!-- Node 1: Incoming Request with Bearer Token -->
+    <g transform="translate(40, 80)">
+      <rect x="0" y="0" width="190" height="150" rx="14" fill="#0F172A" stroke="#38BDF8" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#0284C7"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">1</text>
+      <text x="50" y="32" class="font-heading" font-size="14" fill="#F8FAFC">Request Có Bảo Vệ</text>
+      
+      <rect x="14" y="52" width="162" height="42" rx="6" fill="#1E293B"/>
+      <text x="22" y="68" class="font-code" fill="#38BDF8">GET /api/v1/admin/...</text>
+      <text x="22" y="84" class="font-code" fill="#F43F5E">POST /recruiter/jobs</text>
+
+      <text x="14" y="112" class="font-code" fill="#93C5FD">Authorization:</text>
+      <text x="14" y="128" class="font-code" fill="#A5B4FC">Bearer eyJhbGciOi...</text>
+    </g>
+
+    <!-- Arrow 1 -> 2 -->
+    <path d="M 230 155 L 290 155" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrowCyan)"/>
+
+    <!-- Node 2: JwtAuthenticationFilter -->
+    <g transform="translate(300, 70)">
+      <rect x="0" y="0" width="240" height="210" rx="14" fill="#0F172A" stroke="#818CF8" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#4F46E5"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">2</text>
+      <text x="50" y="32" class="font-heading" font-size="14" fill="#C7D2FE">JwtAuthenticationFilter</text>
+      
+      <text x="14" y="62" class="font-medium" font-size="11" fill="#94A3B8">OncePerRequestFilter:</text>
+      <text x="14" y="80" class="font-regular" font-size="11" fill="#E2E8F0">1. Trích xuất Token sau chữ "Bearer "</text>
+      <text x="14" y="98" class="font-regular" font-size="11" fill="#E2E8F0">2. Gọi jwtTokenProvider.validateToken()</text>
+      <text x="24" y="114" class="font-code" fill="#CBD5E1">• Kiểm tra chữ ký Secret Key</text>
+      <text x="24" y="128" class="font-code" fill="#CBD5E1">• Kiểm tra hạn dùng (exp &gt; now)</text>
+      <text x="24" y="142" class="font-code" fill="#CBD5E1">• Kiểm tra tài khoản không BANNED</text>
+      <text x="14" y="162" class="font-regular" font-size="11" fill="#E2E8F0">3. Trích xuất: email, userId, roles</text>
+      <text x="14" y="180" class="font-code" fill="#818CF8">4. Tạo UsernamePasswordAuthToken</text>
+    </g>
+
+    <!-- Branching from Filter: Invalid Token -->
+    <path d="M 420 280 L 420 330" fill="none" stroke="#EF4444" stroke-width="2" marker-end="url(#arrowRose)"/>
+    <g transform="translate(300, 340)">
+      <rect x="0" y="0" width="240" height="70" rx="10" fill="#1C1917" stroke="#EF4444" stroke-width="1.5"/>
+      <text x="14" y="24" class="font-heading" font-size="12" fill="#FCA5A5">JwtAuthenticationEntryPoint</text>
+      <text x="14" y="42" class="font-code" fill="#EF4444">Token sai / Hết hạn ➔ 401 Unauthorized</text>
+      <text x="14" y="58" class="font-regular" font-size="10" fill="#A8A29E">Chặn ngay tại Filter Chain, không vào Controller</text>
+    </g>
+
+    <!-- Valid Token -> SecurityContextHolder -->
+    <path d="M 540 155 L 600 155" fill="none" stroke="#10B981" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+
+    <!-- Node 3: SecurityContextHolder -->
+    <g transform="translate(610, 75)">
+      <rect x="0" y="0" width="230" height="180" rx="14" fill="#0F172A" stroke="#10B981" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#059669"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">3</text>
+      <text x="50" y="32" class="font-heading" font-size="13" fill="#6EE7B7">SecurityContextHolder</text>
+      
+      <text x="14" y="64" class="font-medium" font-size="12" fill="#E2E8F0">Thiết lập Principal</text>
+      <rect x="14" y="74" width="202" height="54" rx="6" fill="#064E3B" fill-opacity="0.3"/>
+      <text x="20" y="92" class="font-code" fill="#A7F3D0">UserPrincipal:</text>
+      <text x="20" y="106" class="font-code" fill="#A7F3D0">• id: 101, email: "..."</text>
+      <text x="20" y="120" class="font-code" fill="#A7F3D0">• authorities: ROLE_...</text>
+
+      <text x="14" y="146" class="font-regular" font-size="11" fill="#94A3B8">• Gắn context vào ThreadLocal</text>
+      <text x="14" y="162" class="font-regular" font-size="11" fill="#94A3B8">• Sẵn sàng để Method Guard kiểm tra</text>
+    </g>
+
+    <!-- Arrow 3 -> 4 (Authorization Checks) -->
+    <path d="M 840 155 L 890 155" fill="none" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowIndigo)"/>
+
+    <!-- Node 4: Spring Method Security (@PreAuthorize RBAC Guard) -->
+    <g transform="translate(900, 60)">
+      <rect x="0" y="0" width="260" height="220" rx="14" fill="#0F172A" stroke="#F59E0B" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="14" y="14" width="28" height="28" rx="6" fill="#D97706"/>
+      <text x="22" y="32" class="font-title" font-size="13" fill="#FFFFFF">4</text>
+      <text x="50" y="32" class="font-heading" font-size="13" fill="#FDE68A">@EnableMethodSecurity</text>
+      
+      <text x="14" y="60" class="font-medium" font-size="11" fill="#E2E8F0">Kiểm tra vai trò (Role Matcher):</text>
+      
+      <rect x="14" y="70" width="232" height="40" rx="6" fill="#1E293B"/>
+      <text x="20" y="86" class="font-code" fill="#F472B6">@PreAuthorize("hasRole('ADMIN')")</text>
+      <text x="20" y="100" class="font-code" fill="#94A3B8">↳ /api/v1/admin/**</text>
+
+      <rect x="14" y="118" width="232" height="40" rx="6" fill="#1E293B"/>
+      <text x="20" y="134" class="font-code" fill="#60A5FA">@PreAuthorize("hasRole('RECRUITER')")</text>
+      <text x="20" y="148" class="font-code" fill="#94A3B8">↳ /api/v1/recruiter/**</text>
+
+      <rect x="14" y="166" width="232" height="40" rx="6" fill="#1E293B"/>
+      <text x="20" y="182" class="font-code" fill="#34D399">@PreAuthorize("hasRole('CANDIDATE')")</text>
+      <text x="20" y="196" class="font-code" fill="#94A3B8">↳ /api/v1/candidates/**</text>
+    </g>
+
+    <!-- Branch from RBAC -->
+    <!-- Up/Right: Access Denied (403) -->
+    <path d="M 1160 120 L 1230 120" fill="none" stroke="#EF4444" stroke-width="2" marker-end="url(#arrowRose)"/>
+    <g transform="translate(1240, 75)">
+      <rect x="0" y="0" width="200" height="90" rx="12" fill="#1C1917" stroke="#EF4444" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="14" y="28" class="font-heading" font-size="13" fill="#FCA5A5">AccessDeniedHandler</text>
+      <text x="14" y="50" class="font-code" fill="#F87171">HTTP 403 Forbidden</text>
+      <text x="14" y="68" class="font-regular" font-size="11" fill="#A8A29E">Đã đăng nhập nhưng không có quyền hạn tương ứng</text>
+    </g>
+
+    <!-- Down/Right: Allowed (200 OK) -->
+    <path d="M 1160 210 L 1230 210" fill="none" stroke="#10B981" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+    <g transform="translate(1240, 185)">
+      <rect x="0" y="0" width="200" height="170" rx="14" fill="#064E3B" fill-opacity="0.25" stroke="#10B981" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="12" y="12" width="24" height="24" rx="6" fill="#059669"/>
+      <text x="18" y="28" class="font-title" font-size="12" fill="#FFFFFF">✓</text>
+      <text x="44" y="28" class="font-heading" font-size="13" fill="#6EE7B7">Cho Phép Vào Core</text>
+
+      <text x="14" y="60" class="font-medium" font-size="11" fill="#A7F3D0">Inbound Controller</text>
+      <text x="14" y="78" class="font-regular" font-size="11" fill="#94A3B8">• Trích xuất currentUserId</text>
+      <text x="14" y="96" class="font-regular" font-size="11" fill="#94A3B8">• Gọi Business Use Case</text>
+      <text x="14" y="114" class="font-regular" font-size="11" fill="#94A3B8">• Truy vấn / Cập nhật DB</text>
+
+      <rect x="14" y="128" width="172" height="28" rx="6" fill="#022C22"/>
+      <text x="22" y="146" class="font-code" fill="#34D399">HTTP 200 / 201 Created</text>
+    </g>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- FOOTER: SUMMARY KEY & SECURITY INVARIANTS -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 1090)">
+    <rect x="0" y="0" width="1480" height="70" rx="14" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+    
+    <g transform="translate(24, 22)">
+      <rect x="0" y="0" width="8" height="26" rx="4" fill="#6366F1"/>
+      <text x="18" y="18" class="font-heading" font-size="13" fill="#F8FAFC">TÓM TẮT NGUYÊN TẮC BẢO MẬT TALENTBRIDGE:</text>
+      
+      <text x="360" y="18" class="font-regular" font-size="12" fill="#CBD5E1">
+        <tspan fill="#38BDF8" font-weight="700">1. Stateless Session:</tspan> Không lưu session trên RAM Server, xác thực thuần Bearer JWT.
+      </text>
+
+      <text x="800" y="18" class="font-regular" font-size="12" fill="#CBD5E1">
+        <tspan fill="#F59E0B" font-weight="700">2. Fail-Fast:</tspan> Kiểm tra tính hợp lệ của token ngay tại Filter đầu luồng.
+      </text>
+
+      <text x="1140" y="18" class="font-regular" font-size="12" fill="#CBD5E1">
+        <tspan fill="#10B981" font-weight="700">3. RBAC Strict:</tspan> @PreAuthorize bảo vệ từng endpoint độc lập.
+      </text>
+    </g>
+  </g>
+</svg>
