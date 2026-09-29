@@ -67,6 +67,15 @@ class CompanyJoinRequestIntegrationTest {
     private CompanyJoinRequestJpaRepository companyJoinRequestRepository;
 
     @Autowired
+    private vn.talentbridge.adapter.out.persistence.repository.ApplicationJpaRepository applicationRepository;
+
+    @Autowired
+    private vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository candidateRepository;
+
+    @Autowired
+    private vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository jobRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -180,6 +189,9 @@ class CompanyJoinRequestIntegrationTest {
     private void cleanup() {
         companyJoinRequestRepository.deleteAll();
         recruiterRepository.deleteAll();
+        applicationRepository.deleteAll();
+        candidateRepository.deleteAll();
+        jobRepository.deleteAll();
         companyRepository.deleteAll();
         userRepository.deleteAll();
     }
