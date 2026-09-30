@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
     AlertCircle,
     Archive,
@@ -55,7 +55,7 @@ export function RecruiterJobsPage() {
     // Confirm close modal
     const [confirmCloseId, setConfirmCloseId] = useState<number | null>(null)
 
-    async function loadJobs() {
+    const loadJobs = useCallback(async () => {
         setIsLoading(true)
         setErrorMsg(null)
         try {
@@ -73,11 +73,11 @@ export function RecruiterJobsPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [page, pageSize, statusFilter])
 
     useEffect(() => {
         loadJobs()
-    }, [page, statusFilter])
+    }, [loadJobs])
 
     // Filter jobs client-side by keyword
     const filteredJobs = jobs.filter((job) => {

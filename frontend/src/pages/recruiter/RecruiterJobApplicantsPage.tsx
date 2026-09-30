@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useId } from 'react'
+import { useEffect, useState, useMemo, useId, useCallback } from 'react'
 import {
     AlertCircle,
     ArrowLeft,
@@ -78,12 +78,8 @@ export function RecruiterJobApplicantsPage() {
     const expSelectId = useId()
     const sortSelectId = useId()
 
-    useEffect(() => {
+    const fetchApplicants = useCallback(async () => {
         if (!numericJobId || isNaN(numericJobId)) return
-        fetchApplicants()
-    }, [numericJobId, stageFilter, minExpFilter, sortBy, sortDirection])
-
-    async function fetchApplicants() {
         setIsLoading(true)
         setErrorMsg(null)
         try {
@@ -101,7 +97,11 @@ export function RecruiterJobApplicantsPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [numericJobId, stageFilter, minExpFilter, sortBy, sortDirection, searchTerm])
+
+    useEffect(() => {
+        fetchApplicants()
+    }, [fetchApplicants])
 
     function handleSearchSubmit(e: React.FormEvent) {
         e.preventDefault()

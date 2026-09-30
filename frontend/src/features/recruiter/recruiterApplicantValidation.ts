@@ -20,7 +20,7 @@ export function validateStageTransition(payload: UpdateStagePayload): Validation
 
     if (!payload.stage || !payload.stage.trim()) {
         errors.push({ field: 'stage', message: 'Vòng tuyển dụng không được để trống' })
-    } else if (!VALID_STAGES.includes(payload.stage.trim().toUpperCase() as any)) {
+    } else if (!(VALID_STAGES as readonly string[]).includes(payload.stage.trim().toUpperCase())) {
         errors.push({ field: 'stage', message: `Vòng tuyển dụng '${payload.stage}' không hợp lệ` })
     }
 

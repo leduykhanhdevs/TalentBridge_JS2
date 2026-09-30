@@ -41,7 +41,7 @@ export interface CreateJobPayload {
     skills?: string[]
 }
 
-export interface UpdateJobPayload extends CreateJobPayload {}
+export type UpdateJobPayload = CreateJobPayload
 
 export interface RecruiterJobFilterParams {
     page?: number

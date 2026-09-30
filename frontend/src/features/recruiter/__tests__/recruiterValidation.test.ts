@@ -136,8 +136,8 @@ describe('Recruiter Validation and Domain Logic Rules', () => {
         })
 
         it('should reject invalid status or PENDING status in review command', () => {
-            expect(validateReviewRequest({ status: 'PENDING' as any }).valid).toBe(false)
-            expect(validateReviewRequest({ status: '' as any }).valid).toBe(false)
+            expect(validateReviewRequest({ status: 'PENDING' as unknown as 'ACCEPTED' | 'REJECTED' }).valid).toBe(false)
+            expect(validateReviewRequest({ status: '' as unknown as 'ACCEPTED' | 'REJECTED' }).valid).toBe(false)
         })
 
         it('should require a non-empty reason when REJECTED', () => {
