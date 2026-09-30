@@ -12,6 +12,7 @@ import {
     MapPin,
     Plus,
     Search,
+    Users,
 } from 'lucide-react'
 import { Link } from 'react-router'
 import {
@@ -379,6 +380,15 @@ export function RecruiterJobsPage() {
 
                                     {/* Right Actions */}
                                     <div className="flex items-center gap-2 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0 shrink-0">
+                                        <Link
+                                            to={`/recruiter/jobs/${job.id}/applicants`}
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-600 bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700 shadow-2xs transition"
+                                            title="Xem và sàng lọc hồ sơ ứng viên"
+                                        >
+                                            <Users size={13} />
+                                            <span>Xem ứng viên</span>
+                                        </Link>
+
                                         <Link
                                             to={`/jobs/${job.id}`}
                                             target="_blank"

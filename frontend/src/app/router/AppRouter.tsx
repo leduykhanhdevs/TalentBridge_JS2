@@ -16,6 +16,7 @@ import { RecruiterCompanyPage } from '../../pages/recruiter/RecruiterCompanyPage
 import { RecruiterJoinCompanyPage } from '../../pages/recruiter/RecruiterJoinCompanyPage'
 import { RecruiterPeerApprovalPage } from '../../pages/recruiter/RecruiterPeerApprovalPage'
 import { RecruiterJobsPage } from '../../pages/recruiter/RecruiterJobsPage'
+import { RecruiterJobApplicantsPage } from '../../pages/recruiter/RecruiterJobApplicantsPage'
 import { CandidateProfilePage } from '../../pages/candidate/CandidateProfilePage'
 import { JobDetailPage } from '../../pages/jobs/JobDetailPage'
 import { JobSearchPage } from '../../pages/jobs/JobSearchPage'
@@ -41,6 +42,7 @@ export function AppRouter() {
                 <Route element={<Navigate replace to="/recruiter/profile" />} index />
                 <Route element={<RecruiterProfilePage />} path="profile" />
                 <Route element={<RecruiterJobsPage />} path="jobs" />
+                <Route element={<RecruiterJobApplicantsPage />} path="jobs/:jobId/applicants" />
                 <Route element={<RecruiterCompanyPage />} path="company" />
                 <Route element={<RecruiterJoinCompanyPage />} path="join-company" />
                 <Route element={<RecruiterPeerApprovalPage />} path="peer-approval" />

@@ -249,4 +249,46 @@ public class UseCaseConfig {
         return new TransactionalWithdrawApplicationUseCase(core);
     }
 
+    @Bean
+    public GetJobApplicantsUseCase getJobApplicantsUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort jobApplicationRepository) {
+        return new GetJobApplicantsUseCaseImpl(
+                recruiterRepository,
+                jobRepository,
+                jobApplicationRepository
+        );
+    }
+
+    @Bean
+    public UpdateApplicantStatusUseCase updateApplicantStatusUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort jobApplicationRepository,
+            ApplicationStageRepositoryPort applicationStageRepository) {
+        return new UpdateApplicantStatusUseCaseImpl(
+                recruiterRepository,
+                jobRepository,
+                jobApplicationRepository,
+                applicationStageRepository
+        );
+    }
+
+    @Bean
+    public RateAndNoteApplicantUseCase rateAndNoteApplicantUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort jobApplicationRepository,
+            ApplicationNoteRepositoryPort applicationNoteRepository,
+            ApplicationStageRepositoryPort applicationStageRepository) {
+        return new RateAndNoteApplicantUseCaseImpl(
+                recruiterRepository,
+                jobRepository,
+                jobApplicationRepository,
+                applicationNoteRepository,
+                applicationStageRepository
+        );
+    }
+
 }
