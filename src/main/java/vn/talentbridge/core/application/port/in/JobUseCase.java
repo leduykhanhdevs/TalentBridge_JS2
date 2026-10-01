@@ -22,8 +22,14 @@ public interface JobUseCase {
 
     long countMyJobs(Long recruiterUserId, JobStatus status);
 
+    default List<JobDetailResult> searchJobs(String keyword, String location, String jobType, String experienceLevel,
+                                             BigDecimal minSalary, BigDecimal maxSalary, int page, int size) {
+        return searchJobs(keyword, location, jobType, experienceLevel, minSalary, maxSalary, page, size, "createdAt", "desc");
+    }
+
     List<JobDetailResult> searchJobs(String keyword, String location, String jobType, String experienceLevel,
-                                     BigDecimal minSalary, BigDecimal maxSalary, int page, int size);
+                                     BigDecimal minSalary, BigDecimal maxSalary, int page, int size,
+                                     String sortBy, String sortDirection);
 
     long countSearchJobs(String keyword, String location, String jobType, String experienceLevel,
                          BigDecimal minSalary, BigDecimal maxSalary);

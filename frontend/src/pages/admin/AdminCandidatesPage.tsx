@@ -643,23 +643,23 @@ export function AdminCandidatesPage() {
                             <X size={20} />
                         </button>
 
-                        <div className="flex items-start gap-4 sm:gap-5">
+                        <div className="flex items-start gap-4 sm:gap-5 pr-8">
                             {selectedCandidate.avatarUrl ? (
                                 <img
                                     alt={selectedCandidate.fullName}
-                                    className="size-16 sm:size-20 rounded-2xl object-cover border border-slate-200 shadow-sm"
+                                    className="size-16 sm:size-20 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
                                     src={selectedCandidate.avatarUrl}
                                 />
                             ) : (
-                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm">
+                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm shrink-0">
                                     {selectedCandidate.fullName.charAt(0).toUpperCase()}
                                 </div>
                             )}
-                            <div>
-                                <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+                            <div className="min-w-0 flex-1">
+                                <h3 className="text-xl sm:text-2xl font-black text-slate-900 truncate">
                                     {selectedCandidate.fullName}
                                 </h3>
-                                <p className="text-sm sm:text-base font-bold text-indigo-600 mt-0.5">
+                                <p className="text-sm sm:text-base font-bold text-indigo-600 mt-0.5 truncate">
                                     {selectedCandidate.title || 'Chưa thiết lập chức danh công việc'}
                                 </p>
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -683,35 +683,37 @@ export function AdminCandidatesPage() {
 
                         {/* Bento Details Grid */}
                         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-slate-100 pt-5 text-sm">
-                            <div className="space-y-3 rounded-xl bg-slate-50/70 p-4 border border-slate-200/60">
+                            <div className="space-y-3 rounded-xl bg-slate-50/70 p-4 border border-slate-200/60 min-w-0 overflow-hidden">
                                 <h4 className="font-black text-xs uppercase tracking-wider text-slate-500">Thông tin liên hệ</h4>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Email:</span>{' '}
-                                    <span className="font-bold text-slate-900">{selectedCandidate.email}</span>
+                                    <span className="font-bold text-slate-900 break-all select-all" title={selectedCandidate.email}>
+                                        {selectedCandidate.email}
+                                    </span>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Số điện thoại:</span>{' '}
-                                    <span className="font-bold text-slate-900">{selectedCandidate.phone || 'Chưa cập nhật'}</span>
+                                    <span className="font-bold text-slate-900 break-all">{selectedCandidate.phone || 'Chưa cập nhật'}</span>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Ngày sinh:</span>{' '}
                                     <span className="font-bold text-slate-900">{selectedCandidate.dob || 'Chưa cập nhật'}</span>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Giới tính:</span>{' '}
                                     <span className="font-bold text-slate-900">{selectedCandidate.gender || 'Chưa cập nhật'}</span>
                                 </div>
                             </div>
 
-                            <div className="space-y-3 rounded-xl bg-slate-50/70 p-4 border border-slate-200/60">
+                            <div className="space-y-3 rounded-xl bg-slate-50/70 p-4 border border-slate-200/60 min-w-0 overflow-hidden">
                                 <h4 className="font-black text-xs uppercase tracking-wider text-slate-500">Kinh nghiệm & Địa điểm</h4>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Địa chỉ / Tỉnh thành:</span>{' '}
-                                    <span className="font-bold text-slate-900">
+                                    <span className="font-bold text-slate-900 break-words">
                                         {[selectedCandidate.address, selectedCandidate.city].filter(Boolean).join(', ') || 'Chưa cập nhật'}
                                     </span>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Kinh nghiệm:</span>{' '}
                                     <span className="font-bold text-slate-900">
                                         {selectedCandidate.experienceYears !== undefined && selectedCandidate.experienceYears !== null
@@ -719,7 +721,7 @@ export function AdminCandidatesPage() {
                                             : 'Chưa cập nhật'}
                                     </span>
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <span className="font-semibold text-slate-500">Mức lương kỳ vọng:</span>{' '}
                                     <span className="font-black text-emerald-600">
                                         {selectedCandidate.expectedSalary
@@ -731,9 +733,9 @@ export function AdminCandidatesPage() {
                         </div>
 
                         {selectedCandidate.summary && (
-                            <div className="mt-4 rounded-xl bg-indigo-50/40 p-4 text-sm border border-indigo-100">
+                            <div className="mt-4 rounded-xl bg-indigo-50/40 p-4 text-sm border border-indigo-100 min-w-0">
                                 <div className="font-black text-indigo-900 mb-1">Giới thiệu bản thân & Mục tiêu nghề nghiệp:</div>
-                                <p className="leading-relaxed whitespace-pre-wrap font-medium text-slate-700">{selectedCandidate.summary}</p>
+                                <p className="leading-relaxed whitespace-pre-wrap font-medium text-slate-700 break-words">{selectedCandidate.summary}</p>
                             </div>
                         )}
 

@@ -36,6 +36,8 @@ export interface JobSummary {
     createdAt: string | null
 }
 
+export type JobSortOption = 'NEWEST' | 'SALARY_DESC' | 'SALARY_ASC' | 'TITLE_ASC'
+
 export interface JobSearchParams {
     keyword?: string
     location?: string
@@ -45,4 +47,7 @@ export interface JobSearchParams {
     maxSalary?: number
     page?: number
     size?: number
+    sort?: JobSortOption | string
+    sortBy?: string
+    sortDirection?: 'asc' | 'desc'
 }

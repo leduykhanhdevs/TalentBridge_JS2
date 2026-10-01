@@ -154,7 +154,14 @@ public class JobUseCaseImpl implements JobUseCase {
     @Override
     public List<JobDetailResult> searchJobs(String keyword, String location, String jobType, String experienceLevel,
                                            BigDecimal minSalary, BigDecimal maxSalary, int page, int size) {
-        List<Job> jobs = jobRepository.search(keyword, location, jobType, experienceLevel, minSalary, maxSalary, page, size);
+        return searchJobs(keyword, location, jobType, experienceLevel, minSalary, maxSalary, page, size, "createdAt", "desc");
+    }
+
+    @Override
+    public List<JobDetailResult> searchJobs(String keyword, String location, String jobType, String experienceLevel,
+                                           BigDecimal minSalary, BigDecimal maxSalary, int page, int size,
+                                           String sortBy, String sortDirection) {
+        List<Job> jobs = jobRepository.search(keyword, location, jobType, experienceLevel, minSalary, maxSalary, page, size, sortBy, sortDirection);
         return jobs.stream().map(JobDetailResult::from).toList();
     }
 

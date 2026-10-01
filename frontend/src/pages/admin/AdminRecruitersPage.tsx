@@ -588,21 +588,21 @@ export function AdminRecruitersPage() {
                             <X size={20} />
                         </button>
 
-                        <div className="flex items-start gap-4 sm:gap-5">
+                        <div className="flex items-start gap-4 sm:gap-5 pr-8">
                             {selectedRecruiter.avatarUrl ? (
                                 <img
                                     alt={selectedRecruiter.fullName}
-                                    className="size-16 sm:size-20 rounded-2xl object-cover border border-slate-200 shadow-sm"
+                                    className="size-16 sm:size-20 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
                                     src={selectedRecruiter.avatarUrl}
                                 />
                             ) : (
-                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm">
+                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm shrink-0">
                                     {selectedRecruiter.fullName.charAt(0).toUpperCase()}
                                 </div>
                             )}
-                            <div>
-                                <h3 className="text-xl sm:text-2xl font-black text-slate-900">{selectedRecruiter.fullName}</h3>
-                                <p className="text-sm sm:text-base font-bold text-indigo-600 mt-0.5">
+                            <div className="min-w-0 flex-1">
+                                <h3 className="text-xl sm:text-2xl font-black text-slate-900 truncate">{selectedRecruiter.fullName}</h3>
+                                <p className="text-sm sm:text-base font-bold text-indigo-600 mt-0.5 truncate">
                                     {selectedRecruiter.position || 'Chuyên viên tuyển dụng HR'}
                                 </p>
                                 <div className="mt-2 flex items-center gap-2">
@@ -622,25 +622,25 @@ export function AdminRecruitersPage() {
                         </div>
 
                         <div className="mt-6 space-y-3.5 border-t border-slate-100 pt-5 text-sm bg-slate-50/70 p-4 rounded-xl border border-slate-200/60">
-                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50">
-                                <span className="font-semibold text-slate-500">Mã định danh HR:</span>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50 gap-4 min-w-0">
+                                <span className="font-semibold text-slate-500 shrink-0">Mã định danh HR:</span>
                                 <span className="font-mono font-bold text-slate-900">#{selectedRecruiter.id}</span>
                             </div>
-                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50">
-                                <span className="font-semibold text-slate-500">Mã tài khoản User:</span>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50 gap-4 min-w-0">
+                                <span className="font-semibold text-slate-500 shrink-0">Mã tài khoản User:</span>
                                 <span className="font-mono font-bold text-slate-900">#{selectedRecruiter.userId}</span>
                             </div>
-                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50">
-                                <span className="font-semibold text-slate-500">Địa chỉ Email:</span>
-                                <span className="font-bold text-slate-900">{selectedRecruiter.email}</span>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50 gap-4 min-w-0">
+                                <span className="font-semibold text-slate-500 shrink-0">Địa chỉ Email:</span>
+                                <span className="font-bold text-slate-900 break-all select-all text-right" title={selectedRecruiter.email}>{selectedRecruiter.email}</span>
                             </div>
-                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50">
-                                <span className="font-semibold text-slate-500">Số điện thoại:</span>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50 gap-4 min-w-0">
+                                <span className="font-semibold text-slate-500 shrink-0">Số điện thoại:</span>
                                 <span className="font-bold text-slate-900">{selectedRecruiter.phone || 'Chưa cập nhật'}</span>
                             </div>
-                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50">
-                                <span className="font-semibold text-slate-500">Doanh nghiệp trực thuộc:</span>
-                                <span className="font-black text-indigo-700">
+                            <div className="flex items-center justify-between py-1 border-b border-slate-200/50 gap-4 min-w-0">
+                                <span className="font-semibold text-slate-500 shrink-0">Doanh nghiệp trực thuộc:</span>
+                                <span className="font-black text-indigo-700 text-right truncate">
                                     {selectedRecruiter.companyName || 'Chưa liên kết pháp nhân'}
                                 </span>
                             </div>

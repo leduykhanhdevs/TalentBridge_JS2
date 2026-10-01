@@ -7,6 +7,7 @@ import type {
     CandidateSkillRequest,
     SkillItem,
     ResumeItem,
+    CandidateApplicationItem,
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 
@@ -350,5 +351,38 @@ export async function downloadResumeFile(id: number, fileName: string): Promise<
     link.click()
     window.URL.revokeObjectURL(downloadUrl)
     document.body.removeChild(link)
+}
+
+export async function getMyApplications(): Promise<CandidateApplicationItem[]> {
+    const res = await fetch(`${API_BASE_URL}/candidates/applications`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể lấy danh sách đơn ứng tuyển',
+        )
+    }
+
+    const payload: ApiResponse<CandidateApplicationItem[]> = await res.json()
+    return payload.data ?? []
+}
+
+export async function withdrawApplication(applicationId: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/candidates/applications/${applicationId}/withdraw`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể rút đơn ứng tuyển',
+        )
+    }
 }
 

@@ -133,25 +133,37 @@ export function RecruiterLayout() {
     ]
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+        <div className="relative flex min-h-screen flex-col bg-bento-canvas text-slate-900 selection:bg-emerald-600 selection:text-white">
+            {/* Ambient Background Glows */}
+            <div className="pointer-events-none fixed -top-40 right-10 size-[32rem] rounded-full bg-emerald-100/40 blur-3xl" />
+            <div className="pointer-events-none fixed top-72 -left-20 size-[28rem] rounded-full bg-teal-100/30 blur-3xl" />
+
             {/* Header */}
-            <header className="sticky top-0 z-40 border-b border-emerald-800/60 bg-emerald-950 text-white shadow-xs">
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md text-slate-900 shadow-2xs">
                 <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3">
-                        <div className="grid size-9 place-items-center rounded-xl bg-emerald-500 text-emerald-950 font-bold shadow-xs">
+                        <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold shadow-xs border border-emerald-400/20">
                             <Building2 size={20} />
                         </div>
                         <div>
-                            <span className="text-sm sm:text-base font-bold tracking-tight">TalentBridge Recruiter</span>
-                            <span className="bento-badge ml-2 border-emerald-400 bg-emerald-900 text-emerald-200 text-[10px]">
-                                HR_PORTAL
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                                    TalentBridge Recruiter
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 shadow-2xs">
+                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    HR_PORTAL
+                                </span>
+                            </div>
+                            <p className="hidden sm:block text-[11px] font-medium text-slate-500">
+                                Cổng Quản trị Tuyển dụng & Sàng lọc Ứng viên ATS
+                            </p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3">
                         <NavLink
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-800/80 bg-emerald-900/80 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:border-emerald-700 hover:bg-emerald-900 hover:text-white shadow-2xs"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-2xs"
                             to="/"
                         >
                             <ArrowLeft size={14} />
@@ -159,25 +171,25 @@ export function RecruiterLayout() {
                         </NavLink>
 
                         {/* Bento Recruiter User Capsule */}
-                        <div className="flex items-center rounded-xl border border-emerald-800/80 bg-emerald-900/90 p-1 shadow-2xs">
+                        <div className="flex items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs">
                             <div className="flex items-center gap-2 pl-1.5 pr-2 py-0.5">
-                                <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-500 text-[11px] font-bold text-white shadow-2xs">
+                                <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 text-[11px] font-bold text-white shadow-2xs">
                                     {getInitials(displayName)}
                                 </span>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="max-w-[120px] truncate text-xs font-semibold text-emerald-100 sm:max-w-none">
+                                    <span className="max-w-[120px] truncate text-xs font-bold text-slate-800 sm:max-w-none">
                                         {displayName}
                                     </span>
-                                    <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold border border-emerald-400/40 bg-emerald-400/10 text-emerald-300">
+                                    <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold border border-emerald-200/80 bg-emerald-50 text-emerald-700">
                                         Nhà tuyển dụng
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="h-4 w-px bg-emerald-800 mx-0.5" />
+                            <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
 
                             <button
-                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-200 hover:text-white hover:bg-emerald-800 transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/70 transition-colors"
                                 onClick={() => setIsChangePasswordOpen(true)}
                                 title="Đổi mật khẩu"
                                 type="button"
@@ -187,7 +199,7 @@ export function RecruiterLayout() {
                             </button>
 
                             <button
-                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-200 hover:text-rose-300 hover:bg-rose-500/20 transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                                 onClick={handleLogout}
                                 title="Đăng xuất"
                                 type="button"
@@ -199,34 +211,41 @@ export function RecruiterLayout() {
                     </div>
                 </div>
 
-                {/* Subnav Navigation Bar */}
-                <div className="border-t border-emerald-900/80 bg-emerald-950/90 px-4 sm:px-6 lg:px-8">
-                    <nav className="mx-auto flex max-w-7xl space-x-2 sm:space-x-3 overflow-x-auto py-2">
-                        {navItems.map((item) => {
-                            const Icon = item.icon
-                            return (
-                                <NavLink
-                                    className={({ isActive }) =>
-                                        `inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
-                                            isActive
-                                                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs border border-amber-300'
-                                                : 'border border-transparent text-emerald-200 hover:bg-emerald-900/60 hover:text-white'
-                                        }`
-                                    }
-                                    key={item.to}
-                                    to={item.to}
-                                >
-                                    <Icon size={14} />
-                                    <span>{item.label}</span>
-                                </NavLink>
-                            )
-                        })}
-                    </nav>
+                {/* Subnav Bento Navigation Dock */}
+                <div className="border-t border-slate-200/60 bg-slate-50/70 backdrop-blur-xs px-4 sm:px-6 lg:px-8 py-2">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between">
+                        <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto p-1 rounded-2xl bg-slate-200/60 border border-slate-200/80 backdrop-blur-xs shrink-0">
+                            {navItems.map((item) => {
+                                const Icon = item.icon
+                                return (
+                                    <NavLink
+                                        className={({ isActive }) =>
+                                            `inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-bold border transition-colors duration-150 whitespace-nowrap ${
+                                                isActive
+                                                    ? 'bg-white text-emerald-700 shadow-2xs border-slate-200/90'
+                                                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60 shadow-none'
+                                            }`
+                                        }
+                                        key={item.to}
+                                        to={item.to}
+                                    >
+                                        <Icon size={15} className="shrink-0" />
+                                        <span>{item.label}</span>
+                                    </NavLink>
+                                )
+                            })}
+                        </nav>
+
+                        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 shrink-0">
+                            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>ATS Pipeline • Sẵn sàng tiếp nhận hồ sơ</span>
+                        </div>
+                    </div>
                 </div>
             </header>
 
             {/* Main Content Area */}
-            <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <main className="relative z-10 mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                 <Outlet />
             </main>
 

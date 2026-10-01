@@ -186,29 +186,29 @@ export function AdminLayout() {
                 {/* Subnav Bento Navigation Dock */}
                 <div className="border-t border-slate-800/80 bg-slate-950/90 px-4 sm:px-6 lg:px-8 py-2">
                     <div className="mx-auto flex max-w-7xl items-center justify-between">
-                        <nav className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto p-1 rounded-2xl bg-slate-900/90 border border-slate-800/90">
+                        <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto p-1 rounded-2xl bg-slate-900/90 border border-slate-800/90 shrink-0">
                             {navItems.map((item) => {
                                 const Icon = item.icon
                                 return (
                                     <NavLink
                                         className={({ isActive }) =>
-                                            `inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                                            `inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-bold border transition-colors duration-150 whitespace-nowrap ${
                                                 isActive
-                                                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-sm shadow-indigo-950/60 border border-indigo-400/30'
-                                                    : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
+                                                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-sm shadow-indigo-950/60 border-indigo-400/30'
+                                                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/70 shadow-none'
                                             }`
                                         }
                                         key={item.to}
                                         to={item.to}
                                     >
-                                        <Icon size={16} />
+                                        <Icon size={16} className="shrink-0" />
                                         <span>{item.label}</span>
                                     </NavLink>
                                 )
                             })}
                         </nav>
 
-                        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-400">
+                        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-400 shrink-0">
                             <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                             <span>CSDL 3NF • Sẵn sàng giám sát</span>
                         </div>

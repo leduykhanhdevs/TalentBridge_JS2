@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, Building2, KeyRound, LogIn, LogOut, Search, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BriefcaseBusiness, Building2, FileText, KeyRound, LogIn, LogOut, Search, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -112,19 +112,35 @@ export function MainLayout() {
                             </NavLink>
 
                             {isCandidate && (
-                                <NavLink
-                                    className={({ isActive }) =>
-                                        `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
-                                            isActive
-                                                ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
-                                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                                        }`
-                                    }
-                                    to="/candidate/profile"
-                                >
-                                    <User size={14} />
-                                    <span>Hồ sơ TopCV</span>
-                                </NavLink>
+                                <>
+                                    <NavLink
+                                        className={({ isActive }) =>
+                                            `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                                isActive
+                                                    ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
+                                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                            }`
+                                        }
+                                        to="/candidate/profile"
+                                    >
+                                        <User size={14} />
+                                        <span>Hồ sơ TopCV</span>
+                                    </NavLink>
+
+                                    <NavLink
+                                        className={({ isActive }) =>
+                                            `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                                isActive
+                                                    ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
+                                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                            }`
+                                        }
+                                        to="/candidate/applications"
+                                    >
+                                        <FileText size={14} />
+                                        <span>Đơn ứng tuyển</span>
+                                    </NavLink>
+                                </>
                             )}
 
                             {isRecruiter && (

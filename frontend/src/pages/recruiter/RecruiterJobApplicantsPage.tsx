@@ -520,18 +520,18 @@ export function RecruiterJobApplicantsPage() {
 
                                             {/* Contacts */}
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1">
-                                                    <Mail size={12} className="text-slate-400" />
-                                                    {app.candidateEmail}
+                                                <span className="flex items-center gap-1 min-w-0">
+                                                    <Mail size={12} className="text-slate-400 shrink-0" />
+                                                    <span className="break-all select-all">{app.candidateEmail}</span>
                                                 </span>
                                                 {app.candidatePhone && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Phone size={12} className="text-slate-400" />
-                                                        {app.candidatePhone}
+                                                    <span className="flex items-center gap-1 shrink-0">
+                                                        <Phone size={12} className="text-slate-400 shrink-0" />
+                                                        <span>{app.candidatePhone}</span>
                                                     </span>
                                                 )}
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar size={12} className="text-slate-400" />
+                                                <span className="flex items-center gap-1 shrink-0">
+                                                    <Calendar size={12} className="text-slate-400 shrink-0" />
                                                     Nộp ngày:{' '}
                                                     {new Date(app.appliedAt).toLocaleDateString('vi-VN')}
                                                 </span>

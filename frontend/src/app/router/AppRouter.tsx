@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router'
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router'
 import { MainLayout } from '../../layouts/MainLayout'
 import { AdminLayout } from '../../layouts/AdminLayout'
 import { RecruiterLayout } from '../../layouts/RecruiterLayout'
@@ -18,12 +19,25 @@ import { RecruiterPeerApprovalPage } from '../../pages/recruiter/RecruiterPeerAp
 import { RecruiterJobsPage } from '../../pages/recruiter/RecruiterJobsPage'
 import { RecruiterJobApplicantsPage } from '../../pages/recruiter/RecruiterJobApplicantsPage'
 import { CandidateProfilePage } from '../../pages/candidate/CandidateProfilePage'
+import { CandidateApplicationsPage } from '../../pages/candidate/CandidateApplicationsPage'
 import { JobDetailPage } from '../../pages/jobs/JobDetailPage'
 import { JobSearchPage } from '../../pages/jobs/JobSearchPage'
 
+function ScrollToTop() {
+    const { pathname } = useLocation()
+
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [pathname])
+
+    return null
+}
+
 export function AppRouter() {
     return (
-        <Routes>
+        <>
+            <ScrollToTop />
+            <Routes>
             {/* Public and Standard User Routes */}
             <Route element={<MainLayout />}>
                 <Route element={<HomePage />} index />
@@ -34,6 +48,7 @@ export function AppRouter() {
                 <Route element={<JobSearchPage />} path="jobs" />
                 <Route element={<JobDetailPage />} path="jobs/:jobId" />
                 <Route element={<CandidateProfilePage />} path="candidate/profile" />
+                <Route element={<CandidateApplicationsPage />} path="candidate/applications" />
                 <Route element={<NotFoundPage />} path="*" />
             </Route>
 
@@ -56,5 +71,6 @@ export function AppRouter() {
                 <Route element={<AdminCompaniesPage />} path="companies" />
             </Route>
         </Routes>
+        </>
     )
 }

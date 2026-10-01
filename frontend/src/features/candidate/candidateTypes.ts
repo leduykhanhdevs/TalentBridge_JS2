@@ -109,3 +109,31 @@ export interface ResumeItem {
     isDefault: boolean
     createdAt: string
 }
+
+export type ApplicationStage = 'APPLIED' | 'SCREENING' | 'INTERVIEW' | 'OFFERED' | 'REJECTED'
+export type ApplicationStatus = 'SUBMITTED' | 'WITHDRAWN'
+
+export interface CandidateApplicationItem {
+    id: number
+    jobId: number
+    jobTitle: string
+    companyId: number | null
+    companyName: string
+    companyLogo: string | null
+    location: string | null
+    city: string | null
+    jobType: string | null
+    experienceLevel: string | null
+    minSalary: number | null
+    maxSalary: number | null
+    isNegotiable: boolean | null
+    resumeId: number | null
+    resumeFileName: string | null
+    resumeFileUrl: string | null
+    coverLetter: string | null
+    currentStage: ApplicationStage
+    status: ApplicationStatus
+    aiMatchScore: number | null
+    appliedAt: string
+}
+

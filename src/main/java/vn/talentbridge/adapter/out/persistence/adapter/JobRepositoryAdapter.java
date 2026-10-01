@@ -154,8 +154,24 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
     @Transactional(readOnly = true)
     public List<Job> search(String keyword, String location, String jobType, String experienceLevel,
                             BigDecimal minSalary, BigDecimal maxSalary, int page, int size) {
+        return search(keyword, location, jobType, experienceLevel, minSalary, maxSalary, page, size, "createdAt", "desc");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Job> search(String keyword, String location, String jobType, String experienceLevel,
+                            BigDecimal minSalary, BigDecimal maxSalary, int page, int size,
+                            String sortBy, String sortDirection) {
         Specification<JobJpaEntity> spec = buildSearchSpecification(keyword, location, jobType, experienceLevel, minSalary, maxSalary);
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDirection) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String sortProperty = switch (sortBy != null ? sortBy.toLowerCase() : "") {
+            case "salary", "maxsalary" -> "maxSalary";
+            case "minsalary" -> "minSalary";
+            case "title" -> "title";
+            case "deadline" -> "deadline";
+            default -> "createdAt";
+        };
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(direction, sortProperty));
         return jobJpaRepository.findAll(spec, pageRequest).stream().map(this::toDomain).collect(Collectors.toList());
     }
 

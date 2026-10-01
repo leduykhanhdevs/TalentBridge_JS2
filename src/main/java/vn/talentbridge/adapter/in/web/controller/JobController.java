@@ -142,7 +142,7 @@ public class JobController {
     }
 
     @GetMapping
-    @Operation(summary = "Tìm kiếm việc làm công khai", description = "Tìm kiếm việc làm với bộ lọc đa tiêu chí (từ khóa, địa điểm, cấp bậc, mức lương...)")
+    @Operation(summary = "Tìm kiếm việc làm công khai", description = "Tìm kiếm việc làm với bộ lọc đa tiêu chí (từ khóa, địa điểm, cấp bậc, mức lương...) cùng phân trang và sắp xếp")
     public ResponseEntity<ApiResponse<PageResponse<JobResponse>>> searchJobs(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
@@ -151,10 +151,55 @@ public class JobController {
             @RequestParam(required = false) BigDecimal minSalary,
             @RequestParam(required = false) BigDecimal maxSalary,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDirection) {
+
+        String resolvedSortBy = "createdAt";
+        String resolvedSortDirection = "desc";
+
+        if (sort != null && !sort.isBlank()) {
+            String trimmedSort = sort.trim().toUpperCase();
+            switch (trimmedSort) {
+                case "SALARY_DESC" -> {
+                    resolvedSortBy = "maxSalary";
+                    resolvedSortDirection = "desc";
+                }
+                case "SALARY_ASC" -> {
+                    resolvedSortBy = "minSalary";
+                    resolvedSortDirection = "asc";
+                }
+                case "TITLE_ASC" -> {
+                    resolvedSortBy = "title";
+                    resolvedSortDirection = "asc";
+                }
+                case "NEWEST" -> {
+                    resolvedSortBy = "createdAt";
+                    resolvedSortDirection = "desc";
+                }
+                default -> {
+                    if (sort.contains(",")) {
+                        String[] parts = sort.split(",", 2);
+                        resolvedSortBy = parts[0].trim();
+                        resolvedSortDirection = parts[1].trim();
+                    } else {
+                        resolvedSortBy = sort.trim();
+                    }
+                }
+            }
+        } else {
+            if (sortBy != null && !sortBy.isBlank()) {
+                resolvedSortBy = sortBy.trim();
+            }
+            if (sortDirection != null && !sortDirection.isBlank()) {
+                resolvedSortDirection = sortDirection.trim();
+            }
+        }
 
         int pageIndex = Math.max(0, page - 1);
-        List<JobDetailResult> jobs = jobUseCase.searchJobs(keyword, location, jobType, experienceLevel, minSalary, maxSalary, pageIndex, size);
+        List<JobDetailResult> jobs = jobUseCase.searchJobs(
+                keyword, location, jobType, experienceLevel, minSalary, maxSalary, pageIndex, size, resolvedSortBy, resolvedSortDirection);
         long totalElements = jobUseCase.countSearchJobs(keyword, location, jobType, experienceLevel, minSalary, maxSalary);
         int totalPages = (int) Math.ceil((double) totalElements / size);
 

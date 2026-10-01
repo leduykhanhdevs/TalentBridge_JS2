@@ -1,8 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+    ArrowUpDown,
     BriefcaseBusiness,
     Building2,
+    ChevronLeft,
+    ChevronRight,
     CircleDollarSign,
+    ExternalLink,
     Filter,
     MapPin,
     RefreshCw,
@@ -11,6 +15,7 @@ import {
     TriangleAlert,
 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
+import { Link } from 'react-router'
 import { searchJobs } from '../../features/jobs/jobSearchApi'
 import {
     EMPTY_JOB_FILTERS,
@@ -43,11 +48,25 @@ const EXPERIENCE_LEVEL_OPTIONS: SelectOption[] = [
     { value: 'SENIOR', label: 'Senior' },
 ]
 
+const SORT_OPTIONS: SelectOption[] = [
+    { value: 'NEWEST', label: 'Mới nhất' },
+    { value: 'SALARY_DESC', label: 'Lương cao đến thấp' },
+    { value: 'SALARY_ASC', label: 'Lương thấp đến cao' },
+    { value: 'TITLE_ASC', label: 'Tên việc làm (A-Z)' },
+]
+
+const PAGE_SIZE_OPTIONS: SelectOption[] = [
+    { value: '10', label: '10 việc làm / trang' },
+    { value: '20', label: '20 việc làm / trang' },
+    { value: '50', label: '50 việc làm / trang' },
+]
+
 const inputClassName = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 hover:border-slate-300'
 
 export function JobSearchPage() {
     const [formValues, setFormValues] = useState<JobFilterFormValues>(EMPTY_JOB_FILTERS)
-    const [appliedFilters, setAppliedFilters] = useState<JobSearchParams>({ page: 1, size: 10 })
+    const [sortBy, setSortBy] = useState<string>('NEWEST')
+    const [appliedFilters, setAppliedFilters] = useState<JobSearchParams>({ page: 1, size: 10, sort: 'NEWEST' })
     const [validationError, setValidationError] = useState<string | null>(null)
 
     const jobsQuery = useQuery({
@@ -67,13 +86,34 @@ export function JobSearchPage() {
             setValidationError(error)
             return
         }
-        setAppliedFilters(toJobSearchParams(formValues))
+        setAppliedFilters({
+            ...toJobSearchParams(formValues),
+            page: 1,
+            size: appliedFilters.size ?? 10,
+            sort: sortBy,
+        })
     }
 
     function handleReset() {
         setFormValues(EMPTY_JOB_FILTERS)
         setValidationError(null)
-        setAppliedFilters({ page: 1, size: 10 })
+        setSortBy('NEWEST')
+        setAppliedFilters({ page: 1, size: 10, sort: 'NEWEST' })
+    }
+
+    function handleSortChange(newSort: string) {
+        setSortBy(newSort)
+        setAppliedFilters((current) => ({ ...current, page: 1, sort: newSort }))
+    }
+
+    function handlePageChange(newPage: number) {
+        setAppliedFilters((current) => ({ ...current, page: newPage }))
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    function handlePageSizeChange(newSize: string) {
+        const size = parseInt(newSize, 10) || 10
+        setAppliedFilters((current) => ({ ...current, page: 1, size }))
     }
 
     const jobs = jobsQuery.data?.content ?? []
@@ -199,14 +239,29 @@ export function JobSearchPage() {
                 </aside>
 
                 <section aria-live="polite">
-                    <div className="mb-4 flex items-center justify-between gap-3">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-slate-950">Cơ hội đang tuyển</h2>
                             {jobsQuery.data && (
-                                <p className="mt-1 text-sm text-slate-500">Tìm thấy {jobsQuery.data.totalElements} việc làm</p>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Tìm thấy <span className="font-semibold text-indigo-600">{jobsQuery.data.totalElements}</span> việc làm
+                                    {jobsQuery.data.totalPages > 1 && ` (Trang ${jobsQuery.data.pageNumber}/${jobsQuery.data.totalPages})`}
+                                </p>
                             )}
                         </div>
-                        {jobsQuery.isFetching && <span className="text-sm font-medium text-indigo-600">Đang cập nhật...</span>}
+                        <div className="flex items-center gap-2">
+                            <ArrowUpDown className="text-slate-400" size={15} />
+                            <span className="text-xs font-semibold text-slate-600">Sắp xếp:</span>
+                            <div className="w-48">
+                                <CustomSelect
+                                    onChange={handleSortChange}
+                                    options={SORT_OPTIONS}
+                                    placeholder="Sắp xếp"
+                                    value={sortBy}
+                                />
+                            </div>
+                            {jobsQuery.isFetching && <span className="text-xs font-medium text-indigo-600 animate-pulse ml-2">Đang tải...</span>}
+                        </div>
                     </div>
 
                     {jobsQuery.isLoading && (
@@ -244,15 +299,28 @@ export function JobSearchPage() {
                                 <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-sm sm:p-6" key={job.id}>
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div>
-                                            <h3 className="text-lg font-bold text-slate-950">{job.title}</h3>
+                                            <Link className="group" to={`/jobs/${job.id}`}>
+                                                <h3 className="text-lg font-bold text-slate-950 transition group-hover:text-indigo-600">
+                                                    {job.title}
+                                                </h3>
+                                            </Link>
                                             <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-indigo-700">
                                                 <Building2 aria-hidden="true" size={15} />
                                                 {job.companyName}
                                             </p>
                                         </div>
-                                        <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                                            Đang tuyển
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                                                Đang tuyển
+                                            </span>
+                                            <Link
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700 transition hover:bg-indigo-600 hover:text-white"
+                                                to={`/jobs/${job.id}`}
+                                            >
+                                                <span>Ứng tuyển</span>
+                                                <ExternalLink size={13} />
+                                            </Link>
+                                        </div>
                                     </div>
 
                                     <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
@@ -280,6 +348,73 @@ export function JobSearchPage() {
                                     )}
                                 </article>
                             ))}
+
+                            {/* Pagination Controls */}
+                            {jobsQuery.data && jobsQuery.data.totalPages > 1 && (
+                                <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:flex-row">
+                                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                                        <span>Hiển thị:</span>
+                                        <div className="w-40">
+                                            <CustomSelect
+                                                onChange={handlePageSizeChange}
+                                                options={PAGE_SIZE_OPTIONS}
+                                                value={String(appliedFilters.size ?? 10)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                            disabled={(appliedFilters.page ?? 1) <= 1 || jobsQuery.isFetching}
+                                            onClick={() => handlePageChange(Math.max(1, (appliedFilters.page ?? 1) - 1))}
+                                            type="button"
+                                        >
+                                            <ChevronLeft size={14} />
+                                            <span>Trước</span>
+                                        </button>
+
+                                        {Array.from({ length: jobsQuery.data.totalPages }, (_, i) => i + 1)
+                                            .filter((p) => {
+                                                const current = appliedFilters.page ?? 1
+                                                return p === 1 || p === jobsQuery.data?.totalPages || Math.abs(p - current) <= 2
+                                            })
+                                            .map((pageNum, idx, arr) => {
+                                                const prev = arr[idx - 1]
+                                                const showEllipsis = prev && pageNum - prev > 1
+                                                const isActive = pageNum === (appliedFilters.page ?? 1)
+
+                                                return (
+                                                    <div className="flex items-center" key={pageNum}>
+                                                        {showEllipsis && <span className="px-1.5 text-xs text-slate-400">...</span>}
+                                                        <button
+                                                            className={`h-8 min-w-[32px] rounded-lg px-2 text-xs font-semibold transition ${
+                                                                isActive
+                                                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                                                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                                            }`}
+                                                            disabled={jobsQuery.isFetching}
+                                                            onClick={() => handlePageChange(pageNum)}
+                                                            type="button"
+                                                        >
+                                                            {pageNum}
+                                                        </button>
+                                                    </div>
+                                                )
+                                            })}
+
+                                        <button
+                                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                            disabled={(appliedFilters.page ?? 1) >= jobsQuery.data.totalPages || jobsQuery.isFetching}
+                                            onClick={() => handlePageChange(Math.min(jobsQuery.data?.totalPages ?? 1, (appliedFilters.page ?? 1) + 1))}
+                                            type="button"
+                                        >
+                                            <span>Sau</span>
+                                            <ChevronRight size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </section>

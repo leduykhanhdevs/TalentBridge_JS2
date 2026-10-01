@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -274,6 +275,34 @@ class ApplicationControllerIntegrationTest {
                 .andExpect(status().isForbidden());
 
         assertTrue(applicationRepository.findAll().isEmpty());
+    }
+
+    @Test
+    void candidateCanGetTheirApplications() throws Exception {
+        // First submit an application
+        mockMvc.perform(post(URL)
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest()))
+                .andExpect(status().isCreated());
+
+        // Then retrieve application history
+        mockMvc.perform(get(URL)
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].jobTitle").value("Java Developer"))
+                .andExpect(jsonPath("$.data[0].companyName").value("Công ty kiểm thử"))
+                .andExpect(jsonPath("$.data[0].currentStage").value("APPLIED"))
+                .andExpect(jsonPath("$.data[0].status").value("SUBMITTED"))
+                .andExpect(jsonPath("$.data[0].resumeFileName").value("cv.pdf"));
+    }
+
+    @Test
+    void unauthenticatedUserCannotGetCandidateApplications() throws Exception {
+        mockMvc.perform(get(URL))
+                .andExpect(status().isUnauthorized());
     }
 
     private String validRequest() {

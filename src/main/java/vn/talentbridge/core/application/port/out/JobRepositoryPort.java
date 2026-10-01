@@ -15,7 +15,10 @@ public interface JobRepositoryPort {
     long countByRecruiterUserId(Long recruiterUserId, JobStatus status);
     List<Job> findByCompanyId(Long companyId, int page, int size, JobStatus status);
     long countByCompanyId(Long companyId, JobStatus status);
-    List<Job> search(String keyword, String location, String jobType, String experienceLevel, BigDecimal minSalary, BigDecimal maxSalary, int page, int size);
+    default List<Job> search(String keyword, String location, String jobType, String experienceLevel, BigDecimal minSalary, BigDecimal maxSalary, int page, int size) {
+        return search(keyword, location, jobType, experienceLevel, minSalary, maxSalary, page, size, "createdAt", "desc");
+    }
+    List<Job> search(String keyword, String location, String jobType, String experienceLevel, BigDecimal minSalary, BigDecimal maxSalary, int page, int size, String sortBy, String sortDirection);
     long countSearch(String keyword, String location, String jobType, String experienceLevel, BigDecimal minSalary, BigDecimal maxSalary);
     long count();
     long countByStatus(JobStatus status);

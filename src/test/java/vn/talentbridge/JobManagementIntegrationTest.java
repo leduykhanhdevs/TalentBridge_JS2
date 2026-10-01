@@ -414,6 +414,70 @@ class JobManagementIntegrationTest {
                 .andExpect(jsonPath("$.data.companyName").value("TalentBridge AI Global"));
     }
 
+    @Test
+    @DisplayName("HRPM-36: GET /api/v1/jobs - Phân trang danh sách việc làm chính xác")
+    void testPublicSearchJobsPagination() throws Exception {
+        saveJob("Job Page 1", "Remote", "Hà Nội", "FULL_TIME", "JUNIOR",
+                new BigDecimal("10000000"), new BigDecimal("15000000"), false, JobStatus.ACTIVE);
+        saveJob("Job Page 2", "Remote", "Hồ Chí Minh", "FULL_TIME", "MIDDLE",
+                new BigDecimal("20000000"), new BigDecimal("25000000"), false, JobStatus.ACTIVE);
+
+        // We now have 3 jobs: sampleJob, Job Page 1, Job Page 2
+        // Test page 1 with size 2
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.pageNumber").value(1))
+                .andExpect(jsonPath("$.data.pageSize").value(2))
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.last").value(false));
+
+        // Test page 2 with size 2
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("page", "2")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.pageNumber").value(2))
+                .andExpect(jsonPath("$.data.pageSize").value(2))
+                .andExpect(jsonPath("$.data.last").value(true));
+    }
+
+    @Test
+    @DisplayName("HRPM-36: GET /api/v1/jobs - Sắp xếp theo mức lương cao nhất (SALARY_DESC)")
+    void testPublicSearchJobsSortingBySalaryDesc() throws Exception {
+        saveJob("Low Salary Job", "Remote", "Hà Nội", "FULL_TIME", "FRESHER",
+                new BigDecimal("8000000"), new BigDecimal("12000000"), false, JobStatus.ACTIVE);
+        saveJob("Highest Salary Job", "Remote", "Hồ Chí Minh", "FULL_TIME", "SENIOR",
+                new BigDecimal("60000000"), new BigDecimal("90000000"), false, JobStatus.ACTIVE);
+
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("sort", "SALARY_DESC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.content[0].title").value("Highest Salary Job"));
+    }
+
+    @Test
+    @DisplayName("HRPM-36: GET /api/v1/jobs - Sắp xếp theo tên công việc (TITLE_ASC)")
+    void testPublicSearchJobsSortingByTitleAsc() throws Exception {
+        saveJob("AAA First Alphabet Job", "Remote", "Hà Nội", "FULL_TIME", "JUNIOR",
+                new BigDecimal("10000000"), new BigDecimal("15000000"), false, JobStatus.ACTIVE);
+        saveJob("ZZZ Last Alphabet Job", "Remote", "Hồ Chí Minh", "FULL_TIME", "SENIOR",
+                new BigDecimal("20000000"), new BigDecimal("30000000"), false, JobStatus.ACTIVE);
+
+        mockMvc.perform(get("/api/v1/jobs")
+                        .param("sort", "TITLE_ASC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(200))
+                .andExpect(jsonPath("$.data.content[0].title").value("AAA First Alphabet Job"));
+    }
+
     private JobJpaEntity saveJob(String title, String location, String city, String jobType,
                                  String experienceLevel, BigDecimal minSalary, BigDecimal maxSalary,
                                  boolean isNegotiable, JobStatus status) {

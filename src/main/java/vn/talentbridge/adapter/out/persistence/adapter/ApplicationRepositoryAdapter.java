@@ -97,6 +97,36 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
         return false;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<vn.talentbridge.core.application.dto.CandidateApplicationResult> findMyApplications(Long candidateUserId) {
+        return applicationJpaRepository.findMyApplicationsByCandidateUserId(candidateUserId).stream()
+                .map(entity -> new vn.talentbridge.core.application.dto.CandidateApplicationResult(
+                        entity.getId(),
+                        entity.getJob().getId(),
+                        entity.getJob().getTitle(),
+                        entity.getJob().getCompany() != null ? entity.getJob().getCompany().getId() : null,
+                        entity.getJob().getCompany() != null ? entity.getJob().getCompany().getName() : "Doanh nghiệp",
+                        entity.getJob().getCompany() != null ? entity.getJob().getCompany().getLogoUrl() : null,
+                        entity.getJob().getLocation(),
+                        entity.getJob().getCity(),
+                        entity.getJob().getJobType(),
+                        entity.getJob().getExperienceLevel(),
+                        entity.getJob().getMinSalary(),
+                        entity.getJob().getMaxSalary(),
+                        entity.getJob().getIsNegotiable(),
+                        entity.getResume() != null ? entity.getResume().getId() : null,
+                        entity.getResume() != null ? entity.getResume().getFileName() : null,
+                        entity.getResume() != null ? entity.getResume().getFileUrl() : null,
+                        entity.getCoverLetter(),
+                        entity.getCurrentStage(),
+                        entity.getStatus(),
+                        entity.getAiMatchScore(),
+                        entity.getCreatedAt()
+                ))
+                .toList();
+    }
+
     private Application toDomain(ApplicationJpaEntity entity) {
         return new Application(
                 entity.getId(),
