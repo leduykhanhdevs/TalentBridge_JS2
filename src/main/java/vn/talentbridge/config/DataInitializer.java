@@ -34,6 +34,7 @@ public class DataInitializer implements CommandLineRunner {
     private final JobJpaRepository jobJpaRepository;
     private final ResumeJpaRepository resumeJpaRepository;
     private final ApplicationJpaRepository applicationJpaRepository;
+    private final CvTemplateJpaRepository cvTemplateJpaRepository;
     private final org.springframework.core.env.Environment environment;
     private final PasswordEncoder passwordEncoder;
 
@@ -172,6 +173,35 @@ public class DataInitializer implements CommandLineRunner {
                 skillJpaRepository.save(SkillJpaEntity.builder().name(skillName).build());
             }
             log.info(">>> [DataInitializer] Đã khởi tạo danh mục {} kỹ năng tiêu chuẩn.", defaultSkills.size());
+        }
+
+        // 6.1. Seed CV Templates
+        if (cvTemplateJpaRepository.count() == 0) {
+            cvTemplateJpaRepository.save(CvTemplateJpaEntity.builder()
+                    .name("Modern IT Professional")
+                    .templateCode("MODERN_IT_01")
+                    .thumbnailUrl("https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&auto=format&fit=crop&q=60")
+                    .description("Mẫu CV hiện đại chuyên biệt cho ngành IT & Phần mềm, tối ưu hiển thị kỹ năng và dự án")
+                    .defaultConfig("{\"primaryColor\": \"#2563EB\", \"fontFamily\": \"Inter\", \"columns\": 2, \"layout\": \"sidebar-left\"}")
+                    .isActive(true)
+                    .build());
+            cvTemplateJpaRepository.save(CvTemplateJpaEntity.builder()
+                    .name("Classic Elegant")
+                    .templateCode("CLASSIC_01")
+                    .thumbnailUrl("https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=400&auto=format&fit=crop&q=60")
+                    .description("Mẫu CV phong cách cổ điển, trang trọng, phù hợp cho ngành Kinh doanh, Quản lý & Tài chính")
+                    .defaultConfig("{\"primaryColor\": \"#1F2937\", \"fontFamily\": \"Merriweather\", \"columns\": 1, \"layout\": \"single-column\"}")
+                    .isActive(true)
+                    .build());
+            cvTemplateJpaRepository.save(CvTemplateJpaEntity.builder()
+                    .name("Creative Minimalist")
+                    .templateCode("MINIMALIST_01")
+                    .thumbnailUrl("https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=400&auto=format&fit=crop&q=60")
+                    .description("Mẫu CV tối giản tinh tế, tập trung vào điểm nhấn kinh nghiệm và thành tựu cá nhân")
+                    .defaultConfig("{\"primaryColor\": \"#059669\", \"fontFamily\": \"Roboto\", \"columns\": 2, \"layout\": \"grid\"}")
+                    .isActive(true)
+                    .build());
+            log.info(">>> [DataInitializer] Đã khởi tạo 3 mẫu CV chuẩn cho Resume Generator.");
         }
 
         // 7. Seed Sample Jobs, Resumes and Candidates for Local/Dev environment

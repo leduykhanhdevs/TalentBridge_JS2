@@ -19,6 +19,7 @@ import {
     Tag,
     UserCheck,
     X,
+    CalendarCheck2,
 } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import {
@@ -34,6 +35,7 @@ import {
     type ApplicationStage,
     type JobApplicant,
 } from '../../features/recruiter/recruiterApplicantTypes'
+import { ScheduleInterviewModal } from '../../features/recruiter/components/ScheduleInterviewModal'
 
 export function RecruiterJobApplicantsPage() {
     const { jobId } = useParams<{ jobId: string }>()
@@ -52,6 +54,7 @@ export function RecruiterJobApplicantsPage() {
     const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC')
 
     // Modals
+    const [interviewModalApplicant, setInterviewModalApplicant] = useState<JobApplicant | null>(null)
     const [stageModalApplicant, setStageModalApplicant] = useState<JobApplicant | null>(null)
     const [targetStage, setTargetStage] = useState('REVIEWING')
     const [stageNote, setStageNote] = useState('')
@@ -600,6 +603,17 @@ export function RecruiterJobApplicantsPage() {
                                             </span>
                                         )}
 
+                                        {/* Schedule Interview Button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setInterviewModalApplicant(app)}
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-bold text-purple-700 hover:bg-purple-100 transition shadow-2xs"
+                                            title="Lên lịch phỏng vấn và đồng bộ Google Calendar"
+                                        >
+                                            <CalendarCheck2 size={13} />
+                                            <span>Lên lịch PV</span>
+                                        </button>
+
                                         {/* Change Stage Button */}
                                         <button
                                             type="button"
@@ -1018,6 +1032,20 @@ export function RecruiterJobApplicantsPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Modal 4: Schedule Interview with Google Calendar */}
+            {interviewModalApplicant && (
+                <ScheduleInterviewModal
+                    isOpen={Boolean(interviewModalApplicant)}
+                    onClose={() => setInterviewModalApplicant(null)}
+                    jobId={numericJobId}
+                    applicant={interviewModalApplicant}
+                    onSuccess={() => {
+                        fetchApplicants()
+                        setSuccessMsg('Đã lên lịch phỏng vấn và tự động cập nhật vòng tuyển dụng!')
+                    }}
+                />
             )}
         </div>
     )

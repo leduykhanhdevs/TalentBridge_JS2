@@ -48,6 +48,8 @@ public class SecurityConfig {
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
             "/api/v1/skills",
+            "/api/v1/candidates/resumes/templates",
+            "/api/v1/interviews/*/calendar.ics",
             "/api/v1/health/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",

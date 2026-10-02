@@ -46,6 +46,7 @@ public class ResumeRepositoryAdapter implements ResumeRepositoryPort {
         entity.setFileUrl(domain.getFileUrl());
         entity.setFileType(domain.getFileType());
         entity.setIsDefault(domain.isDefault());
+        entity.setCustomizationJson(domain.getCustomizationJson());
 
         ResumeJpaEntity saved = resumeJpaRepository.save(entity);
         return toDomain(saved);
@@ -93,6 +94,7 @@ public class ResumeRepositoryAdapter implements ResumeRepositoryPort {
                 entity.getFileUrl(),
                 entity.getFileType(),
                 Boolean.TRUE.equals(entity.getIsDefault()),
+                entity.getCustomizationJson(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

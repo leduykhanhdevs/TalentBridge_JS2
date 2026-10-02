@@ -12,8 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
+import vn.talentbridge.adapter.in.web.dto.request.GenerateResumeRequest;
 import vn.talentbridge.common.ApiResponse;
+import vn.talentbridge.core.application.dto.CvTemplateResult;
 import vn.talentbridge.core.application.dto.ResumeResult;
 import vn.talentbridge.core.application.port.in.ResumeUseCase;
 
@@ -38,6 +41,33 @@ public class ResumeController {
             @AuthenticationPrincipal UserPrincipal principal) {
         List<ResumeResult> resumes = resumeUseCase.getResumes(principal.getId());
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách CV thành công", resumes));
+    }
+
+    @GetMapping("/templates")
+    @Operation(summary = "Lấy danh sách các mẫu CV hỗ trợ tạo trực tuyến")
+    public ResponseEntity<ApiResponse<List<CvTemplateResult>>> getTemplates() {
+        List<CvTemplateResult> templates = resumeUseCase.getTemplates();
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách mẫu CV thành công", templates));
+    }
+
+    @PostMapping(value = "/generate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @SecurityRequirement(name = "BearerAuth")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Tạo CV từ thông tin hồ sơ theo mẫu chọn sẵn")
+    public ResponseEntity<ApiResponse<ResumeResult>> generateResume(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody GenerateResumeRequest request) {
+
+        ResumeResult result = resumeUseCase.generateResume(
+                principal.getId(),
+                request.getTemplateCode(),
+                request.getTitle(),
+                request.getCustomizationJson(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created("Tạo CV thành công", result));
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -104,3 +104,28 @@ export const APPLICANT_STAGE_CONFIG: Record<
         desc: 'Không phù hợp ở giai đoạn này',
     },
 }
+
+export interface InterviewItem {
+    id: number
+    applicationId: number
+    jobId: number
+    jobTitle: string
+    companyName: string
+    candidateName: string
+    candidateEmail: string
+    interviewTime: string
+    locationType: 'ONLINE' | 'OFFLINE' | string
+    meetingLinkOrAddress: string
+    notes?: string
+    status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | string
+    googleCalendarUrl: string
+    createdAt: string
+}
+
+export interface ScheduleInterviewPayload {
+    interviewTime: string
+    locationType: 'ONLINE' | 'OFFLINE' | string
+    meetingLinkOrAddress: string
+    notes?: string
+}
+

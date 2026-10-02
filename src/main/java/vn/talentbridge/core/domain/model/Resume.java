@@ -12,6 +12,7 @@ public class Resume {
     private String fileUrl;
     private String fileType;
     private boolean isDefault;
+    private String customizationJson;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -20,7 +21,7 @@ public class Resume {
 
     public Resume(Long id, Long candidateId, Integer templateId, String resumeType,
                   String title, String fileName, String fileUrl, String fileType,
-                  boolean isDefault, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                  boolean isDefault, String customizationJson, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.candidateId = candidateId;
         this.templateId = templateId;
@@ -30,8 +31,15 @@ public class Resume {
         this.fileUrl = fileUrl;
         this.fileType = fileType;
         this.isDefault = isDefault;
+        this.customizationJson = customizationJson;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public Resume(Long id, Long candidateId, Integer templateId, String resumeType,
+                  String title, String fileName, String fileUrl, String fileType,
+                  boolean isDefault, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, candidateId, templateId, resumeType, title, fileName, fileUrl, fileType, isDefault, null, createdAt, updatedAt);
     }
 
     public Long getId() {
@@ -104,6 +112,14 @@ public class Resume {
 
     public void setDefault(boolean aDefault) {
         isDefault = aDefault;
+    }
+
+    public String getCustomizationJson() {
+        return customizationJson;
+    }
+
+    public void setCustomizationJson(String customizationJson) {
+        this.customizationJson = customizationJson;
     }
 
     public LocalDateTime getCreatedAt() {

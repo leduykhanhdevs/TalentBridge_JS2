@@ -30,6 +30,7 @@ import type {
     ApplicationStage,
     CandidateApplicationItem,
 } from '../../features/candidate/candidateTypes'
+import { CandidateInterviewCard } from '../../features/candidate/components/CandidateInterviewCard'
 
 const STAGE_LABELS: Record<ApplicationStage, { label: string; color: string; bg: string; border: string }> = {
     APPLIED: {
@@ -429,6 +430,10 @@ export function CandidateApplicationsPage() {
                                         </span>
                                     </div>
                                 </div>
+
+                                {app.currentStage === 'INTERVIEW' && (
+                                    <CandidateInterviewCard applicationId={app.id} />
+                                )}
 
                                 {/* Attached CV & Cover letter snippet */}
                                 <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">

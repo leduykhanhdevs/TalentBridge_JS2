@@ -8,6 +8,11 @@ import type {
     SkillItem,
     ResumeItem,
     CandidateApplicationItem,
+    CvTemplate,
+    GenerateResumePayload,
+    ParsedCvResult,
+    ApplyParsedCvPayload,
+    CandidateInterviewItem,
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 
@@ -29,7 +34,7 @@ interface ApiResponse<T> {
     timestamp: string
 }
 
-const API_BASE_URL = (
+export const API_BASE_URL = (
     import.meta.env.VITE_API_BASE_URL || '/api/v1'
 ).replace(/\/$/, '')
 
@@ -410,5 +415,104 @@ export async function applyJob(payload: ApplyJobPayload): Promise<CandidateAppli
     const json: ApiResponse<CandidateApplicationItem> = await res.json()
     return json.data
 }
+
+// ==========================================
+// CV BUILDER & GENERATOR
+// ==========================================
+
+export async function getCvTemplates(): Promise<CvTemplate[]> {
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes/templates`, {
+        method: 'GET',
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(res.status, errJson?.message || 'Không thể lấy danh sách mẫu CV')
+    }
+
+    const json: ApiResponse<CvTemplate[]> = await res.json()
+    return json.data || []
+}
+
+export async function generateResume(payload: GenerateResumePayload): Promise<ResumeItem> {
+    const res = await fetch(`${API_BASE_URL}/candidates/resumes/generate`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(res.status, errJson?.message || 'Không thể tạo CV từ hồ sơ')
+    }
+
+    const json: ApiResponse<ResumeItem> = await res.json()
+    return json.data
+}
+
+// ==========================================
+// CV PARSER (REVERSE IMPORT)
+// ==========================================
+
+export async function parseCv(file: File): Promise<ParsedCvResult> {
+    const token = getAccessToken()
+    if (!token) {
+        throw new CandidateApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await fetch(`${API_BASE_URL}/candidates/profile/parse-cv`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(res.status, errJson?.message || 'Không thể bóc tách nội dung CV')
+    }
+
+    const json: ApiResponse<ParsedCvResult> = await res.json()
+    return json.data
+}
+
+export async function applyParsedCv(payload: ApplyParsedCvPayload): Promise<CandidateProfileResponse> {
+    const res = await fetch(`${API_BASE_URL}/candidates/profile/apply-parsed-cv`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(res.status, errJson?.message || 'Không thể đồng bộ dữ liệu CV vào hồ sơ')
+    }
+
+    const json: ApiResponse<CandidateProfileResponse> = await res.json()
+    return json.data
+}
+
+// ==========================================
+// CANDIDATE INTERVIEW CALENDAR
+// ==========================================
+
+export async function getCandidateInterview(applicationId: number): Promise<CandidateInterviewItem | null> {
+    const res = await fetch(`${API_BASE_URL}/candidates/applications/${applicationId}/interview`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    if (!res.ok) {
+        return null
+    }
+
+    const json: ApiResponse<CandidateInterviewItem> = await res.json()
+    return json.data || null
+}
+
 
 

@@ -215,8 +215,9 @@ public class UseCaseConfig {
             ResumeRepositoryPort resumeRepository,
             CandidateRepositoryPort candidateRepository,
             UserRepositoryPort userRepository,
-            FileStoragePort fileStoragePort) {
-        return new ResumeUseCaseImpl(resumeRepository, candidateRepository, userRepository, fileStoragePort);
+            FileStoragePort fileStoragePort,
+            CvTemplateRepositoryPort cvTemplateRepository) {
+        return new ResumeUseCaseImpl(resumeRepository, candidateRepository, userRepository, fileStoragePort, cvTemplateRepository);
     }
 
     @Bean
@@ -297,6 +298,27 @@ public class UseCaseConfig {
                 applicationNoteRepository,
                 applicationStageRepository
         );
+    }
+
+    @Bean
+    public ScheduleInterviewUseCase scheduleInterviewUseCase(
+            InterviewRepositoryPort interviewRepository,
+            JobApplicationRepositoryPort jobApplicationRepository,
+            JobRepositoryPort jobRepository,
+            RecruiterRepositoryPort recruiterRepository,
+            ApplicationStageRepositoryPort applicationStageRepository) {
+        return new ScheduleInterviewUseCaseImpl(
+                interviewRepository,
+                jobApplicationRepository,
+                jobRepository,
+                recruiterRepository,
+                applicationStageRepository
+        );
+    }
+
+    @Bean
+    public ParseCvUseCase parseCvUseCase(CvParserPort cvParserPort) {
+        return new ParseCvUseCaseImpl(cvParserPort);
     }
 
 }

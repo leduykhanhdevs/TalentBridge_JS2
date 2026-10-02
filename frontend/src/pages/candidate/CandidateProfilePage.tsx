@@ -23,6 +23,7 @@ import {
     Trash2,
     User,
     X,
+    FileText,
 } from 'lucide-react'
 import {
     deleteCandidateSkill,
@@ -43,6 +44,8 @@ import { validateCandidateProfile } from '../../features/candidate/candidateVali
 import { WorkExperienceModal } from '../../features/candidate/components/WorkExperienceModal'
 import { CandidateSkillModal } from '../../features/candidate/components/CandidateSkillModal'
 import { ResumeUploadSection } from '../../features/candidate/components/ResumeUploadSection'
+import { CvBuilderModal } from '../../features/candidate/components/CvBuilderModal'
+import { CvImportModal } from '../../features/candidate/components/CvImportModal'
 import { EmptyStateIllustration } from '../../components/illustrations'
 
 export function CandidateProfilePage() {
@@ -51,10 +54,12 @@ export function CandidateProfilePage() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-    // Modals state for Work Experience and Skills
+    // Modals state for Work Experience, Skills, CV Builder & CV Import
     const [isExpModalOpen, setIsExpModalOpen] = useState(false)
     const [editingExp, setEditingExp] = useState<WorkExperience | null>(null)
     const [isSkillModalOpen, setIsSkillModalOpen] = useState(false)
+    const [isCvBuilderOpen, setIsCvBuilderOpen] = useState(false)
+    const [isCvImportOpen, setIsCvImportOpen] = useState(false)
 
     const {
         data: profile,
@@ -288,12 +293,29 @@ export function CandidateProfilePage() {
                         </div>
 
                         {!isEditing ? (
-                            <button
-                                onClick={handleStartEditing}
-                                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
-                            >
-                                <Edit3 className="h-4 w-4" /> Chỉnh sửa hồ sơ
-                            </button>
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCvImportOpen(true)}
+                                    className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2.5 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-100 transition"
+                                >
+                                    <Sparkles className="h-4 w-4 text-indigo-600" /> Nhập nhanh từ CV
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCvBuilderOpen(true)}
+                                    className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-100 transition"
+                                >
+                                    <FileText className="h-4 w-4 text-blue-600" /> Tạo CV từ Hồ sơ
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleStartEditing}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
+                                >
+                                    <Edit3 className="h-4 w-4" /> Chỉnh sửa hồ sơ
+                                </button>
+                            </div>
                         ) : (
                             <div className="flex items-center gap-2">
                                 <button
@@ -932,6 +954,31 @@ export function CandidateProfilePage() {
                         refetchSkills()
                     }}
                     availableSkills={masterSkills.filter((ms) => !skills.some((s) => s.skillId === ms.id))}
+                />
+
+                {profile && (
+                    <CvBuilderModal
+                        isOpen={isCvBuilderOpen}
+                        onClose={() => setIsCvBuilderOpen(false)}
+                        profile={profile}
+                        skills={skills}
+                        experiences={experiences}
+                        onSuccess={() => {
+                            refetchResumes()
+                            setSuccessMessage('Đã tạo và lưu CV thành công!')
+                        }}
+                    />
+                )}
+
+                <CvImportModal
+                    isOpen={isCvImportOpen}
+                    onClose={() => setIsCvImportOpen(false)}
+                    onSuccess={() => {
+                        refetch()
+                        refetchSkills()
+                        refetchExperiences()
+                        setSuccessMessage('Đã đồng bộ thông tin từ CV vào hồ sơ thành công!')
+                    }}
                 />
             </div>
         </div>

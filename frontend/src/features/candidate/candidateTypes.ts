@@ -137,3 +137,77 @@ export interface CandidateApplicationItem {
     appliedAt: string
 }
 
+export interface CvTemplate {
+    id: number
+    name: string
+    templateCode: string
+    thumbnailUrl: string | null
+    description: string | null
+    defaultConfig: string | null
+    isActive: boolean
+}
+
+export interface GenerateResumePayload {
+    templateCode: string
+    title: string
+    primaryColor?: string
+    customizationJson?: string
+    htmlContent?: string
+}
+
+export interface ParsedCvExperience {
+    companyName: string
+    position: string
+    startDate: string
+    endDate: string | null
+    isCurrent: boolean
+    description: string
+}
+
+export interface ParsedCvResult {
+    fullName: string
+    email: string
+    phone: string
+    title: string
+    city: string
+    summary: string
+    skills: string[]
+    experiences: ParsedCvExperience[]
+    rawText: string
+}
+
+export interface ApplyParsedCvPayload {
+    fullName?: string
+    phone?: string
+    title?: string
+    city?: string
+    summary?: string
+    skills?: string[]
+    experiences?: {
+        companyName: string
+        position: string
+        startDate: string
+        endDate?: string | null
+        isCurrent?: boolean
+        description?: string
+    }[]
+}
+
+export interface CandidateInterviewItem {
+    id: number
+    applicationId: number
+    jobId: number
+    jobTitle: string
+    companyName: string
+    candidateName: string
+    candidateEmail: string
+    interviewTime: string
+    locationType: 'ONLINE' | 'OFFLINE' | string
+    meetingLinkOrAddress: string
+    notes?: string
+    status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | string
+    googleCalendarUrl: string
+    createdAt: string
+}
+
+

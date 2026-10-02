@@ -42,4 +42,7 @@ public class ResumeJpaEntity extends BaseJpaEntity {
     @Column(name = "is_default", nullable = false)
     @Builder.Default
     private Boolean isDefault = false;
+
+    @Column(name = "customization_json", columnDefinition = "JSON")
+    private String customizationJson;
 }

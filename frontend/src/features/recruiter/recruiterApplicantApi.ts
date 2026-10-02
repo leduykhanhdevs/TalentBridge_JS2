@@ -6,6 +6,8 @@ import type {
     ApplicationStage,
     JobApplicant,
     UpdateStagePayload,
+    InterviewItem,
+    ScheduleInterviewPayload,
 } from './recruiterApplicantTypes'
 
 export class RecruiterApplicantApiError extends Error {
@@ -143,3 +145,38 @@ export async function getApplicantStageHistory(
 
     return handleResponse<ApplicationStage[]>(res, 'Không thể tải lịch sử vòng tuyển dụng')
 }
+
+// ==========================================
+// INTERVIEW SCHEDULING (GOOGLE CALENDAR)
+// ==========================================
+
+export async function scheduleApplicantInterview(
+    jobId: number,
+    applicationId: number,
+    payload: ScheduleInterviewPayload
+): Promise<InterviewItem> {
+    const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/interviews`
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    })
+
+    return handleResponse<InterviewItem>(res, 'Không thể lên lịch phỏng vấn')
+}
+
+export async function getApplicantInterviews(
+    jobId: number,
+    applicationId: number
+): Promise<InterviewItem[]> {
+    const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/interviews`
+
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+
+    return handleResponse<InterviewItem[]>(res, 'Không thể tải danh sách lịch phỏng vấn')
+}
+
