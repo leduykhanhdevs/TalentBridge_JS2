@@ -4,15 +4,22 @@ import {
     BriefcaseBusiness,
     Building2,
     CalendarDays,
+    CheckCircle2,
     CircleDollarSign,
     Clock3,
+    ExternalLink,
     MapPin,
     RefreshCw,
+    Send,
     TriangleAlert,
     UserRoundCheck,
 } from 'lucide-react'
-import { Link, useParams } from 'react-router'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
+import { getStoredUser, isAuthenticated } from '../../features/auth/tokenStorage'
+import { getMyApplications } from '../../features/candidate/candidateApi'
 import { getJobDetail, JobApiError } from '../../features/jobs/jobApi'
+import { ApplyJobModal } from '../../features/jobs/components/ApplyJobModal'
 import {
     formatDate,
     formatExperienceLevel,
@@ -78,15 +85,93 @@ function JobDetailSkeleton() {
 }
 
 export function JobDetailPage() {
+    const navigate = useNavigate()
+    const location = useLocation()
     const { jobId: jobIdParam } = useParams<{ jobId: string }>()
     const jobId = Number(jobIdParam)
     const isValidJobId = Number.isInteger(jobId) && jobId > 0
+    const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
+
+    const user = getStoredUser()
+    const authenticated = isAuthenticated()
+    const isAdmin = authenticated && user?.roles?.includes('ROLE_ADMIN')
+    const isRecruiter = authenticated && user?.roles?.includes('ROLE_RECRUITER')
+    const isCandidate =
+        authenticated && (user?.roles?.includes('ROLE_CANDIDATE') || (!isAdmin && !isRecruiter))
 
     const jobQuery = useQuery({
         queryKey: ['jobs', 'detail', jobId],
         queryFn: () => getJobDetail(jobId),
         enabled: isValidJobId,
     })
+
+    const myApplicationsQuery = useQuery({
+        queryKey: ['candidate-applications'],
+        queryFn: getMyApplications,
+        enabled: authenticated && isCandidate,
+    })
+
+    const existingApplication = myApplicationsQuery.data?.find((app) => app.jobId === jobId)
+
+    function renderApplyAction(extraClass = '') {
+        if (!authenticated) {
+            return (
+                <button
+                    className={`btn-bento-primary inline-flex items-center justify-center gap-2 ${extraClass}`}
+                    onClick={() => navigate('/login', { state: { from: location } })}
+                    type="button"
+                >
+                    <Send size={16} />
+                    <span>Đăng nhập để ứng tuyển</span>
+                </button>
+            )
+        }
+
+        if (isAdmin || isRecruiter) {
+            return (
+                <div
+                    className={`rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-center text-xs font-medium text-slate-500 ${extraClass}`}
+                >
+                    Tài khoản {isAdmin ? 'Quản trị viên' : 'Nhà tuyển dụng'} không thể nộp đơn
+                </div>
+            )
+        }
+
+        if (existingApplication) {
+            return (
+                <div
+                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 text-left ${extraClass}`}
+                >
+                    <div className="flex items-center gap-2 font-bold text-emerald-800 text-sm">
+                        <CheckCircle2 className="text-emerald-600 shrink-0" size={18} />
+                        <span>Đã nộp hồ sơ ứng tuyển</span>
+                    </div>
+                    <p className="mt-1 text-xs text-emerald-700">
+                        Ngày nộp: {formatDate(existingApplication.appliedAt)} &bull; Giai đoạn:{' '}
+                        <span className="font-semibold">{existingApplication.currentStage}</span>
+                    </p>
+                    <Link
+                        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:text-emerald-950 underline"
+                        to="/candidate/applications"
+                    >
+                        <span>Xem trạng thái đơn ứng tuyển</span>
+                        <ExternalLink size={13} />
+                    </Link>
+                </div>
+            )
+        }
+
+        return (
+            <button
+                className={`btn-bento-primary inline-flex items-center justify-center gap-2 shadow-md hover:shadow-indigo-500/20 ${extraClass}`}
+                onClick={() => setIsApplyModalOpen(true)}
+                type="button"
+            >
+                <Send size={16} />
+                <span>Ứng tuyển ngay</span>
+            </button>
+        )
+    }
 
     if (!isValidJobId) {
         return <JobNotFoundState />
@@ -160,11 +245,16 @@ export function JobDetailPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-4 lg:min-w-64">
-                            <p className="text-xs font-bold tracking-wide text-indigo-700 uppercase">Mức lương</p>
-                            <p className="mt-2 text-xl font-extrabold text-indigo-950">
-                                {formatSalaryRange(job.minSalary, job.maxSalary)}
-                            </p>
+                        <div className="flex flex-col gap-3 lg:items-end">
+                            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-4 lg:min-w-64">
+                                <p className="text-xs font-bold tracking-wide text-indigo-700 uppercase">Mức lương</p>
+                                <p className="mt-2 text-xl font-extrabold text-indigo-950">
+                                    {formatSalaryRange(job.minSalary, job.maxSalary)}
+                                </p>
+                            </div>
+                            <div className="w-full lg:w-64">
+                                {renderApplyAction('w-full')}
+                            </div>
                         </div>
                     </div>
 
@@ -233,13 +323,26 @@ export function JobDetailPage() {
                             </div>
                         </dl>
 
-                        <div className="mt-6 border-t border-slate-200 pt-5">
-                            <p className="text-xs leading-5 text-slate-500">
+                        <div className="mt-6 border-t border-slate-200 pt-5 space-y-4">
+                            {renderApplyAction('w-full py-3 text-base')}
+                            <p className="text-xs leading-5 text-slate-500 text-center">
                                 Mã tin tuyển dụng: <span className="font-mono font-semibold text-slate-700">#{job.id}</span>
                             </p>
                         </div>
                     </aside>
                 </div>
+
+                {/* Apply Modal */}
+                <ApplyJobModal
+                    companyName={job.companyName || 'Doanh nghiệp'}
+                    isOpen={isApplyModalOpen}
+                    jobId={job.id}
+                    jobTitle={job.title}
+                    onApplySuccess={() => {
+                        void myApplicationsQuery.refetch()
+                    }}
+                    onClose={() => setIsApplyModalOpen(false)}
+                />
             </div>
         </div>
     )

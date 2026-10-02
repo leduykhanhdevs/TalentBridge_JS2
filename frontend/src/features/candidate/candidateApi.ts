@@ -386,3 +386,29 @@ export async function withdrawApplication(applicationId: number): Promise<void> 
     }
 }
 
+export interface ApplyJobPayload {
+    jobId: number
+    resumeId: number
+    coverLetter?: string
+}
+
+export async function applyJob(payload: ApplyJobPayload): Promise<CandidateApplicationItem> {
+    const res = await fetch(`${API_BASE_URL}/candidates/applications`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(
+            res.status,
+            errJson?.message || 'Không thể nộp đơn ứng tuyển',
+        )
+    }
+
+    const json: ApiResponse<CandidateApplicationItem> = await res.json()
+    return json.data
+}
+
+
