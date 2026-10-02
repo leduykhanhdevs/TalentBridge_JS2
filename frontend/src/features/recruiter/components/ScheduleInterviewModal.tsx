@@ -70,12 +70,8 @@ export function ScheduleInterviewModal({
 
         setIsSubmitting(true)
         try {
-            // Convert local datetime-local format to ISO String if needed or pass as is
-            const dateObj = new Date(interviewTime)
-            const isoString = dateObj.toISOString()
-
             const res = await scheduleApplicantInterview(jobId, applicant.id, {
-                interviewTime: isoString,
+                interviewTime,
                 locationType,
                 meetingLinkOrAddress: meetingLinkOrAddress.trim(),
                 notes: notes.trim() || undefined

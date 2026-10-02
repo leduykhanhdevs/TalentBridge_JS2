@@ -35,6 +35,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadableException(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        log.warn("HttpMessageNotReadableException occurred: {}", ex.getMessage());
+        String msg = "Dữ liệu yêu cầu không đúng định dạng";
+        if (ex.getCause() instanceof com.fasterxml.jackson.databind.JsonMappingException jme && jme.getCause() instanceof IllegalArgumentException iae) {
+            msg = iae.getMessage();
+        } else if (ex.getCause() instanceof IllegalArgumentException iae) {
+            msg = iae.getMessage();
+        }
+        ApiResponse<Object> response = ApiResponse.error(ErrorCode.INVALID_REQUEST.getCode(), msg);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiResponse<Object>> handleDomainException(DomainException ex) {
         log.warn("DomainException occurred: code={}, message={}", ex.getCode(), ex.getMessage());
