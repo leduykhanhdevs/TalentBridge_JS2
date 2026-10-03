@@ -10,6 +10,10 @@ import type {
     RecruiterFilterParams,
     UpdateCompanyStatusRequest,
     UpdateUserStatusRequest,
+    AdminJobResponse,
+    JobFilterParams,
+    JobStatusHistoryResponse,
+    AdminJobStatus,
 } from './adminTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 
@@ -201,4 +205,35 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStatsRespo
         response,
         'Không thể tải thống kê bảng điều khiển quản trị.',
     )
+}
+
+export async function getAdminJobs(params: JobFilterParams = {}): Promise<PageResponse<AdminJobResponse>> {
+    const query = new URLSearchParams()
+    if (params.page !== undefined) query.set('page', String(params.page))
+    if (params.size !== undefined) query.set('size', String(params.size))
+    if (params.status) query.set('status', params.status)
+    const response = await fetch(`${API_BASE_URL}/admin/jobs?${query.toString()}`, {
+        method: 'GET', headers: getAuthHeaders(),
+    })
+    return handleResponse<PageResponse<AdminJobResponse>>(response, 'Không thể tải danh sách tin cần kiểm duyệt.')
+}
+
+export async function getJobStatusHistory(jobId: number): Promise<JobStatusHistoryResponse[]> {
+    const response = await fetch(`${API_BASE_URL}/admin/jobs/${jobId}/status-history`, {
+        method: 'GET', headers: getAuthHeaders(),
+    })
+    return handleResponse<JobStatusHistoryResponse[]>(response, 'Không thể tải lịch sử kiểm duyệt tin.')
+}
+
+export async function updateAdminJobStatus(
+    jobId: number,
+    status: AdminJobStatus,
+    reason?: string,
+): Promise<AdminJobResponse> {
+    const response = await fetch(`${API_BASE_URL}/admin/jobs/${jobId}/status`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status, reason }),
+    })
+    return handleResponse<AdminJobResponse>(response, 'Không thể cập nhật trạng thái tin tuyển dụng.')
 }

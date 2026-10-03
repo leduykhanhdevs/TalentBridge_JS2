@@ -73,6 +73,11 @@ export const APPLICANT_STAGE_CONFIG: Record<
         badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
         desc: 'Hồ sơ mới nộp vào hệ thống',
     },
+    SCREENING: {
+        label: 'Đang xem xét',
+        badgeClass: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+        desc: 'Giai đoạn sàng lọc cũ; hệ thống quy đổi sang Đang xem xét',
+    },
     REVIEWING: {
         label: 'Đang xem xét',
         badgeClass: 'border-indigo-200 bg-indigo-50 text-indigo-700',

@@ -160,6 +160,23 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public UpdateCompanyStatusUseCase updateCompanyStatusUseCase(
+            CompanyRepositoryPort companyRepository,
+            RecruiterRepositoryPort recruiterRepository,
+            CompanyJoinRequestRepositoryPort joinRequestRepository) {
+        return new TransactionalUpdateCompanyStatusUseCase(new UpdateCompanyStatusUseCaseImpl(
+                companyRepository, recruiterRepository, joinRequestRepository));
+    }
+
+    @Bean
+    public JobModerationUseCase jobModerationUseCase(
+            JobRepositoryPort jobRepository,
+            JobStatusHistoryRepositoryPort historyRepository) {
+        return new TransactionalJobModerationUseCase(
+                new JobModerationUseCaseImpl(jobRepository, historyRepository));
+    }
+
+    @Bean
     public GetRecruiterProfileUseCase getRecruiterProfileUseCase(
             RecruiterRepositoryPort recruiterRepository) {
         return new GetRecruiterProfileUseCaseImpl(recruiterRepository);
@@ -223,8 +240,9 @@ public class UseCaseConfig {
     @Bean
     public JobUseCase jobUseCase(
             JobRepositoryPort jobRepository,
-            RecruiterRepositoryPort recruiterRepository) {
-        return new JobUseCaseImpl(jobRepository, recruiterRepository);
+            RecruiterRepositoryPort recruiterRepository,
+            JobStatusHistoryRepositoryPort historyRepository) {
+        return new TransactionalJobUseCase(new JobUseCaseImpl(jobRepository, recruiterRepository, historyRepository));
     }
 
     @Bean
@@ -276,12 +294,12 @@ public class UseCaseConfig {
             JobRepositoryPort jobRepository,
             JobApplicationRepositoryPort jobApplicationRepository,
             ApplicationStageRepositoryPort applicationStageRepository) {
-        return new UpdateApplicantStatusUseCaseImpl(
+        return new TransactionalUpdateApplicantStatusUseCase(new UpdateApplicantStatusUseCaseImpl(
                 recruiterRepository,
                 jobRepository,
                 jobApplicationRepository,
                 applicationStageRepository
-        );
+        ));
     }
 
     @Bean
@@ -307,13 +325,13 @@ public class UseCaseConfig {
             JobRepositoryPort jobRepository,
             RecruiterRepositoryPort recruiterRepository,
             ApplicationStageRepositoryPort applicationStageRepository) {
-        return new ScheduleInterviewUseCaseImpl(
+        return new TransactionalScheduleInterviewUseCase(new ScheduleInterviewUseCaseImpl(
                 interviewRepository,
                 jobApplicationRepository,
                 jobRepository,
                 recruiterRepository,
                 applicationStageRepository
-        );
+        ));
     }
 
     @Bean

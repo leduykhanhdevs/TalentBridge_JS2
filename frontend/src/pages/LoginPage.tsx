@@ -7,10 +7,11 @@ import {
     LogIn,
     Mail,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useMutation } from '@tanstack/react-query'
 import { AuthApiError, loginUser } from '../features/auth/authApi'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
+import { getCandidatePostLoginPath } from '../features/auth/loginRedirect'
 import { AuthIllustration } from '../components/illustrations'
 
 type FormField = 'email' | 'password'
@@ -19,6 +20,7 @@ type FieldErrors = Partial<Record<FormField, string>>
 
 export function LoginPage() {
     const navigate = useNavigate()
+    const location = useLocation()
     const [formValues, setFormValues] = useState({
         email: '',
         password: '',
@@ -35,10 +37,12 @@ export function LoginPage() {
             setSuccessMessage(`Đăng nhập thành công! Chào mừng ${data.user.fullName}.`)
             setTimeout(() => {
                 const roles = data.user.roles || []
-                if (roles.includes('ROLE_RECRUITER')) {
-                    navigate('/recruiter/profile')
-                } else if (roles.includes('ROLE_ADMIN')) {
+                if (roles.includes('ROLE_ADMIN')) {
                     navigate('/admin/candidates')
+                } else if (roles.includes('ROLE_RECRUITER')) {
+                    navigate('/recruiter/profile')
+                } else if (roles.includes('ROLE_CANDIDATE')) {
+                    navigate(getCandidatePostLoginPath(location.state))
                 } else {
                     navigate('/')
                 }

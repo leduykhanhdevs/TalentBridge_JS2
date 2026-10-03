@@ -125,6 +125,40 @@ class CandidateExperienceIntegrationTest {
     }
 
     @Test
+    @DisplayName("Gộp khoảng làm việc chồng lấp và từ chối ngày ở tương lai")
+    void workExperienceUsesMergedPeriodsAndRejectsFutureDates() throws Exception {
+        WorkExperienceRequest first = new WorkExperienceRequest(
+                "Công ty A", "Backend Developer", LocalDate.of(2020, 1, 1),
+                LocalDate.of(2022, 1, 1), false, null, null);
+        WorkExperienceRequest overlapping = new WorkExperienceRequest(
+                "Công ty B", "Engineer", LocalDate.of(2021, 1, 1),
+                LocalDate.of(2023, 1, 1), false, null, null);
+
+        mockMvc.perform(post("/api/v1/candidates/work-experiences")
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(first)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/v1/candidates/work-experiences")
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(overlapping)))
+                .andExpect(status().isCreated());
+
+        CandidateJpaEntity updated = candidateRepository.findById(testCandidate.getId()).orElseThrow();
+        assertEquals(3, updated.getExperienceYears());
+
+        WorkExperienceRequest futureStart = new WorkExperienceRequest(
+                "Công ty C", "Engineer", LocalDate.now().plusDays(2), null,
+                true, null, null);
+        mockMvc.perform(post("/api/v1/candidates/work-experiences")
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(futureStart)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Thêm và xóa kỹ năng chuyên môn với đánh giá sao (1-5)")
     void testCandidateSkill_AddAndRemove() throws Exception {
         CandidateSkillRequest skillReq = new CandidateSkillRequest(

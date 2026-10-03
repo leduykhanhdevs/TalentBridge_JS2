@@ -39,11 +39,17 @@ const STAGE_LABELS: Record<ApplicationStage, { label: string; color: string; bg:
         bg: 'bg-blue-50',
         border: 'border-blue-200',
     },
+    REVIEWING: {
+        label: 'Đang xem xét', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200',
+    },
     SCREENING: {
         label: 'Đang sàng lọc CV',
         color: 'text-amber-700',
         bg: 'bg-amber-50',
         border: 'border-amber-200',
+    },
+    SHORTLISTED: {
+        label: 'Vào danh sách rút gọn', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200',
     },
     INTERVIEW: {
         label: 'Mời phỏng vấn',
@@ -56,6 +62,9 @@ const STAGE_LABELS: Record<ApplicationStage, { label: string; color: string; bg:
         color: 'text-emerald-700',
         bg: 'bg-emerald-50',
         border: 'border-emerald-200',
+    },
+    HIRED: {
+        label: 'Đã tuyển dụng', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200',
     },
     REJECTED: {
         label: 'Chưa phù hợp',
@@ -125,18 +134,19 @@ export function CandidateApplicationsPage() {
     // Metrics
     const totalApps = applications.length
     const activeProcessingCount = applications.filter(
-        (a) => a.status === 'SUBMITTED' && (a.currentStage === 'APPLIED' || a.currentStage === 'SCREENING'),
+        (a) => a.status !== 'WITHDRAWN' && ['APPLIED', 'REVIEWING', 'SCREENING', 'SHORTLISTED'].includes(a.currentStage),
     ).length
     const interviewCount = applications.filter(
-        (a) => a.status === 'SUBMITTED' && a.currentStage === 'INTERVIEW',
+        (a) => a.status !== 'WITHDRAWN' && a.currentStage === 'INTERVIEW',
     ).length
     const offerCount = applications.filter(
-        (a) => a.status === 'SUBMITTED' && a.currentStage === 'OFFERED',
+        (a) => a.status !== 'WITHDRAWN' && (a.currentStage === 'OFFERED' || a.currentStage === 'HIRED'),
     ).length
     const withdrawnCount = applications.filter((a) => a.status === 'WITHDRAWN').length
 
     return (
-        <div className="space-y-6">
+        <div className="min-h-[calc(100vh-4rem)] py-6 sm:py-8">
+            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
             {/* Header section */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -257,9 +267,12 @@ export function CandidateApplicationsPage() {
                         {[
                             { key: 'ALL', label: `Tất cả (${totalApps})` },
                             { key: 'APPLIED', label: 'Đã nộp' },
+                            { key: 'REVIEWING', label: 'Đang xem xét' },
                             { key: 'SCREENING', label: 'Sàng lọc' },
+                            { key: 'SHORTLISTED', label: 'Rút gọn' },
                             { key: 'INTERVIEW', label: 'Phỏng vấn' },
                             { key: 'OFFERED', label: 'Đề nghị' },
+                            { key: 'HIRED', label: 'Đã tuyển' },
                             { key: 'REJECTED', label: 'Từ chối' },
                             { key: 'WITHDRAWN', label: 'Đã rút' },
                         ].map((tab) => (
@@ -346,6 +359,7 @@ export function CandidateApplicationsPage() {
                         const isWithdrawn = app.status === 'WITHDRAWN'
                         const canWithdraw =
                             !isWithdrawn &&
+                            app.currentStage !== 'HIRED' &&
                             app.currentStage !== 'OFFERED' &&
                             app.currentStage !== 'REJECTED'
 
@@ -377,7 +391,7 @@ export function CandidateApplicationsPage() {
                                                     to={`/jobs/${app.jobId}`}
                                                     className="text-base sm:text-lg font-black text-slate-900 hover:text-indigo-600 transition truncate"
                                                 >
-                                                    {app.jobTitle}
+                                                    {app.jobTitle ? (isNaN(Number(app.jobTitle)) ? app.jobTitle : `Vị trí tuyển dụng #${app.jobTitle}`) : `Vị trí tuyển dụng #${app.jobId}`}
                                                 </Link>
                                                 {app.aiMatchScore && (
                                                     <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700">
@@ -537,6 +551,7 @@ export function CandidateApplicationsPage() {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     )
 }

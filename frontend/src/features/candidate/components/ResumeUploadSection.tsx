@@ -199,7 +199,7 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
                                         : 'border-slate-200 bg-slate-50/40 hover:border-slate-300 hover:bg-white'
                                 }`}
                             >
-                                <div className="flex items-start sm:items-center gap-3.5">
+                                <div className="flex min-w-0 items-start gap-3.5 sm:items-center">
                                     <div
                                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-bold text-xs shadow-sm ${
                                             isDocx
@@ -209,9 +209,9 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
                                     >
                                         {isDocx ? 'DOCX' : 'PDF'}
                                     </div>
-                                    <div>
+                                    <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <h4 className="text-sm font-bold text-slate-900">{resume.title}</h4>
+                                            <h4 className="break-words text-sm font-bold text-slate-900 [overflow-wrap:anywhere]">{resume.title}</h4>
                                             {resume.isDefault && (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-semibold text-rose-700">
                                                     <Star className="h-3 w-3 fill-rose-600 text-rose-600" />
@@ -219,7 +219,7 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[280px] sm:max-w-md">
+                                        <p className="mt-0.5 max-w-full truncate text-xs text-slate-500 sm:max-w-md">
                                             {resume.fileName} &bull; Tải lên ngày {resume.createdAt ? resume.createdAt.split('T')[0] : ''}
                                         </p>
                                     </div>

@@ -12,6 +12,7 @@ import { ResetPasswordPage } from '../../pages/ResetPasswordPage'
 import { AdminCandidatesPage } from '../../pages/admin/AdminCandidatesPage'
 import { AdminRecruitersPage } from '../../pages/admin/AdminRecruitersPage'
 import { AdminCompaniesPage } from '../../pages/admin/AdminCompaniesPage'
+import { AdminJobsPage } from '../../pages/admin/AdminJobsPage'
 import { RecruiterProfilePage } from '../../pages/recruiter/RecruiterProfilePage'
 import { RecruiterCompanyPage } from '../../pages/recruiter/RecruiterCompanyPage'
 import { RecruiterJoinCompanyPage } from '../../pages/recruiter/RecruiterJoinCompanyPage'
@@ -69,6 +70,7 @@ export function AppRouter() {
                 <Route element={<AdminCandidatesPage />} path="candidates" />
                 <Route element={<AdminRecruitersPage />} path="recruiters" />
                 <Route element={<AdminCompaniesPage />} path="companies" />
+                <Route element={<AdminJobsPage />} path="jobs" />
             </Route>
         </Routes>
         </>

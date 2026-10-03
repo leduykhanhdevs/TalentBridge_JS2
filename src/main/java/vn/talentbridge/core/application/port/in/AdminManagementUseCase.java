@@ -17,11 +17,10 @@ public interface AdminManagementUseCase {
     List<CompanyResult> getAllCompanies(int page, int size, String keyword, CompanyStatus status);
     long countCompanies(String keyword, CompanyStatus status);
     CompanyResult getCompanyById(Long id);
-    CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status, String reason);
 
-    List<JobResult> getAllJobs(int page, int size, JobStatus status);
+    List<JobDetailResult> getAllJobs(int page, int size, JobStatus status);
     long countJobs();
-    JobResult updateJobStatus(Long jobId, JobStatus status);
+    long countJobs(JobStatus status);
 
     List<RecruiterResult> getAllRecruiters(int page, int size, String keyword);
     long countRecruiters(String keyword);

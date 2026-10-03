@@ -50,9 +50,7 @@ export function RecruiterJoinCompanyPage() {
         queryFn: getMyPendingJoinRequest,
     })
 
-    const hasPendingRequest = Boolean(pendingRequest)
-
-    const { data: profile } = useQuery({
+    const { data: profile, isLoading: isProfileLoading } = useQuery({
         queryKey: ['recruiter-profile'],
         queryFn: getRecruiterProfile,
     })
@@ -137,6 +135,32 @@ export function RecruiterJoinCompanyPage() {
     }
 
     const hasCompany = Boolean(profile?.companyId)
+    const hasPendingRequest = Boolean(pendingRequest) && !hasCompany
+
+    if (isProfileLoading) {
+        return <div className="bento-card mx-auto max-w-xl p-10 text-center text-sm text-slate-500">Đang kiểm tra trạng thái liên kết doanh nghiệp…</div>
+    }
+
+    if (hasCompany) {
+        return (
+            <div className="mx-auto max-w-3xl space-y-5">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Doanh nghiệp của bạn</h1>
+                    <p className="mt-1 text-sm text-slate-500">Trạng thái thành viên được lấy từ hồ sơ nhà tuyển dụng hiện tại.</p>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                    <Building2 className="mt-0.5 shrink-0 text-blue-600" size={22} />
+                    <div className="flex-1">
+                        <h2 className="font-bold text-blue-900">Bạn đã liên kết với: {profile?.companyName || 'Doanh nghiệp'}</h2>
+                        <p className="mt-1 text-sm text-blue-700">Tài khoản HR hiện thuộc một doanh nghiệp. Các yêu cầu gia nhập đang chờ ở doanh nghiệp khác không còn hiệu lực.</p>
+                        <Link className="mt-3 inline-flex rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700" to="/recruiter/company">
+                            Xem trang doanh nghiệp của tôi
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-6">

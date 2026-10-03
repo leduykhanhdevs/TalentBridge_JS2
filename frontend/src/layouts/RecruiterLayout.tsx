@@ -6,9 +6,11 @@ import {
     CheckSquare,
     KeyRound,
     LogOut,
+    Menu,
     Search,
     ShieldAlert,
     UserCircle,
+    X,
 } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
@@ -21,6 +23,7 @@ export function RecruiterLayout() {
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+    const [isMobileActionsOpen, setIsMobileActionsOpen] = useState(false)
 
     useEffect(() => {
         function syncAuth() {
@@ -103,54 +106,59 @@ export function RecruiterLayout() {
         {
             to: '/recruiter/profile',
             label: 'Hồ sơ HR',
+            mobileLabel: 'Hồ sơ',
             icon: UserCircle,
             desc: 'Thông tin cá nhân & chức vụ',
         },
         {
             to: '/recruiter/jobs',
             label: 'Tin tuyển dụng',
+            mobileLabel: 'Tin',
             icon: Briefcase,
             desc: 'Quản lý bài đăng tuyển dụng',
         },
         {
             to: '/recruiter/company',
             label: 'Doanh nghiệp của tôi',
+            mobileLabel: 'Công ty',
             icon: Building2,
             desc: 'Thông tin công ty hoặc tạo mới',
         },
         {
             to: '/recruiter/join-company',
             label: 'Tìm & Xin gia nhập',
+            mobileLabel: 'Gia nhập',
             icon: Search,
             desc: 'Tìm kiếm công ty & nộp yêu cầu',
         },
         {
             to: '/recruiter/peer-approval',
             label: 'Duyệt thành viên nội bộ',
+            mobileLabel: 'Duyệt',
             icon: CheckSquare,
             desc: 'Xét duyệt HR gia nhập công ty',
         },
     ]
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-bento-canvas text-slate-900 selection:bg-emerald-600 selection:text-white">
+        <div className="relative flex min-h-screen flex-col overflow-x-clip bg-bento-canvas text-slate-900 selection:bg-emerald-600 selection:text-white">
             {/* Ambient Background Glows */}
             <div className="pointer-events-none fixed -top-40 right-10 size-[32rem] rounded-full bg-emerald-100/40 blur-3xl" />
             <div className="pointer-events-none fixed top-72 -left-20 size-[28rem] rounded-full bg-teal-100/30 blur-3xl" />
 
             {/* Header */}
             <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md text-slate-900 shadow-2xs">
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3">
                         <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold shadow-xs border border-emerald-400/20">
                             <Building2 size={20} />
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                                <span className="text-sm font-bold tracking-tight text-slate-900 sm:text-lg">
                                     TalentBridge Recruiter
                                 </span>
-                                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 shadow-2xs">
+                                <span className="hidden items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 shadow-2xs md:inline-flex">
                                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     HR_PORTAL
                                 </span>
@@ -163,7 +171,7 @@ export function RecruiterLayout() {
 
                     <div className="flex items-center gap-2 sm:gap-3">
                         <NavLink
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-2xs"
+                            className="hidden items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 md:inline-flex"
                             to="/"
                         >
                             <ArrowLeft size={14} />
@@ -171,7 +179,7 @@ export function RecruiterLayout() {
                         </NavLink>
 
                         {/* Bento Recruiter User Capsule */}
-                        <div className="flex items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs">
+                        <div className="hidden items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs md:flex">
                             <div className="flex items-center gap-2 pl-1.5 pr-2 py-0.5">
                                 <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 text-[11px] font-bold text-white shadow-2xs">
                                     {getInitials(displayName)}
@@ -208,40 +216,79 @@ export function RecruiterLayout() {
                                 <span className="hidden sm:inline">Đăng xuất</span>
                             </button>
                         </div>
+
+                        <button
+                            aria-controls="recruiter-mobile-actions"
+                            aria-expanded={isMobileActionsOpen}
+                            aria-label={isMobileActionsOpen ? 'Đóng menu tài khoản' : 'Mở menu tài khoản'}
+                            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs md:hidden"
+                            onClick={() => setIsMobileActionsOpen((open) => !open)}
+                            type="button"
+                        >
+                            {isMobileActionsOpen ? <X aria-hidden="true" size={18} /> : <Menu aria-hidden="true" size={18} />}
+                        </button>
                     </div>
                 </div>
 
                 {/* Subnav Bento Navigation Dock */}
                 <div className="border-t border-slate-200/60 bg-slate-50/70 backdrop-blur-xs px-4 sm:px-6 lg:px-8 py-2">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between">
-                        <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto p-1 rounded-2xl bg-slate-200/60 border border-slate-200/80 backdrop-blur-xs shrink-0">
+                    <div className="mx-auto flex min-w-0 max-w-7xl items-center justify-between gap-4">
+                        <nav
+                            aria-label="Điều hướng nhà tuyển dụng"
+                            className="inline-flex min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-200/60 bg-slate-100/80 p-1 shadow-2xs backdrop-blur-xs sm:gap-1.5 scrollbar-none"
+                        >
                             {navItems.map((item) => {
                                 const Icon = item.icon
                                 return (
                                     <NavLink
+                                        aria-label={item.label}
                                         className={({ isActive }) =>
-                                            `inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-bold border transition-colors duration-150 whitespace-nowrap ${
+                                            `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-150 sm:gap-2 sm:px-3 sm:text-sm ${
                                                 isActive
-                                                    ? 'bg-white text-emerald-700 shadow-2xs border-slate-200/90'
-                                                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60 shadow-none'
+                                                    ? 'bg-white text-emerald-700 shadow-2xs border-slate-200/60'
+                                                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                             }`
                                         }
                                         key={item.to}
                                         to={item.to}
+                                        title={item.label}
                                     >
                                         <Icon size={15} className="shrink-0" />
-                                        <span>{item.label}</span>
+                                        <span className="hidden sm:inline md:hidden">{item.mobileLabel}</span>
+                                        <span className="hidden md:inline">{item.label}</span>
                                     </NavLink>
                                 )
                             })}
                         </nav>
 
-                        <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 shrink-0">
-                            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>ATS Pipeline • Sẵn sàng tiếp nhận hồ sơ</span>
+                        <div className="hidden lg:flex items-center gap-2 rounded-xl border border-slate-200/60 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-2xs backdrop-blur-xs shrink-0">
+                            <span className="relative flex size-2">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                            </span>
+                            <span className="text-slate-500">ATS Pipeline</span>
+                            <span className="text-slate-300">•</span>
+                            <span className="font-semibold text-emerald-700">Sẵn sàng tiếp nhận hồ sơ</span>
                         </div>
                     </div>
                 </div>
+                {isMobileActionsOpen && (
+                    <div id="recruiter-mobile-actions" className="border-t border-slate-200 bg-white px-4 py-3 md:hidden sm:px-6">
+                        <p className="truncate text-sm font-bold text-slate-900">{displayName}</p>
+                        <p className="mt-0.5 text-xs font-medium text-emerald-700">Nhà tuyển dụng</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700" onClick={() => { setIsChangePasswordOpen(true); setIsMobileActionsOpen(false) }} type="button">
+                                <KeyRound aria-hidden="true" size={13} /> Đổi mật khẩu
+                            </button>
+                            <button className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700" onClick={() => { setIsMobileActionsOpen(false); void handleLogout() }} type="button">
+                                <LogOut aria-hidden="true" size={13} /> Đăng xuất
+                            </button>
+                            <NavLink className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700" onClick={() => setIsMobileActionsOpen(false)} to="/">
+                                <ArrowLeft aria-hidden="true" size={13} /> Về website
+                            </NavLink>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Main Content Area */}

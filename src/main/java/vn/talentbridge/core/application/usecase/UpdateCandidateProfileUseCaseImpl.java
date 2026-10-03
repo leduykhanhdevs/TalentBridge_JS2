@@ -5,8 +5,8 @@ import vn.talentbridge.core.application.dto.UpdateCandidateProfileCommand;
 import vn.talentbridge.core.application.port.in.UpdateCandidateProfileUseCase;
 import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
-import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
+import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.User;
 
@@ -45,9 +45,6 @@ public class UpdateCandidateProfileUseCaseImpl implements UpdateCandidateProfile
         }
 
         // Validate numerical fields
-        if (command.experienceYears() != null && command.experienceYears() < 0) {
-            throw new DomainException(40001, "Số năm kinh nghiệm không được nhỏ hơn 0");
-        }
         if (command.currentSalary() != null && command.currentSalary().compareTo(BigDecimal.ZERO) < 0) {
             throw new DomainException(40001, "Mức lương hiện tại không được nhỏ hơn 0");
         }
@@ -81,9 +78,6 @@ public class UpdateCandidateProfileUseCaseImpl implements UpdateCandidateProfile
         }
         if (command.summary() != null) {
             candidate.setSummary(command.summary().trim());
-        }
-        if (command.experienceYears() != null) {
-            candidate.setExperienceYears(command.experienceYears());
         }
         if (command.currentSalary() != null) {
             candidate.setCurrentSalary(command.currentSalary());

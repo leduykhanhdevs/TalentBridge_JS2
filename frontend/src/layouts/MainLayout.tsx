@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, Building2, FileText, KeyRound, LogIn, LogOut, Search, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BriefcaseBusiness, Building2, FileText, KeyRound, LogIn, LogOut, Menu, Search, ShieldCheck, User, UserPlus, X } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -11,6 +11,7 @@ export function MainLayout() {
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
     useEffect(() => {
         function syncAuth() {
@@ -53,10 +54,21 @@ export function MainLayout() {
         ? { label: 'Tuyển dụng', className: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' }
         : { label: 'Ứng viên', className: 'bg-indigo-50 text-indigo-700 border-indigo-200/80' }
 
+    const mobileLinks = [
+        { to: '/', label: 'Trang chủ' },
+        { to: '/jobs', label: 'Việc làm' },
+        ...(isCandidate ? [
+            { to: '/candidate/profile', label: 'Hồ sơ TopCV' },
+            { to: '/candidate/applications', label: 'Đơn ứng tuyển' },
+        ] : []),
+        ...(isRecruiter ? [{ to: '/recruiter/profile', label: 'Cổng nhà tuyển dụng' }] : []),
+        ...(isAdmin ? [{ to: '/admin/candidates', label: 'Cổng quản trị' }] : []),
+    ]
+
     return (
         <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
             <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-2xs">
-                <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     <NavLink
                         className="flex items-center gap-3 transition-transform hover:-translate-y-0.5 active:translate-y-0"
                         end
@@ -81,14 +93,14 @@ export function MainLayout() {
                         {/* Bento Navigation Dock */}
                         <nav
                             aria-label="Điều hướng chính"
-                            className="flex items-center rounded-xl bg-slate-100/80 p-1 border border-slate-200/60 backdrop-blur-xs shadow-2xs"
+                            className="hidden items-center rounded-xl border border-slate-200/60 bg-slate-100/80 p-1 shadow-2xs backdrop-blur-xs lg:flex"
                         >
                             <NavLink
                                 className={({ isActive }) =>
-                                    `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                    `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                         isActive
-                                            ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                            ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                            : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                     }`
                                 }
                                 end
@@ -99,10 +111,10 @@ export function MainLayout() {
 
                             <NavLink
                                 className={({ isActive }) =>
-                                    `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                    `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                         isActive
-                                            ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                            ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                            : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                     }`
                                 }
                                 to="/jobs"
@@ -115,10 +127,10 @@ export function MainLayout() {
                                 <>
                                     <NavLink
                                         className={({ isActive }) =>
-                                            `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                            `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                                 isActive
-                                                    ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
-                                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                                    ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                             }`
                                         }
                                         to="/candidate/profile"
@@ -129,10 +141,10 @@ export function MainLayout() {
 
                                     <NavLink
                                         className={({ isActive }) =>
-                                            `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                            `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                                 isActive
-                                                    ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
-                                                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                                    ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                             }`
                                         }
                                         to="/candidate/applications"
@@ -146,10 +158,10 @@ export function MainLayout() {
                             {isRecruiter && (
                                 <NavLink
                                     className={({ isActive }) =>
-                                        `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                        `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                             isActive
-                                                ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60'
-                                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                                ? 'bg-white text-emerald-700 shadow-2xs border-slate-200/60'
+                                                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                         }`
                                     }
                                     to="/recruiter/profile"
@@ -162,10 +174,10 @@ export function MainLayout() {
                             {isAdmin && (
                                 <NavLink
                                     className={({ isActive }) =>
-                                        `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                        `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                             isActive
-                                                ? 'bg-white text-indigo-700 shadow-2xs border border-slate-200/60'
-                                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                                ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                         }`
                                     }
                                     to="/admin/candidates"
@@ -178,7 +190,7 @@ export function MainLayout() {
 
                         {/* Bento User Control Hub (When Authenticated) */}
                         {authenticated && user ? (
-                            <div className="flex items-center rounded-xl bg-white border border-slate-200/80 p-1 shadow-2xs">
+                            <div className="hidden items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs lg:flex">
                                 {/* User Identity Chip */}
                                 <div className="flex items-center gap-2 pl-1.5 pr-2 py-0.5">
                                     <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 text-[11px] font-bold text-white shadow-2xs">
@@ -220,7 +232,7 @@ export function MainLayout() {
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="hidden items-center gap-2 lg:flex">
                                 <NavLink
                                     className="btn-bento-secondary text-xs sm:text-sm py-1.5 px-3"
                                     to="/login"
@@ -238,8 +250,71 @@ export function MainLayout() {
                                 </NavLink>
                             </div>
                         )}
+
+                        <button
+                            aria-controls="mobile-navigation"
+                            aria-expanded={isMobileNavOpen}
+                            aria-label={isMobileNavOpen ? 'Đóng menu' : 'Mở menu'}
+                            className="inline-flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 lg:hidden"
+                            onClick={() => setIsMobileNavOpen((open) => !open)}
+                            type="button"
+                        >
+                            {isMobileNavOpen ? <X aria-hidden="true" size={18} /> : <Menu aria-hidden="true" size={18} />}
+                        </button>
                     </div>
                 </div>
+
+                {isMobileNavOpen && (
+                    <div id="mobile-navigation" className="border-t border-slate-200 bg-white px-4 py-3 shadow-lg sm:px-6 lg:hidden">
+                        <nav aria-label="Điều hướng di động" className="grid gap-1">
+                            {mobileLinks.map((link) => (
+                                <NavLink
+                                    key={link.to}
+                                    className={({ isActive }) => `rounded-lg px-3 py-2.5 text-sm font-semibold ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-50'}`}
+                                    onClick={() => setIsMobileNavOpen(false)}
+                                    to={link.to}
+                                >
+                                    {link.label}
+                                </NavLink>
+                            ))}
+                        </nav>
+                        {authenticated && user ? (
+                            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-bold text-slate-900">{displayName}</p>
+                                    <span className={`mt-1 inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${userRoleBadge.className}`}>
+                                        {userRoleBadge.label}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                                        onClick={() => { setIsChangePasswordOpen(true); setIsMobileNavOpen(false) }}
+                                        type="button"
+                                    >
+                                        <KeyRound aria-hidden="true" size={13} /> Đổi mật khẩu
+                                    </button>
+                                    <button
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700"
+                                        onClick={() => { setIsMobileNavOpen(false); void handleLogout() }}
+                                        type="button"
+                                    >
+                                        <LogOut aria-hidden="true" size={13} /> Đăng xuất
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+                                <NavLink className="btn-bento-secondary flex-1 justify-center text-sm" onClick={() => setIsMobileNavOpen(false)} to="/login">
+                                    <LogIn aria-hidden="true" size={15} /> Đăng nhập
+                                </NavLink>
+                                <NavLink className="btn-bento-primary flex-1 justify-center text-sm" onClick={() => setIsMobileNavOpen(false)} to="/register">
+                                    <UserPlus aria-hidden="true" size={15} /> Đăng ký
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
+                )}
             </header>
 
             <main className="flex-1">

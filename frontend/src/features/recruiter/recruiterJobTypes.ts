@@ -1,4 +1,14 @@
-export type JobStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'EXPIRED'
+export type JobStatus = 'DRAFT' | 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CLOSED' | 'REJECTED'
+
+export interface MyJobStats {
+    total: number
+    draft: number
+    pending: number
+    active: number
+    rejected: number
+    expired: number
+    closed: number
+}
 
 export interface RecruiterJobItem {
     id: number

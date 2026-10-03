@@ -49,6 +49,16 @@ public class ReviewJoinRequestUseCaseImpl implements ReviewJoinRequestUseCase {
             throw new DomainException(40001, "Yêu cầu gia nhập đã được xử lý trước đó");
         }
 
+        if (command.status() == CompanyJoinRequestStatus.ACCEPTED
+                && joinRequest.getUser() != null
+                && joinRequest.getUser().getId() != null) {
+            Recruiter applicant = recruiterRepository.findByUserId(joinRequest.getUser().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
+            if (applicant.getCompany() != null) {
+                throw new DomainException(40001, "Nhà tuyển dụng đã được liên kết với một công ty khác");
+            }
+        }
+
         if (command.status() == null || (command.status() != CompanyJoinRequestStatus.ACCEPTED && command.status() != CompanyJoinRequestStatus.REJECTED)) {
             throw new DomainException(40001, "Trạng thái phê duyệt chỉ được là ACCEPTED hoặc REJECTED");
         }
@@ -58,15 +68,19 @@ public class ReviewJoinRequestUseCaseImpl implements ReviewJoinRequestUseCase {
             CompanyJoinRequest saved = companyJoinRequestRepository.save(joinRequest);
 
             if (joinRequest.getUser() != null && joinRequest.getUser().getId() != null) {
-                Recruiter applicant = recruiterRepository.findByUserId(joinRequest.getUser().getId())
-                        .orElse(null);
-                if (applicant != null) {
-                    applicant.setCompany(reviewer.getCompany());
-                    if (joinRequest.getPosition() != null && !joinRequest.getPosition().isBlank()) {
-                        applicant.setPosition(joinRequest.getPosition().trim());
-                    }
-                    recruiterRepository.save(applicant);
+                Recruiter applicant = recruiterRepository.findByUserId(joinRequest.getUser().getId()).orElseThrow();
+                applicant.setCompany(reviewer.getCompany());
+                if (joinRequest.getPosition() != null && !joinRequest.getPosition().isBlank()) {
+                    applicant.setPosition(joinRequest.getPosition().trim());
                 }
+                recruiterRepository.save(applicant);
+                companyJoinRequestRepository.findByUserIdAndStatus(joinRequest.getUser().getId(), CompanyJoinRequestStatus.PENDING)
+                        .stream()
+                        .filter(other -> !other.getId().equals(joinRequest.getId()))
+                        .forEach(other -> {
+                            other.cancel("Yêu cầu tự hủy: tài khoản đã được liên kết với một công ty.");
+                            companyJoinRequestRepository.save(other);
+                        });
             }
 
             return CompanyJoinRequestResult.from(saved);

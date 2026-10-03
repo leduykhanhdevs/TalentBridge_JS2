@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.flyway.enabled=true",
         "spring.flyway.locations=classpath:db/migration",
         "spring.flyway.baseline-on-migrate=true",
+        "spring.datasource.url=jdbc:h2:mem:flyway_schema_validation;DB_CLOSE_DELAY=-1;MODE=MySQL",
         "spring.jpa.hibernate.ddl-auto=validate"
 })
 class FlywaySchemaValidationTest {
@@ -28,7 +29,7 @@ class FlywaySchemaValidationTest {
         assertThat(flyway).isNotNull();
         MigrationInfo current = flyway.info().current();
         assertThat(current).isNotNull();
-        assertThat(current.getVersion().getVersion()).isEqualTo("1");
-        assertThat(current.getDescription()).isIn("baseline", "<< Flyway Baseline >>");
+        assertThat(current.getVersion().getVersion()).isEqualTo("2");
+        assertThat(current.getDescription()).isEqualTo("job moderation history");
     }
 }

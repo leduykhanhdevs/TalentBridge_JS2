@@ -27,6 +27,7 @@ import {
     getApplicantNotes,
     getApplicantStageHistory,
     getJobApplicants,
+    reopenApplicantApplication,
     updateApplicantStage,
 } from '../../features/recruiter/recruiterApplicantApi'
 import {
@@ -36,6 +37,24 @@ import {
     type JobApplicant,
 } from '../../features/recruiter/recruiterApplicantTypes'
 import { ScheduleInterviewModal } from '../../features/recruiter/components/ScheduleInterviewModal'
+import { countApplicantsByStage } from '../../features/recruiter/recruiterApplicantMetrics'
+
+const PIPELINE_ORDER = ['APPLIED', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'HIRED', 'REJECTED']
+
+function canonicalStage(stage: string) {
+    return stage === 'SCREENING' ? 'REVIEWING' : stage
+}
+
+function getAllowedStageTargets(currentStage: string) {
+    const canonical = canonicalStage(currentStage)
+    const currentIndex = PIPELINE_ORDER.indexOf(canonical)
+    if (currentIndex < 0 || ['HIRED', 'REJECTED'].includes(canonical)) return []
+    return PIPELINE_ORDER.filter((stage, index) => stage === 'REJECTED' || index > currentIndex)
+}
+
+function getNextStage(currentStage: string) {
+    return getAllowedStageTargets(currentStage)[0] || 'REJECTED'
+}
 
 export function RecruiterJobApplicantsPage() {
     const { jobId } = useParams<{ jobId: string }>()
@@ -59,6 +78,9 @@ export function RecruiterJobApplicantsPage() {
     const [targetStage, setTargetStage] = useState('REVIEWING')
     const [stageNote, setStageNote] = useState('')
     const [isUpdatingStage, setIsUpdatingStage] = useState(false)
+    const [reopenApplicant, setReopenApplicant] = useState<JobApplicant | null>(null)
+    const [reopenReason, setReopenReason] = useState('')
+    const [isReopening, setIsReopening] = useState(false)
 
     const [notesModalApplicant, setNotesModalApplicant] = useState<JobApplicant | null>(null)
     const [notesList, setNotesList] = useState<ApplicationNote[]>([])
@@ -137,6 +159,24 @@ export function RecruiterJobApplicantsPage() {
         }
     }
 
+    async function handleReopenSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        if (!reopenApplicant || !reopenReason.trim()) return
+        setIsReopening(true)
+        setErrorMsg(null)
+        try {
+            const updated = await reopenApplicantApplication(numericJobId, reopenApplicant.id, reopenReason.trim())
+            setApplicants((prev) => prev.map((app) => app.id === updated.id ? { ...app, ...updated } : app))
+            setSuccessMsg(`Đã mở lại hồ sơ ${reopenApplicant.candidateFullName} về vòng xem xét.`)
+            setReopenApplicant(null)
+            setReopenReason('')
+        } catch (err) {
+            setErrorMsg(err instanceof Error ? err.message : 'Không thể mở lại hồ sơ ứng tuyển.')
+        } finally {
+            setIsReopening(false)
+        }
+    }
+
     async function openNotesModal(applicant: JobApplicant) {
         setNotesModalApplicant(applicant)
         setIsLoadingNotes(true)
@@ -195,13 +235,7 @@ export function RecruiterJobApplicantsPage() {
     }
 
     // Quick stage statistics
-    const stageCounts = useMemo(() => {
-        const counts: Record<string, number> = {}
-        for (const app of applicants) {
-            counts[app.currentStage] = (counts[app.currentStage] || 0) + 1
-        }
-        return counts
-    }, [applicants])
+    const stageCounts = useMemo(() => countApplicantsByStage(applicants), [applicants])
 
     const jobTitleDisplay = applicants[0]?.jobTitle || `Tin tuyển dụng #${jobId}`
 
@@ -604,7 +638,17 @@ export function RecruiterJobApplicantsPage() {
                                         )}
 
                                         {/* Schedule Interview Button */}
-                                        <button
+                                        {['HIRED', 'REJECTED'].includes(app.currentStage) && app.status !== 'WITHDRAWN' && <button
+                                            type="button"
+                                            onClick={() => { setReopenApplicant(app); setReopenReason('') }}
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100 transition shadow-2xs"
+                                            title="Mở lại hồ sơ về vòng xem xét; cần ghi lý do"
+                                        >
+                                            <RefreshCw size={13} />
+                                            <span>Mở lại</span>
+                                        </button>}
+
+                                        {app.status !== 'WITHDRAWN' && !['HIRED', 'REJECTED', 'OFFERED'].includes(app.currentStage) && <button
                                             type="button"
                                             onClick={() => setInterviewModalApplicant(app)}
                                             className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-bold text-purple-700 hover:bg-purple-100 transition shadow-2xs"
@@ -612,14 +656,14 @@ export function RecruiterJobApplicantsPage() {
                                         >
                                             <CalendarCheck2 size={13} />
                                             <span>Lên lịch PV</span>
-                                        </button>
+                                        </button>}
 
                                         {/* Change Stage Button */}
-                                        <button
+                                        {app.status !== 'WITHDRAWN' && !['HIRED', 'REJECTED'].includes(app.currentStage) && <button
                                             type="button"
                                             onClick={() => {
                                                 setStageModalApplicant(app)
-                                                setTargetStage(app.currentStage)
+                                                setTargetStage(getNextStage(app.currentStage))
                                                 setStageNote('')
                                             }}
                                             className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs"
@@ -627,7 +671,7 @@ export function RecruiterJobApplicantsPage() {
                                         >
                                             <RefreshCw size={13} />
                                             <span>Chuyển vòng</span>
-                                        </button>
+                                        </button>}
 
                                         {/* Notes and Rating Button */}
                                         <button
@@ -680,7 +724,9 @@ export function RecruiterJobApplicantsPage() {
                                     Chọn vòng tuyển dụng mục tiêu *
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {Object.entries(APPLICANT_STAGE_CONFIG).map(([key, conf]) => {
+                                    {getAllowedStageTargets(stageModalApplicant.currentStage).map((key) => {
+                                        const conf = APPLICANT_STAGE_CONFIG[key]
+                                        if (!conf) return null
                                         const isSelected = targetStage === key
                                         return (
                                             <button
@@ -744,6 +790,24 @@ export function RecruiterJobApplicantsPage() {
                             </div>
                         </form>
                     </div>
+                </div>
+            )}
+
+            {reopenApplicant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs" role="dialog" aria-modal="true">
+                    <form onSubmit={handleReopenSubmit} className="bento-card w-full max-w-lg space-y-4 p-5 shadow-xl">
+                        <div>
+                            <h3 className="text-base font-bold text-slate-900">Mở lại hồ sơ ứng tuyển</h3>
+                            <p className="mt-1 text-xs text-slate-600">{reopenApplicant.candidateFullName} sẽ quay về giai đoạn xem xét.</p>
+                        </div>
+                        <label className="block text-xs font-bold text-slate-700">Lý do bắt buộc
+                            <textarea required maxLength={1000} rows={4} value={reopenReason} onChange={(event) => setReopenReason(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+                        </label>
+                        <div className="flex justify-end gap-2">
+                            <button type="button" disabled={isReopening} onClick={() => setReopenApplicant(null)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold">Hủy</button>
+                            <button type="submit" disabled={isReopening || !reopenReason.trim()} className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{isReopening ? 'Đang mở lại…' : 'Xác nhận mở lại'}</button>
+                        </div>
+                    </form>
                 </div>
             )}
 

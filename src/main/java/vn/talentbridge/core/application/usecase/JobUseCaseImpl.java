@@ -2,13 +2,16 @@ package vn.talentbridge.core.application.usecase;
 
 import vn.talentbridge.core.application.dto.CreateJobCommand;
 import vn.talentbridge.core.application.dto.JobDetailResult;
+import vn.talentbridge.core.application.dto.MyJobStatsResult;
 import vn.talentbridge.core.application.dto.UpdateJobCommand;
 import vn.talentbridge.core.application.port.in.JobUseCase;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
+import vn.talentbridge.core.application.port.out.JobStatusHistoryRepositoryPort;
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
 import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
 import vn.talentbridge.core.domain.model.Job;
+import vn.talentbridge.core.domain.model.JobStatusHistory;
 import vn.talentbridge.core.domain.model.Recruiter;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.JobStatus;
@@ -23,11 +26,14 @@ public class JobUseCaseImpl implements JobUseCase {
 
     private final JobRepositoryPort jobRepository;
     private final RecruiterRepositoryPort recruiterRepository;
+    private final JobStatusHistoryRepositoryPort historyRepository;
 
     public JobUseCaseImpl(JobRepositoryPort jobRepository,
-                          RecruiterRepositoryPort recruiterRepository) {
+                          RecruiterRepositoryPort recruiterRepository,
+                          JobStatusHistoryRepositoryPort historyRepository) {
         this.jobRepository = jobRepository;
         this.recruiterRepository = recruiterRepository;
+        this.historyRepository = historyRepository;
     }
 
     @Override
@@ -62,12 +68,14 @@ public class JobUseCaseImpl implements JobUseCase {
         job.setMaxSalary(command.maxSalary());
         job.setIsNegotiable(Boolean.TRUE.equals(command.isNegotiable()));
         job.setDeadline(command.deadline());
-        job.setStatus(JobStatus.ACTIVE);
+        job.setStatus(JobStatus.PENDING);
         job.setSkills(command.skills() != null ? command.skills() : new ArrayList<>());
         job.setCreatedAt(LocalDateTime.now());
         job.setUpdatedAt(LocalDateTime.now());
 
         Job saved = jobRepository.save(job);
+        recordStatusChange(saved, null, JobStatus.PENDING,
+                "Tin được tạo và đang chờ Admin kiểm duyệt.", recruiterUserId);
         return JobDetailResult.from(saved);
     }
 
@@ -84,6 +92,7 @@ public class JobUseCaseImpl implements JobUseCase {
         }
 
         validateSalaryAndDeadline(command.minSalary(), command.maxSalary(), command.deadline());
+        boolean requiresReview = job.getStatus() == JobStatus.ACTIVE;
 
         job.setTitle(command.title() != null ? command.title().trim() : job.getTitle());
         job.setDescription(command.description() != null ? command.description().trim() : job.getDescription());
@@ -105,9 +114,16 @@ public class JobUseCaseImpl implements JobUseCase {
         if (command.skills() != null) {
             job.setSkills(command.skills());
         }
+        if (requiresReview) {
+            job.setStatus(JobStatus.PENDING);
+        }
         job.setUpdatedAt(LocalDateTime.now());
 
         Job saved = jobRepository.save(job);
+        if (requiresReview) {
+            recordStatusChange(saved, JobStatus.ACTIVE, JobStatus.PENDING,
+                    "Tin được chỉnh sửa và cần Admin kiểm duyệt lại.", recruiterUserId);
+        }
         return JobDetailResult.from(saved);
     }
 
@@ -123,10 +139,15 @@ public class JobUseCaseImpl implements JobUseCase {
             throw new DomainException(40301, "Bạn không có quyền đóng tin tuyển dụng này");
         }
 
+        JobStatus previousStatus = job.getStatus();
         job.close();
         job.setUpdatedAt(LocalDateTime.now());
 
         Job saved = jobRepository.save(job);
+        if (previousStatus != saved.getStatus()) {
+            recordStatusChange(saved, previousStatus, saved.getStatus(),
+                    "Nhà tuyển dụng chủ động đóng tin tuyển dụng.", recruiterUserId);
+        }
         return JobDetailResult.from(saved);
     }
 
@@ -149,6 +170,20 @@ public class JobUseCaseImpl implements JobUseCase {
     @Override
     public long countMyJobs(Long recruiterUserId, JobStatus status) {
         return jobRepository.countByRecruiterUserId(recruiterUserId, status);
+    }
+
+    @Override
+    public MyJobStatsResult getMyJobStats(Long recruiterUserId) {
+        recruiterRepository.findByUserId(recruiterUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
+        long draft = countMyJobs(recruiterUserId, JobStatus.DRAFT);
+        long pending = countMyJobs(recruiterUserId, JobStatus.PENDING);
+        long active = countMyJobs(recruiterUserId, JobStatus.ACTIVE);
+        long rejected = countMyJobs(recruiterUserId, JobStatus.REJECTED);
+        long expired = countMyJobs(recruiterUserId, JobStatus.EXPIRED);
+        long closed = countMyJobs(recruiterUserId, JobStatus.CLOSED);
+        return new MyJobStatsResult(draft + pending + active + rejected + expired + closed,
+                draft, pending, active, rejected, expired, closed);
     }
 
     @Override
@@ -184,5 +219,10 @@ public class JobUseCaseImpl implements JobUseCase {
         if (minSalary != null && maxSalary != null && minSalary.compareTo(maxSalary) > 0) {
             throw new DomainException(40001, "Mức lương tối thiểu không được lớn hơn mức lương tối đa");
         }
+    }
+
+    private void recordStatusChange(Job job, JobStatus from, JobStatus to, String reason, Long actorUserId) {
+        historyRepository.save(new JobStatusHistory(null, job.getId(), from, to, reason,
+                actorUserId, LocalDateTime.now()));
     }
 }

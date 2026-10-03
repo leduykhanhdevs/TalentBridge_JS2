@@ -18,12 +18,14 @@ import { Link } from 'react-router'
 import {
     closeJob,
     createJob,
+    getMyJobStats,
     getMyJobs,
     updateJob,
 } from '../../features/recruiter/recruiterJobApi'
 import type {
     CreateJobPayload,
     JobStatus,
+    MyJobStats,
     RecruiterJobItem,
 } from '../../features/recruiter/recruiterJobTypes'
 import {
@@ -46,6 +48,9 @@ export function RecruiterJobsPage() {
     const [pageSize] = useState(10)
     const [totalPages, setTotalPages] = useState(1)
     const [totalJobs, setTotalJobs] = useState(0)
+    const [jobStats, setJobStats] = useState<MyJobStats>({
+        total: 0, draft: 0, pending: 0, active: 0, rejected: 0, expired: 0, closed: 0,
+    })
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -59,14 +64,14 @@ export function RecruiterJobsPage() {
         setIsLoading(true)
         setErrorMsg(null)
         try {
-            const res = await getMyJobs({
-                page,
-                size: pageSize,
-                status: statusFilter,
-            })
+            const [res, stats] = await Promise.all([
+                getMyJobs({ page, size: pageSize, status: statusFilter }),
+                getMyJobStats(),
+            ])
             setJobs(res.content || [])
             setTotalPages(res.totalPages || 1)
             setTotalJobs(res.totalElements || 0)
+            setJobStats(stats)
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Không thể tải danh sách tin tuyển dụng.'
             setErrorMsg(msg)
@@ -90,8 +95,8 @@ export function RecruiterJobsPage() {
         )
     })
 
-    const publishedCount = jobs.filter((j) => j.status === 'PUBLISHED').length
-    const closedCount = jobs.filter((j) => j.status === 'CLOSED').length
+    const publishedCount = jobStats.active
+    const closedCount = jobStats.closed + jobStats.expired
 
     async function handleFormSubmit(payload: CreateJobPayload) {
         setIsSubmitting(true)
@@ -186,7 +191,7 @@ export function RecruiterJobsPage() {
                             <Briefcase size={16} />
                         </div>
                     </div>
-                    <p className="mt-2 text-2xl font-black text-slate-900">{totalJobs}</p>
+                    <p className="mt-2 text-2xl font-black text-slate-900">{jobStats.total}</p>
                     <span className="text-[11px] text-slate-500">Tất cả bài đăng của công ty</span>
                 </div>
 
@@ -221,50 +226,25 @@ export function RecruiterJobsPage() {
             <div className="bento-card p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Status Tabs */}
-                    <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200/60 w-fit">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setStatusFilter('')
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                        Trạng thái
+                        <select
+                            value={statusFilter}
+                            onChange={(event) => {
+                                setStatusFilter(event.target.value as JobStatus | '')
                                 setPage(1)
                             }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                                statusFilter === ''
-                                    ? 'bg-white text-slate-900 shadow-2xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
                         >
-                            Tất cả ({totalJobs})
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setStatusFilter('PUBLISHED')
-                                setPage(1)
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                                statusFilter === 'PUBLISHED'
-                                    ? 'bg-emerald-600 text-white shadow-2xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            Đang tuyển
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setStatusFilter('CLOSED')
-                                setPage(1)
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                                statusFilter === 'CLOSED'
-                                    ? 'bg-slate-700 text-white shadow-2xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            Đã đóng
-                        </button>
-                    </div>
+                            <option value="">Tất cả ({jobStats.total})</option>
+                            <option value="DRAFT">Bản nháp ({jobStats.draft})</option>
+                            <option value="PENDING">Chờ duyệt ({jobStats.pending})</option>
+                            <option value="ACTIVE">Đang tuyển ({jobStats.active})</option>
+                            <option value="REJECTED">Bị từ chối ({jobStats.rejected})</option>
+                            <option value="EXPIRED">Hết hạn ({jobStats.expired})</option>
+                            <option value="CLOSED">Đã đóng ({jobStats.closed})</option>
+                        </select>
+                    </label>
 
                     {/* Search Input */}
                     <div className="relative w-full sm:w-72">
@@ -310,7 +290,11 @@ export function RecruiterJobsPage() {
             ) : (
                 <div className="space-y-3">
                     {filteredJobs.map((job) => {
-                        const isPublished = job.status === 'PUBLISHED'
+                        const statusLabels: Record<JobStatus, string> = {
+                            DRAFT: 'BẢN NHÁP', PENDING: 'CHỜ KIỂM DUYỆT', ACTIVE: 'ĐANG TUYỂN DỤNG',
+                            EXPIRED: 'ĐÃ HẾT HẠN', CLOSED: 'ĐÃ ĐÓNG', REJECTED: 'BỊ TỪ CHỐI',
+                        }
+                        const isPublished = job.status === 'ACTIVE'
 
                         return (
                             <div
@@ -328,7 +312,7 @@ export function RecruiterJobsPage() {
                                                         : 'border-slate-200 bg-slate-100 text-slate-600'
                                                 }`}
                                             >
-                                                {isPublished ? 'ĐANG TUYỂN DỤNG' : 'ĐÃ ĐÓNG'}
+                                                {statusLabels[job.status] || job.status}
                                             </span>
                                             <span className="text-xs font-bold text-indigo-600">
                                                 {JOB_TYPE_LABELS[job.jobType] || job.jobType}
@@ -379,7 +363,7 @@ export function RecruiterJobsPage() {
                                     </div>
 
                                     {/* Right Actions */}
-                                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0 shrink-0">
+                                    <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:shrink-0 lg:border-t-0 lg:pt-0">
                                         <Link
                                             to={`/recruiter/jobs/${job.id}/applicants`}
                                             className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-600 bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700 shadow-2xs transition"

@@ -16,6 +16,8 @@ public interface CompanyJoinRequestRepositoryPort {
 
     Optional<CompanyJoinRequest> findPendingByUserId(Long userId);
 
+    List<CompanyJoinRequest> findByUserIdAndStatus(Long userId, CompanyJoinRequestStatus status);
+
     List<CompanyJoinRequest> findByCompanyId(Long companyId, CompanyJoinRequestStatus status, int page, int size);
 
     long countByCompanyId(Long companyId, CompanyJoinRequestStatus status);

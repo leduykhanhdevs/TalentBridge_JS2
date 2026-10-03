@@ -12,7 +12,7 @@ Giao diện người dùng nền tảng Tuyển dụng Trực tuyến & Quản t
 - **Build Tool & Bundler**: [Vite 8](https://vitejs.dev/)
 - **Styling & CSS**: [Tailwind CSS v4](https://tailwindcss.com/) (`@tailwindcss/vite`)
 - **Icon Set**: [Lucide React](https://lucide.dev/)
-- **Automated Testing**: [Vitest 5](https://vitest.dev/) (Unit & Integration E2E test suite)
+- **Automated Testing**: [Vitest 5](https://vitest.dev/) (unit/component and isolated API tests) + [Playwright](https://playwright.dev/) (role/viewport UI checks and screenshots)
 - **Language**: [TypeScript 6](https://www.typescriptlang.org/) (Strict Mode, Zero-Any discipline)
 - **Routing**: [React Router v8](https://reactrouter.com/) (File-based & Nested route layouts)
 - **Server State Management**: [TanStack React Query v5](https://tanstack.com/query)
@@ -48,6 +48,7 @@ Giao diện người dùng nền tảng Tuyển dụng Trực tuyến & Quản t
 - `/admin/candidates`: **Quản lý Ứng viên (AdminCandidatesPage)** – Danh sách ứng viên hệ thống, tìm kiếm, lọc theo trạng thái và thao tác Khóa / Mở khóa tài khoản (`ACTIVE` / `BANNED`).
 - `/admin/recruiters`: **Quản lý Nhà tuyển dụng (AdminRecruitersPage)** – Danh sách HR tuyển dụng, thông tin doanh nghiệp trực thuộc và thao tác Khóa / Mở khóa tài khoản.
 - `/admin/companies`: **Kiểm duyệt Doanh nghiệp (AdminCompaniesPage)** – Xem xét các hồ sơ công ty mới gửi lên, thực hiện Phê duyệt (`APPROVED`) hoặc Từ chối (`REJECTED`).
+- `/admin/jobs`: **Kiểm duyệt Tin tuyển dụng (AdminJobsPage)** – Xem đầy đủ nội dung tin, duyệt/từ chối/gỡ tin có lý do và tra cứu lịch sử kiểm duyệt.
 
 ---
 
@@ -108,8 +109,10 @@ frontend/
 │   │   ├── NotFoundPage.tsx
 │   │   ├── RegisterPage.tsx
 │   │   └── ResetPasswordPage.tsx
-│   └── __tests__/
-│       └── e2e-ecosystem.test.ts   # Kiểm thử E2E tích hợp toàn bộ hệ sinh thái (59 tests)
+│   └── e2e/
+│       ├── e2e-ecosystem.test.ts   # API flow tích hợp trên H2 dùng riêng cho E2E
+│       └── role-viewport-smoke.spec.ts # Đăng nhập 3 vai trò, kiểm tra tràn và lưu ảnh UI
+├── playwright.config.ts
 ├── package.json
 ├── tsconfig.json
 └── vite.config.ts
@@ -144,17 +147,24 @@ Vite dev server đã được cấu hình proxy tự động chuyển tiếp cá
 
 ### 3. Kiểm Thử Tự Động (Automated Testing)
 
-Chạy bộ kiểm thử tự động toàn diện bao gồm Unit Tests và E2E Flow test:
+`npm test` chỉ chạy bộ unit/component tests. Luồng ecosystem và ảnh giao diện chạy riêng trên backend H2 tạm thời; không trỏ tới backend phát triển ở `localhost:8080`:
 
 ```bash
-# Chạy toàn bộ test suite một lần (CI mode)
-pnpm test
-
-# Hoặc chạy ở chế độ watch khi phát triển
-pnpm exec vitest watch
+# Từ thư mục gốc dự án trên Windows, dùng JDK 21
+./scripts/run-e2e.ps1
 ```
 
-Bài kiểm thử E2E cần Backend Spring Boot đang chạy tại `http://localhost:8080`.
+Script đóng gói backend hiện tại, khởi chạy profile `e2e` với H2 trong bộ nhớ tại cổng `18080`, chạy API flow và đăng nhập lần lượt bằng ba tài khoản mẫu. Trên máy mới, cài browser một lần bằng `pnpm exec playwright install chromium`. Playwright mở giao diện tại cổng `5174`, kiểm tra Candidate `/candidate/profile`, Recruiter `/recruiter/jobs` và Admin `/admin/jobs` ở độ rộng `360`, `555`, `1280` px. Backend tạm được dừng khi hoàn tất; ảnh được lưu tại `artifacts/roleplay-qa/`.
+
+Các bước frontend độc lập vẫn chạy từ thư mục `frontend/`:
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+Không chạy trực tiếp `npm run test:e2e` nếu chưa cấu hình backend H2 riêng bằng script trên; bài test từ chối mọi API base ngoài `127.0.0.1:18080`.
 
 ### 4. Kiểm Tra Quy Chuẩn Mã Nguồn (Linting)
 

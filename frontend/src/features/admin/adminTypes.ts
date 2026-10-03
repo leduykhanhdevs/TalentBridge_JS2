@@ -1,5 +1,6 @@
 export type UserStatus = 'ACTIVE' | 'BANNED'
 export type CompanyStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type AdminJobStatus = 'DRAFT' | 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CLOSED' | 'REJECTED'
 
 export type PageResponse<T> = {
     content: T[]
@@ -109,4 +110,40 @@ export type CompanyFilterParams = {
     size?: number
     keyword?: string
     status?: CompanyStatus
+}
+
+export type AdminJobResponse = {
+    id: number
+    title: string
+    description?: string
+    requirements?: string
+    benefits?: string
+    companyId?: number
+    companyName?: string
+    jobType?: string
+    experienceLevel?: string
+    salaryMin?: number | null
+    salaryMax?: number | null
+    city?: string
+    recruiterUserId?: number
+    skills?: string[]
+    status: AdminJobStatus
+    deadline?: string
+    createdAt?: string
+}
+
+export type JobStatusHistoryResponse = {
+    id: number
+    jobId: number
+    fromStatus?: AdminJobStatus | null
+    toStatus: AdminJobStatus
+    reason?: string | null
+    changedByUserId: number
+    changedAt: string
+}
+
+export type JobFilterParams = {
+    page?: number
+    size?: number
+    status?: AdminJobStatus
 }

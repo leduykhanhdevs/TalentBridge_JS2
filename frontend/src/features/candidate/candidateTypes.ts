@@ -30,6 +30,7 @@ export interface UpdateCandidateProfileRequest {
     dob?: string
     gender?: string
     summary?: string
+    /** @deprecated Derived from work experience; retained for backward request compatibility and ignored by the server. */
     experienceYears?: number
     currentSalary?: number
     expectedSalary?: number
@@ -110,8 +111,8 @@ export interface ResumeItem {
     createdAt: string
 }
 
-export type ApplicationStage = 'APPLIED' | 'SCREENING' | 'INTERVIEW' | 'OFFERED' | 'REJECTED'
-export type ApplicationStatus = 'SUBMITTED' | 'WITHDRAWN'
+export type ApplicationStage = 'APPLIED' | 'REVIEWING' | 'SCREENING' | 'SHORTLISTED' | 'INTERVIEW' | 'OFFERED' | 'HIRED' | 'REJECTED'
+export type ApplicationStatus = 'SUBMITTED' | 'ACTIVE' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN'
 
 export interface CandidateApplicationItem {
     id: number

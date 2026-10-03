@@ -49,6 +49,13 @@ public class CompanyJoinRequest {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void cancel(String reason) {
+        this.status = CompanyJoinRequestStatus.CANCELLED;
+        this.reason = reason;
+        this.approvedByUserId = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

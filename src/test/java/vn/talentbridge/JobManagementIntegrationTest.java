@@ -208,7 +208,7 @@ class JobManagementIntegrationTest {
                 .andExpect(jsonPath("$.data.title").value("Fullstack Developer (Java & React)"))
                 .andExpect(jsonPath("$.data.companyName").value("TalentBridge AI Global"))
                 .andExpect(jsonPath("$.data.city").value("Hà Nội"))
-                .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
                 .andExpect(jsonPath("$.data.skills", hasItems("Java", "Spring Boot", "React", "TypeScript")));
     }
 

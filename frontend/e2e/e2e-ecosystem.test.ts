@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest'
 
-const API_BASE = 'http://localhost:8080/api/v1'
+const configuredBase = process.env.TALENTBRIDGE_E2E_API_BASE_URL
+if (!configuredBase || process.env.TALENTBRIDGE_E2E_DATA_ISOLATED !== 'true') {
+    throw new Error('E2E cần TALENTBRIDGE_E2E_API_BASE_URL và TALENTBRIDGE_E2E_DATA_ISOLATED=true; hãy chạy scripts/run-e2e.ps1 để dùng H2 tạm thời.')
+}
+const parsedBase = new URL(configuredBase)
+if (parsedBase.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(parsedBase.hostname) || parsedBase.port !== '18080') {
+    throw new Error('E2E chỉ được phép gọi backend H2 cục bộ tại 127.0.0.1:18080; các cổng/máy chủ khác có thể dùng dữ liệu chung.')
+}
+const API_BASE = configuredBase.replace(/\/$/, '')
 
 describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
     const timestamp = Date.now()
@@ -17,6 +25,9 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
     let hr1CompanyId = 0
     let hr2Token = ''
     let joinRequestId = 0
+    let approvedJobId = 0
+    let approvedJobTitle = ''
+    let pendingJobTitle = ''
 
     // Helper fetch wrapper
     async function apiRequest(endpoint: string, options: RequestInit = {}, token?: string) {
@@ -90,7 +101,6 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
                         fullName: 'Lê Văn Ứng Viên Pro',
                         phone: '0912345678',
                         title: 'Senior Fullstack Engineer',
-                        experienceYears: 4,
                         currentSalary: 22000000,
                         expectedSalary: 35000000,
                         city: 'Đà Nẵng',
@@ -106,7 +116,7 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
             expect(updateRes.status).toBe(200)
             expect(updateRes.data?.data?.fullName).toBe('Lê Văn Ứng Viên Pro')
             expect(updateRes.data?.data?.title).toBe('Senior Fullstack Engineer')
-            expect(updateRes.data?.data?.experienceYears).toBe(4)
+            expect(updateRes.data?.data?.experienceYears).toBe(0)
             expect(updateRes.data?.data?.city).toBe('Đà Nẵng')
         })
     })
@@ -447,6 +457,75 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
             expect(hr1Found.companyName).toBe(companyName)
             expect(hr2Found).toBeDefined()
             expect(hr2Found.companyName).toBe(companyName)
+        })
+    })
+
+    // --- PHASE 7: JOB MODERATION LIFECYCLE ---
+    describe('Phase 7: Recruiter Job Creation & Admin Moderation', () => {
+        it('7.1. HR1 creates two jobs which both enter PENDING', async () => {
+            const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+            approvedJobTitle = `E2E Job sẽ duyệt ${timestamp}`
+            pendingJobTitle = `E2E Job chờ duyệt ${timestamp}`
+            const titles = [approvedJobTitle, pendingJobTitle]
+
+            for (const title of titles) {
+                const res = await apiRequest('/jobs', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title,
+                        description: 'Tin tuyển dụng tạo trong bộ kiểm thử H2 cô lập.',
+                        requirements: 'Có kinh nghiệm Java và Spring Boot.',
+                        benefits: 'Làm việc linh hoạt.',
+                        city: 'Hà Nội',
+                        jobType: 'FULL_TIME',
+                        experienceLevel: 'SENIOR',
+                        deadline,
+                        skills: ['Java', 'Spring Boot'],
+                    }),
+                }, hr1Token)
+
+                expect(res.status).toBe(201)
+                expect(res.data?.data?.status).toBe('PENDING')
+                expect(res.data?.data?.title).toBe(title)
+                if (title !== pendingJobTitle) approvedJobId = res.data.data.id
+            }
+
+            const stats = await apiRequest('/recruiters/my-jobs/stats', { method: 'GET' }, hr1Token)
+            expect(stats.status).toBe(200)
+            expect(stats.data?.data?.pending).toBeGreaterThanOrEqual(2)
+        })
+
+        it('7.2. Admin approves one job and records moderation history', async () => {
+            const approve = await apiRequest(`/admin/jobs/${approvedJobId}/status`, {
+                method: 'PATCH',
+                body: JSON.stringify({ status: 'ACTIVE' }),
+            }, adminToken)
+            expect(approve.status).toBe(200)
+            expect(approve.data?.data?.status).toBe('ACTIVE')
+
+            const history = await apiRequest(`/admin/jobs/${approvedJobId}/status-history`, { method: 'GET' }, adminToken)
+            expect(history.status).toBe(200)
+            expect(history.data?.data).toEqual(expect.arrayContaining([
+                expect.objectContaining({ fromStatus: 'PENDING', toStatus: 'ACTIVE' }),
+            ]))
+
+            const publicApproved = await apiRequest(`/jobs?keyword=${encodeURIComponent(approvedJobTitle)}`, { method: 'GET' })
+            expect(publicApproved.status).toBe(200)
+            expect(publicApproved.data?.data?.content?.some((job: { title: string; status: string }) => job.title === approvedJobTitle && job.status === 'ACTIVE')).toBe(true)
+
+            const publicResults = await apiRequest(`/jobs?keyword=${encodeURIComponent(pendingJobTitle)}`, { method: 'GET' })
+            expect(publicResults.status).toBe(200)
+            expect(publicResults.data?.data?.content).toEqual([])
+        })
+
+        it('7.3. Pending job remains visible in Admin queue and not in public search', async () => {
+            const pending = await apiRequest('/admin/jobs?status=PENDING&page=1&size=50', { method: 'GET' }, adminToken)
+            expect(pending.status).toBe(200)
+            expect(pending.data?.data?.content?.some((job: { title: string }) => job.title === pendingJobTitle)).toBe(true)
+
+            const publicResults = await apiRequest(`/jobs?keyword=${encodeURIComponent(pendingJobTitle)}`, { method: 'GET' })
+            expect(publicResults.status).toBe(200)
+            expect(publicResults.data?.data?.content).toEqual([])
         })
     })
 })

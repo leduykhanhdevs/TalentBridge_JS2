@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJoinRequestJpaEntity;
 import vn.talentbridge.core.domain.vo.CompanyJoinRequestStatus;
 
+import java.util.List;
+
 import java.util.Optional;
 
 @Repository
@@ -17,6 +19,8 @@ public interface CompanyJoinRequestJpaRepository extends JpaRepository<CompanyJo
     Optional<CompanyJoinRequestJpaEntity> findFirstByUserIdAndStatusOrderByCreatedAtDesc(Long userId, CompanyJoinRequestStatus status);
 
     Page<CompanyJoinRequestJpaEntity> findByCompanyIdAndStatus(Long companyId, CompanyJoinRequestStatus status, Pageable pageable);
+
+    List<CompanyJoinRequestJpaEntity> findByUserIdAndStatus(Long userId, CompanyJoinRequestStatus status);
 
     Page<CompanyJoinRequestJpaEntity> findByCompanyId(Long companyId, Pageable pageable);
 

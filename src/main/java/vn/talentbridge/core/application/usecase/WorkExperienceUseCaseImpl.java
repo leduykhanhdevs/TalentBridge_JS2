@@ -11,7 +11,9 @@ import vn.talentbridge.core.domain.model.WorkExperience;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
+import java.util.ArrayList;
 
 public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
 
@@ -102,6 +104,9 @@ public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
     }
 
     private void validateCommand(WorkExperienceCommand command) {
+        if (command == null) {
+            throw new IllegalArgumentException("Thông tin kinh nghiệm làm việc không hợp lệ");
+        }
         if (command.companyName() == null || command.companyName().isBlank()) {
             throw new IllegalArgumentException("Tên công ty không được để trống");
         }
@@ -111,8 +116,18 @@ public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
         if (command.startDate() == null) {
             throw new IllegalArgumentException("Ngày bắt đầu không được để trống");
         }
+        if (command.isCurrent() == null) {
+            throw new IllegalArgumentException("Vui lòng xác định công việc hiện tại hay đã kết thúc");
+        }
+        LocalDate today = LocalDate.now();
+        if (command.startDate().isAfter(today)) {
+            throw new IllegalArgumentException("Ngày bắt đầu không được ở trong tương lai");
+        }
         if (Boolean.FALSE.equals(command.isCurrent()) && command.endDate() == null) {
             throw new IllegalArgumentException("Vui lòng chọn ngày kết thúc hoặc đánh dấu là Đang làm việc tại đây");
+        }
+        if (command.endDate() != null && command.endDate().isAfter(today)) {
+            throw new IllegalArgumentException("Ngày kết thúc không được ở trong tương lai");
         }
         if (command.endDate() != null && command.endDate().isBefore(command.startDate())) {
             throw new IllegalArgumentException("Ngày kết thúc không được trước ngày bắt đầu");
@@ -130,7 +145,8 @@ public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
         if (experiences == null || experiences.isEmpty()) {
             return 0;
         }
-        long totalDays = 0;
+        record Period(LocalDate start, LocalDate end) {}
+        List<Period> periods = new ArrayList<>();
         for (WorkExperience exp : experiences) {
             if (exp.getStartDate() == null) continue;
             LocalDate start = exp.getStartDate();
@@ -138,10 +154,26 @@ public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
                     ? LocalDate.now()
                     : exp.getEndDate();
             if (!end.isBefore(start)) {
-                totalDays += ChronoUnit.DAYS.between(start, end);
+                periods.add(new Period(start, end));
             }
         }
-        double years = totalDays / 365.25;
-        return (int) Math.round(years);
+        if (periods.isEmpty()) return 0;
+
+        periods.sort(Comparator.comparing(Period::start));
+        long totalDays = 0;
+        LocalDate currentStart = periods.getFirst().start();
+        LocalDate currentEnd = periods.getFirst().end();
+        for (int i = 1; i < periods.size(); i++) {
+            Period next = periods.get(i);
+            if (!next.start().isAfter(currentEnd.plusDays(1))) {
+                if (next.end().isAfter(currentEnd)) currentEnd = next.end();
+            } else {
+                totalDays += ChronoUnit.DAYS.between(currentStart, currentEnd.plusDays(1));
+                currentStart = next.start();
+                currentEnd = next.end();
+            }
+        }
+        totalDays += ChronoUnit.DAYS.between(currentStart, currentEnd.plusDays(1));
+        return (int) Math.floor(totalDays / 365.2425d);
     }
 }

@@ -2,6 +2,7 @@ package vn.talentbridge.core.application.port.in;
 
 import vn.talentbridge.core.application.dto.CreateJobCommand;
 import vn.talentbridge.core.application.dto.JobDetailResult;
+import vn.talentbridge.core.application.dto.MyJobStatsResult;
 import vn.talentbridge.core.application.dto.UpdateJobCommand;
 import vn.talentbridge.core.domain.vo.JobStatus;
 
@@ -21,6 +22,8 @@ public interface JobUseCase {
     List<JobDetailResult> getMyJobs(Long recruiterUserId, int page, int size, JobStatus status);
 
     long countMyJobs(Long recruiterUserId, JobStatus status);
+
+    MyJobStatsResult getMyJobStats(Long recruiterUserId);
 
     default List<JobDetailResult> searchJobs(String keyword, String location, String jobType, String experienceLevel,
                                              BigDecimal minSalary, BigDecimal maxSalary, int page, int size) {

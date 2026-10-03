@@ -102,6 +102,19 @@ export async function updateApplicantStage(
     return handleResponse<JobApplicant>(res, 'Không thể cập nhật trạng thái ứng viên')
 }
 
+export async function reopenApplicantApplication(
+    jobId: number,
+    applicationId: number,
+    reason: string,
+): Promise<JobApplicant> {
+    const res = await fetch(`${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/reopen`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ reason }),
+    })
+    return handleResponse<JobApplicant>(res, 'Không thể mở lại hồ sơ ứng tuyển.')
+}
+
 export async function addApplicantNote(
     jobId: number,
     applicationId: number,

@@ -4,6 +4,7 @@ import type {
     RecruiterJobFilterParams,
     RecruiterJobItem,
     UpdateJobPayload,
+    MyJobStats,
 } from './recruiterJobTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 
@@ -73,6 +74,14 @@ export async function getMyJobs(
         response,
         'Không thể tải danh sách tin tuyển dụng.',
     )
+}
+
+export async function getMyJobStats(): Promise<MyJobStats> {
+    const response = await fetch(`${API_BASE_URL}/recruiters/my-jobs/stats`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+    return handleResponse<MyJobStats>(response, 'Không thể tải thống kê tin tuyển dụng.')
 }
 
 /**

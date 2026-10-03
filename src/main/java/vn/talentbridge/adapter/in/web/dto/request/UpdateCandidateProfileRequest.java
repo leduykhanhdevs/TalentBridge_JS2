@@ -40,6 +40,7 @@ public class UpdateCandidateProfileRequest {
     private String summary;
 
     @Min(value = 0, message = "Số năm kinh nghiệm không được nhỏ hơn 0")
+    @Deprecated(forRemoval = false)
     private Integer experienceYears;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Mức lương hiện tại không được nhỏ hơn 0")

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
 import vn.talentbridge.adapter.in.web.dto.request.RateAndNoteApplicantRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateApplicantStatusRequest;
+import vn.talentbridge.adapter.in.web.dto.request.ReopenApplicationRequest;
 import vn.talentbridge.adapter.in.web.dto.response.ApplicationNoteResponse;
 import vn.talentbridge.adapter.in.web.dto.response.ApplicationStageResponse;
 import vn.talentbridge.adapter.in.web.dto.response.JobApplicantResponse;
@@ -83,6 +84,19 @@ public class RecruiterApplicantController {
         );
 
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái ứng viên thành công", JobApplicantResponse.from(result)));
+    }
+
+    @PostMapping("/api/v1/recruiters/jobs/{jobId}/applicants/{applicationId}/reopen")
+    @PreAuthorize("hasRole('RECRUITER')")
+    @Operation(summary = "Mở lại hồ sơ tuyển dụng đã kết thúc", description = "Mở lại hồ sơ HIRED hoặc REJECTED về REVIEWING và lưu lý do")
+    public ResponseEntity<ApiResponse<JobApplicantResponse>> reopenApplication(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long jobId,
+            @PathVariable Long applicationId,
+            @Valid @RequestBody ReopenApplicationRequest request) {
+        JobApplicantResult result = updateApplicantStatusUseCase.reopenApplication(
+                principal.getId(), jobId, applicationId, request.reason());
+        return ResponseEntity.ok(ApiResponse.success("Đã mở lại hồ sơ ứng viên", JobApplicantResponse.from(result)));
     }
 
     @PostMapping("/api/v1/recruiters/jobs/{jobId}/applicants/{applicationId}/notes")

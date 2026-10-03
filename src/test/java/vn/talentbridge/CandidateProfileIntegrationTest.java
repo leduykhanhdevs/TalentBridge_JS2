@@ -176,7 +176,7 @@ class CandidateProfileIntegrationTest {
                 .andExpect(jsonPath("$.data.fullName").value("Trần Ứng Viên Pro"))
                 .andExpect(jsonPath("$.data.phone").value("0988776655"))
                 .andExpect(jsonPath("$.data.title").value("Senior Backend Engineer"))
-                .andExpect(jsonPath("$.data.experienceYears").value(5))
+                .andExpect(jsonPath("$.data.experienceYears").value(1))
                 .andExpect(jsonPath("$.data.city").value("TP. Hồ Chí Minh"))
                 .andExpect(jsonPath("$.data.githubUrl").value("https://github.com/ungvienpro"));
     }

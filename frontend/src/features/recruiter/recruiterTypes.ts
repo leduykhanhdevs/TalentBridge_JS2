@@ -67,7 +67,7 @@ export type CompanyJoinRequestResponse = {
     companyLogoUrl?: string
     position?: string
     message?: string
-    status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+    status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'
     reason?: string
     approvedByUserId?: number
     createdAt: string
@@ -85,7 +85,7 @@ export type ReviewJoinRequest = {
 }
 
 export type CompanyJoinRequestFilterParams = {
-    status?: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+    status?: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'
     page?: number
     size?: number
 }

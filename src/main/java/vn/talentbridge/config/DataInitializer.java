@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 @Slf4j
-@Profile({"local", "test", "dev"})
+@Profile({"local", "test", "dev", "e2e"})
 @Configuration
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {

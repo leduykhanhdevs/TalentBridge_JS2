@@ -13,17 +13,11 @@ import vn.talentbridge.core.domain.model.ApplicationStage;
 import vn.talentbridge.core.domain.model.Job;
 import vn.talentbridge.core.domain.model.JobApplicant;
 import vn.talentbridge.core.domain.model.Recruiter;
+import vn.talentbridge.core.domain.vo.ApplicationPipelineStage;
 
 import java.time.LocalDateTime;
-import java.util.Locale;
-import java.util.Set;
 
 public class UpdateApplicantStatusUseCaseImpl implements UpdateApplicantStatusUseCase {
-
-    private static final Set<String> VALID_STAGES = Set.of(
-            "APPLIED", "REVIEWING", "SHORTLISTED", "INTERVIEW", "OFFERED", "HIRED", "REJECTED"
-    );
-
     private final RecruiterRepositoryPort recruiterRepository;
     private final JobRepositoryPort jobRepository;
     private final JobApplicationRepositoryPort jobApplicationRepository;
@@ -40,74 +34,79 @@ public class UpdateApplicantStatusUseCaseImpl implements UpdateApplicantStatusUs
     }
 
     @Override
-    public JobApplicantResult updateStageAndStatus(Long recruiterUserId, Long jobId, Long applicationId, UpdateApplicantStatusCommand command) {
+    public JobApplicantResult updateStageAndStatus(Long recruiterUserId, Long jobId, Long applicationId,
+                                                   UpdateApplicantStatusCommand command) {
         if (command == null || command.getStage() == null || command.getStage().isBlank()) {
             throw new DomainException(40001, "Trạng thái vòng tuyển dụng không được để trống");
         }
-
-        String normalizedStage = command.getStage().trim().toUpperCase(Locale.ROOT);
-        if (!VALID_STAGES.contains(normalizedStage)) {
-            throw new DomainException(40001, "Trạng thái vòng tuyển dụng '" + command.getStage() + "' không hợp lệ");
+        ApplicationPipelineStage target = parseStage(command.getStage());
+        JobApplicant applicant = findAuthorizedApplicant(recruiterUserId, jobId, applicationId);
+        if ("WITHDRAWN".equalsIgnoreCase(applicant.getStatus())) {
+            throw new DomainException(40001, "Đơn ứng tuyển đã được ứng viên rút và không thể cập nhật");
         }
 
-        // 1. Xác định recruiter hiện tại
+        ApplicationPipelineStage current = parseStage(applicant.getCurrentStage());
+        if (!current.canAdvanceTo(target)) {
+            throw new DomainException(40001, "Chỉ được chuyển tiếp vòng tuyển dụng; dùng chức năng mở lại cho hồ sơ đã kết thúc");
+        }
+
+        jobApplicationRepository.updateStageAndStatus(applicationId, target.name(), target.applicationStatus());
+        saveStageHistory(applicationId, target, command.getNote(), recruiterUserId);
+        JobApplicant updated = jobApplicationRepository.findApplicantById(applicationId).orElse(applicant);
+        return JobApplicantResult.from(updated);
+    }
+
+    @Override
+    public JobApplicantResult reopenApplication(Long recruiterUserId, Long jobId, Long applicationId, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new DomainException(40001, "Vui lòng nhập lý do mở lại hồ sơ");
+        }
+        JobApplicant applicant = findAuthorizedApplicant(recruiterUserId, jobId, applicationId);
+        if ("WITHDRAWN".equalsIgnoreCase(applicant.getStatus())) {
+            throw new DomainException(40001, "Không thể mở lại đơn ứng tuyển mà ứng viên đã rút");
+        }
+        ApplicationPipelineStage current = parseStage(applicant.getCurrentStage());
+        if (current != ApplicationPipelineStage.REJECTED && current != ApplicationPipelineStage.HIRED) {
+            throw new DomainException(40001, "Chỉ có thể mở lại hồ sơ đã bị từ chối hoặc đã tuyển");
+        }
+
+        jobApplicationRepository.updateStageAndStatus(applicationId,
+                ApplicationPipelineStage.REVIEWING.name(), ApplicationPipelineStage.REVIEWING.applicationStatus());
+        saveStageHistory(applicationId, ApplicationPipelineStage.REVIEWING,
+                "Mở lại hồ sơ: " + reason.trim(), recruiterUserId);
+        JobApplicant updated = jobApplicationRepository.findApplicantById(applicationId).orElse(applicant);
+        return JobApplicantResult.from(updated);
+    }
+
+    private JobApplicant findAuthorizedApplicant(Long recruiterUserId, Long jobId, Long applicationId) {
         Recruiter recruiter = recruiterRepository.findByUserId(recruiterUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
-
         if (recruiter.getCompany() == null || recruiter.getCompany().getId() == null) {
             throw new DomainException(40001, "Nhà tuyển dụng chưa thuộc công ty nào");
         }
-
-        // 2. Kiểm tra Job tồn tại và thuộc company của recruiter
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng", jobId));
-
-        Long recruiterCompanyId = recruiter.getCompany().getId();
-        if (!recruiterCompanyId.equals(job.getCompanyId())) {
-            throw new DomainException(40301, "Bạn không có quyền cập nhật trạng thái ứng viên của tin tuyển dụng thuộc công ty khác");
+        if (!recruiter.getCompany().getId().equals(job.getCompanyId())) {
+            throw new DomainException(40301, "Bạn không có quyền cập nhật ứng viên của công ty khác");
         }
-
-        // 3. Kiểm tra Application tồn tại và thuộc Job
         JobApplicant applicant = jobApplicationRepository.findApplicantById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Đơn ứng tuyển", applicationId));
-
         if (!jobId.equals(applicant.getJobId())) {
             throw new DomainException(40001, "Đơn ứng tuyển không thuộc tin tuyển dụng này");
         }
+        return applicant;
+    }
 
-        // 4. Quyết định status
-        String targetStatus = command.getStatus();
-        if (targetStatus == null || targetStatus.isBlank()) {
-            if ("REJECTED".equals(normalizedStage)) {
-                targetStatus = "REJECTED";
-            } else if ("HIRED".equals(normalizedStage)) {
-                targetStatus = "ACCEPTED";
-            } else {
-                targetStatus = applicant.getStatus() != null ? applicant.getStatus() : "ACTIVE";
-            }
-        } else {
-            targetStatus = targetStatus.trim().toUpperCase(Locale.ROOT);
+    private ApplicationPipelineStage parseStage(String value) {
+        try {
+            return ApplicationPipelineStage.from(value);
+        } catch (IllegalArgumentException exception) {
+            throw new DomainException(40001, exception.getMessage());
         }
+    }
 
-        // 5. Cập nhật Application
-        jobApplicationRepository.updateStageAndStatus(applicationId, normalizedStage, targetStatus);
-
-        // 6. Ghi log chuyển vòng vào application_stages
-        ApplicationStage stageHistory = new ApplicationStage(
-                null,
-                applicationId,
-                normalizedStage,
-                command.getNote(),
-                recruiterUserId,
-                null,
-                LocalDateTime.now()
-        );
-        applicationStageRepository.save(stageHistory);
-
-        // 7. Lấy lại applicant sau khi cập nhật
-        JobApplicant updatedApplicant = jobApplicationRepository.findApplicantById(applicationId)
-                .orElse(applicant);
-
-        return JobApplicantResult.from(updatedApplicant);
+    private void saveStageHistory(Long applicationId, ApplicationPipelineStage target, String note, Long recruiterUserId) {
+        applicationStageRepository.save(new ApplicationStage(null, applicationId, target.name(), note,
+                recruiterUserId, null, LocalDateTime.now()));
     }
 }

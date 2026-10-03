@@ -15,6 +15,7 @@ import vn.talentbridge.core.domain.model.Interview;
 import vn.talentbridge.core.domain.model.Job;
 import vn.talentbridge.core.domain.model.JobApplicant;
 import vn.talentbridge.core.domain.model.Recruiter;
+import vn.talentbridge.core.domain.vo.ApplicationPipelineStage;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -72,6 +73,20 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
             throw new DomainException(40301, "Bạn không có quyền lên lịch phỏng vấn cho ứng viên của công ty khác");
         }
 
+        if ("WITHDRAWN".equalsIgnoreCase(applicant.getStatus())) {
+            throw new DomainException(40001, "Không thể lên lịch cho đơn ứng tuyển đã được rút");
+        }
+        ApplicationPipelineStage currentStage;
+        try {
+            currentStage = ApplicationPipelineStage.from(applicant.getCurrentStage());
+        } catch (IllegalArgumentException exception) {
+            throw new DomainException(40001, exception.getMessage());
+        }
+        if (currentStage != ApplicationPipelineStage.INTERVIEW
+                && !currentStage.canAdvanceTo(ApplicationPipelineStage.INTERVIEW)) {
+            throw new DomainException(40001, "Không thể lên lịch phỏng vấn cho hồ sơ đã kết thúc hoặc ở vòng sau");
+        }
+
         String locationType = (command.locationType() != null && !command.locationType().isBlank())
                 ? command.locationType().trim().toUpperCase()
                 : "ONLINE";
@@ -89,23 +104,21 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
 
         Interview saved = interviewRepository.save(interview);
 
-        // Update application stage to INTERVIEW
-        jobApplicationRepository.updateStageAndStatus(applicationId, "INTERVIEW", applicant.getStatus());
+        // Stage drives the lifecycle status for active pipeline applications.
+        jobApplicationRepository.updateStageAndStatus(applicationId, ApplicationPipelineStage.INTERVIEW.name(),
+                ApplicationPipelineStage.INTERVIEW.applicationStatus());
 
         // Record stage transition audit
-        try {
-            ApplicationStage stageHistory = new ApplicationStage(
-                    null,
-                    applicationId,
-                    "INTERVIEW",
-                    "HR lên lịch phỏng vấn: " + (command.notes() != null ? command.notes() : ""),
-                    recruiterUserId,
-                    null,
-                    LocalDateTime.now()
-            );
-            applicationStageRepository.save(stageHistory);
-        } catch (Exception ignored) {
-        }
+        ApplicationStage stageHistory = new ApplicationStage(
+                null,
+                applicationId,
+                ApplicationPipelineStage.INTERVIEW.name(),
+                "HR lên lịch phỏng vấn: " + (command.notes() != null ? command.notes() : ""),
+                recruiterUserId,
+                null,
+                LocalDateTime.now()
+        );
+        applicationStageRepository.save(stageHistory);
 
         return InterviewResult.from(
                 saved,

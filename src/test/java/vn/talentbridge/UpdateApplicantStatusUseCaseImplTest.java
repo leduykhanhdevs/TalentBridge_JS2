@@ -178,6 +178,79 @@ class UpdateApplicantStatusUseCaseImplTest {
         verify(jobApplicationRepository).updateStageAndStatus(APP_ID, "REJECTED", "REJECTED");
     }
 
+    @Test
+    void blocksMovingThePipelineBackwards() {
+        JobApplicant applicant = applicant("SHORTLISTED", "ACTIVE");
+        authorize(applicant);
+        UpdateApplicantStatusCommand command = new UpdateApplicantStatusCommand("REVIEWING", "SUBMITTED", null);
+
+        assertThatThrownBy(() -> useCase.updateStageAndStatus(RECRUITER_USER_ID, JOB_ID, APP_ID, command))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Chỉ được chuyển tiếp");
+        verify(jobApplicationRepository, never()).updateStageAndStatus(any(), any(), any());
+    }
+
+    @Test
+    void mapsHiredStageToAcceptedStatus() {
+        JobApplicant applicant = applicant("OFFERED", "ACTIVE");
+        authorize(applicant);
+        UpdateApplicantStatusCommand command = new UpdateApplicantStatusCommand("HIRED", "SUBMITTED", null);
+
+        useCase.updateStageAndStatus(RECRUITER_USER_ID, JOB_ID, APP_ID, command);
+
+        verify(jobApplicationRepository).updateStageAndStatus(APP_ID, "HIRED", "ACCEPTED");
+    }
+
+    @Test
+    void reopensRejectedApplicationWithRequiredReasonAndAuditEntry() {
+        JobApplicant applicant = applicant("REJECTED", "REJECTED");
+        authorize(applicant);
+        useCase.reopenApplication(RECRUITER_USER_ID, JOB_ID, APP_ID, "Ứng viên bổ sung chứng chỉ phù hợp");
+
+        verify(jobApplicationRepository).updateStageAndStatus(APP_ID, "REVIEWING", "ACTIVE");
+        verify(applicationStageRepository).save(argThat(stage -> stage.getStage().equals("REVIEWING")
+                && stage.getNote().contains("Ứng viên bổ sung chứng chỉ")
+                && stage.getChangedByUserId().equals(RECRUITER_USER_ID)));
+    }
+
+    @Test
+    void doesNotReopenWithdrawnApplication() {
+        JobApplicant applicant = applicant("APPLIED", "WITHDRAWN");
+        authorize(applicant);
+        assertThatThrownBy(() -> useCase.reopenApplication(RECRUITER_USER_ID, JOB_ID, APP_ID, "Lý do"))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("đã rút");
+        verify(jobApplicationRepository, never()).updateStageAndStatus(any(), any(), any());
+    }
+
+    @Test
+    void propagatesStageHistoryWriteFailureToAllowTransactionRollback() {
+        JobApplicant applicant = applicant("APPLIED", "SUBMITTED");
+        authorize(applicant);
+        doThrow(new IllegalStateException("stage history unavailable"))
+                .when(applicationStageRepository).save(any(ApplicationStage.class));
+
+        assertThatThrownBy(() -> useCase.updateStageAndStatus(RECRUITER_USER_ID, JOB_ID, APP_ID,
+                new UpdateApplicantStatusCommand("REVIEWING", null, null)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("stage history unavailable");
+    }
+
+    private JobApplicant applicant(String stage, String status) {
+        JobApplicant applicant = new JobApplicant();
+        applicant.setId(APP_ID);
+        applicant.setJobId(JOB_ID);
+        applicant.setCurrentStage(stage);
+        applicant.setStatus(status);
+        return applicant;
+    }
+
+    private void authorize(JobApplicant applicant) {
+        when(recruiterRepository.findByUserId(RECRUITER_USER_ID)).thenReturn(Optional.of(createRecruiter(COMPANY_ID)));
+        when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(createJob(JOB_ID, COMPANY_ID)));
+        when(jobApplicationRepository.findApplicantById(APP_ID)).thenReturn(Optional.of(applicant));
+    }
+
     private Recruiter createRecruiter(Long companyId) {
         Company company = new Company();
         company.setId(companyId);

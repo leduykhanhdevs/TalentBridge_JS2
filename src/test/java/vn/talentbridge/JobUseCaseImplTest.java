@@ -11,6 +11,7 @@ import vn.talentbridge.core.application.dto.JobDetailResult;
 import vn.talentbridge.core.application.dto.UpdateJobCommand;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
 import vn.talentbridge.core.application.port.out.RecruiterRepositoryPort;
+import vn.talentbridge.core.application.port.out.JobStatusHistoryRepositoryPort;
 import vn.talentbridge.core.application.usecase.JobUseCaseImpl;
 import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
@@ -40,6 +41,9 @@ class JobUseCaseImplTest {
     @Mock
     private RecruiterRepositoryPort recruiterRepository;
 
+    @Mock
+    private JobStatusHistoryRepositoryPort historyRepository;
+
     private JobUseCaseImpl jobUseCase;
 
     private Recruiter validRecruiter;
@@ -47,7 +51,7 @@ class JobUseCaseImplTest {
 
     @BeforeEach
     void setUp() {
-        jobUseCase = new JobUseCaseImpl(jobRepository, recruiterRepository);
+        jobUseCase = new JobUseCaseImpl(jobRepository, recruiterRepository, historyRepository);
 
         approvedCompany = new Company();
         approvedCompany.setId(10L);
@@ -101,7 +105,7 @@ class JobUseCaseImplTest {
         assertEquals(10L, result.companyId());
         assertEquals("Tech Corp", result.companyName());
         assertEquals(3, result.skills().size());
-        assertEquals(JobStatus.ACTIVE.name(), result.status());
+        assertEquals(JobStatus.PENDING.name(), result.status());
 
         verify(jobRepository, times(1)).save(any(Job.class));
     }

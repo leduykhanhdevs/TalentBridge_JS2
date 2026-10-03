@@ -128,7 +128,6 @@ export function CandidateProfilePage() {
             dob: profile.dob || '',
             gender: profile.gender || 'OTHER',
             summary: profile.summary || '',
-            experienceYears: profile.experienceYears ?? 0,
             currentSalary: profile.currentSalary ?? undefined,
             expectedSalary: profile.expectedSalary ?? undefined,
             city: profile.city || '',
@@ -168,7 +167,6 @@ export function CandidateProfilePage() {
         const errors = validateCandidateProfile({
             fullName: formData.fullName,
             phone: formData.phone,
-            experienceYears: formData.experienceYears,
             currentSalary: formData.currentSalary,
             expectedSalary: formData.expectedSalary,
             personalWebsite: formData.personalWebsite,
@@ -215,6 +213,19 @@ export function CandidateProfilePage() {
     }
 
     if (!profile) return null
+
+    const today = new Date()
+    const todayDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const hasRecordedExperience = experiences.some((exp) => {
+        const endDate = exp.isCurrent || !exp.endDate ? todayDate : exp.endDate
+        return exp.startDate <= todayDate && endDate >= exp.startDate
+    })
+    const experienceDisplayLabel = profile.experienceYears
+        ? `${profile.experienceYears} năm (tự động tính)`
+        : hasRecordedExperience ? 'Dưới 1 năm' : 'Chưa có kinh nghiệm (0 năm)'
+    const hasSkillExperienceExceeding = skills.some(
+        (skill) => (skill.yearsOfExperience ?? 0) > (profile.experienceYears ?? 0),
+    )
 
     const formatCurrency = (val: number | null | undefined) => {
         if (!val || val <= 0) return 'Thỏa thuận'
@@ -471,17 +482,9 @@ export function CandidateProfilePage() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                        Số năm kinh nghiệm
-                                    </label>
-                                    <input
-                                        type="number"
-                                        disabled
-                                        value={formData.experienceYears ?? 0}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-500 shadow-sm cursor-not-allowed"
-                                    />
-                                    <p className="mt-1 text-xs text-slate-400">Tự động tính từ quá trình làm việc</p>
+                                <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5">
+                                    <p className="text-xs font-semibold text-indigo-900">Kinh nghiệm được tính từ lịch sử làm việc</p>
+                                    <p className="mt-1 text-xs text-indigo-700">Cập nhật các mốc công việc bên dưới để hệ thống tự tính tổng số năm.</p>
                                 </div>
 
                                 <div>
@@ -629,7 +632,7 @@ export function CandidateProfilePage() {
                                     <div className="flex justify-between border-b border-slate-100 pb-2">
                                         <span className="text-slate-500">Kinh nghiệm làm việc:</span>
                                         <span className="font-semibold text-slate-800">
-                                            {profile.experienceYears ? `${profile.experienceYears} năm (tự động tính)` : 'Chưa có kinh nghiệm (0 năm)'}
+                                            {experienceDisplayLabel}
                                         </span>
                                     </div>
                                     <div className="flex justify-between border-b border-slate-100 pb-2">
@@ -777,6 +780,11 @@ export function CandidateProfilePage() {
                                 </button>
                             </div>
 
+                            {hasSkillExperienceExceeding && (
+                                <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
+                                    Số năm ở một hoặc nhiều kỹ năng đang cao hơn tổng kinh nghiệm từ lịch sử công việc. Hãy kiểm tra lại từng kỹ năng.
+                                </p>
+                            )}
                             {skills.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
                                     <EmptyStateIllustration className="w-20 h-auto mx-auto mb-2" />

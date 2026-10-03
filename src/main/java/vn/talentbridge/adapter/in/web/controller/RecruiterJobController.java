@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
 import vn.talentbridge.adapter.in.web.dto.response.JobResponse;
+import vn.talentbridge.adapter.in.web.dto.response.MyJobStatsResponse;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.common.PageResponse;
 import vn.talentbridge.core.application.dto.JobDetailResult;
@@ -29,6 +30,15 @@ import java.util.List;
 public class RecruiterJobController {
 
     private final JobUseCase jobUseCase;
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('RECRUITER')")
+    @Operation(summary = "Thống kê tin tuyển dụng của HR")
+    public ResponseEntity<ApiResponse<MyJobStatsResponse>> getMyJobStats(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(ApiResponse.success(
+                MyJobStatsResponse.from(jobUseCase.getMyJobStats(principal.getId()))));
+    }
 
     @GetMapping
     @PreAuthorize("hasRole('RECRUITER')")

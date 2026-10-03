@@ -795,8 +795,8 @@ export function AdminCompaniesPage() {
                                     <span className="font-bold text-slate-900">{selectedCompany.city || 'Chưa cập nhật'}</span>
                                 </div>
                                 <div>
-                                    <span className="font-semibold text-slate-500">ID Người đại diện:</span>{' '}
-                                    <span className="font-mono font-bold text-slate-900">#{selectedCompany.createdByUserId || 'N/A'}</span>
+                                    <span className="font-semibold text-slate-500">Người tạo doanh nghiệp:</span>{' '}
+                                    <span className="font-mono font-bold text-slate-900">{selectedCompany.createdByUserId ? `#${selectedCompany.createdByUserId}` : 'Chưa có thông tin'}</span>
                                 </div>
                             </div>
                         </div>

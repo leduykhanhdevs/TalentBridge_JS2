@@ -4,6 +4,7 @@ import vn.talentbridge.core.application.dto.AdminDashboardStatsResult;
 import vn.talentbridge.core.application.dto.CandidateResult;
 import vn.talentbridge.core.application.dto.CompanyResult;
 import vn.talentbridge.core.application.dto.JobResult;
+import vn.talentbridge.core.application.dto.JobDetailResult;
 import vn.talentbridge.core.application.dto.RecruiterResult;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.AdminManagementUseCase;
@@ -95,29 +96,9 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     }
 
     @Override
-    public CompanyResult updateCompanyStatus(Long companyId, CompanyStatus status, String reason) {
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doanh nghiệp", companyId));
-        company.setStatus(status);
-        Company updated = companyRepository.save(company);
-
-        // Khi Admin phê duyệt công ty (APPROVED), tự động liên kết HR tạo công ty làm đại diện chính thức
-        if (status == CompanyStatus.APPROVED && updated.getCreatedByUserId() != null) {
-            recruiterRepository.findByUserId(updated.getCreatedByUserId()).ifPresent(recruiter -> {
-                if (recruiter.getCompany() == null || !updated.getId().equals(recruiter.getCompany().getId())) {
-                    recruiter.setCompany(updated);
-                    recruiterRepository.save(recruiter);
-                }
-            });
-        }
-
-        return CompanyResult.from(updated);
-    }
-
-    @Override
-    public List<JobResult> getAllJobs(int page, int size, JobStatus status) {
+    public List<JobDetailResult> getAllJobs(int page, int size, JobStatus status) {
         return jobRepository.findAll(page, size, status).stream()
-                .map(JobResult::from)
+                .map(JobDetailResult::from)
                 .collect(Collectors.toList());
     }
 
@@ -127,12 +108,8 @@ public class AdminManagementUseCaseImpl implements AdminManagementUseCase {
     }
 
     @Override
-    public JobResult updateJobStatus(Long jobId, JobStatus status) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng", jobId));
-        job.setStatus(status);
-        Job updated = jobRepository.save(job);
-        return JobResult.from(updated);
+    public long countJobs(JobStatus status) {
+        return status == null ? jobRepository.count() : jobRepository.countByStatus(status);
     }
 
     @Override

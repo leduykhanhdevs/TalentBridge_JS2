@@ -44,7 +44,8 @@ public class CompanyJoinRequestUseCaseConfig {
     public ReviewJoinRequestUseCase reviewJoinRequestUseCase(
             RecruiterRepositoryPort recruiterRepository,
             CompanyJoinRequestRepositoryPort companyJoinRequestRepository) {
-        return new ReviewJoinRequestUseCaseImpl(recruiterRepository, companyJoinRequestRepository);
+        return new TransactionalReviewJoinRequestUseCase(
+                new ReviewJoinRequestUseCaseImpl(recruiterRepository, companyJoinRequestRepository));
     }
 
     @Bean

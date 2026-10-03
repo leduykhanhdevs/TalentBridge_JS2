@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import vn.talentbridge.adapter.in.security.UserPrincipal;
 import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateCompanyStatusRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateJobStatusRequest;
@@ -15,6 +17,7 @@ import vn.talentbridge.adapter.in.web.dto.response.AdminDashboardStatsResponse;
 import vn.talentbridge.adapter.in.web.dto.response.CandidateAdminResponse;
 import vn.talentbridge.adapter.in.web.dto.response.CompanyAdminResponse;
 import vn.talentbridge.adapter.in.web.dto.response.JobAdminResponse;
+import vn.talentbridge.adapter.in.web.dto.response.JobStatusHistoryResponse;
 import vn.talentbridge.adapter.in.web.dto.response.RecruiterAdminResponse;
 import vn.talentbridge.adapter.in.web.dto.response.UserResponse;
 import vn.talentbridge.common.ApiResponse;
@@ -22,10 +25,12 @@ import vn.talentbridge.common.PageResponse;
 import vn.talentbridge.core.application.dto.AdminDashboardStatsResult;
 import vn.talentbridge.core.application.dto.CandidateResult;
 import vn.talentbridge.core.application.dto.CompanyResult;
-import vn.talentbridge.core.application.dto.JobResult;
+import vn.talentbridge.core.application.dto.JobDetailResult;
 import vn.talentbridge.core.application.dto.RecruiterResult;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.AdminManagementUseCase;
+import vn.talentbridge.core.application.port.in.JobModerationUseCase;
+import vn.talentbridge.core.application.port.in.UpdateCompanyStatusUseCase;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 import vn.talentbridge.core.domain.vo.JobStatus;
 import vn.talentbridge.core.domain.vo.UserStatus;
@@ -41,6 +46,8 @@ import java.util.List;
 public class AdminController {
 
     private final AdminManagementUseCase adminManagementUseCase;
+    private final JobModerationUseCase jobModerationUseCase;
+    private final UpdateCompanyStatusUseCase updateCompanyStatusUseCase;
 
     @GetMapping("/users")
     @Operation(summary = "Danh sách người dùng", description = "Lấy danh sách người dùng có phân trang và lọc theo trạng thái (Yêu cầu ROLE_ADMIN)")
@@ -116,7 +123,7 @@ public class AdminController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateCompanyStatusRequest request
     ) {
-        CompanyResult updatedCompany = adminManagementUseCase.updateCompanyStatus(id, request.getStatus(), request.getReason());
+        CompanyResult updatedCompany = updateCompanyStatusUseCase.updateCompanyStatus(id, request.getStatus(), request.getReason());
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái doanh nghiệp thành công", CompanyAdminResponse.from(updatedCompany)));
     }
 
@@ -128,8 +135,8 @@ public class AdminController {
             @RequestParam(required = false) JobStatus status
     ) {
         int pageIndex = Math.max(0, page - 1);
-        List<JobResult> jobs = adminManagementUseCase.getAllJobs(pageIndex, size, status);
-        long totalElements = adminManagementUseCase.countJobs();
+        List<JobDetailResult> jobs = adminManagementUseCase.getAllJobs(pageIndex, size, status);
+        long totalElements = adminManagementUseCase.countJobs(status);
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
         List<JobAdminResponse> content = jobs.stream().map(JobAdminResponse::from).toList();
@@ -148,11 +155,21 @@ public class AdminController {
     @PatchMapping("/jobs/{id}/status")
     @Operation(summary = "Kiểm duyệt tin tuyển dụng", description = "Phê duyệt, đóng hoặc gỡ tin vi phạm")
     public ResponseEntity<ApiResponse<JobAdminResponse>> updateJobStatus(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long id,
             @Valid @RequestBody UpdateJobStatusRequest request
     ) {
-        JobResult updatedJob = adminManagementUseCase.updateJobStatus(id, request.getStatus());
+        JobDetailResult updatedJob = jobModerationUseCase.changeStatus(
+                principal.getId(), id, request.getStatus(), request.getReason());
         return ResponseEntity.ok(ApiResponse.success("Kiểm duyệt tin tuyển dụng thành công", JobAdminResponse.from(updatedJob)));
+    }
+
+    @GetMapping("/jobs/{id}/status-history")
+    @Operation(summary = "Lịch sử kiểm duyệt tin tuyển dụng")
+    public ResponseEntity<ApiResponse<List<JobStatusHistoryResponse>>> getJobStatusHistory(@PathVariable Long id) {
+        List<JobStatusHistoryResponse> history = jobModerationUseCase.getStatusHistory(id).stream()
+                .map(JobStatusHistoryResponse::from).toList();
+        return ResponseEntity.ok(ApiResponse.success(history));
     }
 
     @GetMapping("/recruiters")

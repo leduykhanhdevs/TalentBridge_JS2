@@ -329,6 +329,19 @@ class CompanyJoinRequestIntegrationTest {
                 .build();
         req = companyJoinRequestRepository.save(req);
 
+        CompanyJpaEntity anotherCompany = companyRepository.save(CompanyJpaEntity.builder()
+                .name("Another Approved Company")
+                .taxCode("0107778888")
+                .status(CompanyStatus.APPROVED)
+                .build());
+        CompanyJoinRequestJpaEntity competingRequest = companyJoinRequestRepository.save(
+                CompanyJoinRequestJpaEntity.builder()
+                        .user(hrUser2)
+                        .company(anotherCompany)
+                        .position("Talent Partner")
+                        .status(CompanyJoinRequestStatus.PENDING)
+                        .build());
+
         ReviewJoinRequest reviewReq = ReviewJoinRequest.builder()
                 .status(CompanyJoinRequestStatus.ACCEPTED)
                 .reason("Chao mung ban den voi TalentBridge Tech")
@@ -348,6 +361,39 @@ class CompanyJoinRequestIntegrationTest {
         assertNotNull(updatedApplicant.getCompany());
         assertEquals(approvedCompany.getId(), updatedApplicant.getCompany().getId());
         assertEquals("Senior Recruiter", updatedApplicant.getPosition());
+
+        CompanyJoinRequestJpaEntity cancelled = companyJoinRequestRepository.findById(competingRequest.getId())
+                .orElseThrow();
+        assertEquals(CompanyJoinRequestStatus.CANCELLED, cancelled.getStatus());
+        org.junit.jupiter.api.Assertions.assertTrue(cancelled.getReason().contains("đã được liên kết"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/recruiters/companies/join-requests/{id} - Không thể duyệt yêu cầu đã mất hiệu lực")
+    void testReviewJoinRequestRejectsAlreadyLinkedRecruiter() throws Exception {
+        CompanyJoinRequestJpaEntity req = companyJoinRequestRepository.save(CompanyJoinRequestJpaEntity.builder()
+                .user(hrUser2)
+                .company(approvedCompany)
+                .position("Recruiter")
+                .status(CompanyJoinRequestStatus.PENDING)
+                .build());
+        RecruiterJpaEntity applicant = recruiterRepository.findByUserId(hrUser2.getId()).orElseThrow();
+        applicant.setCompany(approvedCompany);
+        recruiterRepository.save(applicant);
+
+        ReviewJoinRequest reviewReq = ReviewJoinRequest.builder()
+                .status(CompanyJoinRequestStatus.ACCEPTED)
+                .reason("Duyệt muộn")
+                .build();
+
+        mockMvc.perform(patch("/api/v1/recruiters/companies/join-requests/{requestId}", req.getId())
+                        .header("Authorization", "Bearer " + hrToken1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reviewReq)))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(CompanyJoinRequestStatus.PENDING,
+                companyJoinRequestRepository.findById(req.getId()).orElseThrow().getStatus());
     }
 
     @Test
