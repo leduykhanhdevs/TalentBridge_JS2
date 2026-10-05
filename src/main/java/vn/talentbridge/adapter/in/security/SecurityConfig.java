@@ -51,6 +51,8 @@ public class SecurityConfig {
             "/api/v1/candidates/resumes/templates",
             "/api/v1/interviews/*/calendar.ics",
             "/api/v1/health/**",
+            "/api/v1/mcp/**",
+            "/api/v1/ai/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
