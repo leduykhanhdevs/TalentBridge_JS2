@@ -2,7 +2,6 @@
 .gitignore
 .idea
 *.iml
-.mvn
 target
 *.log
 .DS_Store
