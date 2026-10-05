@@ -15,8 +15,10 @@ import vn.talentbridge.core.domain.vo.UserStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -223,111 +225,14 @@ public class DataInitializer implements CommandLineRunner {
         UserJpaEntity hrUser = userJpaRepository.findByEmail("recruiter@fpt.com").orElse(null);
         Long hrUserId = hrUser != null ? hrUser.getId() : 1L;
 
-        // 7.1. Seed 5 Sample Jobs for FPT Software
+        // 7.1. Seed 100 Sample Jobs for Top Tech Companies
         List<JobJpaEntity> createdJobs = new java.util.ArrayList<>();
-        if (jobJpaRepository.count() == 0) {
-            JobJpaEntity job1 = JobJpaEntity.builder()
-                    .company(fptCompany)
-                    .recruiterUserId(hrUserId)
-                    .title("Senior Java Spring Boot Engineer")
-                    .description("Tham gia phát triển kiến trúc backend microservices cho các dự án FinTech và E-commerce quy mô lớn. Tối ưu hóa hiệu năng cơ sở dữ liệu MySQL và cache Redis.")
-                    .requirements("Tối thiểu 4 năm kinh nghiệm với Java và Spring Boot. Thành thạo Spring Data JPA, Spring Security, Hibernate, MySQL, Docker, RESTful API.")
-                    .benefits("Thu nhập 35 - 50 triệu/tháng + tháng lương 13 và thưởng dự án. Bảo hiểm FPT Care cho bản thân và gia đình. Môi trường quốc tế, hỗ trợ thi chứng chỉ AWS.")
-                    .location("Khu Công Nghệ Cao, TP. Thủ Đức")
-                    .city("TP. Hồ Chí Minh")
-                    .jobType("FULL_TIME")
-                    .experienceLevel("SENIOR")
-                    .minSalary(new BigDecimal("35000000"))
-                    .maxSalary(new BigDecimal("50000000"))
-                    .isNegotiable(false)
-                    .deadline(LocalDate.now().plusDays(30))
-                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
-                    .skills(getSkillsByNames("Java", "Spring Boot", "SQL / MySQL", "Docker", "Microservices"))
-                    .build();
-            createdJobs.add(jobJpaRepository.save(job1));
-
-            JobJpaEntity job2 = JobJpaEntity.builder()
-                    .company(fptCompany)
-                    .recruiterUserId(hrUserId)
-                    .title("Frontend React / TypeScript Developer")
-                    .description("Phát triển giao diện web portal responsive sử dụng React 18/19, TypeScript, TailwindCSS và TanStack Query. Đảm bảo trải nghiệm mượt mà 60fps và đạt chuẩn Core Web Vitals.")
-                    .requirements("Có từ 2-3 năm kinh nghiệm lập trình React & TypeScript. Sử dụng thành thạo HTML5/CSS3, TailwindCSS, REST API, Git.")
-                    .benefits("Lương cạnh tranh 20 - 32 triệu. Xét tăng lương định kỳ 2 lần/năm. Được cấp MacBook Pro làm việc. Tham gia các khóa đào tạo công nghệ mới.")
-                    .location("FPT Tower, Cầu Giấy")
-                    .city("Hà Nội")
-                    .jobType("FULL_TIME")
-                    .experienceLevel("MIDDLE")
-                    .minSalary(new BigDecimal("20000000"))
-                    .maxSalary(new BigDecimal("32000000"))
-                    .isNegotiable(false)
-                    .deadline(LocalDate.now().plusDays(25))
-                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
-                    .skills(getSkillsByNames("React", "TypeScript", "TailwindCSS", "HTML5 & CSS3", "Git / GitHub"))
-                    .build();
-            createdJobs.add(jobJpaRepository.save(job2));
-
-            JobJpaEntity job3 = JobJpaEntity.builder()
-                    .company(fptCompany)
-                    .recruiterUserId(hrUserId)
-                    .title("Cloud & DevOps Engineer (AWS / Docker)")
-                    .description("Xây dựng và tự động hóa hạ tầng đám mây AWS, triển khai hệ thống CI/CD pipeline với GitHub Actions và Docker. Giám sát hệ thống và đảm bảo độ sẵn sàng 99.99%.")
-                    .requirements("Từ 3 năm kinh nghiệm với AWS, Docker, Linux, CI/CD. Có kinh nghiệm triển khai Microservices.")
-                    .benefits("Làm việc từ xa linh hoạt (Remote 100%). Lương 30 - 45 triệu. Gói bảo hiểm quốc tế cao cấp.")
-                    .location("FPT Complex, Ngũ Hành Sơn")
-                    .city("Đà Nẵng")
-                    .jobType("REMOTE")
-                    .experienceLevel("SENIOR")
-                    .minSalary(new BigDecimal("30000000"))
-                    .maxSalary(new BigDecimal("45000000"))
-                    .isNegotiable(false)
-                    .deadline(LocalDate.now().plusDays(40))
-                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
-                    .skills(getSkillsByNames("AWS", "Docker", "Git / GitHub", "Microservices"))
-                    .build();
-            createdJobs.add(jobJpaRepository.save(job3));
-
-            JobJpaEntity job4 = JobJpaEntity.builder()
-                    .company(fptCompany)
-                    .recruiterUserId(hrUserId)
-                    .title("Fresher / Junior Java Developer")
-                    .description("Dành cho các bạn mới tốt nghiệp hoặc dưới 1 năm kinh nghiệm. Tham gia khóa đào tạo chuyên sâu và thực chiến trên các dự án phần mềm doanh nghiệp của FPT.")
-                    .requirements("Nắm vững kiến thức Java Core, OOP, CSDL quan hệ SQL. Tinh thần học hỏi cao, đam mê lập trình.")
-                    .benefits("Lương đào tạo và khởi điểm hấp dẫn từ 10 - 15 triệu. Lộ trình thăng tiến rõ ràng lên Junior/Middle sau 6 tháng.")
-                    .location("Quận 9, TP. Thủ Đức")
-                    .city("TP. Hồ Chí Minh")
-                    .jobType("FULL_TIME")
-                    .experienceLevel("FRESHER")
-                    .minSalary(new BigDecimal("10000000"))
-                    .maxSalary(new BigDecimal("15000000"))
-                    .isNegotiable(false)
-                    .deadline(LocalDate.now().plusDays(20))
-                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
-                    .skills(getSkillsByNames("Java", "SQL / MySQL", "RESTful API"))
-                    .build();
-            createdJobs.add(jobJpaRepository.save(job4));
-
-            JobJpaEntity job5 = JobJpaEntity.builder()
-                    .company(fptCompany)
-                    .recruiterUserId(hrUserId)
-                    .title("UI/UX Product Designer (Figma)")
-                    .description("Thiết kế trải nghiệm người dùng (UX) và giao diện trực quan (UI) cho các sản phẩm web/mobile. Xây dựng Design System chuẩn chỉn trên Figma.")
-                    .requirements("Thành thạo Figma, Design Tokens, wireframing, prototyping. Có portfolio dự án thực tế.")
-                    .benefits("Lương thỏa thuận không giới hạn theo năng lực. Môi trường làm việc sáng tạo, năng động.")
-                    .location("Toàn quốc (Hybrid)")
-                    .city("TP. Hồ Chí Minh")
-                    .jobType("HYBRID")
-                    .experienceLevel("JUNIOR")
-                    .isNegotiable(true)
-                    .deadline(LocalDate.now().plusDays(35))
-                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
-                    .skills(getSkillsByNames("Figma / UI-UX"))
-                    .build();
-            createdJobs.add(jobJpaRepository.save(job5));
-
-            log.info(">>> [DataInitializer] Đã khởi tạo {} tin tuyển dụng mẫu cho FPT Software.", createdJobs.size());
+        if (jobJpaRepository.count() < 100) {
+            seed100Jobs(createdJobs, hrUserId);
         } else {
             createdJobs.addAll(jobJpaRepository.findAll());
         }
+
 
         // 7.2. Seed Default Resume for Candidate 1 (Trần Minh Anh - candidate@talentbridge.vn)
         UserJpaEntity candidateUser1 = userJpaRepository.findByEmail("candidate@talentbridge.vn").orElse(null);
@@ -460,10 +365,99 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
+    private void seed100Jobs(List<JobJpaEntity> createdJobs, Long defaultHrUserId) {
+        Map<String, CompanyJpaEntity> companyMap = new HashMap<>();
+        for (CompanyJpaEntity c : companyJpaRepository.findAll()) {
+            companyMap.put(c.getName(), c);
+        }
+
+        CompanyJpaEntity fpt = companyMap.get("FPT Software");
+        CompanyJpaEntity vng = getOrCreateApprovedCompany(companyMap, "VNG Corporation", "0303888999", "https://vng.com.vn", "1000-5000 nhân viên", "TP. Hồ Chí Minh", "Z06 KCX Tân Thuận, Quận 7", "Kỳ lân công nghệ đầu tiên tại Việt Nam, phát triển Zalo, Zing, VNG Games.");
+        CompanyJpaEntity viettel = getOrCreateApprovedCompany(companyMap, "Viettel Digital", "0100109106", "https://viettel.vn", "10000+ nhân viên", "Hà Nội", "Số 1 Giang Văn Minh, Ba Đình", "Tổng công ty Dịch vụ số Viettel, phát triển Viettel Money, Cloud, Big Data.");
+        CompanyJpaEntity momo = getOrCreateApprovedCompany(companyMap, "MoMo (M-Service)", "0309489240", "https://momo.vn", "1000-5000 nhân viên", "TP. Hồ Chí Minh", "Tòa nhà Phú Mỹ Hưng, Quận 7", "Siêu ứng dụng thanh toán và tài chính số hàng đầu Việt Nam.");
+        CompanyJpaEntity shopee = getOrCreateApprovedCompany(companyMap, "Shopee Vietnam", "0313576722", "https://shopee.vn", "5000+ nhân viên", "TP. Hồ Chí Minh", "Saigon Centre, Quận 1", "Sàn thương mại điện tử hàng đầu Đông Nam Á.");
+        CompanyJpaEntity oneMount = getOrCreateApprovedCompany(companyMap, "One Mount Group", "0109012345", "https://onemount.com", "1000-5000 nhân viên", "Hà Nội", "Times City, Hai Bà Trưng", "Tập đoàn công nghệ phát triển hệ sinh thái VinID, OneHousing.");
+        CompanyJpaEntity cmc = getOrCreateApprovedCompany(companyMap, "CMC Global", "0107891234", "https://cmcglobal.vn", "1000-5000 nhân viên", "Hà Nội", "CMC Tower, Cầu Giấy", "Doanh nghiệp cung cấp giải pháp và dịch vụ xuất khẩu phần mềm quốc tế.");
+        CompanyJpaEntity nashtech = getOrCreateApprovedCompany(companyMap, "NashTech Vietnam", "0302345678", "https://nashtechglobal.com", "1000-5000 nhân viên", "TP. Hồ Chí Minh", "E-Town, Tân Bình", "Tập đoàn tư vấn giải pháp phần mềm và chuyển đổi số toàn cầu.");
+        CompanyJpaEntity kms = getOrCreateApprovedCompany(companyMap, "KMS Technology", "0309876543", "https://kms-technology.com", "1000-5000 nhân viên", "TP. Hồ Chí Minh", "Tòa nhà Tản Viên, Tân Bình", "Công ty dịch vụ phát triển phần mềm chuyên nghiệp cho thị trường Mỹ.");
+        CompanyJpaEntity tma = getOrCreateApprovedCompany(companyMap, "TMA Solutions", "0301112233", "https://tmasolutions.vn", "1000-5000 nhân viên", "TP. Hồ Chí Minh", "Công viên phần mềm Quang Trung, Q.12", "Công ty công nghệ phần mềm hàng đầu Việt Nam với hơn 4.000 kỹ sư.");
+        CompanyJpaEntity rikkei = getOrCreateApprovedCompany(companyMap, "RikkeiSoft", "0105556677", "https://rikkeisoft.com", "1000-5000 nhân viên", "Đà Nẵng", "Tòa nhà Ricco, Hải Châu", "Doanh nghiệp công nghệ thông tin xuất khẩu phần mềm hàng đầu thị trường Nhật Bản.");
+        CompanyJpaEntity nexttech = getOrCreateApprovedCompany(companyMap, "NextTech Group", "0109999888", "https://nexttech.asia", "500-1000 nhân viên", "Hà Nội", "Tòa nhà VTC Online, Hai Bà Trưng", "Tập đoàn công nghệ tiên phong chuyển đổi số toàn diện.");
+        CompanyJpaEntity vnpt = getOrCreateApprovedCompany(companyMap, "VNPT IT", "0100684378", "https://vnpt.vn", "5000+ nhân viên", "Hà Nội", "Tòa nhà VNPT, Cầu Giấy", "Công ty Công nghệ thông tin VNPT, chuyên trách các giải pháp chính phủ điện tử.");
+
+        List<JobSeedData.SeedJobDef> defs = JobSeedData.get100JobDefinitions();
+        Set<String> existingTitles = new HashSet<>();
+        for (JobJpaEntity j : jobJpaRepository.findAll()) {
+            existingTitles.add(j.getTitle());
+            createdJobs.add(j);
+        }
+
+        int index = 0;
+        for (JobSeedData.SeedJobDef def : defs) {
+            if (existingTitles.contains(def.title())) {
+                continue;
+            }
+            CompanyJpaEntity targetCompany = companyMap.getOrDefault(def.companyName(), fpt != null ? fpt : vng);
+            if (targetCompany == null) continue;
+
+            LocalDate deadline = LocalDate.now().plusDays(20 + (index % 45));
+            JobJpaEntity job = JobJpaEntity.builder()
+                    .company(targetCompany)
+                    .recruiterUserId(defaultHrUserId)
+                    .title(def.title())
+                    .description(def.description())
+                    .requirements(def.requirements())
+                    .benefits(def.benefits())
+                    .location(def.location())
+                    .city(def.city())
+                    .address(def.location())
+                    .jobType(def.jobType())
+                    .experienceLevel(def.experienceLevel())
+                    .minSalary(new BigDecimal(def.minSalaryMln() * 1000000L))
+                    .maxSalary(new BigDecimal(def.maxSalaryMln() * 1000000L))
+                    .isNegotiable(def.isNegotiable())
+                    .deadline(deadline)
+                    .status(vn.talentbridge.core.domain.vo.JobStatus.ACTIVE)
+                    .skills(getSkillsByNames(def.skills().toArray(new String[0])))
+                    .build();
+
+            createdJobs.add(jobJpaRepository.save(job));
+            existingTitles.add(def.title());
+            index++;
+        }
+        log.info(">>> [DataInitializer] Đã khởi tạo hoàn tất {} tin tuyển dụng mẫu trên hệ thống.", jobJpaRepository.count());
+    }
+
+    private CompanyJpaEntity getOrCreateApprovedCompany(
+            Map<String, CompanyJpaEntity> companyMap,
+            String name, String taxCode, String website, String size, String city, String address, String desc) {
+        CompanyJpaEntity comp = companyMap.get(name);
+        if (comp == null) {
+            comp = CompanyJpaEntity.builder()
+                    .name(name)
+                    .taxCode(taxCode)
+                    .website(website)
+                    .companySize(size)
+                    .city(city)
+                    .address(address)
+                    .description(desc)
+                    .status(CompanyStatus.APPROVED)
+                    .build();
+            comp = companyJpaRepository.save(comp);
+            companyMap.put(name, comp);
+        } else if (comp.getStatus() != CompanyStatus.APPROVED) {
+            comp.setStatus(CompanyStatus.APPROVED);
+            comp = companyJpaRepository.save(comp);
+        }
+        return comp;
+    }
+
     private Set<SkillJpaEntity> getSkillsByNames(String... names) {
         Set<SkillJpaEntity> set = new HashSet<>();
         for (String name : names) {
-            skillJpaRepository.findByNameIgnoreCase(name).ifPresent(set::add);
+            SkillJpaEntity skill = skillJpaRepository.findByNameIgnoreCase(name)
+                    .orElseGet(() -> skillJpaRepository.save(SkillJpaEntity.builder().name(name).build()));
+            set.add(skill);
         }
         return set;
     }

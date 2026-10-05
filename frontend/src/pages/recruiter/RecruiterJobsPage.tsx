@@ -366,11 +366,11 @@ export function RecruiterJobsPage() {
                                     <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:shrink-0 lg:border-t-0 lg:pt-0">
                                         <Link
                                             to={`/recruiter/jobs/${job.id}/applicants`}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-600 bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700 shadow-2xs transition"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-600 bg-indigo-600 px-3.5 py-2 text-xs font-bold !text-white hover:bg-indigo-700 hover:!text-white shadow-sm transition"
                                             title="Xem và sàng lọc hồ sơ ứng viên"
                                         >
-                                            <Users size={13} />
-                                            <span>Xem ứng viên</span>
+                                            <Users size={13} className="!text-white shrink-0" />
+                                            <span className="!text-white font-bold">Xem ứng viên</span>
                                         </Link>
 
                                         <Link
