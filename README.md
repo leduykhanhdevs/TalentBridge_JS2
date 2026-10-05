@@ -222,3 +222,38 @@ Nếu thành viên sử dụng AI (ChatGPT, Gemini, Claude, Cursor, Copilot...) 
 - **Chỉ khi Trưởng nhóm Lê Duy Khánh review code đạt chuẩn mới được merge**.
 
 > 📖 **Xem chi tiết quy chuẩn Git và hướng dẫn thao tác**: [TEAM_RULES_AND_GITFLOW.md](TEAM_RULES_AND_GITFLOW.md)
+
+---
+
+## 🔬 CƠ SỞ KHOA HỌC & CÔNG NGHỆ AI (RESEARCH FOUNDATION)
+
+Dự án áp dụng nền tảng lý thuyết và giải pháp từ công trình khoa học quốc tế:
+> **"Version 5.4.18 – AI–KM: Knowledge enhancement with RAG and workflow"**  
+> *Haolong Wu, Wei Jiang, Xuesong Zhang, Hongjie Zhang, Mengxing Huang*  
+> Công bố trên **SoftwareX**, Volume 31 (2025) 102349, Elsevier. DOI: [10.1016/j.softx.2025.102349](https://doi.org/10.1016/j.softx.2025.102349).  
+> Mã nguồn tham chiếu: [https://github.com/whl1207/Knowledge](https://github.com/whl1207/Knowledge)
+
+### Các nguyên lý áp dụng trong TalentBridge:
+1. **Suy luận thông tin ẩn (Inferred Hidden Information)**: Nghịch đảo câu hỏi và kỹ năng từ CV ứng viên ($q \xrightarrow{\text{LLM Reasoning}} V = \{v_1, v_2, \dots, v_n\}$) để bóc tách năng lực thực chiến thay vì chỉ đối sánh từ khóa thô.
+2. **Độ tương đồng lai 3 Vector (Tri-Vector Hybrid Similarity)**:
+   $$Merge(q, v_i, u_i) = \frac{\cos(q, v_i) + \cos(q, u_i)}{2}$$
+   Khớp nối 3 chiều giữa Yêu cầu công việc ($JD$), Năng lực thực tế của ứng viên ($CV$), và Kỹ năng suy luận ($Inferred\ Capabilities$).
+3. **Kiến trúc Tích hợp Kép RAG + MCP**: Kết hợp Retrieval-Augmented Generation (bộ nhớ tri thức tĩnh/tài liệu) với Model Context Protocol (MCP - công cụ hành động tương tác DB/API thời gian thực).
+> 📑 **Tài liệu phân tích chuyên sâu**: [AI_KM_RAG_WORKFLOW_ANALYSIS.md](docs/research/AI_KM_RAG_WORKFLOW_ANALYSIS.md)
+
+---
+
+## ⚡ QUY CHUẨN ĐÓNG GÓI NGỮ CẢNH: WORKING CAPSULE PROTOCOL
+
+Khi phiên làm việc kéo dài, context bị phân mảnh hoặc hệ thống kích hoạt cơ chế nén ngữ cảnh, Agent **BẮT BUỘC** phải đóng gói trạng thái làm việc thành **WORKING CAPSULE** với đúng 8 trường chuẩn:
+- **OBJECTIVE**: Mục tiêu cụ thể hiện tại.
+- **DONE**: Những gì đã hoàn thành và đã được kiểm thử xác minh.
+- **CONSTRAINTS**: Các ràng buộc kỹ thuật và quy tắc bất biến.
+- **DECISIONS**: Quyết định kiến trúc/thiết kế đã chốt.
+- **FILES/ARTIFACTS**: Các file/code/tài liệu liên quan trực tiếp.
+- **ERRORS/SCARS**: Lỗi đã gặp, nguyên nhân, cách khắc phục và điều TUYỆT ĐỐI không lặp lại.
+- **OPEN ITEMS**: Việc còn dang dở, câu hỏi cần người dùng làm rõ.
+- **NEXT ACTION**: Hành động cụ thể đơn lẻ tiếp theo cần làm ngay.
+
+> 📑 **Chi tiết quy tắc**: [WORKING_CAPSULE_GUIDE.md](docs/WORKING_CAPSULE_GUIDE.md)
+
