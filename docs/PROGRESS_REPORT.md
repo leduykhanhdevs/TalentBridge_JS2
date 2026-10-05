@@ -52,7 +52,7 @@
   - Kết nối Cloud MySQL (Aiven / Clever Cloud) miễn phí giữ nguyên 100% CSDL 27 bảng và 103 jobs.
 - **Mục đích chức năng / Việc đã làm**:
   - Cho phép triển khai toàn bộ hệ thống lên Cloud chỉ bằng 1 cú nhấp chuột.
-  - Fix lỗi Blueprint: Loại bỏ thuộc tính `region` trên Static Site (do Render phục vụ Static Site qua Global CDN không ràng buộc vùng).
+  - Fix lỗi Blueprint: Chuẩn hóa service Static Site thành `type: static` (thay vì `type: web`) và loại bỏ `plan`/`region` theo đúng chuẩn Render Blueprint specification.
   - Xử lý các thách thức đặc thù của Cloud miễn phí: giải pháp chống ngủ đông (Cold Start) bằng UptimeRobot và tối ưu tài nguyên.
 
 ---
