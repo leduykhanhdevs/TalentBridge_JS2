@@ -85,3 +85,17 @@
   - Spring Boot Data Initialization, JPA Cascade, TailwindCSS.
 - **Mục đích chức năng / Việc đã làm**:
   - Đảm bảo hệ thống có sẵn nguồn dữ liệu phong phú, phục vụ kiểm thử phân trang và demo trực quan cho giảng viên.
+
+---
+
+## BÁO CÁO KHẮC PHỤC RENDER BACKEND FAILED DEPLOY
+- **Thời gian**: 06/10/2026
+- **Đã làm được gì**:
+  - Đối chiếu build log Render của commit `48410b9`: bước `COPY .mvn/ .mvn/` trong `Dockerfile:9` thất bại vì `.mvn` không có trong Docker build context.
+  - Xác định nguyên nhân là quy tắc `.mvn` trong `.dockerignore`; đã bỏ quy tắc này để Maven Wrapper được đưa vào build context.
+  - Chạy thành công `mvnw dependency:go-offline -B` và `mvnw clean package -DskipTests=true` bằng JDK 21, tương ứng các bước build backend trong Dockerfile.
+  - GitHub Actions Backend Build & Verify và Frontend Test, Lint & Build đều pass trên PR #11. Docker image chưa được kiểm chứng trực tiếp vì Docker Desktop Linux engine không chạy trong môi trường kiểm tra.
+- **Công nghệ / Thuật toán / Kết hợp**:
+  - Docker multi-stage build, `.dockerignore`, Maven Wrapper và JDK 21.
+- **Mục đích chức năng / Việc đã làm**:
+  - Đảm bảo Docker builder nhận được `.mvn/wrapper/maven-wrapper.properties` để chạy Maven Wrapper, tránh lỗi thiếu đường dẫn `.mvn` khi build backend trên Render.
