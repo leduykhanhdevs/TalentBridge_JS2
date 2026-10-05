@@ -37,7 +37,6 @@ services:
     name: talentbridge-frontend
     runtime: static
     plan: free
-    region: singapore
     autoDeploy: false
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
