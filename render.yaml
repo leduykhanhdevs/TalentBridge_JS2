@@ -33,8 +33,9 @@ services:
   # ----------------------------------------------------------------------------
   # 2. Frontend Static Site (React 19 + Vite SPA)
   # ----------------------------------------------------------------------------
-  - type: static
+  - type: web
     name: talentbridge-frontend
+    runtime: static
     autoDeploy: false
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
