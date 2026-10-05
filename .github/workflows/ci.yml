@@ -1,13 +1,17 @@
-name: TalentBridge CI/CD Pipeline
+name: TalentBridge Continuous Integration (CI)
 
 on:
-  push:
-    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
+  push:
+    branches: [ dev ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  backend:
+  backend-verify:
     name: Backend Build & Verify (Spring Boot 3 + JDK 21)
     runs-on: ubuntu-latest
 
@@ -30,7 +34,7 @@ jobs:
           JWT_SECRET: "CiCdPipelineSecretKeyForTalentBridgeTestingMustBe32CharsLong!"
         run: ./mvnw -B verify
 
-  frontend:
+  frontend-verify:
     name: Frontend Test, Lint & Build (React 19 + Node 20)
     runs-on: ubuntu-latest
     defaults:
@@ -46,13 +50,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Set up JDK 21 (Eclipse Temurin)
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: maven
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -64,39 +61,27 @@ jobs:
       - name: Run ESLint
         run: pnpm lint
 
-      - name: Build Backend for E2E Tests
-        run: |
-          cd ..
-          sh ./mvnw -B -DskipTests package
+      - name: Run Vitest Unit Tests
+        run: pnpm test
 
-      - name: Run Vitest Suite
-        env:
-          JWT_SECRET: "CiCdPipelineSecretKeyForTalentBridgeTestingMustBe32CharsLong!"
-          RATE_LIMIT_ENABLED: 'false'
-          SPRING_PROFILES_ACTIVE: local
-        run: |
-          cd ..
-          java -jar target/talentbridge-0.0.1-SNAPSHOT.jar > backend.log 2>&1 &
-          backend_pid=$!
-          trap 'kill "$backend_pid" 2>/dev/null || true' EXIT
-          for attempt in {1..60}; do
-            if curl --fail --silent --output /dev/null --max-time 2 \
-              --header 'Content-Type: application/json' \
-              --data '{"email":"admin@talentbridge.vn","password":"AdminPassword123!"}' \
-              http://localhost:8080/api/v1/auth/login; then
-              cd frontend
-              pnpm test
-              exit $?
-            fi
-            if ! kill -0 "$backend_pid" 2>/dev/null; then
-              cat backend.log
-              exit 1
-            fi
-            sleep 2
-          done
-          cat backend.log
-          echo "Backend did not become ready"
-          exit 1
-
-      - name: Build Production Assets
+      - name: Build Production Bundle (Type-check + Vite)
         run: pnpm build
+
+  docker-verify:
+    name: Dockerfile Build Verification
+    runs-on: ubuntu-latest
+    needs: [backend-verify]
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: talentbridge-app:ci-check

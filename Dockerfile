@@ -35,7 +35,11 @@ USER appuser
 # Expose server port
 EXPOSE 8080
 
-# Configure JVM options and entry point
-ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -Dfile.encoding=UTF-8"
+# Configure JVM options for low memory environments (Render Free Tier 512MB RAM)
+# - SerialGC: Lowest memory overhead for single-core / low-memory containers
+# - MaxRAMPercentage=70.0: Limits heap to ~350MB, leaving ~160MB for metaspace & thread stacks
+# - Xss256k: Reduces thread stack from default 1MB to 256KB
+ENV JAVA_OPTS="-XX:+UseSerialGC -XX:MaxRAMPercentage=70.0 -Xss256k -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+

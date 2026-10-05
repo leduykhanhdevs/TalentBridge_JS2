@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /
     encoding:
@@ -65,6 +65,9 @@ talentbridge:
     window-seconds: "${RATE_LIMIT_WINDOW_SECONDS:60}"
   upload:
     dir: "${UPLOAD_DIR:uploads}"
+  gemini:
+    api-key: "${GEMINI_API_KEY:}"
+    model: "gemini-flash-lite-latest"
 
 ---
 spring:
@@ -110,3 +113,24 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: "${SPRING_DATASOURCE_URL}"
+    username: "${SPRING_DATASOURCE_USERNAME}"
+    password: "${SPRING_DATASOURCE_PASSWORD}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
