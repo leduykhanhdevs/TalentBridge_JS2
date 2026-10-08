@@ -26,6 +26,9 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
+# Pre-create uploads directory and grant ownership to non-root appuser
+RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
+
 # Copy executable jar from builder stage
 COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
 

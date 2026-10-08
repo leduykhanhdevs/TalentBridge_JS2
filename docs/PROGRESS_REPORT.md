@@ -99,3 +99,19 @@
   - Docker multi-stage build, `.dockerignore`, Maven Wrapper và JDK 21.
 - **Mục đích chức năng / Việc đã làm**:
   - Đảm bảo Docker builder nhận được `.mvn/wrapper/maven-wrapper.properties` để chạy Maven Wrapper, tránh lỗi thiếu đường dẫn `.mvn` khi build backend trên Render.
+
+---
+
+## BÁO CÁO KHẮC PHỤC KẾT NỐI TIDB VÀ PHÂN QUYỀN THƯ MỤC UPLOADS DOCKER
+- **Thời gian**: 08/10/2026
+- **Đã làm được gì**:
+  - **Khắc phục lỗi CSDL**: Xác định chính xác Username TiDB Cloud là `2igDRivUbswCBxf.root` (ký tự `B` hoa thay vì số `8`), xác nhận kết nối TiDB Cloud thành công qua JDBC TLS.
+  - **Khắc phục lỗi phân quyền Docker `/app/uploads`**:
+    - Phân tích log Render mới nhất (`AccessDeniedException: /app/uploads`): Container chạy user bảo mật phi-root `appuser`, nhưng thư mục `/app` thuộc sở hữu `root:root` dẫn đến không thể tạo `/app/uploads`.
+    - Thêm lệnh `RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app` vào `Dockerfile` trước khi chuyển sang `USER appuser`.
+    - Cải tiến `LocalFileStorageAdapter.java` với cơ chế resilient fallback: Nếu thư mục chỉ định bị từ chối quyền ghi, tự động chuyển hướng lưu trữ sang thư mục tạm hệ thống (`java.io.tmpdir/talentbridge-uploads`), triệt tiêu 100% rủi ro crash ứng dụng khi khởi động.
+    - Cập nhật quy tắc kiểm thử ArchUnit `HexagonalArchitectureTest` vượt qua 10/10 tests (BUILD SUCCESS).
+- **Công nghệ / Thuật toán / Kết hợp**:
+  - Docker multi-stage security, Linux permissions (`chown -R`), Java NIO Files, Resilient Fallback Pattern, ArchUnit Hexagonal Architecture.
+- **Mục đích chức năng / Việc đã làm**:
+  - Đảm bảo Backend Spring Boot khởi động mượt mà, lưu trữ file tuyển dụng/CV an toàn và chuyển sang trạng thái Live trên Cloud Render.
