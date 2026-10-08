@@ -130,3 +130,23 @@
   - Docker Multi-stage Container (JRE 21 Alpine), Spring Boot 3.3.4, Flyway Migration, TiDB Cloud Serverless, Vite Static Site CDN, Render Cloud Platform.
 - **Mục đích chức năng / Việc đã làm**:
   - Hoàn tất 100% nhiệm vụ cốt lõi do giảng viên giao: Triển khai hoàn chỉnh toàn bộ hệ thống TalentBridge ATS lên Cloud công cộng, sẵn sàng báo cáo và nghiệm thu đồ án.
+
+---
+
+## BÁO CÁO KHẮC PHỤC AI VÀ TỐI ƯU ĐỘ TRỄ (CHƯA DEPLOY)
+- **Thời gian**: 09/10/2026
+- **Đã làm được gì**:
+  - Chuẩn hóa adapter gọi Gemini dùng header `x-goog-api-key`, nhận phản hồi JSON kể cả khi upstream trả `application/octet-stream`, đặt connect/read timeout và không ghi nội dung CV hay API key vào log.
+  - Chuyển model mặc định sang ID ổn định `gemini-3.5-flash-lite`, được liệt kê trong tài liệu Gemini GenerateContent; cho phép `GEMINI_MODEL` override.
+  - CV parser trả nguồn xử lý `GEMINI` hoặc `RULE_BASED`; giao diện hiển thị rõ khi AI được dùng hay khi chuyển sang xử lý dự phòng.
+  - Chuyển phân tích matching ứng viên sang inbound use case/port trong core; giới hạn endpoint cho Recruiter và kiểm tra quyền sở hữu tin cùng đơn ứng tuyển. Khóa các endpoint MCP đối với người dùng chưa được cấp quyền Admin.
+  - Giảm truy vấn dư thừa khi tải danh sách việc làm/đơn ứng tuyển; đổi tải tập quyền `roles` sang lazy + batch để tránh Hibernate phân trang trong bộ nhớ; cấu hình Hikari cho TiDB, chia nhỏ bundle frontend bằng lazy route và cache tìm việc công khai trong 60 giây.
+  - Cập nhật README và hướng dẫn Render. Backend có 267 tests pass (0 failures/errors), gồm ArchUnit; frontend có 84 tests pass, lint và production build đều pass.
+  - Chưa triển khai hoặc kiểm tra production sau thay đổi. Cần cấu hình `GEMINI_API_KEY` ở Render; gói Render Free vẫn có thể cold start.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - Spring `RestClient`, Gemini `generateContent`, UTF-8 response handling, timeout có cấu hình và fallback parser xác định.
+  - Hexagonal Architecture với inbound use case và outbound port; kiểm tra quyền bằng Spring Security; JPA lazy loading/batch fetching cho association quyền.
+  - Tri-Vector/RAG matching hiện có; React `lazy`/`Suspense`, TanStack Query cache; HikariCP và JPA batch loading.
+- **Mục đích chức năng / việc đã làm**:
+  - Làm cho kết quả AI/fallback có thể nhận biết trong CV import và matching nhà tuyển dụng, giảm rủi ro lỗi do xác thực hoặc quyền truy cập sai.
+  - Giảm tải ban đầu và truy vấn không cần thiết ở các trang/list thường dùng. Chưa đo latency production nên chưa khẳng định phần trăm cải thiện; thời gian cold start của gói Free phụ thuộc Render.

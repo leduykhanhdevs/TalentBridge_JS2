@@ -72,6 +72,8 @@ export function JobSearchPage() {
     const jobsQuery = useQuery({
         queryKey: ['public-jobs', appliedFilters],
         queryFn: () => searchJobs(appliedFilters),
+        staleTime: 60_000,
+        gcTime: 5 * 60_000,
     })
 
     function updateField(field: keyof JobFilterFormValues, value: string) {

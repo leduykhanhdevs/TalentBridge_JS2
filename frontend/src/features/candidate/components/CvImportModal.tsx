@@ -187,6 +187,17 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                             <span>{successMessage}</span>
                         </div>
                     )}
+                    {parsedResult && (
+                        <div className={`rounded-2xl border p-4 text-xs font-medium ${
+                            parsedResult.processingSource === 'GEMINI'
+                                ? 'border-violet-200 bg-violet-50 text-violet-800'
+                                : 'border-amber-200 bg-amber-50 text-amber-800'
+                        }`} role="status">
+                            {parsedResult.processingSource === 'GEMINI'
+                                ? 'CV đã được phân tích bằng Gemini AI. Vui lòng kiểm tra lại thông tin trước khi lưu.'
+                                : 'Gemini AI chưa khả dụng; thông tin được trích xuất bằng bộ quy tắc cơ bản. Vui lòng kiểm tra kỹ trước khi lưu.'}
+                        </div>
+                    )}
 
                     {/* Step 1: Upload Dropzone if no parsed result */}
                     {!parsedResult && (
@@ -221,7 +232,7 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                                             Đang đọc và bóc tách dữ liệu từ file CV...
                                         </p>
                                         <p className="text-xs text-slate-500 max-w-sm">
-                                            Hệ thống đang sử dụng công nghệ trích xuất Apache PDFBox / Word Parser để nhận diện các mục thông tin.
+                                            Hệ thống đang trích xuất nội dung và sẽ dùng Gemini AI nếu dịch vụ đã được cấu hình.
                                         </p>
                                     </div>
                                 ) : (

@@ -59,9 +59,15 @@
    - `SPRING_DATASOURCE_PASSWORD`: *(Điền password MySQL)*
    - `TALENTBRIDGE_JWT_SECRET`: *(Tạo 1 chuỗi ngẫu nhiên tối thiểu 32 ký tự)*
    - `GEMINI_API_KEY`: *(Điền Gemini API Key của bạn)*
+   - `GEMINI_MODEL`: *(Tùy chọn; mặc định `gemini-3.5-flash-lite`)*
+   - `DB_POOL_MAX_SIZE`: *(Tùy chọn; mặc định `5` kết nối)*
    - `CORS_ALLOWED_ORIGINS`: `*` *(sau khi có link frontend sẽ đổi lại link frontend)*
 6. Bấm **Create Web Service**. Đợi 3-5 phút để Render build và khởi chạy.
 7. Khi thành công, copy URL Backend: `https://talentbridge-backend-xxxx.onrender.com`.
+
+Gemini API key phải được lưu trong Environment Variables của Render, không đưa vào Git hoặc URL. Kết quả nhập CV và matching trả thông tin nguồn xử lý để phân biệt Gemini với parser/thuật toán dự phòng. Endpoint matching yêu cầu đăng nhập recruiter và kiểm tra quan hệ công ty–tin tuyển dụng–đơn ứng tuyển. Kết nối TiDB dùng pool Hikari với thời gian sống 5 phút và keepalive 3 phút để tránh giữ connection quá thời hạn idle của dịch vụ DB.
+
+Gói Render Free vẫn có thể ngủ khi không có request; code không thể loại bỏ độ trễ khởi động nguội của hạ tầng. Chia route frontend, cache truy vấn danh sách trong phiên và tái sử dụng kết nối DB giúp các request thường gặp nhẹ hơn, còn luôn sẵn sàng cần cấu hình instance phù hợp trên Render.
 
 ---
 

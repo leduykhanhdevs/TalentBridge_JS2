@@ -3,20 +3,20 @@ package vn.talentbridge.adapter.out.ai;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import vn.talentbridge.adapter.in.web.dto.response.AiMatchResultResponse;
+import org.springframework.web.client.RestClientResponseException;
 import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
 import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CandidateSkillJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
+import vn.talentbridge.core.application.dto.AiMatchingSource;
+import vn.talentbridge.core.application.dto.CandidateJobMatchResult;
+import vn.talentbridge.core.application.port.out.CandidateJobMatchingPort;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,43 +34,48 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class TriVectorRagMatchingService {
+public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
 
-    private static final String GEMINI_API_URL_TEMPLATE =
-            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
+    private static final int MAX_PROMPT_SECTION_LENGTH = 15_000;
 
     private final JobJpaRepository jobRepository;
     private final CandidateJpaRepository candidateRepository;
     private final CandidateSkillJpaRepository candidateSkillRepository;
     private final ObjectMapper objectMapper;
-    private final RestClient restClient;
+    private final GeminiApiClient geminiApiClient;
 
-    @Value("${talentbridge.gemini.api-key:}")
-    private String apiKey;
-
-    @Value("${talentbridge.gemini.model:gemini-flash-lite-latest}")
+    @Value("${talentbridge.gemini.model:gemini-3.5-flash-lite}")
     private String model;
+
+    @Autowired
+    public TriVectorRagMatchingService(
+            JobJpaRepository jobRepository,
+            CandidateJpaRepository candidateRepository,
+            CandidateSkillJpaRepository candidateSkillRepository,
+            ObjectMapper objectMapper,
+            GeminiApiClient geminiApiClient) {
+        this.jobRepository = jobRepository;
+        this.candidateRepository = candidateRepository;
+        this.candidateSkillRepository = candidateSkillRepository;
+        this.objectMapper = objectMapper;
+        this.geminiApiClient = geminiApiClient;
+    }
 
     public TriVectorRagMatchingService(
             JobJpaRepository jobRepository,
             CandidateJpaRepository candidateRepository,
             CandidateSkillJpaRepository candidateSkillRepository,
             ObjectMapper objectMapper) {
-        this.jobRepository = jobRepository;
-        this.candidateRepository = candidateRepository;
-        this.candidateSkillRepository = candidateSkillRepository;
-        this.objectMapper = objectMapper;
-
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(6));
-        requestFactory.setReadTimeout(Duration.ofSeconds(20));
-
-        this.restClient = RestClient.builder()
-                .requestFactory(requestFactory)
-                .build();
+        this(jobRepository, candidateRepository, candidateSkillRepository, objectMapper,
+                new GeminiApiClient("", "https://generativelanguage.googleapis.com/v1beta", 5000, 20000, null));
     }
 
-    public AiMatchResultResponse matchCandidateToJob(Long jobId, Long candidateId, String overrideCvText) {
+    @Override
+    public CandidateJobMatchResult match(Long jobId, Long candidateId) {
+        return matchCandidateToJob(jobId, candidateId, null);
+    }
+
+    public CandidateJobMatchResult matchCandidateToJob(Long jobId, Long candidateId, String overrideCvText) {
         JobJpaEntity job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy công việc ID: " + jobId));
 
@@ -93,14 +98,17 @@ public class TriVectorRagMatchingService {
             candidateCvContent = "Thông tin kỹ năng ứng viên chưa được cập nhật đầy đủ.";
         }
 
-        String jobText = buildJobRequirementText(job);
+        String jobText = truncate(buildJobRequirementText(job));
+        candidateCvContent = truncate(candidateCvContent);
 
         // Thử chạy qua Gemini AI với phương pháp Tri-Vector RAG
-        if (apiKey != null && !apiKey.isBlank()) {
+        if (geminiApiClient.isConfigured()) {
             try {
                 return matchWithGeminiTriVector(job, candidateId, candidateName, jobText, candidateCvContent);
+            } catch (RestClientResponseException e) {
+                log.warn("[TriVector RAG] Gemini từ chối yêu cầu với HTTP {}; dùng thuật toán nội bộ.", e.getStatusCode().value());
             } catch (Exception e) {
-                log.warn("[TriVector RAG] Gemini AI matching gặp sự cố ({}), tự động fallback thuật toán nội bộ", e.getMessage());
+                log.warn("[TriVector RAG] Gemini matching thất bại ({}); dùng thuật toán nội bộ.", e.getClass().getSimpleName());
             }
         }
 
@@ -135,24 +143,21 @@ public class TriVectorRagMatchingService {
             sb.append("Tóm tắt: ").append(candidate.getSummary()).append(". ");
         }
 
-        try {
-            var skills = candidateSkillRepository.findByCandidateIdOrderByIdAsc(candidate.getId());
-            if (!skills.isEmpty()) {
-                sb.append("Kỹ năng: ");
-                for (var s : skills) {
-                    if (s.getSkill() != null) {
-                        sb.append(s.getSkill().getName()).append(" (")
-                                .append(s.getProficiencyLevel()).append("), ");
-                    }
+        var skills = candidateSkillRepository.findByCandidateIdOrderByIdAsc(candidate.getId());
+        if (!skills.isEmpty()) {
+            sb.append("Kỹ năng: ");
+            for (var s : skills) {
+                if (s.getSkill() != null) {
+                    sb.append(s.getSkill().getName()).append(" (")
+                            .append(s.getProficiencyLevel()).append("), ");
                 }
             }
-        } catch (Exception ignored) {
         }
 
         return sb.toString();
     }
 
-    private AiMatchResultResponse matchWithGeminiTriVector(
+    private CandidateJobMatchResult matchWithGeminiTriVector(
             JobJpaEntity job, Long candidateId, String candidateName, String jobText, String cvText) throws Exception {
 
         String prompt = """
@@ -195,16 +200,13 @@ public class TriVectorRagMatchingService {
                 )
         );
 
-        String url = String.format(GEMINI_API_URL_TEMPLATE, model, apiKey);
-        String responseJson = restClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestBody)
-                .retrieve()
-                .body(String.class);
+        String responseJson = geminiApiClient.generateContent(model, requestBody);
 
         JsonNode root = objectMapper.readTree(responseJson);
         String text = root.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
+        if (text == null || text.isBlank()) {
+            throw new IllegalStateException("Gemini returned no matching result");
+        }
         JsonNode data = objectMapper.readTree(text);
 
         double directScore = data.path("directKeywordScore").asDouble(0.7);
@@ -220,23 +222,19 @@ public class TriVectorRagMatchingService {
         List<String> missing = new ArrayList<>();
         data.path("missingCriticalSkills").forEach(n -> missing.add(n.asText()));
 
-        return AiMatchResultResponse.builder()
-                .jobId(job.getId())
-                .jobTitle(job.getTitle())
-                .candidateId(candidateId)
-                .candidateName(candidateName)
-                .directKeywordScore(Math.round(directScore * 100.0) / 100.0)
-                .inferredCapabilityScore(Math.round(inferredScore * 100.0) / 100.0)
-                .matchPercentage(Math.round(percentage * 10.0) / 10.0)
-                .inferredCapabilities(inferredList)
-                .matchingStrengths(strengths)
-                .missingCriticalSkills(missing)
-                .recommendation(data.path("recommendation").asText("CẦN ĐÁNH GIÁ THÊM"))
-                .analysisSummary(data.path("analysisSummary").asText("Đánh giá khớp nối ứng viên hoàn tất bằng Gemini Tri-Vector Engine."))
-                .build();
+        return new CandidateJobMatchResult(
+                job.getId(), job.getTitle(), candidateId, candidateName,
+                Math.round(percentage * 10.0) / 10.0,
+                Math.round(directScore * 100.0) / 100.0,
+                Math.round(inferredScore * 100.0) / 100.0,
+                inferredList, strengths, missing,
+                data.path("recommendation").asText("CẦN ĐÁNH GIÁ THÊM"),
+                data.path("analysisSummary").asText("Đánh giá khớp nối ứng viên hoàn tất bằng Gemini Tri-Vector Engine."),
+                AiMatchingSource.GEMINI
+        );
     }
 
-    private AiMatchResultResponse matchWithDeterministicTriVector(
+    private CandidateJobMatchResult matchWithDeterministicTriVector(
             JobJpaEntity job, Long candidateId, String candidateName, String jobText, String cvText) {
 
         Set<String> jobTokens = extractTokens(jobText);
@@ -276,20 +274,21 @@ public class TriVectorRagMatchingService {
             recommendation = "CHƯA PHÙ HỢP";
         }
 
-        return AiMatchResultResponse.builder()
-                .jobId(job.getId())
-                .jobTitle(job.getTitle())
-                .candidateId(candidateId)
-                .candidateName(candidateName)
-                .directKeywordScore(Math.round(directScore * 100.0) / 100.0)
-                .inferredCapabilityScore(Math.round(inferredScore * 100.0) / 100.0)
-                .matchPercentage(percentage)
-                .inferredCapabilities(new ArrayList<>(inferredCapabilities))
-                .matchingStrengths(strengths)
-                .missingCriticalSkills(missing)
-                .recommendation(recommendation)
-                .analysisSummary("Ứng viên đạt " + percentage + "% độ tương đồng theo công thức Tri-Vector Cosine Similarity.")
-                .build();
+        return new CandidateJobMatchResult(
+                job.getId(), job.getTitle(), candidateId, candidateName,
+                percentage,
+                Math.round(directScore * 100.0) / 100.0,
+                Math.round(inferredScore * 100.0) / 100.0,
+                new ArrayList<>(inferredCapabilities), strengths, missing, recommendation,
+                "Ứng viên đạt " + percentage + "% độ tương đồng theo công thức Tri-Vector Cosine Similarity.",
+                AiMatchingSource.DETERMINISTIC
+        );
+    }
+
+    private String truncate(String text) {
+        return text.length() <= MAX_PROMPT_SECTION_LENGTH
+                ? text
+                : text.substring(0, MAX_PROMPT_SECTION_LENGTH);
     }
 
     private Set<String> extractTokens(String text) {

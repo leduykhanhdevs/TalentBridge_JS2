@@ -27,11 +27,13 @@ import {
     getApplicantNotes,
     getApplicantStageHistory,
     getJobApplicants,
+    matchApplicantWithAi,
     reopenApplicantApplication,
     updateApplicantStage,
 } from '../../features/recruiter/recruiterApplicantApi'
 import {
     APPLICANT_STAGE_CONFIG,
+    type AiMatchResult,
     type ApplicationNote,
     type ApplicationStage,
     type JobApplicant,
@@ -64,6 +66,10 @@ export function RecruiterJobApplicantsPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
+    const [aiMatchApplicant, setAiMatchApplicant] = useState<JobApplicant | null>(null)
+    const [aiMatchResult, setAiMatchResult] = useState<AiMatchResult | null>(null)
+    const [isAiMatching, setIsAiMatching] = useState(false)
+    const [aiMatchError, setAiMatchError] = useState<string | null>(null)
 
     // Filter and Sort states
     const [searchTerm, setSearchTerm] = useState('')
@@ -131,6 +137,21 @@ export function RecruiterJobApplicantsPage() {
     function handleSearchSubmit(e: React.FormEvent) {
         e.preventDefault()
         fetchApplicants()
+    }
+
+    async function handleAiMatch(applicant: JobApplicant) {
+        setAiMatchApplicant(applicant)
+        setAiMatchResult(null)
+        setAiMatchError(null)
+        setIsAiMatching(true)
+        try {
+            const result = await matchApplicantWithAi(numericJobId, applicant.candidateId)
+            setAiMatchResult(result)
+        } catch (err: unknown) {
+            setAiMatchError(err instanceof Error ? err.message : 'Không thể phân tích ứng viên bằng AI')
+        } finally {
+            setIsAiMatching(false)
+        }
     }
 
     async function handleUpdateStageSubmit(e: React.FormEvent) {
@@ -618,6 +639,17 @@ export function RecruiterJobApplicantsPage() {
 
                                     {/* Right: Actions */}
                                     <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0 shrink-0">
+                                        <button
+                                            type="button"
+                                            disabled={isAiMatching}
+                                            onClick={() => void handleAiMatch(app)}
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-100 disabled:cursor-wait disabled:opacity-60 transition shadow-2xs"
+                                            title="Phân tích mức độ phù hợp giữa hồ sơ ứng viên và yêu cầu công việc"
+                                        >
+                                            <Sparkles size={13} />
+                                            <span>{isAiMatching && aiMatchApplicant?.id === app.id ? 'Đang phân tích' : 'Phân tích AI'}</span>
+                                        </button>
+
                                         {/* Resume Link */}
                                         {app.resumeUrl ? (
                                             <a
@@ -1099,6 +1131,76 @@ export function RecruiterJobApplicantsPage() {
             )}
 
             {/* Modal 4: Schedule Interview with Google Calendar */}
+            {aiMatchApplicant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs" role="presentation">
+                    <section className="bento-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="ai-match-title">
+                        <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                            <div>
+                                <h3 id="ai-match-title" className="text-lg font-bold text-slate-900">Phân tích độ phù hợp</h3>
+                                <p className="mt-1 text-sm text-slate-600">{aiMatchApplicant.candidateFullName} · {aiMatchApplicant.candidateTitle || 'Ứng viên'}</p>
+                            </div>
+                            <button type="button" onClick={() => setAiMatchApplicant(null)} className="text-slate-400 hover:text-slate-700" aria-label="Đóng phân tích AI">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {isAiMatching && (
+                            <div className="grid min-h-48 place-items-center text-sm font-medium text-slate-600" role="status">
+                                <span className="inline-flex items-center gap-2"><Sparkles className="animate-pulse text-violet-600" size={18} /> Đang phân tích hồ sơ và yêu cầu công việc...</span>
+                            </div>
+                        )}
+                        {aiMatchError && <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">{aiMatchError}</p>}
+                        {aiMatchResult && (
+                            <div className="mt-5 space-y-5">
+                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-violet-50 p-4">
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Điểm phù hợp</p>
+                                        <p className="mt-1 text-3xl font-bold text-violet-950">{aiMatchResult.matchPercentage.toFixed(1)}%</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-bold text-slate-900">{aiMatchResult.recommendation}</p>
+                                        <p className="mt-1 text-xs text-slate-600">
+                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini AI' : 'Thuật toán dự phòng'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p className="text-sm leading-6 text-slate-700">{aiMatchResult.analysisSummary}</p>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-900">Điểm phù hợp</h4>
+                                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
+                                            {aiMatchResult.matchingStrengths.map((item) => <li key={item}>{item}</li>)}
+                                            {aiMatchResult.matchingStrengths.length === 0 && <li>Chưa có điểm nổi bật được xác định.</li>}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-900">Kỹ năng còn thiếu</h4>
+                                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
+                                            {aiMatchResult.missingCriticalSkills.map((item) => <li key={item}>{item}</li>)}
+                                            {aiMatchResult.missingCriticalSkills.length === 0 && <li>Không phát hiện kỹ năng thiếu rõ ràng.</li>}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {aiMatchResult.inferredCapabilities.length > 0 && (
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-900">Năng lực suy luận</h4>
+                                        <p className="mt-2 text-sm text-slate-600">{aiMatchResult.inferredCapabilities.join(' · ')}</p>
+                                    </div>
+                                )}
+                                {aiMatchResult.matchingSource === 'DETERMINISTIC' && (
+                                    <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                                        Gemini AI chưa phản hồi được. Điểm số này do bộ máy đối sánh quy tắc tạo ra, nên cần được HR kiểm tra thủ công.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        <div className="mt-6 flex justify-end">
+                            <button type="button" onClick={() => setAiMatchApplicant(null)} className="btn-bento-secondary h-9 px-4 text-xs font-bold">Đóng</button>
+                        </div>
+                    </section>
+                </div>
+            )}
+
             {interviewModalApplicant && (
                 <ScheduleInterviewModal
                     isOpen={Boolean(interviewModalApplicant)}

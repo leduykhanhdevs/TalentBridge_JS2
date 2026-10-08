@@ -31,6 +31,13 @@ public interface ApplicationJpaRepository extends JpaRepository<ApplicationJpaEn
     @EntityGraph(attributePaths = {"job", "candidate", "candidate.user", "resume"})
     Optional<ApplicationJpaEntity> findDetailedById(Long id);
 
+    @Query("select a from ApplicationJpaEntity a where a.job.id = :jobId and a.candidate.id = :candidateId")
+    @EntityGraph(attributePaths = {"job", "candidate", "candidate.user", "resume"})
+    Optional<ApplicationJpaEntity> findDetailedByJobIdAndCandidateId(
+            @Param("jobId") Long jobId,
+            @Param("candidateId") Long candidateId
+    );
+
     @Query("select a from ApplicationJpaEntity a " +
            "join fetch a.job j " +
            "left join fetch j.company c " +

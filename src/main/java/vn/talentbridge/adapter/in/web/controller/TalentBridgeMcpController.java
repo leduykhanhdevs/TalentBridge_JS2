@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.out.ai.TriVectorRagMatchingService;
@@ -28,6 +29,7 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/mcp")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class TalentBridgeMcpController {
 

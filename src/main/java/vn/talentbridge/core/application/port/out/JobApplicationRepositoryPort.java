@@ -12,5 +12,7 @@ public interface JobApplicationRepositoryPort {
 
     Optional<JobApplicant> findApplicantById(Long applicationId);
 
+    Optional<JobApplicant> findApplicantByJobIdAndCandidateId(Long jobId, Long candidateId);
+
     void updateStageAndStatus(Long applicationId, String stage, String status);
 }
