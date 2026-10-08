@@ -67,7 +67,8 @@ public class JobApplicationPersistenceAdapter implements JobApplicationRepositor
 
         Map<Long, Double> avgRatings = new HashMap<>();
         Map<Long, Integer> notesCounts = new HashMap<>();
-        loadRatingSummaries(avgRatings, notesCounts);
+        List<Long> applicationIds = entities.stream().map(ApplicationJpaEntity::getId).toList();
+        loadRatingSummaries(applicationIds, avgRatings, notesCounts);
 
         return entities.stream()
                 .map(entity -> toDomain(entity, avgRatings.get(entity.getId()), notesCounts.getOrDefault(entity.getId(), 0)))
@@ -81,6 +82,17 @@ public class JobApplicationPersistenceAdapter implements JobApplicationRepositor
                 .map(entity -> {
                     Double avgRating = applicationNoteJpaRepository.findAverageRatingByApplicationId(applicationId);
                     int count = applicationNoteJpaRepository.countByApplicationId(applicationId);
+                    return toDomain(entity, avgRating, count);
+                });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<JobApplicant> findApplicantByJobIdAndCandidateId(Long jobId, Long candidateId) {
+        return applicationJpaRepository.findDetailedByJobIdAndCandidateId(jobId, candidateId)
+                .map(entity -> {
+                    Double avgRating = applicationNoteJpaRepository.findAverageRatingByApplicationId(entity.getId());
+                    int count = applicationNoteJpaRepository.countByApplicationId(entity.getId());
                     return toDomain(entity, avgRating, count);
                 });
     }
@@ -117,8 +129,11 @@ public class JobApplicationPersistenceAdapter implements JobApplicationRepositor
         };
     }
 
-    private void loadRatingSummaries(Map<Long, Double> avgRatings, Map<Long, Integer> notesCounts) {
-        List<Object[]> rows = applicationNoteJpaRepository.findRatingSummariesGroupedByApplication();
+    private void loadRatingSummaries(
+            List<Long> applicationIds,
+            Map<Long, Double> avgRatings,
+            Map<Long, Integer> notesCounts) {
+        List<Object[]> rows = applicationNoteJpaRepository.findRatingSummariesByApplicationIds(applicationIds);
         for (Object[] row : rows) {
             if (row[0] instanceof Long appId) {
                 Double avg = row[1] != null ? ((Number) row[1]).doubleValue() : null;

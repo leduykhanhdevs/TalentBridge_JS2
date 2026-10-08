@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import vn.talentbridge.adapter.in.web.dto.response.AiMatchResultResponse;
 import vn.talentbridge.adapter.out.ai.TriVectorRagMatchingService;
 import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
 import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CandidateSkillJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
+import vn.talentbridge.core.application.dto.CandidateJobMatchResult;
 
 import java.util.Optional;
 
@@ -65,17 +65,18 @@ class TriVectorRagMatchingServiceTest {
                 """;
 
         // Act
-        AiMatchResultResponse result = matchingService.matchCandidateToJob(jobId, null, candidateCv);
+        CandidateJobMatchResult result = matchingService.matchCandidateToJob(jobId, null, candidateCv);
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getJobId()).isEqualTo(jobId);
-        assertThat(result.getDirectKeywordScore()).isGreaterThan(0.0);
-        assertThat(result.getInferredCapabilityScore()).isGreaterThan(0.0);
-        assertThat(result.getMatchPercentage()).isGreaterThan(40.0);
-        assertThat(result.getInferredCapabilities()).isNotEmpty();
-        assertThat(result.getInferredCapabilities()).contains("microservices", "backend");
-        assertThat(result.getRecommendation()).isIn("ƯU TIÊN PHỎNG VẤN", "CẦN ĐÁNH GIÁ THÊM");
+        assertThat(result.jobId()).isEqualTo(jobId);
+        assertThat(result.directKeywordScore()).isGreaterThan(0.0);
+        assertThat(result.inferredCapabilityScore()).isGreaterThan(0.0);
+        assertThat(result.matchPercentage()).isGreaterThan(40.0);
+        assertThat(result.inferredCapabilities()).isNotEmpty();
+        assertThat(result.inferredCapabilities()).contains("microservices", "backend");
+        assertThat(result.recommendation()).isIn("ƯU TIÊN PHỎNG VẤN", "CẦN ĐÁNH GIÁ THÊM");
+        assertThat(result.source().name()).isEqualTo("DETERMINISTIC");
     }
 
     @Test
@@ -95,11 +96,11 @@ class TriVectorRagMatchingServiceTest {
         String technicalCv = "Lập trình viên vi điều khiển C/C++, hàn mạch điện tử.";
 
         // Act
-        AiMatchResultResponse result = matchingService.matchCandidateToJob(jobId, null, technicalCv);
+        CandidateJobMatchResult result = matchingService.matchCandidateToJob(jobId, null, technicalCv);
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getMatchPercentage()).isLessThan(50.0);
-        assertThat(result.getRecommendation()).isEqualTo("CHƯA PHÙ HỢP");
+        assertThat(result.matchPercentage()).isLessThan(50.0);
+        assertThat(result.recommendation()).isEqualTo("CHƯA PHÙ HỢP");
     }
 }

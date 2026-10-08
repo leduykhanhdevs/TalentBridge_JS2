@@ -289,6 +289,20 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public MatchApplicantUseCase matchApplicantUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort applicationRepository,
+            CandidateJobMatchingPort matchingPort) {
+        return new MatchApplicantUseCaseImpl(
+                recruiterRepository,
+                jobRepository,
+                applicationRepository,
+                matchingPort
+        );
+    }
+
+    @Bean
     public UpdateApplicantStatusUseCase updateApplicantStatusUseCase(
             RecruiterRepositoryPort recruiterRepository,
             JobRepositoryPort jobRepository,

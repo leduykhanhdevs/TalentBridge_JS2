@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.talentbridge.core.application.dto.CandidateJobMatchResult;
 
 import java.util.List;
 
@@ -58,8 +59,30 @@ public class AiMatchResultResponse {
      */
     private String recommendation;
 
+    /** Provider used for the analysis: GEMINI or DETERMINISTIC. */
+    private String matchingSource;
+
     /**
      * Tóm tắt phân tích tổng quan
      */
     private String analysisSummary;
+
+    public static AiMatchResultResponse from(CandidateJobMatchResult result) {
+        if (result == null) return null;
+        return AiMatchResultResponse.builder()
+                .jobId(result.jobId())
+                .jobTitle(result.jobTitle())
+                .candidateId(result.candidateId())
+                .candidateName(result.candidateName())
+                .matchPercentage(result.matchPercentage())
+                .directKeywordScore(result.directKeywordScore())
+                .inferredCapabilityScore(result.inferredCapabilityScore())
+                .inferredCapabilities(result.inferredCapabilities())
+                .matchingStrengths(result.matchingStrengths())
+                .missingCriticalSkills(result.missingCriticalSkills())
+                .recommendation(result.recommendation())
+                .analysisSummary(result.analysisSummary())
+                .matchingSource(result.source() != null ? result.source().name() : "DETERMINISTIC")
+                .build();
+    }
 }

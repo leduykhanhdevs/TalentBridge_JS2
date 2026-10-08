@@ -151,11 +151,19 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 | `SPRING_DATASOURCE_URL` | Khi `mysql` | `jdbc:mysql://localhost:3306/talentbridge_db` | URL kết nối MySQL khi chạy profile `mysql`. |
 | `SPRING_DATASOURCE_USERNAME`| Khi `mysql` | `root` | Tài khoản kết nối MySQL. |
 | `SPRING_DATASOURCE_PASSWORD`| Khi `mysql` | `password` | Mật khẩu tài khoản kết nối MySQL. |
+| `GEMINI_API_KEY` | Không | *(để trống)* | API key Gemini. Nếu chưa cấu hình hoặc nhà cung cấp lỗi, CV parser và matching dùng phương án dự phòng; key được gửi qua header HTTP. |
+| `GEMINI_MODEL` | Không | `gemini-3.5-flash-lite` | Mô hình Gemini ổn định, độ trễ thấp dùng cho phân tích CV và matching. |
+| `GEMINI_API_BASE_URL` | Không | `https://generativelanguage.googleapis.com/v1beta` | Endpoint Gemini; chủ yếu dùng để cấu hình môi trường và kiểm thử. |
+| `GEMINI_CONNECT_TIMEOUT_MS` | Không | `5000` | Timeout kết nối tới Gemini. |
+| `GEMINI_READ_TIMEOUT_MS` | Không | `20000` | Timeout chờ phản hồi Gemini; không tự retry để tránh kéo dài request lỗi. |
+| `DB_POOL_MAX_SIZE` | Không | `5` | Số kết nối tối đa trong pool ở profile production. |
 | `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
 | `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
 | `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
 | `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |
+
+API nhập CV trả `processingSource` là `GEMINI` hoặc `RULE_BASED`; API matching trả `matchingSource` là `GEMINI` hoặc `DETERMINISTIC`, để giao diện không nhận nhầm kết quả dự phòng thành kết quả AI. Matching yêu cầu vai trò recruiter, xác minh công ty sở hữu tin và ứng viên đã nộp đơn; request không nhận nội dung CV thô từ trình duyệt.
 
 ### 3. Khởi Chạy Backend (Spring Boot 3)
 

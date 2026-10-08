@@ -3,17 +3,17 @@ package vn.talentbridge.adapter.out.parser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+import vn.talentbridge.adapter.out.ai.GeminiApiClient;
+import vn.talentbridge.core.application.dto.CvParsingSource;
 import vn.talentbridge.core.application.dto.ParsedCvResult;
 import vn.talentbridge.core.application.port.out.CvParserPort;
 
-import java.time.Duration;
 import java.util.*;
 
 @Slf4j
@@ -21,32 +21,21 @@ import java.util.*;
 @Primary
 public class GeminiCvParserService implements CvParserPort {
 
-    private static final String GEMINI_API_URL_TEMPLATE =
-            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
-
     private final CvParserService fallbackParser;
     private final ObjectMapper objectMapper;
-    private final RestClient restClient;
+    private final GeminiApiClient geminiApiClient;
 
-    @Value("${talentbridge.gemini.api-key:}")
-    private String apiKey;
-
-    @Value("${talentbridge.gemini.model:gemini-1.5-flash}")
+    @Value("${talentbridge.gemini.model:gemini-3.5-flash-lite}")
     private String model;
 
+    @Autowired
     public GeminiCvParserService(
             @Qualifier("cvParserService") CvParserService fallbackParser,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            GeminiApiClient geminiApiClient) {
         this.fallbackParser = fallbackParser;
         this.objectMapper = objectMapper;
-
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(5));
-        requestFactory.setReadTimeout(Duration.ofSeconds(15));
-
-        this.restClient = RestClient.builder()
-                .requestFactory(requestFactory)
-                .build();
+        this.geminiApiClient = geminiApiClient;
     }
 
     @Override
@@ -54,23 +43,22 @@ public class GeminiCvParserService implements CvParserPort {
         // 1. Trích xuất text thô cực nhanh từ file PDF / DOCX thông qua local parser
         String rawText = fallbackParser.extractRawText(bytes, fileName);
         if (rawText == null || rawText.isBlank()) {
-            log.warn("[Gemini AI] Không thể trích xuất văn bản thô từ file: {}", fileName);
             return fallbackParser.parse(bytes, fileName);
         }
 
-        // 2. Kiểm tra nếu chưa cấu hình API Key thì dùng fallback rule-based parser
-        if (apiKey == null || apiKey.isBlank() || apiKey.startsWith("YOUR_")) {
-            log.info("[Gemini AI] Chưa cấu hình API Key (talentbridge.gemini.api-key). Đang sử dụng bộ phân tích Rule-based mặc định.");
+        if (!geminiApiClient.isConfigured()) {
+            log.info("[Gemini AI] Chưa cấu hình API key; dùng bộ phân tích rule-based.");
             return fallbackParser.parse(bytes, fileName);
         }
 
-        // 3. Gọi Gemini API để bóc tách thông tin với độ chính xác cao
         try {
-            log.info("[Gemini AI] Đang gửi nội dung CV ({}, {} ký tự) đến mô hình: {}", fileName, rawText.length(), model);
+            log.info("[Gemini AI] Bắt đầu phân tích CV ({} ký tự) bằng mô hình {}", rawText.length(), model);
             return callGemini(rawText, fileName, bytes);
+        } catch (RestClientResponseException e) {
+            log.warn("[Gemini AI] Nhà cung cấp từ chối yêu cầu CV với HTTP {}. Dùng parser dự phòng.", e.getStatusCode().value());
+            return fallbackParser.parse(bytes, fileName);
         } catch (Exception e) {
-            log.warn("[Gemini AI] Gặp lỗi khi gọi AI ({}: {}). Tự động chuyển đổi sang bộ phân tích Rule-based dự phòng.",
-                    e.getClass().getSimpleName(), e.getMessage());
+            log.warn("[Gemini AI] Phân tích CV thất bại ({}). Dùng parser dự phòng.", e.getClass().getSimpleName());
             return fallbackParser.parse(bytes, fileName);
         }
     }
@@ -104,7 +92,7 @@ public class GeminiCvParserService implements CvParserPort {
         Map<String, Object> requestPayload = Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(
-                                Map.of("text", "Nội dung CV của ứng viên (File: " + fileName + "):\n\n" + truncatedText)
+                                Map.of("text", "Nội dung CV của ứng viên:\n\n" + truncatedText)
                         ))
                 ),
                 "systemInstruction", Map.of(
@@ -119,15 +107,8 @@ public class GeminiCvParserService implements CvParserPort {
                 )
         );
 
-        String url = String.format(GEMINI_API_URL_TEMPLATE, model, apiKey);
-
         long startTime = System.currentTimeMillis();
-        String responseBody = restClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestPayload)
-                .retrieve()
-                .body(String.class);
+        String responseBody = geminiApiClient.generateContent(model, requestPayload);
 
         long duration = System.currentTimeMillis() - startTime;
         log.info("[Gemini AI] Nhận phản hồi thành công sau {} ms", duration);
@@ -199,16 +180,17 @@ public class GeminiCvParserService implements CvParserPort {
         }
 
         // Tự động bổ sung nếu trường hợp Gemini bỏ sót tên hoặc email (kết hợp với fallback)
+        ParsedCvResult fallback = null;
+        if (fullName.isBlank() || email.isBlank() || phone.isBlank()) {
+            fallback = fallbackParser.parse(originalBytes, fileName);
+        }
         if (fullName.isBlank()) {
-            ParsedCvResult fallback = fallbackParser.parse(originalBytes, fileName);
             fullName = fallback.fullName();
         }
         if (email.isBlank()) {
-            ParsedCvResult fallback = fallbackParser.parse(originalBytes, fileName);
             email = fallback.email();
         }
         if (phone.isBlank()) {
-            ParsedCvResult fallback = fallbackParser.parse(originalBytes, fileName);
             phone = fallback.phone();
         }
 
@@ -221,7 +203,8 @@ public class GeminiCvParserService implements CvParserPort {
                 summary,
                 skills,
                 experiences,
-                rawText.length() > 2000 ? rawText.substring(0, 2000) : rawText
+                rawText.length() > 2000 ? rawText.substring(0, 2000) : rawText,
+                CvParsingSource.GEMINI
         );
     }
 

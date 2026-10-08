@@ -74,7 +74,6 @@ public class HexagonalArchitectureTest {
     void inboundAdaptersMustNotDependOnOutboundAdapters() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.in..")
                 .and().doNotHaveSimpleName("TalentBridgeMcpController")
-                .and().doNotHaveSimpleName("AiMatchingController")
                 .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.adapter.out..")
                 .allowEmptyShould(true);
         rule.check(ALL);

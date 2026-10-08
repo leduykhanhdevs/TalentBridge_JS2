@@ -1,28 +1,37 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router'
 import { MainLayout } from '../../layouts/MainLayout'
 import { AdminLayout } from '../../layouts/AdminLayout'
 import { RecruiterLayout } from '../../layouts/RecruiterLayout'
-import { HomePage } from '../../pages/HomePage'
-import { LoginPage } from '../../pages/LoginPage'
-import { NotFoundPage } from '../../pages/NotFoundPage'
-import { RegisterPage } from '../../pages/RegisterPage'
-import { ForgotPasswordPage } from '../../pages/ForgotPasswordPage'
-import { ResetPasswordPage } from '../../pages/ResetPasswordPage'
-import { AdminCandidatesPage } from '../../pages/admin/AdminCandidatesPage'
-import { AdminRecruitersPage } from '../../pages/admin/AdminRecruitersPage'
-import { AdminCompaniesPage } from '../../pages/admin/AdminCompaniesPage'
-import { AdminJobsPage } from '../../pages/admin/AdminJobsPage'
-import { RecruiterProfilePage } from '../../pages/recruiter/RecruiterProfilePage'
-import { RecruiterCompanyPage } from '../../pages/recruiter/RecruiterCompanyPage'
-import { RecruiterJoinCompanyPage } from '../../pages/recruiter/RecruiterJoinCompanyPage'
-import { RecruiterPeerApprovalPage } from '../../pages/recruiter/RecruiterPeerApprovalPage'
-import { RecruiterJobsPage } from '../../pages/recruiter/RecruiterJobsPage'
-import { RecruiterJobApplicantsPage } from '../../pages/recruiter/RecruiterJobApplicantsPage'
-import { CandidateProfilePage } from '../../pages/candidate/CandidateProfilePage'
-import { CandidateApplicationsPage } from '../../pages/candidate/CandidateApplicationsPage'
-import { JobDetailPage } from '../../pages/jobs/JobDetailPage'
-import { JobSearchPage } from '../../pages/jobs/JobSearchPage'
+
+const HomePage = lazy(() => import('../../pages/HomePage').then((module) => ({ default: module.HomePage })))
+const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({ default: module.LoginPage })))
+const NotFoundPage = lazy(() => import('../../pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
+const RegisterPage = lazy(() => import('../../pages/RegisterPage').then((module) => ({ default: module.RegisterPage })))
+const ForgotPasswordPage = lazy(() => import('../../pages/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('../../pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
+const AdminCandidatesPage = lazy(() => import('../../pages/admin/AdminCandidatesPage').then((module) => ({ default: module.AdminCandidatesPage })))
+const AdminRecruitersPage = lazy(() => import('../../pages/admin/AdminRecruitersPage').then((module) => ({ default: module.AdminRecruitersPage })))
+const AdminCompaniesPage = lazy(() => import('../../pages/admin/AdminCompaniesPage').then((module) => ({ default: module.AdminCompaniesPage })))
+const AdminJobsPage = lazy(() => import('../../pages/admin/AdminJobsPage').then((module) => ({ default: module.AdminJobsPage })))
+const RecruiterProfilePage = lazy(() => import('../../pages/recruiter/RecruiterProfilePage').then((module) => ({ default: module.RecruiterProfilePage })))
+const RecruiterCompanyPage = lazy(() => import('../../pages/recruiter/RecruiterCompanyPage').then((module) => ({ default: module.RecruiterCompanyPage })))
+const RecruiterJoinCompanyPage = lazy(() => import('../../pages/recruiter/RecruiterJoinCompanyPage').then((module) => ({ default: module.RecruiterJoinCompanyPage })))
+const RecruiterPeerApprovalPage = lazy(() => import('../../pages/recruiter/RecruiterPeerApprovalPage').then((module) => ({ default: module.RecruiterPeerApprovalPage })))
+const RecruiterJobsPage = lazy(() => import('../../pages/recruiter/RecruiterJobsPage').then((module) => ({ default: module.RecruiterJobsPage })))
+const RecruiterJobApplicantsPage = lazy(() => import('../../pages/recruiter/RecruiterJobApplicantsPage').then((module) => ({ default: module.RecruiterJobApplicantsPage })))
+const CandidateProfilePage = lazy(() => import('../../pages/candidate/CandidateProfilePage').then((module) => ({ default: module.CandidateProfilePage })))
+const CandidateApplicationsPage = lazy(() => import('../../pages/candidate/CandidateApplicationsPage').then((module) => ({ default: module.CandidateApplicationsPage })))
+const JobDetailPage = lazy(() => import('../../pages/jobs/JobDetailPage').then((module) => ({ default: module.JobDetailPage })))
+const JobSearchPage = lazy(() => import('../../pages/jobs/JobSearchPage').then((module) => ({ default: module.JobSearchPage })))
+
+function RouteLoadingFallback() {
+    return (
+        <div className="grid min-h-[40vh] place-items-center text-sm font-medium text-slate-500" role="status">
+            Đang tải trang...
+        </div>
+    )
+}
 
 function ScrollToTop() {
     const { pathname } = useLocation()
@@ -38,6 +47,7 @@ export function AppRouter() {
     return (
         <>
             <ScrollToTop />
+            <Suspense fallback={<RouteLoadingFallback />}>
             <Routes>
             {/* Public and Standard User Routes */}
             <Route element={<MainLayout />}>
@@ -72,7 +82,8 @@ export function AppRouter() {
                 <Route element={<AdminCompaniesPage />} path="companies" />
                 <Route element={<AdminJobsPage />} path="jobs" />
             </Route>
-        </Routes>
+            </Routes>
+            </Suspense>
         </>
     )
 }

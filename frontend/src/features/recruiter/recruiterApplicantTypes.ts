@@ -23,6 +23,22 @@ export interface JobApplicant {
     notesCount: number
 }
 
+export interface AiMatchResult {
+    jobId: number
+    jobTitle: string
+    candidateId: number
+    candidateName: string
+    matchPercentage: number
+    directKeywordScore: number
+    inferredCapabilityScore: number
+    inferredCapabilities: string[]
+    matchingStrengths: string[]
+    missingCriticalSkills: string[]
+    recommendation: string
+    analysisSummary: string
+    matchingSource: 'GEMINI' | 'DETERMINISTIC'
+}
+
 export interface ApplicationNote {
     id: number
     applicationId: number
