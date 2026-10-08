@@ -115,3 +115,18 @@
   - Docker multi-stage security, Linux permissions (`chown -R`), Java NIO Files, Resilient Fallback Pattern, ArchUnit Hexagonal Architecture.
 - **Mục đích chức năng / Việc đã làm**:
   - Đảm bảo Backend Spring Boot khởi động mượt mà, lưu trữ file tuyển dụng/CV an toàn và chuyển sang trạng thái Live trên Cloud Render.
+
+---
+
+## 🏆 CỘT MỐC TRIỂN KHAI THÀNH CÔNG CLOUD RENDER (PRODUCTION LIVE)
+- **Thời gian**: 08/10/2026
+- **Đã làm được gì**:
+  - **Backend Live**: Dịch vụ `talentbridge-backend` chính thức đạt trạng thái Live tại `https://talentbridge-backend-6rmd.onrender.com`.
+  - **Frontend Live**: Dịch vụ `talentbridge-frontend` chính thức đạt trạng thái Live tại `https://talentbridge-frontend.onrender.com`.
+  - **Database Cloud**: Kết nối thông suốt cụm TiDB Cloud Serverless (MySQL 8.0 wire protocol), Flyway đã thực thi migration tự động schema `test`.
+  - **Tài liệu API**: Kích hoạt thành công Swagger UI Live tại `https://talentbridge-backend-6rmd.onrender.com/swagger-ui.html`.
+  - Đã thực hiện Smoke Test tự động gọi các endpoint `/api/v1/jobs` và `/swagger-ui.html` trên production đều phản hồi `HTTP 200 OK`.
+- **Công nghệ / Thuật toán / Kết hợp**:
+  - Docker Multi-stage Container (JRE 21 Alpine), Spring Boot 3.3.4, Flyway Migration, TiDB Cloud Serverless, Vite Static Site CDN, Render Cloud Platform.
+- **Mục đích chức năng / Việc đã làm**:
+  - Hoàn tất 100% nhiệm vụ cốt lõi do giảng viên giao: Triển khai hoàn chỉnh toàn bộ hệ thống TalentBridge ATS lên Cloud công cộng, sẵn sàng báo cáo và nghiệm thu đồ án.
