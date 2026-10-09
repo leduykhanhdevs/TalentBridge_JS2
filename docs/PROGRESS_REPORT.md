@@ -171,3 +171,17 @@
 
 ### Nợ clean code còn lại sau kiểm toán
 - 11 quy tắc kiến trúc đang pass nhưng điều đó không chứng minh mọi mã nguồn đã đạt Clean Code. Vẫn còn các `catch (Exception)` ở adapter/parser/email/security và một số repository adapter; một số controller lớn vẫn gom nhiều luồng nghiệp vụ; tài khoản mẫu và mật khẩu mẫu còn tồn tại trong seed dành cho profile không production. Các vấn đề này chưa được sửa trong phạm vi chatbot/statistics và cần refactor riêng có kiểm thử hồi quy.
+
+---
+
+## SỬA LỖI MÀN TRẮNG TRỢ LÝ TALENTBRIDGE
+- **Thời gian**: 09/10/2026
+- **Đã làm được gì**:
+  - Tái hiện lỗi React `TypeError: l is not a function` khi đóng chatbot. `useEffect` dùng biểu thức ngắn trả kết quả của `scrollIntoView()`; React xem giá trị đó là hàm cleanup. Đổi effect sang block body, kiểm tra method trước khi gọi và bảo đảm không trả giá trị cleanup ngoài ý muốn.
+  - Thêm Playwright regression test cho trang `/assistant`, chuyển route và mở/đóng widget khi `scrollIntoView()` giả lập trả về giá trị không phải `void`; không phát sinh lỗi trang và root vẫn render.
+  - Xác minh: frontend 84 unit tests pass; API E2E trên H2 tạm 28 tests pass; Playwright UI E2E 2 tests pass (bao gồm luồng 3 vai trò/viewport); lint và production build pass.
+  - Ảnh QA được lưu tại `artifacts/roleplay-qa/assistant-page.png` và `artifacts/roleplay-qa/assistant-widget-open.png`. Chưa merge hoặc redeploy production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - React `useEffect`, TypeScript, Vitest, Playwright, Vite và backend H2 cô lập qua `scripts/run-e2e.ps1`.
+- **Mục đích chức năng / việc đã làm**:
+  - Giữ nguyên trang TalentBridge và widget chat khi trình duyệt/extension làm `scrollIntoView()` trả kết quả khác chuẩn; tránh một lỗi cleanup làm trắng toàn bộ giao diện.
