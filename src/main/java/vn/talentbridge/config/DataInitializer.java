@@ -59,7 +59,7 @@ public class DataInitializer implements CommandLineRunner {
                     .roles(new HashSet<>(Set.of(adminRole)))
                     .build();
             userJpaRepository.save(admin);
-            log.info(">>> [DataInitializer] Tạo tài khoản Admin mặc định: admin@talentbridge.vn / AdminPassword123!");
+            log.info(">>> [DataInitializer] Đã khởi tạo tài khoản Admin mẫu cho môi trường không production.");
         }
 
         // 3. Initialize Sample Companies
@@ -129,7 +129,7 @@ public class DataInitializer implements CommandLineRunner {
                     .position("Talent Acquisition Manager")
                     .build();
             recruiterJpaRepository.save(recruiter);
-            log.info(">>> [DataInitializer] Tạo tài khoản HR mẫu: recruiter@fpt.com / Password123!");
+            log.info(">>> [DataInitializer] Đã khởi tạo tài khoản nhà tuyển dụng mẫu cho môi trường không production.");
         }
 
         // 5. Initialize Sample Candidate
@@ -160,7 +160,7 @@ public class DataInitializer implements CommandLineRunner {
                     .linkedinUrl("https://linkedin.com/in/minhanh-dev")
                     .build();
             candidateJpaRepository.save(candidate);
-            log.info(">>> [DataInitializer] Tạo tài khoản Ứng viên mẫu: candidate@talentbridge.vn / Password123!");
+            log.info(">>> [DataInitializer] Đã khởi tạo tài khoản ứng viên mẫu cho môi trường không production.");
         }
 
         // 6. Initialize Standard Skills Catalog

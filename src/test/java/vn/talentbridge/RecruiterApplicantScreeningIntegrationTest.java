@@ -266,6 +266,54 @@ class RecruiterApplicantScreeningIntegrationTest {
     }
 
     @Test
+    @DisplayName("Recruiter statistics: trả điểm tin có tiêu chí và giới hạn minh bạch")
+    void shouldReturnOwnedJobQualityAssessment() throws Exception {
+        mockMvc.perform(get("/api/v1/statistics/recruiter/jobs/{jobId}/quality", job.getId())
+                        .header("Authorization", "Bearer " + recruiterToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.jobId").value(job.getId()))
+                .andExpect(jsonPath("$.data.qualityScore").isNumber())
+                .andExpect(jsonPath("$.data.criteria", hasSize(10)))
+                .andExpect(jsonPath("$.data.limitation", containsString("không xác minh độc lập")));
+
+        mockMvc.perform(get("/api/v1/statistics/recruiter/jobs/{jobId}/quality", job.getId())
+                        .header("Authorization", "Bearer " + otherRecruiterToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Recruiter statistics: pipeline đếm theo currentStage và giới hạn theo công ty")
+    void shouldReturnCurrentApplicationStageDistribution() throws Exception {
+        mockMvc.perform(get("/api/v1/statistics/recruiter/jobs/{jobId}/pipeline", job.getId())
+                        .header("Authorization", "Bearer " + recruiterToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalApplications").value(2))
+                .andExpect(jsonPath("$.data.stages[?(@.stage == 'APPLIED')].applicantCount").value(1))
+                .andExpect(jsonPath("$.data.stages[?(@.stage == 'REVIEWING')].applicantCount").value(1))
+                .andExpect(jsonPath("$.data.interpretation", containsString("không biểu thị")));
+
+        mockMvc.perform(get("/api/v1/statistics/recruiter/jobs/{jobId}/pipeline", job.getId())
+                        .header("Authorization", "Bearer " + otherRecruiterToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Recruiter statistics: chỉ đánh giá CV ứng viên đã nộp đúng tin của công ty")
+    void shouldAssessOnlyCandidateWhoAppliedToOwnedJob() throws Exception {
+        mockMvc.perform(get("/api/v1/statistics/recruiter/jobs/{jobId}/candidates/{candidateId}", job.getId(), app1.getCandidate().getId())
+                        .header("Authorization", "Bearer " + recruiterToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.match.jobId").value(job.getId()))
+                .andExpect(jsonPath("$.data.profileCompletenessPercentage").isNumber())
+                .andExpect(jsonPath("$.data.candidateOverallAssessment").isNotEmpty())
+                .andExpect(jsonPath("$.data.advisoryNotice", containsString("không phải xác suất")));
+
+        mockMvc.perform(get("/api/v1/statistics/recruiter/jobs/{jobId}/candidates/{candidateId}", job.getId(), app1.getCandidate().getId())
+                        .header("Authorization", "Bearer " + otherRecruiterToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("HRPM-48: Cập nhật vòng tuyển dụng và kiểm tra lịch sử audit")
     void shouldUpdateApplicantStageAndCheckAuditHistory() throws Exception {
         UpdateApplicantStatusRequest request = UpdateApplicantStatusRequest.builder()

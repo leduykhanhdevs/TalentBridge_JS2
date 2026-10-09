@@ -8,11 +8,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import vn.talentbridge.adapter.out.ai.TriVectorRagMatchingService;
-import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
-import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.CandidateSkillJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
+import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
+import vn.talentbridge.core.application.port.out.CandidateSkillRepositoryPort;
+import vn.talentbridge.core.application.port.out.JobRepositoryPort;
 import vn.talentbridge.core.application.dto.CandidateJobMatchResult;
+import vn.talentbridge.core.domain.model.Job;
 
 import java.util.Optional;
 
@@ -23,13 +23,13 @@ import static org.mockito.Mockito.when;
 class TriVectorRagMatchingServiceTest {
 
     @Mock
-    private JobJpaRepository jobRepository;
+    private JobRepositoryPort jobRepository;
 
     @Mock
-    private CandidateJpaRepository candidateRepository;
+    private CandidateRepositoryPort candidateRepository;
 
     @Mock
-    private CandidateSkillJpaRepository candidateSkillRepository;
+    private CandidateSkillRepositoryPort candidateSkillRepository;
 
     private TriVectorRagMatchingService matchingService;
 
@@ -44,17 +44,16 @@ class TriVectorRagMatchingServiceTest {
     }
 
     @Test
-    @DisplayName("Nghiệm thu thuật toán Tri-Vector RAG từ bài báo SoftwareX 2025: Khớp nối CV và JD")
-    void shouldCalculateTriVectorHybridSimilarityCorrectly() {
+    @DisplayName("Deterministic matching uses token coverage and rule-based capability inference")
+    void shouldCalculateLexicalMatchAndInferredCapabilities() {
         // Arrange (AAA Pattern)
         Long jobId = 1L;
-        JobJpaEntity mockJob = JobJpaEntity.builder()
-                .id(jobId)
-                .title("Senior Java Spring Boot Developer")
-                .description("Phát triển backend hiệu năng cao, thiết kế REST API, kiến trúc microservices")
-                .requirements("Thành thạo Java 21, Spring Boot 3, MySQL, Docker, CI/CD pipeline")
-                .experienceLevel("SENIOR")
-                .build();
+        Job mockJob = new Job();
+        mockJob.setId(jobId);
+        mockJob.setTitle("Senior Java Spring Boot Developer");
+        mockJob.setDescription("Phát triển backend hiệu năng cao, thiết kế REST API, kiến trúc microservices");
+        mockJob.setRequirements("Thành thạo Java 21, Spring Boot 3, MySQL, Docker, CI/CD pipeline");
+        mockJob.setExperienceLevel("SENIOR");
 
         when(jobRepository.findById(jobId)).thenReturn(Optional.of(mockJob));
 
@@ -80,16 +79,15 @@ class TriVectorRagMatchingServiceTest {
     }
 
     @Test
-    @DisplayName("Đánh giá ứng viên không phù hợp: Điểm tương đồng Tri-Vector thấp")
+    @DisplayName("Unrelated candidate profile receives a low lexical match score")
     void shouldIdentifyUnsuitableCandidateCorrectly() {
         // Arrange
         Long jobId = 2L;
-        JobJpaEntity mockJob = JobJpaEntity.builder()
-                .id(jobId)
-                .title("Chuyên viên Marketing & SEO")
-                .description("Chạy quảng cáo Facebook Ads, Google Ads, sáng tạo nội dung truyền thông")
-                .requirements("Kinh nghiệm copywriting, SEO top 1 Google, Photoshop")
-                .build();
+        Job mockJob = new Job();
+        mockJob.setId(jobId);
+        mockJob.setTitle("Chuyên viên Marketing & SEO");
+        mockJob.setDescription("Chạy quảng cáo Facebook Ads, Google Ads, sáng tạo nội dung truyền thông");
+        mockJob.setRequirements("Kinh nghiệm copywriting, SEO top 1 Google, Photoshop");
 
         when(jobRepository.findById(jobId)).thenReturn(Optional.of(mockJob));
 
@@ -101,6 +99,22 @@ class TriVectorRagMatchingServiceTest {
         // Assert
         assertThat(result).isNotNull();
         assertThat(result.matchPercentage()).isLessThan(50.0);
+        assertThat(result.recommendation()).isEqualTo("CHƯA PHÙ HỢP");
+    }
+
+    @Test
+    @DisplayName("Empty candidate evidence must not receive a fabricated match baseline")
+    void shouldReturnZeroWhenCandidateHasNoMatchingEvidence() {
+        Long jobId = 3L;
+        Job job = new Job();
+        job.setId(jobId);
+        job.setTitle("Senior Java Developer");
+        job.setRequirements("Java Spring Boot SQL");
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+
+        CandidateJobMatchResult result = matchingService.matchCandidateToJob(jobId, null, "");
+
+        assertThat(result.matchPercentage()).isZero();
         assertThat(result.recommendation()).isEqualTo("CHƯA PHÙ HỢP");
     }
 }

@@ -27,7 +27,6 @@ import {
     getApplicantNotes,
     getApplicantStageHistory,
     getJobApplicants,
-    matchApplicantWithAi,
     reopenApplicantApplication,
     updateApplicantStage,
 } from '../../features/recruiter/recruiterApplicantApi'
@@ -40,6 +39,8 @@ import {
 } from '../../features/recruiter/recruiterApplicantTypes'
 import { ScheduleInterviewModal } from '../../features/recruiter/components/ScheduleInterviewModal'
 import { countApplicantsByStage } from '../../features/recruiter/recruiterApplicantMetrics'
+import { getCandidateJobAssessment } from '../../features/statistics/statisticsApi'
+import type { CandidateJobAssessment } from '../../features/statistics/statisticsTypes'
 
 const PIPELINE_ORDER = ['APPLIED', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'HIRED', 'REJECTED']
 
@@ -68,6 +69,7 @@ export function RecruiterJobApplicantsPage() {
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
     const [aiMatchApplicant, setAiMatchApplicant] = useState<JobApplicant | null>(null)
     const [aiMatchResult, setAiMatchResult] = useState<AiMatchResult | null>(null)
+    const [candidateAssessment, setCandidateAssessment] = useState<CandidateJobAssessment | null>(null)
     const [isAiMatching, setIsAiMatching] = useState(false)
     const [aiMatchError, setAiMatchError] = useState<string | null>(null)
 
@@ -142,11 +144,13 @@ export function RecruiterJobApplicantsPage() {
     async function handleAiMatch(applicant: JobApplicant) {
         setAiMatchApplicant(applicant)
         setAiMatchResult(null)
+        setCandidateAssessment(null)
         setAiMatchError(null)
         setIsAiMatching(true)
         try {
-            const result = await matchApplicantWithAi(numericJobId, applicant.candidateId)
-            setAiMatchResult(result)
+            const result = await getCandidateJobAssessment(numericJobId, applicant.candidateId)
+            setAiMatchResult(result.match)
+            setCandidateAssessment(result)
         } catch (err: unknown) {
             setAiMatchError(err instanceof Error ? err.message : 'Không thể phân tích ứng viên bằng AI')
         } finally {
@@ -1186,6 +1190,19 @@ export function RecruiterJobApplicantsPage() {
                                         <h4 className="text-sm font-bold text-slate-900">Năng lực suy luận</h4>
                                         <p className="mt-2 text-sm text-slate-600">{aiMatchResult.inferredCapabilities.join(' · ')}</p>
                                     </div>
+                                )}
+                                {candidateAssessment && (
+                                    <section className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4" aria-label="Đánh giá tổng quan ứng viên">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <h4 className="text-sm font-bold text-indigo-950">Đánh giá tổng quan hồ sơ</h4>
+                                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-indigo-800">Độ hoàn thiện {candidateAssessment.profileCompletenessPercentage}%</span>
+                                        </div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-700">{candidateAssessment.candidateOverallAssessment}</p>
+                                        {candidateAssessment.missingProfileSections.length > 0 && (
+                                            <p className="mt-2 text-xs leading-5 text-slate-600">Hồ sơ còn thiếu: {candidateAssessment.missingProfileSections.join(' · ')}</p>
+                                        )}
+                                        <p className="mt-3 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-600">{candidateAssessment.advisoryNotice}</p>
+                                    </section>
                                 )}
                                 {aiMatchResult.matchingSource === 'DETERMINISTIC' && (
                                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">

@@ -1,7 +1,9 @@
 # KẾ HOẠCH TỔNG THỂ (MASTER PLAN): CI/CD, DEPLOY RENDER & HỆ THỐNG AI (MCP VS RAG)
 
+> **Ghi chú trạng thái 09/10/2026:** Đây là tài liệu kế hoạch có nội dung lịch sử, không phải xác nhận mọi hạng mục đã chạy production. Phần AI bên dưới đã được thay bằng trạng thái kiểm chứng từ source. Bài báo AI-KM chỉ được trích theo metadata/abstract; các claim về Tri-Vector/MCP không được gán cho bài báo nếu chưa có dẫn chứng toàn văn.
+
 > **Dự án**: TalentBridge – Nền tảng Tuyển dụng Trực tuyến & ATS  
-> **Cơ sở học thuật**: Dựa trên công trình *AI–KM: Knowledge enhancement with RAG and workflow* (SoftwareX 31, 2025)  
+> **Tài liệu tham khảo**: *AI–KM: Knowledge enhancement with RAG and workflow* (SoftwareX 31, 2025); phạm vi claim được giới hạn theo abstract đã truy cập.
 > **Tác giả kế hoạch**: Tech Lead & AI Pair Programmer  
 
 ---
@@ -28,11 +30,10 @@
                                               ▲
                                               │ Tích hợp trí tuệ nhân tạo
   ┌───────────────────────────────────────────┴────────────────────────────────────────────┐
-  │ 3. HỆ THỐNG AI THÔNG MINH: KẾT HỢP RAG & MCP (HYBRID ARCHITECTURE)                     │
+  │ 3. AI FEATURES: IN-APP GUIDE + ADVISORY MATCHING + ATS TOOLS (SEPARATE CAPABILITIES)    │
   │    ┌────────────────────────────────────────┐   ┌──────────────────────────────────┐   │
-  │    │ TRI-VECTOR RAG ENGINE                  │   │ MODEL CONTEXT PROTOCOL (MCP)     │   │
-  │    │ (Tra cứu tri thức, CV matching theo    │   │ (Giao thức thực thi công cụ,     │   │
-  │    │  nguyên lý bài báo SoftwareX 2025)     │   │  thao tác dữ liệu DB & Workflow) │   │
+  │    │ HƯỚNG DẪN RETRIEVAL + GEMINI TÙY CHỌN │   │ RECRUITER JSON-RPC TOOL ENDPOINT│   │
+  │    │ MATCH CV–JOB DẠNG ADVISORY            │   │ CÓ RBAC VÀ USE CASE OWNERSHIP   │   │
   │    └────────────────────────────────────────┘   └──────────────────────────────────┘   │
   └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -96,61 +97,24 @@
 
 ---
 
-### TRỤ CỘT 3: AI INTELLIGENCE – ĐỐI CHIẾU & TÍCH HỢP RAG VS MCP
+### TRỤ CỘT 3: AI – TRẠNG THÁI SOURCE VÀ GIỚI HẠN
 
-#### 1. Bảng đối chiếu học thuật & thực tiễn: RAG vs MCP
+#### 1. Phân biệt hai lớp
 
-| Tiêu chí | RAG (Retrieval-Augmented Generation) | MCP (Model Context Protocol) |
-| :--- | :--- | :--- |
-| **Bản chất cốt lõi** | Mở rộng **Bộ nhớ tri thức** (Knowledge Retrieval) từ dữ liệu phi cấu trúc qua vector ngữ nghĩa. | Mở rộng **Năng lực hành động & Công cụ** (Tool Execution Protocol) qua giao thức 2 chiều chuẩn hóa. |
-| **Phương thức hoạt động** | Embedding $\to$ Vector Database $\to$ Cosine Similarity $\to$ Chèn ngữ cảnh vào Prompt. | Khai báo JSON Schema Tools $\to$ LLM quyết định gọi hàm $\to$ Server MCP thực thi $\to$ Trả kết quả JSON. |
-| **Loại dữ liệu xử lý** | Dữ liệu tĩnh/bán tĩnh (Tài liệu CV PDF, Sổ tay quy định, JD mô tả công việc, Luật lao động). | Dữ liệu động theo thời gian thực (Trạng thái đơn ứng tuyển trong DB, Lịch trống của HR, Gửi email, Tạo tài khoản). |
-| **Khả năng tương tác** | **Thụ động (Read-only)**: Chỉ đọc và tổng hợp thông tin, không thể sửa đổi trạng thái hệ thống. | **Chủ động (Read-Write & Action)**: Có thể thay đổi CSDL, gọi webhook, gửi email, giao tiếp liên ứng dụng. |
-| **Rào cản & Nhược điểm** | Chi phí tính toán embedding, vấn đề chunking, dễ mất ngữ cảnh nếu câu hỏi quá mơ hồ. | Đòi hỏi mô hình có khả năng Function Calling tốt, cần kiểm soát phân quyền chặt chẽ (Security & RBAC). |
-| **Vị trí trong bài báo AI-KM** | Là trọng tâm của bài báo (Tri-Vector Hybrid Similarity $Merge(q, v_i, u_i)$). | Là hướng phát triển mở rộng được khẳng định ở phần Kết luận (Section 5) để tiến tới Agent tự chủ. |
+RAG truy xuất tri thức để làm căn cứ cho câu trả lời; MCP chuẩn hóa cách ứng dụng công bố tools, resources và prompts cho client. Tool có thể đọc hoặc ghi theo chính sách của ứng dụng; MCP không tự xác thực quyền hay bảo đảm an toàn. Xem [MCP Server Overview](https://modelcontextprotocol.io/specification/draft/server/index).
 
-#### 2. Kiến trúc giải pháp lai kết hợp (Hybrid AI Architecture cho TalentBridge):
+#### 2. Phần hiện có trong source
 
-```
-                        NGƯỜI DÙNG / HR MANAGER / ỨNG VIÊN
-                                        │
-                                        ▼
-                   ┌──────────────────────────────────────────┐
-                   │        TALENTBRIDGE AI ORCHESTRATOR      │
-                   │     (Gemini 2.5 Flash / Pro Engine)      │
-                   └──────┬────────────────────────────┬──────┘
-                          │                            │
-             [Khi cần tra cứu tri thức]     [Khi cần thao tác hệ thống]
-                          │                            │
-                          ▼                            ▼
-            ┌──────────────────────────┐  ┌──────────────────────────┐
-            │   RAG KNOWLEDGE ENGINE   │  │   TALENTBRIDGE MCP SERVER│
-            │ (Kế thừa bài báo AI-KM)  │  │   (Model Context Protocol)│
-            ├──────────────────────────┤  ├──────────────────────────┤
-            │ 1. CV Vector Store       │  │ • candidate_get_profile  │
-            │ 2. Reverse Skill Gen     │  │ • recruiter_filter_cvs   │
-            │ 3. Tri-Vector Matching   │  │ • app_update_status      │
-            │    Cosine(JD, CV, Skill) │  │ • interview_schedule     │
-            │ 4. Interview Q&A Bank    │  │ • email_notify_applicant │
-            └──────────────────────────┘  └─────────────┬────────────┘
-                                                        │
-                                                        ▼
-                                          ┌──────────────────────────┐
-                                          │ TALENTBRIDGE CORE DB     │
-                                          │ (MySQL / JPA Repository) │
-                                          └──────────────────────────┘
-```
+- Chatbot `/api/v1/assistant/chat`: truy xuất lexical từ hướng dẫn TalentBridge, rồi tùy chọn gọi Gemini; fallback trả nội dung đã truy xuất. Không có embedding/vector store; không tra cứu hồ sơ riêng và không thực hiện mutation.
+- CV–job matching: Gemini khi có cấu hình; fallback từ độ phủ token, cosine trên tập token và quy tắc suy luận kỹ năng. Đây là heuristic advisory, chưa có bộ dữ liệu đánh giá để chứng minh accuracy.
+- `/api/v1/mcp`: JSON-RPC tùy biến, có tools/list, tools/call, ping; yêu cầu Recruiter và kiểm quyền qua use case. Chưa tuyên bố tương thích MCP đầy đủ, chatbot FAQ chưa gọi endpoint này.
+- Statistics: chất lượng tin dựa vào trường dữ liệu và tín hiệu nội bộ; candidate assessment là gợi ý; pipeline là ảnh chụp theo vòng hiện tại, không phải chuyển đổi lịch sử.
 
-#### 3. Các thành phần AI cụ thể cần hiện thực:
-1. **Module RAG Tuyển dụng (Tri-Vector Job-CV Matching)**:
-   - Áp dụng thuật toán từ bài báo SoftwareX 2025: Khi bóc tách CV, sinh ra các kỹ năng tiềm năng (Inferred Capabilities) rồi tính điểm khớp 3 chiều với JD tuyển dụng.
-   - Xếp hạng độ phù hợp (Match Score %): Tránh trường hợp ứng viên tiềm năng bị loại chỉ vì CV viết thiếu từ khóa chính xác.
-2. **Module MCP Server (TalentBridge Tool Suite)**:
-   - Xây dựng MCP Server chuẩn REST/SSE hoặc stdio cho phép trợ lý AI có thể:
-     - `search_candidates(skills, experience, location)`
-     - `get_candidate_cv(candidate_id)`
-     - `shortlist_candidate(application_id, note)`
-     - `generate_tailored_interview_questions(job_id, candidate_id)`
+#### 3. Việc cần làm trước khi nâng mức khẳng định
+
+Nếu cần semantic RAG, xây corpus có nguồn, chunking/embedding và evaluation set có nhãn; báo precision/recall hoặc hit-rate sau đo. Nếu cần MCP chuẩn, dùng SDK tương thích và interoperability test với client thật. Nếu cần chatbot gọi tool, chỉ công bố tool tối thiểu theo role/ownership, không cho LLM đi thẳng đến repository. Tất cả kết quả tuyển dụng phải giữ nhãn tham khảo cho đến khi được hiệu chuẩn và đánh giá bias.
+
+Nguồn, cách phân biệt claim và chi tiết thuật toán hiện có: [AI-KM research note](research/AI_KM_RAG_WORKFLOW_ANALYSIS.md), [RAG/MCP and source audit](research/AI_MCP_VS_RAG_COMPREHENSIVE_ANALYSIS.md).
 
 ---
 
@@ -161,7 +125,7 @@
 | **Phase 1** | Chuẩn hóa quy chuẩn, lưu trữ tài liệu nghiên cứu bài báo | `AI_KM_RAG_WORKFLOW_ANALYSIS.md`, `WORKING_CAPSULE_GUIDE.md`, Rule & Skill |
 | **Phase 2** | Nâng cấp CI/CD Pipeline & Cấu hình Docker Production | `.github/workflows/ci.yml`, `.github/workflows/cd.yml`, Dockerfile tối ưu |
 | **Phase 3** | Cấu hình triển khai Render (Backend + Frontend + Database) | `render.yaml`, Spring Boot Prod profile, Uptime & Memory configuration |
-| **Phase 4** | Thiết kế & Cài đặt Kiến trúc AI (RAG Tri-Vector + MCP Tools) | Dịch vụ tính điểm CV matching theo bài báo + TalentBridge MCP Server |
+| **Phase 4** | Chatbot hướng dẫn, advisory CV matching, recruiter JSON-RPC tools | Phần source có trong nhánh tính năng; chưa phải full semantic RAG/MCP interop và chưa chứng minh accuracy |
 | **Phase 5** | Kiểm thử đầu-cuối (E2E), Tài liệu báo cáo gửi Giảng viên | Báo cáo kiến trúc hoàn chỉnh, Video/Demo link triển khai |
 
 ---
