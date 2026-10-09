@@ -7,30 +7,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
-import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
-import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
-import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.CandidateSkillJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
 import vn.talentbridge.core.application.dto.AiMatchingSource;
 import vn.talentbridge.core.application.dto.CandidateJobMatchResult;
 import vn.talentbridge.core.application.port.out.CandidateJobMatchingPort;
+import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
+import vn.talentbridge.core.application.port.out.CandidateSkillRepositoryPort;
+import vn.talentbridge.core.application.port.out.JobRepositoryPort;
 import vn.talentbridge.core.domain.exception.ResourceNotFoundException;
+import vn.talentbridge.core.domain.model.Candidate;
+import vn.talentbridge.core.domain.model.CandidateSkill;
+import vn.talentbridge.core.domain.model.Job;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Hiện thực thuật toán Tri-Vector Hybrid Similarity từ công trình khoa học:
- * "Version 5.4.18 - AI-KM: Knowledge enhancement with RAG and workflow" (SoftwareX 31, 2025, 102349).
- *
- * Công thức cốt lõi:
- * Merge(q, v_i, u_i) = (cos(q, v_i) + cos(q, u_i)) / 2
- *
- * Trong đó:
- * - q: Vector yêu cầu công việc (Job Requirements & Description)
- * - u_i: Vector văn bản CV thô của ứng viên (Raw Candidate CV / Skills)
- * - v_i: Vector năng lực tiềm năng suy luận ẩn bởi LLM (Inferred Hidden Capabilities)
+ * Legacy adapter name retained for compatibility. The deterministic fallback is a lexical heuristic,
+ * not embedding-based RAG: it combines token overlap with a small rule-based capability map.
  */
 @Slf4j
 @Service
@@ -38,9 +31,9 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
 
     private static final int MAX_PROMPT_SECTION_LENGTH = 15_000;
 
-    private final JobJpaRepository jobRepository;
-    private final CandidateJpaRepository candidateRepository;
-    private final CandidateSkillJpaRepository candidateSkillRepository;
+    private final JobRepositoryPort jobRepository;
+    private final CandidateRepositoryPort candidateRepository;
+    private final CandidateSkillRepositoryPort candidateSkillRepository;
     private final ObjectMapper objectMapper;
     private final GeminiApiClient geminiApiClient;
 
@@ -49,9 +42,9 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
 
     @Autowired
     public TriVectorRagMatchingService(
-            JobJpaRepository jobRepository,
-            CandidateJpaRepository candidateRepository,
-            CandidateSkillJpaRepository candidateSkillRepository,
+            JobRepositoryPort jobRepository,
+            CandidateRepositoryPort candidateRepository,
+            CandidateSkillRepositoryPort candidateSkillRepository,
             ObjectMapper objectMapper,
             GeminiApiClient geminiApiClient) {
         this.jobRepository = jobRepository;
@@ -62,9 +55,9 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
     }
 
     public TriVectorRagMatchingService(
-            JobJpaRepository jobRepository,
-            CandidateJpaRepository candidateRepository,
-            CandidateSkillJpaRepository candidateSkillRepository,
+            JobRepositoryPort jobRepository,
+            CandidateRepositoryPort candidateRepository,
+            CandidateSkillRepositoryPort candidateSkillRepository,
             ObjectMapper objectMapper) {
         this(jobRepository, candidateRepository, candidateSkillRepository, objectMapper,
                 new GeminiApiClient("", "https://generativelanguage.googleapis.com/v1beta", 5000, 20000, null));
@@ -76,14 +69,14 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
     }
 
     public CandidateJobMatchResult matchCandidateToJob(Long jobId, Long candidateId, String overrideCvText) {
-        JobJpaEntity job = jobRepository.findById(jobId)
+        Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy công việc ID: " + jobId));
 
         String candidateName = "Ứng viên ẩn danh";
         String candidateCvContent = overrideCvText;
 
         if (candidateId != null) {
-            CandidateJpaEntity candidate = candidateRepository.findById(candidateId)
+            Candidate candidate = candidateRepository.findById(candidateId)
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ứng viên ID: " + candidateId));
             if (candidate.getUser() != null) {
                 candidateName = candidate.getUser().getFullName();
@@ -101,10 +94,10 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         String jobText = truncate(buildJobRequirementText(job));
         candidateCvContent = truncate(candidateCvContent);
 
-        // Thử chạy qua Gemini AI với phương pháp Tri-Vector RAG
+        // Gemini provides a grounded advisory evaluation; deterministic fallback is clearly labeled.
         if (geminiApiClient.isConfigured()) {
             try {
-                return matchWithGeminiTriVector(job, candidateId, candidateName, jobText, candidateCvContent);
+                return matchWithGeminiAssessment(job, candidateId, candidateName, jobText, candidateCvContent);
             } catch (RestClientResponseException e) {
                 log.warn("[TriVector RAG] Gemini từ chối yêu cầu với HTTP {}; dùng thuật toán nội bộ.", e.getStatusCode().value());
             } catch (Exception e) {
@@ -112,11 +105,11 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
             }
         }
 
-        // Thuật toán Cosine Similarity nội bộ (Deterministic Tri-Vector Engine)
-        return matchWithDeterministicTriVector(job, candidateId, candidateName, jobText, candidateCvContent);
+        // Rule-based fallback. It does not use learned embeddings or a vector database.
+        return matchWithHeuristicFallback(job, candidateId, candidateName, jobText, candidateCvContent);
     }
 
-    private String buildJobRequirementText(JobJpaEntity job) {
+    private String buildJobRequirementText(Job job) {
         StringBuilder sb = new StringBuilder();
         sb.append("Tiêu đề: ").append(job.getTitle()).append(". ");
         if (job.getExperienceLevel() != null) {
@@ -128,10 +121,13 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         if (job.getDescription() != null) {
             sb.append("Mô tả: ").append(job.getDescription()).append(". ");
         }
+        if (job.getSkills() != null && !job.getSkills().isEmpty()) {
+            sb.append("Kỹ năng: ").append(String.join(", ", job.getSkills())).append(". ");
+        }
         return sb.toString();
     }
 
-    private String buildCandidateProfileText(CandidateJpaEntity candidate) {
+    private String buildCandidateProfileText(Candidate candidate) {
         StringBuilder sb = new StringBuilder();
         if (candidate.getTitle() != null) {
             sb.append("Chức danh: ").append(candidate.getTitle()).append(". ");
@@ -143,13 +139,13 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
             sb.append("Tóm tắt: ").append(candidate.getSummary()).append(". ");
         }
 
-        var skills = candidateSkillRepository.findByCandidateIdOrderByIdAsc(candidate.getId());
+        var skills = candidateSkillRepository.findByCandidateId(candidate.getId());
         if (!skills.isEmpty()) {
             sb.append("Kỹ năng: ");
-            for (var s : skills) {
-                if (s.getSkill() != null) {
-                    sb.append(s.getSkill().getName()).append(" (")
-                            .append(s.getProficiencyLevel()).append("), ");
+            for (CandidateSkill skill : skills) {
+                if (skill.getSkillName() != null) {
+                    sb.append(skill.getSkillName()).append(" (")
+                            .append(skill.getProficiencyLevel()).append("), ");
                 }
             }
         }
@@ -157,24 +153,19 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         return sb.toString();
     }
 
-    private CandidateJobMatchResult matchWithGeminiTriVector(
-            JobJpaEntity job, Long candidateId, String candidateName, String jobText, String cvText) throws Exception {
+    private CandidateJobMatchResult matchWithGeminiAssessment(
+            Job job, Long candidateId, String candidateName, String jobText, String cvText) throws Exception {
 
         String prompt = """
-                Bạn là hệ thống AI Matching chuyên sâu theo nghiên cứu: "AI-KM: Knowledge enhancement with RAG and workflow" (SoftwareX 2025).
-                Nhiệm vụ của bạn là áp dụng kỹ thuật Suy luận thông tin ẩn (Inferred Hidden Information) và Công thức Tri-Vector Hybrid Similarity:
-                Merge(q, v_i, u_i) = (cos(q, v_i) + cos(q, u_i)) / 2
-                
-                Trong đó:
-                - q là Yêu cầu công việc (Job Requirements).
-                - u_i là Văn bản CV thô của ứng viên.
-                - v_i là Các năng lực tiềm năng suy luận ẩn (Inferred Hidden Capabilities): Những bài toán ứng viên CÓ THỂ giải quyết được dựa trên kinh nghiệm, dự án và kỹ năng nền tảng trong CV, dù CV có thể chưa viết đúng từ khóa của JD.
-                
+                Bạn hỗ trợ nhà tuyển dụng đối chiếu hồ sơ với yêu cầu công việc.
+                Chỉ nêu kỹ năng/năng lực có bằng chứng trong hồ sơ; phân biệt rõ dữ kiện được nêu và nhận định suy luận.
+                Không bịa kinh nghiệm, kỹ năng hoặc thành tích. Điểm số chỉ là gợi ý tham khảo, không phải xác suất trúng tuyển hay quyết định tuyển dụng.
+
                 Dữ liệu đầu vào:
                 [YÊU CẦU CÔNG VIỆC - q]:
                 %s
                 
-                [HỒ SƠ ỨNG VIÊN - u_i]:
+                [HỒ SƠ ỨNG VIÊN]:
                 %s
                 
                 Hãy trả về DUY NHẤT một JSON hợp lệ theo schema sau:
@@ -234,23 +225,23 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         );
     }
 
-    private CandidateJobMatchResult matchWithDeterministicTriVector(
-            JobJpaEntity job, Long candidateId, String candidateName, String jobText, String cvText) {
+    private CandidateJobMatchResult matchWithHeuristicFallback(
+            Job job, Long candidateId, String candidateName, String jobText, String cvText) {
 
         Set<String> jobTokens = extractTokens(jobText);
         Set<String> cvTokens = extractTokens(cvText);
 
-        // 1. cos(q, u_i) - Direct Keyword Cosine Similarity
-        double directScore = calculateJaccardCosine(jobTokens, cvTokens);
+        // 1. Weighted lexical overlap between job tokens and candidate profile tokens.
+        double directScore = calculateWeightedLexicalScore(jobTokens, cvTokens);
 
         // 2. Suy luận thông tin ẩn (Inferred Hidden Information) dựa trên miền tri thức công nghệ
         Set<String> inferredCapabilities = inferHiddenCapabilities(cvTokens);
-        double inferredScore = calculateJaccardCosine(jobTokens, inferredCapabilities);
+        double inferredScore = calculateWeightedLexicalScore(jobTokens, inferredCapabilities);
 
         // Nâng inferred score nếu có các kỹ năng nền tảng vững
         inferredScore = Math.min(1.0, inferredScore * 1.25);
 
-        // 3. Tri-Vector Formula: Merge(q, v_i, u_i) = (cos(q, v_i) + cos(q, u_i)) / 2
+        // Blend the raw-profile and rule-inferred token scores. This is not an embedding-space vector formula.
         double hybridScore = (directScore + inferredScore) / 2.0;
         double percentage = Math.round(hybridScore * 1000.0) / 10.0;
 
@@ -280,7 +271,7 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
                 Math.round(directScore * 100.0) / 100.0,
                 Math.round(inferredScore * 100.0) / 100.0,
                 new ArrayList<>(inferredCapabilities), strengths, missing, recommendation,
-                "Ứng viên đạt " + percentage + "% độ tương đồng theo công thức Tri-Vector Cosine Similarity.",
+                "Điểm tham khảo từ độ phủ từ khóa và một tập quy tắc năng lực suy luận; cần HR xác minh thủ công.",
                 AiMatchingSource.DETERMINISTIC
         );
     }
@@ -319,10 +310,10 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         return inferred;
     }
 
-    private double calculateJaccardCosine(Set<String> jobRequirements, Set<String> candidateTokens) {
-        if (jobRequirements.isEmpty() || candidateTokens.isEmpty()) return 0.2;
+    private double calculateWeightedLexicalScore(Set<String> jobRequirements, Set<String> candidateTokens) {
+        if (jobRequirements.isEmpty() || candidateTokens.isEmpty()) return 0.0;
         long intersection = jobRequirements.stream().filter(candidateTokens::contains).count();
-        if (intersection == 0) return 0.05;
+        if (intersection == 0) return 0.0;
 
         // Tỷ lệ bao phủ các yêu cầu tuyển dụng trong CV
         double requirementCoverage = (double) intersection / jobRequirements.size();

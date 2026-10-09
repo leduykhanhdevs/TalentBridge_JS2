@@ -20,6 +20,10 @@ public interface ApplicationJpaRepository extends JpaRepository<ApplicationJpaEn
 
     boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId);
 
+    @Query("select a.currentStage, count(a.id) from ApplicationJpaEntity a " +
+            "where a.job.id = :jobId group by a.currentStage")
+    List<Object[]> countCurrentStagesByJobId(@Param("jobId") Long jobId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from ApplicationJpaEntity a where a.id = :id")
     Optional<ApplicationJpaEntity> findByIdForUpdate(@Param("id") Long id);

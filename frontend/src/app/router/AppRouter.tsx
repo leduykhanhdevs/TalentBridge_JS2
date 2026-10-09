@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router'
 import { MainLayout } from '../../layouts/MainLayout'
 import { AdminLayout } from '../../layouts/AdminLayout'
 import { RecruiterLayout } from '../../layouts/RecruiterLayout'
+import { TalentBridgeAssistantWidget } from '../../features/assistant/components/TalentBridgeAssistantWidget'
 
 const HomePage = lazy(() => import('../../pages/HomePage').then((module) => ({ default: module.HomePage })))
 const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({ default: module.LoginPage })))
@@ -24,6 +25,8 @@ const CandidateProfilePage = lazy(() => import('../../pages/candidate/CandidateP
 const CandidateApplicationsPage = lazy(() => import('../../pages/candidate/CandidateApplicationsPage').then((module) => ({ default: module.CandidateApplicationsPage })))
 const JobDetailPage = lazy(() => import('../../pages/jobs/JobDetailPage').then((module) => ({ default: module.JobDetailPage })))
 const JobSearchPage = lazy(() => import('../../pages/jobs/JobSearchPage').then((module) => ({ default: module.JobSearchPage })))
+const AssistantPage = lazy(() => import('../../pages/AssistantPage').then((module) => ({ default: module.AssistantPage })))
+const RecruiterStatisticsPage = lazy(() => import('../../pages/recruiter/RecruiterStatisticsPage').then((module) => ({ default: module.RecruiterStatisticsPage })))
 
 function RouteLoadingFallback() {
     return (
@@ -58,6 +61,7 @@ export function AppRouter() {
                 <Route element={<ResetPasswordPage />} path="reset-password" />
                 <Route element={<JobSearchPage />} path="jobs" />
                 <Route element={<JobDetailPage />} path="jobs/:jobId" />
+                <Route element={<AssistantPage />} path="assistant" />
                 <Route element={<CandidateProfilePage />} path="candidate/profile" />
                 <Route element={<CandidateApplicationsPage />} path="candidate/applications" />
                 <Route element={<NotFoundPage />} path="*" />
@@ -69,6 +73,7 @@ export function AppRouter() {
                 <Route element={<RecruiterProfilePage />} path="profile" />
                 <Route element={<RecruiterJobsPage />} path="jobs" />
                 <Route element={<RecruiterJobApplicantsPage />} path="jobs/:jobId/applicants" />
+                <Route element={<RecruiterStatisticsPage />} path="statistics" />
                 <Route element={<RecruiterCompanyPage />} path="company" />
                 <Route element={<RecruiterJoinCompanyPage />} path="join-company" />
                 <Route element={<RecruiterPeerApprovalPage />} path="peer-approval" />
@@ -84,6 +89,7 @@ export function AppRouter() {
             </Route>
             </Routes>
             </Suspense>
+            <TalentBridgeAssistantWidget />
         </>
     )
 }

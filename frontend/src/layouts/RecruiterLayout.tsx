@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
     ArrowLeft,
+    BarChart3,
     Briefcase,
     Building2,
     CheckSquare,
     KeyRound,
     LogOut,
     Menu,
+    MessageCircle,
     Search,
     ShieldAlert,
     UserCircle,
@@ -118,6 +120,13 @@ export function RecruiterLayout() {
             desc: 'Quản lý bài đăng tuyển dụng',
         },
         {
+            to: '/recruiter/statistics',
+            label: 'Thống kê ATS',
+            mobileLabel: 'Thống kê',
+            icon: BarChart3,
+            desc: 'Chất lượng tin và phân bố pipeline',
+        },
+        {
             to: '/recruiter/company',
             label: 'Doanh nghiệp của tôi',
             mobileLabel: 'Công ty',
@@ -137,6 +146,13 @@ export function RecruiterLayout() {
             mobileLabel: 'Duyệt',
             icon: CheckSquare,
             desc: 'Xét duyệt HR gia nhập công ty',
+        },
+        {
+            to: '/assistant',
+            label: 'Trợ lý TalentBridge',
+            mobileLabel: 'Trợ lý',
+            icon: MessageCircle,
+            desc: 'Hướng dẫn sử dụng TalentBridge',
         },
     ]
 

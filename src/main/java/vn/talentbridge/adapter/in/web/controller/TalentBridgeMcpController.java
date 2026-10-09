@@ -4,53 +4,45 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import vn.talentbridge.adapter.out.ai.TriVectorRagMatchingService;
-import vn.talentbridge.adapter.out.persistence.entity.ApplicationJpaEntity;
-import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
-import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
-import vn.talentbridge.adapter.out.persistence.repository.ApplicationJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.CandidateSkillJpaRepository;
-import vn.talentbridge.adapter.out.persistence.repository.JobJpaRepository;
-import vn.talentbridge.core.domain.vo.ApplicationPipelineStage;
-import vn.talentbridge.core.domain.vo.JobStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import vn.talentbridge.adapter.in.security.UserPrincipal;
+import vn.talentbridge.core.application.dto.CandidateJobMatchResult;
+import vn.talentbridge.core.application.dto.JobApplicantResult;
+import vn.talentbridge.core.application.dto.McpCandidateProfileResult;
+import vn.talentbridge.core.application.dto.McpJobSummary;
+import vn.talentbridge.core.application.port.in.TalentBridgeMcpUseCase;
+import vn.talentbridge.core.domain.exception.DomainException;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- * TalentBridge Model Context Protocol (MCP) Server.
- * Triển khai giao thức chuẩn mở Model Context Protocol (Anthropic MCP Spec / JSON-RPC 2.0).
- * Cho phép các LLM Clients (Claude Desktop, Cursor, Antigravity, OpenClaw, Copilot)
- * kết nối trực tiếp vào TalentBridge để gọi công cụ và truy vấn cơ sở dữ liệu thời gian thực.
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/mcp")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('RECRUITER')")
 @RequiredArgsConstructor
 public class TalentBridgeMcpController {
+    private static final int MAX_SEARCH_LIMIT = 20;
 
-    private final JobJpaRepository jobRepository;
-    private final CandidateJpaRepository candidateRepository;
-    private final CandidateSkillJpaRepository candidateSkillRepository;
-    private final ApplicationJpaRepository applicationRepository;
-    private final TriVectorRagMatchingService matchingService;
+    private final TalentBridgeMcpUseCase mcpUseCase;
     private final ObjectMapper objectMapper;
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getMcpServerInfo() {
         return ResponseEntity.ok(Map.of(
-                "name", "TalentBridge Model Context Protocol (MCP) Server",
+                "name", "TalentBridge ATS Tools",
                 "version", "1.0.0",
-                "protocolVersion", "2024-11-05",
-                "description", "Cung cấp giao thức hành động và truy vấn dữ liệu tuyển dụng ATS thời gian thực cho Trí tuệ Nhân tạo.",
-                "endpoints", Map.of(
-                        "jsonRpc", "/api/v1/mcp",
-                        "supportedMethods", List.of("tools/list", "tools/call", "ping")
-                ),
+                "jsonRpcVersion", "2.0",
+                "description", "Custom TalentBridge JSON-RPC tool endpoint for authenticated recruiters; not a full MCP server.",
+                "endpoints", Map.of("jsonRpc", "/api/v1/mcp", "supportedMethods", List.of("tools/list", "tools/call", "ping")),
                 "toolsAvailable", List.of(
                         "talentbridge_search_jobs",
                         "talentbridge_get_candidate_profile",
@@ -61,215 +53,175 @@ public class TalentBridgeMcpController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> handleJsonRpc(@RequestBody Map<String, Object> request) {
-        String jsonrpc = (String) request.getOrDefault("jsonrpc", "2.0");
-        Object id = request.get("id");
-        String method = (String) request.get("method");
+    public ResponseEntity<Map<String, Object>> handleJsonRpc(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody JsonNode request) {
+        Object id = jsonRpcId(request);
+        if (request == null || !request.isObject() || !"2.0".equals(request.path("jsonrpc").asText())) {
+            return ResponseEntity.ok(errorResponse(id, -32600, "Invalid Request"));
+        }
 
-        if (method == null) {
-            return ResponseEntity.badRequest().body(createErrorResponse(id, -32600, "Invalid Request: Missing method"));
+        String method = request.path("method").asText("");
+        if (method.isBlank()) {
+            return ResponseEntity.ok(errorResponse(id, -32600, "Invalid Request: Missing method"));
         }
 
         try {
-            switch (method) {
-                case "ping":
-                    return ResponseEntity.ok(createSuccessResponse(id, Map.of("status", "pong")));
-
-                case "tools/list":
-                    return ResponseEntity.ok(createSuccessResponse(id, Map.of("tools", getAvailableTools())));
-
-                case "tools/call":
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> params = (Map<String, Object>) request.get("params");
-                    if (params == null) {
-                        return ResponseEntity.badRequest().body(createErrorResponse(id, -32602, "Invalid params: Missing params"));
-                    }
-                    String toolName = (String) params.get("name");
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> arguments = (Map<String, Object>) params.getOrDefault("arguments", Collections.emptyMap());
-
-                    Map<String, Object> toolResult = executeTool(toolName, arguments);
-                    return ResponseEntity.ok(createSuccessResponse(id, toolResult));
-
-                default:
-                    return ResponseEntity.ok(createErrorResponse(id, -32601, "Method not found: " + method));
-            }
-        } catch (Exception e) {
-            log.error("[MCP Server] Lỗi thực thi phương thức JSON-RPC: {}", method, e);
-            return ResponseEntity.ok(createErrorResponse(id, -32603, "Internal error: " + e.getMessage()));
+            return switch (method) {
+                case "ping" -> ResponseEntity.ok(successResponse(id, Map.of("status", "pong")));
+                case "tools/list" -> ResponseEntity.ok(successResponse(id, Map.of("tools", availableTools())));
+                case "tools/call" -> ResponseEntity.ok(successResponse(id, callTool(principal, request.path("params"))));
+                default -> ResponseEntity.ok(errorResponse(id, -32601, "Method not found"));
+            };
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.ok(errorResponse(id, -32602, "Invalid params: " + exception.getMessage()));
+        } catch (DomainException exception) {
+            return ResponseEntity.ok(errorResponse(id, -32000, exception.getMessage()));
+        } catch (Exception exception) {
+            log.error("MCP request failed for method {} ({})", method, exception.getClass().getSimpleName());
+            return ResponseEntity.ok(errorResponse(id, -32603, "Internal error"));
         }
     }
 
-    private List<Map<String, Object>> getAvailableTools() {
+    private Map<String, Object> callTool(UserPrincipal principal, JsonNode params) throws Exception {
+        if (params == null || !params.isObject()) {
+            throw new IllegalArgumentException("Missing params object");
+        }
+        String name = requiredText(params, "name");
+        JsonNode arguments = params.path("arguments");
+        if (!arguments.isMissingNode() && !arguments.isObject()) {
+            throw new IllegalArgumentException("arguments must be an object");
+        }
+        if (arguments.isMissingNode()) {
+            arguments = objectMapper.createObjectNode();
+        }
+
+        Object result = switch (name) {
+            case "talentbridge_search_jobs" -> searchJobs(principal, arguments);
+            case "talentbridge_get_candidate_profile" -> getCandidateProfile(principal, arguments);
+            case "talentbridge_evaluate_cv_fit" -> evaluateCandidate(principal, arguments);
+            case "talentbridge_update_application_stage" -> updateApplicationStage(principal, arguments);
+            default -> throw new IllegalArgumentException("Unknown TalentBridge tool");
+        };
+        return contentResponse(objectMapper.writeValueAsString(result));
+    }
+
+    private List<McpJobSummary> searchJobs(UserPrincipal principal, JsonNode arguments) {
+        String keyword = optionalText(arguments, "keyword");
+        String city = optionalText(arguments, "city");
+        int limit = optionalInteger(arguments, "limit", 5);
+        if (limit < 1 || limit > MAX_SEARCH_LIMIT) {
+            throw new IllegalArgumentException("limit must be between 1 and 20");
+        }
+        return mcpUseCase.searchJobs(principal.getId(), keyword, city, limit);
+    }
+
+    private McpCandidateProfileResult getCandidateProfile(UserPrincipal principal, JsonNode arguments) {
+        return mcpUseCase.getCandidateProfile(principal.getId(),
+                requiredLong(arguments, "jobId"), requiredLong(arguments, "candidateId"));
+    }
+
+    private CandidateJobMatchResult evaluateCandidate(UserPrincipal principal, JsonNode arguments) {
+        return mcpUseCase.evaluateCandidate(principal.getId(),
+                requiredLong(arguments, "jobId"), requiredLong(arguments, "candidateId"));
+    }
+
+    private JobApplicantResult updateApplicationStage(UserPrincipal principal, JsonNode arguments) {
+        return mcpUseCase.updateApplicationStage(principal.getId(),
+                requiredLong(arguments, "jobId"),
+                requiredLong(arguments, "applicationId"),
+                requiredText(arguments, "stage"),
+                optionalText(arguments, "note"));
+    }
+
+    private List<Map<String, Object>> availableTools() {
         return List.of(
-                Map.of(
-                        "name", "talentbridge_search_jobs",
-                        "description", "Tìm kiếm các việc làm đang tuyển dụng trong hệ thống TalentBridge theo từ khóa, thành phố hoặc cấp bậc",
-                        "inputSchema", Map.of(
-                                "type", "object",
-                                "properties", Map.of(
-                                        "keyword", Map.of("type", "string", "description", "Từ khóa tìm kiếm (VD: Java, React, Backend)"),
-                                        "city", Map.of("type", "string", "description", "Thành phố làm việc (VD: Hồ Chí Minh, Hà Nội)"),
-                                        "limit", Map.of("type", "integer", "description", "Số lượng kết quả tối đa cần lấy (mặc định 5)")
-                                )
-                        )
-                ),
-                Map.of(
-                        "name", "talentbridge_get_candidate_profile",
-                        "description", "Tra cứu hồ sơ chi tiết, kỹ năng và kinh nghiệm làm việc của ứng viên theo ID",
-                        "inputSchema", Map.of(
-                                "type", "object",
-                                "properties", Map.of(
-                                        "candidateId", Map.of("type", "integer", "description", "ID của ứng viên")
-                                ),
-                                "required", List.of("candidateId")
-                        )
-                ),
-                Map.of(
-                        "name", "talentbridge_evaluate_cv_fit",
-                        "description", "Đánh giá độ phù hợp của ứng viên với công việc theo thuật toán Tri-Vector RAG từ bài báo khoa học SoftwareX 2025",
-                        "inputSchema", Map.of(
-                                "type", "object",
-                                "properties", Map.of(
-                                        "jobId", Map.of("type", "integer", "description", "ID của công việc"),
-                                        "candidateId", Map.of("type", "integer", "description", "ID của ứng viên"),
-                                        "cvText", Map.of("type", "string", "description", "Nội dung văn bản CV thô (tùy chọn)")
-                                ),
-                                "required", List.of("jobId")
-                        )
-                ),
-                Map.of(
-                        "name", "talentbridge_update_application_stage",
-                        "description", "Chuyển giai đoạn tuyển dụng của ứng viên trong quy trình ATS (APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED)",
-                        "inputSchema", Map.of(
-                                "type", "object",
-                                "properties", Map.of(
-                                        "applicationId", Map.of("type", "integer", "description", "Mã đơn ứng tuyển"),
-                                        "stage", Map.of("type", "string", "description", "Trạng thái mới (APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED)")
-                                ),
-                                "required", List.of("applicationId", "stage")
-                        )
-                )
+                tool("talentbridge_search_jobs", "Tìm tin ACTIVE theo từ khóa hoặc thành phố.", Map.of(
+                        "keyword", stringSchema("Từ khóa"),
+                        "city", stringSchema("Thành phố"),
+                        "limit", Map.of("type", "integer", "description", "Số lượng kết quả (1-20)")), List.of()),
+                tool("talentbridge_get_candidate_profile", "Xem hồ sơ tối thiểu của ứng viên đã nộp vào tin thuộc công ty của bạn.", Map.of(
+                        "jobId", integerSchema("Mã tin tuyển dụng"),
+                        "candidateId", integerSchema("Mã ứng viên")), List.of("jobId", "candidateId")),
+                tool("talentbridge_evaluate_cv_fit", "Đánh giá tư vấn ứng viên đã nộp vào tin tuyển dụng của bạn.", Map.of(
+                        "jobId", integerSchema("Mã tin tuyển dụng"),
+                        "candidateId", integerSchema("Mã ứng viên")), List.of("jobId", "candidateId")),
+                tool("talentbridge_update_application_stage", "Chuyển ứng viên sang vòng tuyển dụng hợp lệ và lưu lịch sử.", Map.of(
+                        "jobId", integerSchema("Mã tin tuyển dụng"),
+                        "applicationId", integerSchema("Mã đơn ứng tuyển"),
+                        "stage", stringSchema("Giai đoạn mới"),
+                        "note", stringSchema("Ghi chú tùy chọn")), List.of("jobId", "applicationId", "stage"))
         );
     }
 
-    private Map<String, Object> executeTool(String toolName, Map<String, Object> args) {
-        log.info("[MCP Tool Call] Thực thi công cụ: {} với tham số: {}", toolName, args);
+    private Map<String, Object> tool(String name, String description,
+                                     Map<String, Object> properties, List<String> required) {
+        return Map.of("name", name, "description", description, "inputSchema",
+                Map.of("type", "object", "properties", properties, "required", required));
+    }
 
-        switch (toolName) {
-            case "talentbridge_search_jobs": {
-                String keyword = (String) args.getOrDefault("keyword", "");
-                int limit = args.get("limit") instanceof Number ? ((Number) args.get("limit")).intValue() : 5;
-                var jobs = jobRepository.findAll();
-                List<Map<String, Object>> matched = new ArrayList<>();
-                for (JobJpaEntity j : jobs) {
-                    if (j.getStatus() == JobStatus.ACTIVE) {
-                        if (keyword.isBlank() || j.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
-                            matched.add(Map.of(
-                                    "id", j.getId(),
-                                    "title", j.getTitle(),
-                                    "company", j.getCompany() != null ? j.getCompany().getName() : "N/A",
-                                    "location", j.getLocation() != null ? j.getLocation() : "Toàn quốc",
-                                    "experience", j.getExperienceLevel() != null ? j.getExperienceLevel() : "Không yêu cầu"
-                            ));
-                            if (matched.size() >= limit) break;
-                        }
-                    }
-                }
-                return createMcpContentResponse("Tìm thấy " + matched.size() + " công việc phù hợp:\n" + toJson(matched));
-            }
+    private Map<String, Object> stringSchema(String description) {
+        return Map.of("type", "string", "description", description);
+    }
 
-            case "talentbridge_get_candidate_profile": {
-                Long candidateId = ((Number) args.get("candidateId")).longValue();
-                CandidateJpaEntity c = candidateRepository.findById(candidateId).orElse(null);
-                if (c == null) {
-                    return createMcpContentResponse("Không tìm thấy ứng viên với ID: " + candidateId);
-                }
-                var skills = candidateSkillRepository.findByCandidateIdOrderByIdAsc(candidateId);
-                List<String> skillNames = skills.stream()
-                        .map(s -> s.getSkill() != null ? s.getSkill().getName() : "")
-                        .filter(s -> !s.isBlank())
-                        .toList();
+    private Map<String, Object> integerSchema(String description) {
+        return Map.of("type", "integer", "description", description);
+    }
 
-                Map<String, Object> profile = Map.of(
-                        "id", c.getId(),
-                        "name", c.getUser() != null ? c.getUser().getFullName() : "N/A",
-                        "title", c.getTitle() != null ? c.getTitle() : "N/A",
-                        "experienceYears", c.getExperienceYears(),
-                        "summary", c.getSummary() != null ? c.getSummary() : "",
-                        "skills", skillNames
-                );
-                return createMcpContentResponse("Thông tin ứng viên:\n" + toJson(profile));
-            }
-
-            case "talentbridge_evaluate_cv_fit": {
-                Long jobId = ((Number) args.get("jobId")).longValue();
-                Long candidateId = args.get("candidateId") != null ? ((Number) args.get("candidateId")).longValue() : null;
-                String cvText = (String) args.get("cvText");
-
-                var result = matchingService.matchCandidateToJob(jobId, candidateId, cvText);
-                return createMcpContentResponse("Kết quả đánh giá Tri-Vector RAG:\n" + toJson(result));
-            }
-
-            case "talentbridge_update_application_stage": {
-                Long appId = ((Number) args.get("applicationId")).longValue();
-                String stageStr = (String) args.get("stage");
-
-                ApplicationJpaEntity app = applicationRepository.findById(appId).orElse(null);
-                if (app == null) {
-                    return createMcpContentResponse("Không tìm thấy đơn ứng tuyển ID: " + appId);
-                }
-
-                try {
-                    ApplicationPipelineStage stage = ApplicationPipelineStage.valueOf(stageStr.toUpperCase());
-                    app.setCurrentStage(stage.name());
-                    applicationRepository.save(app);
-                    return createMcpContentResponse("Cập nhật thành công đơn ứng tuyển #" + appId + " sang giai đoạn: " + stage);
-                } catch (IllegalArgumentException e) {
-                    return createMcpContentResponse("Trạng thái không hợp lệ: " + stageStr + ". Các trạng thái hợp lệ: APPLIED, SCREENING, INTERVIEW, OFFER, HIRED, REJECTED");
-                }
-            }
-
-            default:
-                return createMcpContentResponse("Không tìm thấy công cụ mang tên: " + toolName);
+    private String requiredText(JsonNode source, String field) {
+        String value = optionalText(source, field);
+        if (value.isBlank()) {
+            throw new IllegalArgumentException(field + " is required");
         }
+        return value;
     }
 
-    private Map<String, Object> createMcpContentResponse(String text) {
-        return Map.of(
-                "content", List.of(
-                        Map.of(
-                                "type", "text",
-                                "text", text
-                        )
-                )
-        );
+    private String optionalText(JsonNode source, String field) {
+        JsonNode value = source.path(field);
+        if (value.isMissingNode() || value.isNull()) return "";
+        if (!value.isTextual()) throw new IllegalArgumentException(field + " must be a string");
+        return value.asText().trim();
     }
 
-    private Map<String, Object> createSuccessResponse(Object id, Object result) {
-        return Map.of(
-                "jsonrpc", "2.0",
-                "id", id != null ? id : 1,
-                "result", result
-        );
-    }
-
-    private Map<String, Object> createErrorResponse(Object id, int code, String message) {
-        return Map.of(
-                "jsonrpc", "2.0",
-                "id", id != null ? id : 1,
-                "error", Map.of(
-                        "code", code,
-                        "message", message
-                )
-        );
-    }
-
-    private String toJson(Object obj) {
-        try {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
-        } catch (Exception e) {
-            return String.valueOf(obj);
+    private Long requiredLong(JsonNode source, String field) {
+        JsonNode value = source.path(field);
+        if (!value.isIntegralNumber() || !value.canConvertToLong() || value.longValue() <= 0) {
+            throw new IllegalArgumentException(field + " must be a positive integer");
         }
+        return value.longValue();
+    }
+
+    private int optionalInteger(JsonNode source, String field, int defaultValue) {
+        JsonNode value = source.path(field);
+        if (value.isMissingNode() || value.isNull()) return defaultValue;
+        if (!value.isIntegralNumber() || !value.canConvertToInt()) {
+            throw new IllegalArgumentException(field + " must be an integer");
+        }
+        return value.intValue();
+    }
+
+    private Object jsonRpcId(JsonNode request) {
+        JsonNode id = request == null ? null : request.get("id");
+        return id == null || id.isNull() ? null : objectMapper.convertValue(id, Object.class);
+    }
+
+    private Map<String, Object> contentResponse(String text) {
+        return Map.of("content", List.of(Map.of("type", "text", "text", text)));
+    }
+
+    private Map<String, Object> successResponse(Object id, Object result) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("jsonrpc", "2.0");
+        response.put("id", id);
+        response.put("result", result);
+        return response;
+    }
+
+    private Map<String, Object> errorResponse(Object id, int code, String message) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("jsonrpc", "2.0");
+        response.put("id", id);
+        response.put("error", Map.of("code", code, "message", message));
+        return response;
     }
 }

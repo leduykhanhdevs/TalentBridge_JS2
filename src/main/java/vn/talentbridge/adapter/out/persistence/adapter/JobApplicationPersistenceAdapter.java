@@ -111,6 +111,17 @@ public class JobApplicationPersistenceAdapter implements JobApplicationRepositor
         applicationJpaRepository.save(entity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countApplicationsByStage(Long jobId) {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (Object[] row : applicationJpaRepository.countCurrentStagesByJobId(jobId)) {
+            if (row[0] == null || row[1] == null) continue;
+            counts.put(row[0].toString(), ((Number) row[1]).longValue());
+        }
+        return counts;
+    }
+
     private Sort resolveSort(ApplicantFilterCriteria criteria) {
         if (criteria == null || criteria.getSortBy() == null || criteria.getSortBy().isBlank()) {
             return Sort.by(Sort.Direction.DESC, "createdAt");

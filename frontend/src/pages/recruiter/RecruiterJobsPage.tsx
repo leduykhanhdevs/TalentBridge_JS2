@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
     AlertCircle,
     Archive,
+    BarChart3,
     Briefcase,
     Calendar,
     CheckCircle2,
@@ -371,6 +372,15 @@ export function RecruiterJobsPage() {
                                         >
                                             <Users size={13} className="!text-white shrink-0" />
                                             <span className="!text-white font-bold">Xem ứng viên</span>
+                                        </Link>
+
+                                        <Link
+                                            to={`/recruiter/statistics?jobId=${job.id}`}
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-100 transition"
+                                            title="Xem chất lượng tin và phân bố pipeline"
+                                        >
+                                            <BarChart3 size={13} />
+                                            <span>Thống kê</span>
                                         </Link>
 
                                         <Link
