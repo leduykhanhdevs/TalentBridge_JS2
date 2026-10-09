@@ -65,6 +65,11 @@ talentbridge:
     window-seconds: "${RATE_LIMIT_WINDOW_SECONDS:60}"
   upload:
     dir: "${UPLOAD_DIR:uploads}"
+  admin-bootstrap:
+    enabled: "${ADMIN_BOOTSTRAP_ENABLED:false}"
+    email: "${ADMIN_BOOTSTRAP_EMAIL:}"
+    password: "${ADMIN_BOOTSTRAP_PASSWORD:}"
+    full-name: "${ADMIN_BOOTSTRAP_FULL_NAME:TalentBridge Administrator}"
 
 ---
 spring:
