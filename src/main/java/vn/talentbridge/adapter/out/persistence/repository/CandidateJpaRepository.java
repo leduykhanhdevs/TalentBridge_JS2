@@ -21,7 +21,7 @@ public interface CandidateJpaRepository extends JpaRepository<CandidateJpaEntity
     @EntityGraph(attributePaths = {"user", "user.roles"})
     Optional<CandidateJpaEntity> findByUserId(Long userId);
 
-    @EntityGraph(attributePaths = {"user", "user.roles"})
+    @EntityGraph(attributePaths = {"user"})
     @Query("SELECT c FROM CandidateJpaEntity c " +
            "LEFT JOIN c.user u " +
            "WHERE (:keyword IS NULL OR :keyword = '' OR " +

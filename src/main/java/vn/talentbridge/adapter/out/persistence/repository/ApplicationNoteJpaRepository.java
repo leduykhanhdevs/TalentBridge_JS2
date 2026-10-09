@@ -20,6 +20,9 @@ public interface ApplicationNoteJpaRepository extends JpaRepository<ApplicationN
 
     int countByApplicationId(Long applicationId);
 
-    @Query("SELECT n.application.id, AVG(CAST(n.rating as double)), COUNT(n.id) FROM ApplicationNoteJpaEntity n GROUP BY n.application.id")
-    List<Object[]> findRatingSummariesGroupedByApplication();
+    @Query("SELECT n.application.id, AVG(CAST(n.rating as double)), COUNT(n.id) " +
+            "FROM ApplicationNoteJpaEntity n " +
+            "WHERE n.application.id IN :applicationIds " +
+            "GROUP BY n.application.id")
+    List<Object[]> findRatingSummariesByApplicationIds(@Param("applicationIds") List<Long> applicationIds);
 }

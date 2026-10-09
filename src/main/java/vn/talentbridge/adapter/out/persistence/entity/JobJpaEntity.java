@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import vn.talentbridge.core.domain.vo.JobStatus;
 
 import java.math.BigDecimal;
@@ -78,6 +79,7 @@ public class JobJpaEntity extends BaseJpaEntity {
         joinColumns = @JoinColumn(name = "job_id"),
         inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
+    @BatchSize(size = 32)
     @Builder.Default
     private java.util.Set<SkillJpaEntity> skills = new java.util.HashSet<>();
 }

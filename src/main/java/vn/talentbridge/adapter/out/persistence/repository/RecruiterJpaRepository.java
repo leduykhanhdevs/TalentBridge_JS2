@@ -20,7 +20,7 @@ public interface RecruiterJpaRepository extends JpaRepository<RecruiterJpaEntity
     @EntityGraph(attributePaths = {"user", "user.roles", "company"})
     Optional<RecruiterJpaEntity> findByUserId(Long userId);
 
-    @EntityGraph(attributePaths = {"user", "user.roles", "company"})
+    @EntityGraph(attributePaths = {"user", "company"})
     @Query("SELECT r FROM RecruiterJpaEntity r " +
            "LEFT JOIN r.user u " +
            "LEFT JOIN r.company c " +

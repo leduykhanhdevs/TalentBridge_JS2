@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
 import java.util.HashSet;
@@ -40,7 +41,8 @@ public class UserJpaEntity extends BaseJpaEntity {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @BatchSize(size = 32)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

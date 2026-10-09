@@ -1,0 +1,37 @@
+name: TalentBridge Continuous Deployment (CD to Render)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy-to-render:
+    name: Trigger Render Production Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Webhook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "🚀 Triggering Render Deploy Hook..."
+            response=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_URL")
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | sed '$d')
+            echo "HTTP Status Code: $http_code"
+            echo "Response: $body"
+            if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+              echo "✅ Render deployment triggered successfully!"
+            else
+              echo "❌ Render deploy hook returned error status: $http_code"
+              exit 1
+            fi
+          else
+            echo "⚠️ Secret RENDER_DEPLOY_HOOK_URL is not set in GitHub Repository Secrets."
+            echo "ℹ️ To enable auto-deployment:"
+            echo "  1. Go to your Render Dashboard -> Your Service -> Settings -> Deploy Hook."
+            echo "  2. Copy the Webhook URL."
+            echo "  3. Go to GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret."
+            echo "  4. Set name: RENDER_DEPLOY_HOOK_URL and paste the copied URL."
+          fi

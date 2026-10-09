@@ -1,6 +1,7 @@
 import { getAccessToken } from '../auth/tokenStorage'
 import type {
     AddNotePayload,
+    AiMatchResult,
     ApplicantFilterParams,
     ApplicationNote,
     ApplicationStage,
@@ -84,6 +85,15 @@ export async function getJobApplicants(
     })
 
     return handleResponse<JobApplicant[]>(res, 'Không thể tải danh sách ứng viên')
+}
+
+export async function matchApplicantWithAi(jobId: number, candidateId: number): Promise<AiMatchResult> {
+    const response = await fetch(`${API_BASE_URL}/ai/match`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ jobId, candidateId }),
+    })
+    return handleResponse<AiMatchResult>(response, 'Không thể phân tích mức độ phù hợp bằng AI')
 }
 
 export async function updateApplicantStage(

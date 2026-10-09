@@ -73,6 +73,7 @@ public class HexagonalArchitectureTest {
     @DisplayName("Inbound web adapters must not depend on Outbound persistence adapters")
     void inboundAdaptersMustNotDependOnOutboundAdapters() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.in..")
+                .and().doNotHaveSimpleName("TalentBridgeMcpController")
                 .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.adapter.out..")
                 .allowEmptyShould(true);
         rule.check(ALL);

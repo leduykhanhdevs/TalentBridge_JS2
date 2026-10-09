@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /
     encoding:
@@ -70,6 +70,12 @@ talentbridge:
     email: "${ADMIN_BOOTSTRAP_EMAIL:}"
     password: "${ADMIN_BOOTSTRAP_PASSWORD:}"
     full-name: "${ADMIN_BOOTSTRAP_FULL_NAME:TalentBridge Administrator}"
+  gemini:
+    api-key: "${GEMINI_API_KEY:}"
+    model: "${GEMINI_MODEL:gemini-3.5-flash-lite}"
+    api-base-url: "${GEMINI_API_BASE_URL:https://generativelanguage.googleapis.com/v1beta}"
+    connect-timeout-ms: "${GEMINI_CONNECT_TIMEOUT_MS:5000}"
+    read-timeout-ms: "${GEMINI_READ_TIMEOUT_MS:20000}"
 
 ---
 spring:
@@ -115,3 +121,31 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: "${SPRING_DATASOURCE_URL}"
+    username: "${SPRING_DATASOURCE_USERNAME}"
+    password: "${SPRING_DATASOURCE_PASSWORD}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: "${DB_POOL_MAX_SIZE:5}"
+      connection-timeout: 10000
+      validation-timeout: 5000
+      max-lifetime: 300000
+      keepalive-time: 180000
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+

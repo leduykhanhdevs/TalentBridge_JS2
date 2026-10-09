@@ -151,11 +151,19 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 | `SPRING_DATASOURCE_URL` | Khi `mysql` | `jdbc:mysql://localhost:3306/talentbridge_db` | URL kết nối MySQL khi chạy profile `mysql`. |
 | `SPRING_DATASOURCE_USERNAME`| Khi `mysql` | `root` | Tài khoản kết nối MySQL. |
 | `SPRING_DATASOURCE_PASSWORD`| Khi `mysql` | `password` | Mật khẩu tài khoản kết nối MySQL. |
+| `GEMINI_API_KEY` | Không | *(để trống)* | API key Gemini. Nếu chưa cấu hình hoặc nhà cung cấp lỗi, CV parser và matching dùng phương án dự phòng; key được gửi qua header HTTP. |
+| `GEMINI_MODEL` | Không | `gemini-3.5-flash-lite` | Mô hình Gemini ổn định, độ trễ thấp dùng cho phân tích CV và matching. |
+| `GEMINI_API_BASE_URL` | Không | `https://generativelanguage.googleapis.com/v1beta` | Endpoint Gemini; chủ yếu dùng để cấu hình môi trường và kiểm thử. |
+| `GEMINI_CONNECT_TIMEOUT_MS` | Không | `5000` | Timeout kết nối tới Gemini. |
+| `GEMINI_READ_TIMEOUT_MS` | Không | `20000` | Timeout chờ phản hồi Gemini; không tự retry để tránh kéo dài request lỗi. |
+| `DB_POOL_MAX_SIZE` | Không | `5` | Số kết nối tối đa trong pool ở profile production. |
 | `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
 | `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
 | `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
 | `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |
+
+API nhập CV trả `processingSource` là `GEMINI` hoặc `RULE_BASED`; API matching trả `matchingSource` là `GEMINI` hoặc `DETERMINISTIC`, để giao diện không nhận nhầm kết quả dự phòng thành kết quả AI. Matching yêu cầu vai trò recruiter, xác minh công ty sở hữu tin và ứng viên đã nộp đơn; request không nhận nội dung CV thô từ trình duyệt.
 
 ### 3. Khởi Chạy Backend (Spring Boot 3)
 
@@ -222,3 +230,38 @@ Nếu thành viên sử dụng AI (ChatGPT, Gemini, Claude, Cursor, Copilot...) 
 - **Chỉ khi Trưởng nhóm Lê Duy Khánh review code đạt chuẩn mới được merge**.
 
 > 📖 **Xem chi tiết quy chuẩn Git và hướng dẫn thao tác**: [TEAM_RULES_AND_GITFLOW.md](TEAM_RULES_AND_GITFLOW.md)
+
+---
+
+## 🔬 CƠ SỞ KHOA HỌC & CÔNG NGHỆ AI (RESEARCH FOUNDATION)
+
+Dự án áp dụng nền tảng lý thuyết và giải pháp từ công trình khoa học quốc tế:
+> **"Version 5.4.18 – AI–KM: Knowledge enhancement with RAG and workflow"**  
+> *Haolong Wu, Wei Jiang, Xuesong Zhang, Hongjie Zhang, Mengxing Huang*  
+> Công bố trên **SoftwareX**, Volume 31 (2025) 102349, Elsevier. DOI: [10.1016/j.softx.2025.102349](https://doi.org/10.1016/j.softx.2025.102349).  
+> Mã nguồn tham chiếu: [https://github.com/whl1207/Knowledge](https://github.com/whl1207/Knowledge)
+
+### Các nguyên lý áp dụng trong TalentBridge:
+1. **Suy luận thông tin ẩn (Inferred Hidden Information)**: Nghịch đảo câu hỏi và kỹ năng từ CV ứng viên ($q \xrightarrow{\text{LLM Reasoning}} V = \{v_1, v_2, \dots, v_n\}$) để bóc tách năng lực thực chiến thay vì chỉ đối sánh từ khóa thô.
+2. **Độ tương đồng lai 3 Vector (Tri-Vector Hybrid Similarity)**:
+   $$Merge(q, v_i, u_i) = \frac{\cos(q, v_i) + \cos(q, u_i)}{2}$$
+   Khớp nối 3 chiều giữa Yêu cầu công việc ($JD$), Năng lực thực tế của ứng viên ($CV$), và Kỹ năng suy luận ($Inferred\ Capabilities$).
+3. **Kiến trúc Tích hợp Kép RAG + MCP**: Kết hợp Retrieval-Augmented Generation (bộ nhớ tri thức tĩnh/tài liệu) với Model Context Protocol (MCP - công cụ hành động tương tác DB/API thời gian thực).
+> 📑 **Tài liệu phân tích chuyên sâu**: [AI_KM_RAG_WORKFLOW_ANALYSIS.md](docs/research/AI_KM_RAG_WORKFLOW_ANALYSIS.md)
+
+---
+
+## ⚡ QUY CHUẨN ĐÓNG GÓI NGỮ CẢNH: WORKING CAPSULE PROTOCOL
+
+Khi phiên làm việc kéo dài, context bị phân mảnh hoặc hệ thống kích hoạt cơ chế nén ngữ cảnh, Agent **BẮT BUỘC** phải đóng gói trạng thái làm việc thành **WORKING CAPSULE** với đúng 8 trường chuẩn:
+- **OBJECTIVE**: Mục tiêu cụ thể hiện tại.
+- **DONE**: Những gì đã hoàn thành và đã được kiểm thử xác minh.
+- **CONSTRAINTS**: Các ràng buộc kỹ thuật và quy tắc bất biến.
+- **DECISIONS**: Quyết định kiến trúc/thiết kế đã chốt.
+- **FILES/ARTIFACTS**: Các file/code/tài liệu liên quan trực tiếp.
+- **ERRORS/SCARS**: Lỗi đã gặp, nguyên nhân, cách khắc phục và điều TUYỆT ĐỐI không lặp lại.
+- **OPEN ITEMS**: Việc còn dang dở, câu hỏi cần người dùng làm rõ.
+- **NEXT ACTION**: Hành động cụ thể đơn lẻ tiếp theo cần làm ngay.
+
+> 📑 **Chi tiết quy tắc**: [WORKING_CAPSULE_GUIDE.md](docs/WORKING_CAPSULE_GUIDE.md)
+

@@ -1,5 +1,6 @@
 package vn.talentbridge.adapter.out.storage;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import vn.talentbridge.core.application.port.out.FileStoragePort;
@@ -8,18 +9,31 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class LocalFileStorageAdapter implements FileStoragePort {
 
     private final Path basePath;
 
     public LocalFileStorageAdapter(@Value("${talentbridge.upload.dir:uploads}") String uploadDir) {
-        this.basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path configuredPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path resolvedPath;
         try {
-            Files.createDirectories(this.basePath);
-        } catch (IOException e) {
-            throw new IllegalStateException("Không thể tạo thư mục lưu trữ: " + this.basePath, e);
+            Files.createDirectories(configuredPath);
+            resolvedPath = configuredPath;
+            log.info("Khởi tạo thư mục lưu trữ file thành công tại: {}", resolvedPath);
+        } catch (Exception e) {
+            log.warn("Không thể tạo thư mục lưu trữ tại {}: {}. Chuyển sang thư mục tạm hệ thống.", configuredPath, e.getMessage());
+            Path fallbackPath = Paths.get(System.getProperty("java.io.tmpdir"), "talentbridge-uploads").toAbsolutePath().normalize();
+            try {
+                Files.createDirectories(fallbackPath);
+                resolvedPath = fallbackPath;
+                log.info("Đã chuyển sang thư mục lưu trữ tạm: {}", resolvedPath);
+            } catch (Exception ex) {
+                throw new IllegalStateException("Không thể tạo cả thư mục lưu trữ chính và thư mục tạm: " + configuredPath, ex);
+            }
         }
+        this.basePath = resolvedPath;
     }
 
     @Override
