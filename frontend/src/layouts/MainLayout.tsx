@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, Building2, FileText, KeyRound, LogIn, LogOut, Menu, Search, ShieldCheck, User, UserPlus, X } from 'lucide-react'
+import { BriefcaseBusiness, Building2, FileText, KeyRound, LogIn, LogOut, Menu, MessageCircle, Search, ShieldCheck, User, UserPlus, X } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -57,6 +57,7 @@ export function MainLayout() {
     const mobileLinks = [
         { to: '/', label: 'Trang chủ' },
         { to: '/jobs', label: 'Việc làm' },
+        { to: '/assistant', label: 'Trợ lý TalentBridge' },
         ...(isCandidate ? [
             { to: '/candidate/profile', label: 'Hồ sơ TopCV' },
             { to: '/candidate/applications', label: 'Đơn ứng tuyển' },
@@ -121,6 +122,20 @@ export function MainLayout() {
                             >
                                 <Search size={14} />
                                 <span>Việc làm</span>
+                            </NavLink>
+
+                            <NavLink
+                                className={({ isActive }) =>
+                                    `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                        isActive
+                                            ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                            : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                                    }`
+                                }
+                                to="/assistant"
+                            >
+                                <MessageCircle aria-hidden="true" size={14} />
+                                <span>Trợ lý</span>
                             </NavLink>
 
                             {isCandidate && (

@@ -26,7 +26,7 @@ public class HexagonalArchitectureTest {
     void coreMustNotDependOnSpringFramework() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.core..")
                 .should().dependOnClassesThat().resideInAPackage("org.springframework..")
-                .allowEmptyShould(true);
+                ;
         rule.check(CORE);
     }
 
@@ -36,7 +36,7 @@ public class HexagonalArchitectureTest {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.core..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("jakarta.persistence..", "javax.persistence..", "org.hibernate..")
-                .allowEmptyShould(true);
+                ;
         rule.check(CORE);
     }
 
@@ -46,7 +46,7 @@ public class HexagonalArchitectureTest {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.core..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("jakarta.servlet..", "javax.servlet..", "io.jsonwebtoken..")
-                .allowEmptyShould(true);
+                ;
         rule.check(CORE);
     }
 
@@ -56,7 +56,7 @@ public class HexagonalArchitectureTest {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.core..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("vn.talentbridge.adapter..", "vn.talentbridge.config..")
-                .allowEmptyShould(true);
+                ;
         rule.check(CORE);
     }
 
@@ -65,7 +65,7 @@ public class HexagonalArchitectureTest {
     void domainMustNotDependOnApplication() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.core.domain..")
                 .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.core.application..")
-                .allowEmptyShould(true);
+                ;
         rule.check(CORE);
     }
 
@@ -73,9 +73,8 @@ public class HexagonalArchitectureTest {
     @DisplayName("Inbound web adapters must not depend on Outbound persistence adapters")
     void inboundAdaptersMustNotDependOnOutboundAdapters() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.in..")
-                .and().doNotHaveSimpleName("TalentBridgeMcpController")
                 .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.adapter.out..")
-                .allowEmptyShould(true);
+                ;
         rule.check(ALL);
     }
 
@@ -84,7 +83,7 @@ public class HexagonalArchitectureTest {
     void inboundAdaptersMustNotDependOnConcreteUseCaseImplementations() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.in..")
                 .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.core.application.usecase..")
-                .allowEmptyShould(true);
+                ;
         rule.check(ALL);
     }
 
@@ -102,7 +101,16 @@ public class HexagonalArchitectureTest {
     void inboundWebAdaptersMustNotDependOnOutboundPorts() {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.in.web..")
                 .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.core.application.port.out..")
-                .allowEmptyShould(true);
+                ;
+        rule.check(ALL);
+    }
+
+    @Test
+    @DisplayName("AI adapters must use application ports instead of reaching into persistence adapters")
+    void outboundAiAdaptersMustNotDependOnPersistenceAdapters() {
+        ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.adapter.out.ai..")
+                .should().dependOnClassesThat().resideInAPackage("vn.talentbridge.adapter.out.persistence..")
+                ;
         rule.check(ALL);
     }
 
@@ -112,7 +120,7 @@ public class HexagonalArchitectureTest {
         ArchRule rule = noClasses().that().resideInAPackage("vn.talentbridge.common..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("jakarta.persistence..", "javax.persistence..", "org.hibernate..")
-                .allowEmptyShould(true);
+                ;
         rule.check(ALL);
     }
 }

@@ -233,21 +233,13 @@ Nếu thành viên sử dụng AI (ChatGPT, Gemini, Claude, Cursor, Copilot...) 
 
 ---
 
-## 🔬 CƠ SỞ KHOA HỌC & CÔNG NGHỆ AI (RESEARCH FOUNDATION)
+## 🔬 CƠ SỞ KHOA HỌC VÀ AI TRONG TALENTBRIDGE
 
-Dự án áp dụng nền tảng lý thuyết và giải pháp từ công trình khoa học quốc tế:
-> **"Version 5.4.18 – AI–KM: Knowledge enhancement with RAG and workflow"**  
-> *Haolong Wu, Wei Jiang, Xuesong Zhang, Hongjie Zhang, Mengxing Huang*  
-> Công bố trên **SoftwareX**, Volume 31 (2025) 102349, Elsevier. DOI: [10.1016/j.softx.2025.102349](https://doi.org/10.1016/j.softx.2025.102349).  
-> Mã nguồn tham chiếu: [https://github.com/whl1207/Knowledge](https://github.com/whl1207/Knowledge)
+Tài liệu tham khảo là *Version 5.4.18 – AI–KM: Knowledge enhancement with RAG and workflow*, Wen et al., SoftwareX 31 (2025), 102349, [DOI](https://doi.org/10.1016/j.softx.2025.102349). Abstract nhà xuất bản mô tả RAG dựa trên Ollama, xử lý/vector hóa Markdown, hỏi đáp knowledge base và workflow. Không gán cho bài báo các công thức Tri-Vector, tích hợp MCP hay số liệu chất lượng nếu chưa xác minh được trong toàn văn.
 
-### Các nguyên lý áp dụng trong TalentBridge:
-1. **Suy luận thông tin ẩn (Inferred Hidden Information)**: Nghịch đảo câu hỏi và kỹ năng từ CV ứng viên ($q \xrightarrow{\text{LLM Reasoning}} V = \{v_1, v_2, \dots, v_n\}$) để bóc tách năng lực thực chiến thay vì chỉ đối sánh từ khóa thô.
-2. **Độ tương đồng lai 3 Vector (Tri-Vector Hybrid Similarity)**:
-   $$Merge(q, v_i, u_i) = \frac{\cos(q, v_i) + \cos(q, u_i)}{2}$$
-   Khớp nối 3 chiều giữa Yêu cầu công việc ($JD$), Năng lực thực tế của ứng viên ($CV$), và Kỹ năng suy luận ($Inferred\ Capabilities$).
-3. **Kiến trúc Tích hợp Kép RAG + MCP**: Kết hợp Retrieval-Augmented Generation (bộ nhớ tri thức tĩnh/tài liệu) với Model Context Protocol (MCP - công cụ hành động tương tác DB/API thời gian thực).
-> 📑 **Tài liệu phân tích chuyên sâu**: [AI_KM_RAG_WORKFLOW_ANALYSIS.md](docs/research/AI_KM_RAG_WORKFLOW_ANALYSIS.md)
+Trong source TalentBridge, chatbot dùng truy xuất hướng dẫn nội bộ theo từ khóa/synonym rồi tùy chọn Gemini; matching CV–tin dùng Gemini hoặc fallback heuristic trên token và quy tắc năng lực. Endpoint Recruiter JSON-RPC cung cấp một số công cụ ATS nhưng chưa được xác minh là triển khai MCP đầy đủ. Điểm matching và đánh giá tin là thông tin tham khảo, không phải xác suất trúng tuyển hay bằng chứng độc lập về độ uy tín doanh nghiệp.
+
+> 📑 Chi tiết và giới hạn nguồn: [AI-KM research note](docs/research/AI_KM_RAG_WORKFLOW_ANALYSIS.md) · [RAG/MCP and source audit](docs/research/AI_MCP_VS_RAG_COMPREHENSIVE_ANALYSIS.md)
 
 ---
 

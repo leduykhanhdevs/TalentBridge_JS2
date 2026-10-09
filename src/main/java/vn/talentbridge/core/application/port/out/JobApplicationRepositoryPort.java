@@ -4,6 +4,7 @@ import vn.talentbridge.core.application.dto.ApplicantFilterCriteria;
 import vn.talentbridge.core.domain.model.JobApplicant;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface JobApplicationRepositoryPort {
@@ -15,4 +16,6 @@ public interface JobApplicationRepositoryPort {
     Optional<JobApplicant> findApplicantByJobIdAndCandidateId(Long jobId, Long candidateId);
 
     void updateStageAndStatus(Long applicationId, String stage, String status);
+
+    Map<String, Long> countApplicationsByStage(Long jobId);
 }

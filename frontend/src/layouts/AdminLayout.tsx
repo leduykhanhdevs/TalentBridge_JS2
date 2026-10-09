@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
     ArrowLeft,
+    Bot,
     Building2,
     BriefcaseBusiness,
     LayoutDashboard,
@@ -127,6 +128,13 @@ export function AdminLayout() {
             mobileLabel: 'Tin',
             icon: BriefcaseBusiness,
             desc: 'Duyệt, từ chối và gỡ tin',
+        },
+        {
+            to: '/assistant',
+            label: 'Trợ lý TalentBridge',
+            mobileLabel: 'Trợ lý',
+            icon: Bot,
+            desc: 'Hướng dẫn sử dụng trong ứng dụng',
         },
     ]
 

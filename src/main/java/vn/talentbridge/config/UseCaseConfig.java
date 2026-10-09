@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import vn.talentbridge.core.application.port.in.*;
 import vn.talentbridge.core.application.port.out.*;
 import vn.talentbridge.core.application.usecase.*;
+import vn.talentbridge.core.domain.service.JobQualityScorer;
 
 /**
  * Composition Root: Wires adapters into use cases via pure dependency
@@ -311,6 +312,27 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public TalentBridgeMcpUseCase talentBridgeMcpUseCase(
+            JobUseCase jobUseCase,
+            MatchApplicantUseCase matchApplicantUseCase,
+            UpdateApplicantStatusUseCase updateApplicantStatusUseCase,
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort jobApplicationRepository,
+            CandidateRepositoryPort candidateRepository,
+            CandidateSkillRepositoryPort candidateSkillRepository) {
+        return new TalentBridgeMcpUseCaseImpl(
+                jobUseCase,
+                matchApplicantUseCase,
+                updateApplicantStatusUseCase,
+                recruiterRepository,
+                jobRepository,
+                jobApplicationRepository,
+                candidateRepository,
+                candidateSkillRepository);
+    }
+
+    @Bean
     public UpdateApplicantStatusUseCase updateApplicantStatusUseCase(
             RecruiterRepositoryPort recruiterRepository,
             JobRepositoryPort jobRepository,
@@ -359,6 +381,44 @@ public class UseCaseConfig {
     @Bean
     public ParseCvUseCase parseCvUseCase(CvParserPort cvParserPort) {
         return new ParseCvUseCaseImpl(cvParserPort);
+    }
+
+    @Bean
+    public AskTalentBridgeAssistantUseCase askTalentBridgeAssistantUseCase(
+            TalentBridgeAssistantPort assistantPort) {
+        return new AskTalentBridgeAssistantUseCaseImpl(assistantPort);
+    }
+
+    @Bean
+    public JobQualityScorer jobQualityScorer() {
+        return new JobQualityScorer();
+    }
+
+    @Bean
+    public AnalyzeJobQualityUseCase analyzeJobQualityUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            CompanyRepositoryPort companyRepository,
+            JobQualityScorer scorer) {
+        return new AnalyzeJobQualityUseCaseImpl(recruiterRepository, jobRepository, companyRepository, scorer);
+    }
+
+    @Bean
+    public GetRecruiterPipelineAnalyticsUseCase getRecruiterPipelineAnalyticsUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort applicationRepository) {
+        return new GetRecruiterPipelineAnalyticsUseCaseImpl(recruiterRepository, jobRepository, applicationRepository);
+    }
+
+    @Bean
+    public AssessCandidateForJobUseCase assessCandidateForJobUseCase(
+            MatchApplicantUseCase matchApplicantUseCase,
+            CandidateRepositoryPort candidateRepository,
+            CandidateSkillRepositoryPort candidateSkillRepository,
+            ResumeRepositoryPort resumeRepository) {
+        return new AssessCandidateForJobUseCaseImpl(
+                matchApplicantUseCase, candidateRepository, candidateSkillRepository, resumeRepository);
     }
 
 }
