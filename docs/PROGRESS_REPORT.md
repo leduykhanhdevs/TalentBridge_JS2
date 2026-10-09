@@ -150,3 +150,10 @@
 - **Mục đích chức năng / việc đã làm**:
   - Làm cho kết quả AI/fallback có thể nhận biết trong CV import và matching nhà tuyển dụng, giảm rủi ro lỗi do xác thực hoặc quyền truy cập sai.
   - Giảm tải ban đầu và truy vấn không cần thiết ở các trang/list thường dùng. Chưa đo latency production nên chưa khẳng định phần trăm cải thiện; thời gian cold start của gói Free phụ thuộc Render.
+
+---
+
+## Chuẩn bị bootstrap Admin production an toàn - 09/10/2026
+- **Đã làm được gì**: Thêm inbound use case tạo Admin từ thông tin operator cấu hình, chỉ chạy trong profile `prod` khi `ADMIN_BOOTSTRAP_ENABLED=true`. Email được chuẩn hóa; mật khẩu BCrypt được mã hóa, tối thiểu 16 ký tự và tối đa 72 byte UTF-8. Tài khoản Admin hiện hữu không bị đổi mật khẩu; email của tài khoản thường không được tự nâng quyền. Bổ sung unit tests và hướng dẫn vận hành. PR #14 đã merge vào `dev`; CI backend/frontend đều PASS. PR phát hành sang `main` đang được kiểm tra; chưa redeploy production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Hexagonal Architecture (inbound port/use case/outbound `UserRepositoryPort` và `PasswordEncoderPort`), Spring Boot `ApplicationRunner` theo profile, BCrypt và biến môi trường Render.
+- **Mục đích chức năng / việc đã làm**: Tạo quy trình cấp Admin production có kiểm soát, không mở đăng ký Admin công khai, không đưa password mặc định vào production và không ghi password vào log. Sau xác nhận bootstrap thành công, operator phải tắt cờ và xóa biến email/password.
