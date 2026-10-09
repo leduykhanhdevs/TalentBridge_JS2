@@ -16,6 +16,14 @@ import vn.talentbridge.core.application.usecase.*;
 public class UseCaseConfig {
 
     @Bean
+    public BootstrapAdminAccountUseCase bootstrapAdminAccountUseCase(
+            UserRepositoryPort userRepository,
+            PasswordEncoderPort passwordEncoder
+    ) {
+        return new BootstrapAdminAccountUseCaseImpl(userRepository, passwordEncoder);
+    }
+
+    @Bean
     public RegisterUseCase registerUseCase(
             UserRepositoryPort userRepository,
             RecruiterRepositoryPort recruiterRepository,
