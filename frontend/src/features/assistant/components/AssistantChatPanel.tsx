@@ -40,7 +40,12 @@ export function AssistantChatPanel({ compact = false, onClose }: AssistantChatPa
         }
     }, [])
 
-    useEffect(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [turns, isSending])
+    useEffect(() => {
+        const bottomElement = bottomRef.current
+        if (!bottomElement || typeof bottomElement.scrollIntoView !== 'function') return
+
+        bottomElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }, [turns, isSending])
 
     async function sendMessage(text = message) {
         const question = text.trim()

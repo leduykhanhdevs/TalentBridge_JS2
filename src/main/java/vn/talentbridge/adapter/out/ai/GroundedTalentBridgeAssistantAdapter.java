@@ -35,6 +35,11 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
             "don", "ungtuyen", "nha", "recruiter", "company", "doanh", "nghiep", "admin", "phong", "van",
             "pipeline", "ats", "cong", "ty", "tin", "dang", "ky", "tai", "khoan", "mat", "khau", "ai", "chatbot"
     );
+    private static final Set<String> FAST_FAQ_QUESTIONS = Set.of(
+            "lam sao de ung tuyen",
+            "tao tin tuyen dung the nao",
+            "quen mat khau phai lam gi"
+    );
 
     private static final List<KnowledgeEntry> KNOWLEDGE = List.of(
             entry("Giới thiệu TalentBridge", "TalentBridge là nền tảng tuyển dụng và quản lý hồ sơ ứng viên ATS. Ứng viên tìm việc, hoàn thiện hồ sơ và theo dõi đơn; nhà tuyển dụng quản lý tin và quy trình ứng viên; quản trị viên kiểm duyệt tài khoản, doanh nghiệp và tin.", "talentbridge ats nen tang", "ứng viên", "nhà tuyển dụng", "quản trị"),
@@ -76,6 +81,9 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
         String groundedFallback = evidence.stream()
                 .map(entry -> entry.title() + ": " + entry.answer())
                 .collect(Collectors.joining("\n\n"));
+        if (FAST_FAQ_QUESTIONS.contains(normalizeFaqQuestion(message))) {
+            return new AssistantChatResult(groundedFallback, "KNOWLEDGE_BASE", references);
+        }
         if (!geminiApiClient.isConfigured()) {
             return new AssistantChatResult(groundedFallback, "KNOWLEDGE_BASE", references);
         }
@@ -158,6 +166,10 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
                 .replace('đ', 'd').replace('Đ', 'D')
                 .toLowerCase();
+    }
+
+    private static String normalizeFaqQuestion(String text) {
+        return normalize(text).replaceAll("[^a-z0-9+#]+", " ").trim().replaceAll("\\s+", " ");
     }
 
     private static KnowledgeEntry entry(String title, String answer, String keyText, String... extraKeywords) {

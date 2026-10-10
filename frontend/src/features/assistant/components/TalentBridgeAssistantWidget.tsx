@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Bot, X } from 'lucide-react'
 import { useLocation } from 'react-router'
+import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { AssistantChatPanel } from './AssistantChatPanel'
 
 export function TalentBridgeAssistantWidget() {
@@ -12,7 +13,16 @@ export function TalentBridgeAssistantWidget() {
         <div className="fixed bottom-5 right-5 z-[60] sm:bottom-7 sm:right-7">
             {isOpen && (
                 <div className="mb-3 h-[min(72vh,38rem)] w-[min(92vw,25rem)] drop-shadow-2xl">
-                    <AssistantChatPanel compact onClose={() => setIsOpen(false)} />
+                    <ErrorBoundary fallback={(
+                        <section className="rounded-2xl border border-rose-200 bg-white p-5 text-sm text-slate-700 shadow-xl" role="alert">
+                            <p>Trợ lý tạm thời gặp lỗi hiển thị.</p>
+                            <button className="mt-3 font-semibold text-indigo-700 underline" onClick={() => setIsOpen(false)} type="button">
+                                Đóng trợ lý
+                            </button>
+                        </section>
+                    )}>
+                        <AssistantChatPanel compact onClose={() => setIsOpen(false)} />
+                    </ErrorBoundary>
                 </div>
             )}
             <button
