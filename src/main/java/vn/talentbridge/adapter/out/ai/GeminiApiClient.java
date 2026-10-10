@@ -25,7 +25,7 @@ public class GeminiApiClient {
             @Value("${talentbridge.gemini.api-key:}") String apiKey,
             @Value("${talentbridge.gemini.api-base-url:https://generativelanguage.googleapis.com/v1beta}") String apiBaseUrl,
             @Value("${talentbridge.gemini.connect-timeout-ms:5000}") int connectTimeoutMs,
-            @Value("${talentbridge.gemini.read-timeout-ms:20000}") int readTimeoutMs
+            @Value("${talentbridge.gemini.read-timeout-ms:8000}") int readTimeoutMs
     ) {
         this(apiKey, apiBaseUrl, connectTimeoutMs, readTimeoutMs, null);
     }

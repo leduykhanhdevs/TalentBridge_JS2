@@ -1,5 +1,6 @@
 import { ArrowLeft, Bot } from 'lucide-react'
 import { Link } from 'react-router'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AssistantChatPanel } from '../features/assistant/components/AssistantChatPanel'
 import { getStoredUser } from '../features/auth/tokenStorage'
 
@@ -23,7 +24,16 @@ export function AssistantPage() {
                     <h1 className="text-2xl font-black text-slate-900">Trợ lý TalentBridge</h1>
                 </div>
             </div>
-            <AssistantChatPanel />
+            <ErrorBoundary fallback={(
+                <section className="rounded-2xl border border-rose-200 bg-white p-6 text-sm text-slate-700" role="alert">
+                    <p>Trợ lý tạm thời gặp lỗi hiển thị. Các mục khác của TalentBridge vẫn dùng được.</p>
+                    <button className="mt-3 font-semibold text-indigo-700 underline" onClick={() => window.location.reload()} type="button">
+                        Tải lại trợ lý
+                    </button>
+                </section>
+            )}>
+                <AssistantChatPanel />
+            </ErrorBoundary>
         </div>
     )
 }

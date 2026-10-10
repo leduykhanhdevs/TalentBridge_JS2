@@ -185,3 +185,17 @@
   - React `useEffect`, TypeScript, Vitest, Playwright, Vite và backend H2 cô lập qua `scripts/run-e2e.ps1`.
 - **Mục đích chức năng / việc đã làm**:
   - Giữ nguyên trang TalentBridge và widget chat khi trình duyệt/extension làm `scrollIntoView()` trả kết quả khác chuẩn; tránh một lỗi cleanup làm trắng toàn bộ giao diện.
+
+---
+
+## CÔ LẬP LỖI TRỢ LÝ VÀ GIẢM THỜI GIAN CHỜ - 10/10/2026
+- **Đã làm được gì**:
+  - Thêm React Error Boundary toàn ứng dụng và ranh giới riêng cho trang/widget trợ lý; lỗi render hoặc lazy import hiển thị thông báo phục hồi thay cho trang trắng.
+  - Mở đầu một yêu cầu health check nhẹ `GET /api/v1/health` khi ứng dụng tải để đánh thức backend trong lúc người dùng đọc trang; yêu cầu được chia sẻ, không gọi endpoint nghiệp vụ/DB.
+  - Ba câu hỏi mẫu trả lời trực tiếp từ knowledge base nội bộ, không gọi Gemini. Đặt Gemini read timeout mặc định 8 giây; lỗi upstream dùng câu trả lời dự phòng hiện có. Phía trình duyệt giới hạn request trợ lý 15 giây và thông báo timeout/kết nối rõ ràng.
+  - Playwright kiểm tra câu hỏi mẫu và tự nhập prompt ở trang trợ lý lẫn widget, phản hồi lỗi 503 và health warm-up. Chạy lại sau một lần lỗi tải động không tái hiện: 28 API E2E và 2 UI E2E pass; ảnh QA ở `artifacts/roleplay-qa/`. Frontend 84 tests pass, lint/build pass; Maven 290 tests pass, 0 failures/errors.
+  - Build hiện tại có bundle entry 341.08 KB / 101.48 KB gzip và lazy-load các trang; chưa có benchmark production sau deploy nên không ghi nhận mức tăng tốc tổng thể bằng con số. Gói Render Free vẫn có thể cold start.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - React Error Boundary, React Query, Fetch AbortController, Vite lazy imports, Playwright, Vitest, Spring Boot health endpoint, `RestClient` timeout, Gemini adapter và knowledge-base fallback; giữ gọi AI trong outbound adapter, không đưa Spring vào core.
+- **Mục đích chức năng / việc đã làm**:
+  - Ngăn lỗi hiển thị của chatbot thay toàn bộ giao diện bằng trang trắng, rút ngắn đường trả lời cho FAQ và khởi động backend sớm hơn. Cải thiện độ trễ là tối ưu có mục tiêu; cần deploy và đo cold/warm latency trước khi kết luận tốc độ production đã tăng.
