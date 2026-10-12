@@ -199,3 +199,49 @@
   - React Error Boundary, React Query, Fetch AbortController, Vite lazy imports, Playwright, Vitest, Spring Boot health endpoint, `RestClient` timeout, Gemini adapter và knowledge-base fallback; giữ gọi AI trong outbound adapter, không đưa Spring vào core.
 - **Mục đích chức năng / việc đã làm**:
   - Ngăn lỗi hiển thị của chatbot thay toàn bộ giao diện bằng trang trắng, rút ngắn đường trả lời cho FAQ và khởi động backend sớm hơn. Cải thiện độ trễ là tối ưu có mục tiêu; cần deploy và đo cold/warm latency trước khi kết luận tốc độ production đã tăng.
+
+---
+
+## CHUẨN BỊ CHUYỂN DATABASE SANG AMAZON RDS - 12/10/2026
+- **Đã làm được gì**:
+  - Tạo nhánh `fix/khanh/rds-mysql-cutover` và runbook cho quy trình backup, import TiDB, đối soát, cutover, rollback và giữ DB cũ trong thời gian soak.
+  - Cấu hình production không tự baseline schema và Hibernate chỉ validate cấu trúc; hỗ trợ tài khoản Flyway tách biệt, dự phòng dùng datasource account để tương thích cũ.
+  - Đóng gói CA bundle RDS Singapore thành truststore riêng trong Docker; runbook cấu hình MySQL Connector/J `sslMode=VERIFY_IDENTITY` và CA store cho kết nối.
+  - Tra AWS Price List Singapore: cấu hình tham khảo `db.t4g.micro` Single-AZ + 20 GiB gp3 khoảng 21.01 USD/tháng cơ sở; chưa gồm backup, truyền dữ liệu, CPU credits và thuế. Cần kiểm tra kích thước DB nguồn và estimate lại trước khi tạo.
+  - Bổ sung kiểm thử khởi động profile production với H2, chạy hai migration và kiểm tra Hibernate schema validation. `mvnw -B verify` pass: 291 tests, 0 failures/errors.
+  - Chưa tạo tài nguyên RDS, chưa dump/import/đối soát DB, chưa đổi datasource production hoặc xóa TiDB. Chưa có AWS/Render API credentials hoặc RDS endpoint/estimate trong môi trường làm việc.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Amazon RDS for MySQL; Spring Boot profile `prod`; Flyway `validate-on-migrate`/`baseline-on-migrate=false`; Hibernate `ddl-auto=validate`; MySQL Connector/J TLS `VERIFY_IDENTITY`; AWS CA bundle/PKCS12; Docker multi-stage build; H2 integration test.
+- **Mục đích chức năng / việc đã làm**: Chuẩn bị chuyển DB mà không để Hibernate tự sửa schema production; giữ nguyên lịch sử migration và dữ liệu, dùng xác thực chứng thư/hostname qua TLS, đồng thời giữ TiDB làm nguồn rollback đến khi dữ liệu RDS được kiểm chứng và chạy ổn định.
+
+---
+
+## PREFLIGHT READ-ONLY CHO RDS - 12/10/2026
+- **Đã làm được gì**:
+  - Qua TiDB Cloud Overview, xác nhận cluster `talentbridge` đang Active, plan STARTER, vùng Tokyo (`ap-northeast-1`), MySQL compatible; dung lượng hiển thị 0 MiB row-based và 0 MiB columnar.
+  - Chạy truy vấn chỉ đọc trên `information_schema.tables`: schema `test` có 29 bảng; `TABLE_ROWS` tổng ước tính 53; tổng metadata `data_length + index_length` là 2,304 byte. Không đọc nội dung hồ sơ/tài khoản.
+  - Kiểm tra danh sách RDS trên AWS Console ở Singapore và Sydney; cả hai vùng đều có 0 database.
+  - Khôi phục nguyên trạng câu SQL người dùng đang soạn trong TiDB Editor sau khi kết thúc truy vấn metadata.
+  - Chưa tạo tài nguyên, chưa đổi cấu hình production, chưa xuất/nhập dữ liệu và chưa xóa TiDB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: TiDB Cloud Overview; truy vấn metadata `information_schema.tables`; AWS RDS Console inventory; không thay đổi dữ liệu ứng dụng.
+- **Mục đích chức năng / việc đã làm**: Ước lượng sơ bộ nguồn trước khi chọn dung lượng RDS, kiểm tra tài nguyên đích đã tồn tại hay chưa, và phát hiện điểm cần xác nhận: schema nguồn tên `test` với số dòng ước tính rất thấp. Cần xác minh đúng đây là DB production và đối soát chính xác từng bảng trước cutover.
+
+---
+
+## CHUẨN BỊ BIỂU MẪU RDS AWS FREE - 12/10/2026
+- **Đã làm được gì**:
+  - Trong AWS Console vùng Singapore, chuẩn bị nhưng chưa gửi biểu mẫu tạo RDS MySQL Community 8.4.9: template Free tier, `db.t4g.micro`, Single-AZ, 20 GiB gp2, database `test`, bật mã hóa, backup tự động 7 ngày và deletion protection.
+  - Để Public access ở `No`; do đó Render chưa thể truy cập DB cho đến khi hoàn tất thiết kế kết nối mạng và firewall. Không mở cổng 3306 ra `0.0.0.0/0`.
+  - Chưa nhập master password và chưa bấm `Create database`; tài nguyên chưa được tạo. AWS Console hiển thị `0.029 USD/hour` cho lớp Free tier đã chọn, nên chưa thể khẳng định cấu hình không phát sinh phí hoặc credits của tài khoản sẽ bù hết.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: AWS RDS Console; RDS for MySQL; `db.t4g.micro`; EBS gp2; Single-AZ; AWS KMS encryption; automated backup; private VPC access.
+- **Mục đích chức năng / việc đã làm**: Chuẩn bị cấu hình DB đích tương thích ứng dụng và schema quan sát được, giữ mạng riêng và bảo vệ dữ liệu; chờ chủ tài khoản tự nhập master credential, xem lại billing/estimate và thực hiện bước tạo tài nguyên có thể tính phí.
+
+---
+
+## CẬP NHẬT TRẠNG THÁI KẾT NỐI RDS - 13/10/2026
+- **Đã làm được gì**:
+  - Xác nhận RDS `talentbridge-mysql` đã được tạo ở Singapore, nhưng chủ dự án xác nhận DB đích hiện còn trống, chưa import dữ liệu.
+  - Chạy lại `mvnw -B verify` trên JDK 21 tại nhánh `fix/khanh/rds-mysql-cutover`: BUILD SUCCESS; 291 tests, 0 failures, 0 errors. ArchUnit và production-profile integration test đều nằm trong lượt chạy này.
+  - PR #23 vẫn là thay đổi chuẩn bị cutover; CI trước đó đã pass nhưng PR chưa merge và chưa deploy. Chưa xác nhận kết nối runtime từ Render tới RDS; chưa thay datasource production, chưa import/đối soát dữ liệu và chưa xóa TiDB.
+  - Chưa đọc hoặc tiết lộ giá trị secret của Render/AWS. Việc chuyển DB đang chờ dump nguồn TiDB và thông tin kết nối được cấu hình an toàn để thực hiện import, đối soát rồi mới cutover.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Maven Wrapper với JDK 21; JUnit/Spring Boot integration tests chạy trên H2; ArchUnit; cấu hình production dùng Flyway và Hibernate schema validation; TLS MySQL/RDS `VERIFY_IDENTITY` đã chuẩn bị trong PR.
+- **Mục đích chức năng / việc đã làm**: Xác minh code chuyển đổi DB vượt qua kiểm thử mà không tác động production. Giữ nguyên DB đang phục vụ người dùng cho đến khi dữ liệu nguồn được chuyển đầy đủ và đối soát; kết quả test không được xem là bằng chứng Render đã kết nối RDS.
