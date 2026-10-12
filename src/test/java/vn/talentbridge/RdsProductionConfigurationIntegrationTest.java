@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
         "spring.flyway.url=jdbc:h2:mem:rdsProfile;DB_CLOSE_DELAY=-1;MODE=MySQL",
-        "JWT_SECRET=RdsProfileTestSecretKeyAtLeastThirtyTwoCharactersLong"
+        "TALENTBRIDGE_JWT_SECRET=RdsProfileTestSecretKeyAtLeastThirtyTwoCharactersLong"
 })
 @ActiveProfiles("prod")
 class RdsProductionConfigurationIntegrationTest {
@@ -33,6 +33,8 @@ class RdsProductionConfigurationIntegrationTest {
 
     @Test
     void productionProfileRunsKnownMigrationsAndValidatesTheSchemaWithoutBaselining() {
+        assertThat(environment.getProperty("talentbridge.jwt.secret"))
+                .isEqualTo("RdsProfileTestSecretKeyAtLeastThirtyTwoCharactersLong");
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
         assertThat(environment.getProperty("spring.flyway.baseline-on-migrate", Boolean.class)).isFalse();
         assertThat(environment.getProperty("spring.flyway.user")).isEqualTo("sa");

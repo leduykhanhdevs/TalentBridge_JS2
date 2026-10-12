@@ -35,7 +35,7 @@ public class JwtTokenProviderAdapter implements TokenProviderPort {
     @PostConstruct
     public void validateSecret() {
         if (jwtSecret == null || jwtSecret.trim().isEmpty() || jwtSecret.startsWith("${")) {
-            throw new IllegalStateException("JWT Secret must be configured via environment variable JWT_SECRET and cannot be blank");
+            throw new IllegalStateException("JWT Secret must be configured via TALENTBRIDGE_JWT_SECRET or JWT_SECRET and cannot be blank");
         }
     }
 

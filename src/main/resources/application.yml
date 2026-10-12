@@ -50,7 +50,7 @@ springdoc:
 
 talentbridge:
   jwt:
-    secret: "${JWT_SECRET}"
+    secret: "${TALENTBRIDGE_JWT_SECRET:${JWT_SECRET:}}"
     expiration-ms: 86400000 # 24 hours
     refresh-expiration-ms: 604800000 # 7 days
   cors:
