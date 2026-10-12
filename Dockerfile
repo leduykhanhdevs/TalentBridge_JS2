@@ -5,6 +5,21 @@ FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /build
 
+# Import the public Amazon RDS CA roots into a dedicated truststore. The JDBC
+# URL can then use sslMode=VERIFY_IDENTITY without replacing the JVM-wide
+# truststore used by other outbound HTTPS clients.
+RUN wget -qO /tmp/rds-region-bundle.pem https://truststore.pki.rds.amazonaws.com/ap-southeast-1/ap-southeast-1-bundle.pem \
+    && awk '/-----BEGIN CERTIFICATE-----/ { cert++; file=sprintf("/tmp/rds-ca-%02d.pem", cert) } file != "" { print > file } /-----END CERTIFICATE-----/ { close(file); file="" }' /tmp/rds-region-bundle.pem \
+    && for certificate in /tmp/rds-ca-*.pem; do \
+        keytool -importcert -noprompt -trustcacerts \
+            -alias "$(basename "$certificate" .pem)" \
+            -file "$certificate" \
+            -keystore /tmp/rds-ca-truststore.p12 \
+            -storetype PKCS12 \
+            -storepass changeit; \
+    done \
+    && keytool -list -keystore /tmp/rds-ca-truststore.p12 -storetype PKCS12 -storepass changeit >/dev/null
+
 # Copy Maven Wrapper and POM first to leverage layer cache
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
@@ -31,6 +46,7 @@ RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
 
 # Copy executable jar from builder stage
 COPY --from=builder --chown=appuser:appgroup /build/target/*.jar app.jar
+COPY --from=builder --chown=appuser:appgroup /tmp/rds-ca-truststore.p12 /app/rds-ca-truststore.p12
 
 # Switch to non-root user
 USER appuser

@@ -199,3 +199,15 @@
   - React Error Boundary, React Query, Fetch AbortController, Vite lazy imports, Playwright, Vitest, Spring Boot health endpoint, `RestClient` timeout, Gemini adapter và knowledge-base fallback; giữ gọi AI trong outbound adapter, không đưa Spring vào core.
 - **Mục đích chức năng / việc đã làm**:
   - Ngăn lỗi hiển thị của chatbot thay toàn bộ giao diện bằng trang trắng, rút ngắn đường trả lời cho FAQ và khởi động backend sớm hơn. Cải thiện độ trễ là tối ưu có mục tiêu; cần deploy và đo cold/warm latency trước khi kết luận tốc độ production đã tăng.
+
+---
+
+## CHUẨN BỊ CHUYỂN DATABASE SANG AMAZON RDS - 12/10/2026
+- **Đã làm được gì**:
+  - Tạo nhánh `fix/khanh/rds-mysql-cutover` và runbook cho quy trình backup, import TiDB, đối soát, cutover, rollback và giữ DB cũ trong thời gian soak.
+  - Cấu hình production không tự baseline schema và Hibernate chỉ validate cấu trúc; hỗ trợ tài khoản Flyway tách biệt, dự phòng dùng datasource account để tương thích cũ.
+  - Đóng gói CA bundle RDS Singapore thành truststore riêng trong Docker; runbook cấu hình MySQL Connector/J `sslMode=VERIFY_IDENTITY` và CA store cho kết nối.
+  - Bổ sung kiểm thử khởi động profile production với H2, chạy hai migration và kiểm tra Hibernate schema validation. `mvnw -B verify` pass: 291 tests, 0 failures/errors.
+  - Chưa tạo tài nguyên RDS, chưa dump/import/đối soát DB, chưa đổi datasource production hoặc xóa TiDB. Chưa có AWS/Render API credentials hoặc RDS endpoint/estimate trong môi trường làm việc.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Amazon RDS for MySQL; Spring Boot profile `prod`; Flyway `validate-on-migrate`/`baseline-on-migrate=false`; Hibernate `ddl-auto=validate`; MySQL Connector/J TLS `VERIFY_IDENTITY`; AWS CA bundle/PKCS12; Docker multi-stage build; H2 integration test.
+- **Mục đích chức năng / việc đã làm**: Chuẩn bị chuyển DB mà không để Hibernate tự sửa schema production; giữ nguyên lịch sử migration và dữ liệu, dùng xác thực chứng thư/hostname qua TLS, đồng thời giữ TiDB làm nguồn rollback đến khi dữ liệu RDS được kiểm chứng và chạy ổn định.
