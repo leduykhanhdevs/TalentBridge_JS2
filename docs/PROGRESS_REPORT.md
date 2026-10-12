@@ -224,3 +224,13 @@
   - Chưa tạo tài nguyên, chưa đổi cấu hình production, chưa xuất/nhập dữ liệu và chưa xóa TiDB.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: TiDB Cloud Overview; truy vấn metadata `information_schema.tables`; AWS RDS Console inventory; không thay đổi dữ liệu ứng dụng.
 - **Mục đích chức năng / việc đã làm**: Ước lượng sơ bộ nguồn trước khi chọn dung lượng RDS, kiểm tra tài nguyên đích đã tồn tại hay chưa, và phát hiện điểm cần xác nhận: schema nguồn tên `test` với số dòng ước tính rất thấp. Cần xác minh đúng đây là DB production và đối soát chính xác từng bảng trước cutover.
+
+---
+
+## CHUẨN BỊ BIỂU MẪU RDS AWS FREE - 12/10/2026
+- **Đã làm được gì**:
+  - Trong AWS Console vùng Singapore, chuẩn bị nhưng chưa gửi biểu mẫu tạo RDS MySQL Community 8.4.9: template Free tier, `db.t4g.micro`, Single-AZ, 20 GiB gp2, database `test`, bật mã hóa, backup tự động 7 ngày và deletion protection.
+  - Để Public access ở `No`; do đó Render chưa thể truy cập DB cho đến khi hoàn tất thiết kế kết nối mạng và firewall. Không mở cổng 3306 ra `0.0.0.0/0`.
+  - Chưa nhập master password và chưa bấm `Create database`; tài nguyên chưa được tạo. AWS Console hiển thị `0.029 USD/hour` cho lớp Free tier đã chọn, nên chưa thể khẳng định cấu hình không phát sinh phí hoặc credits của tài khoản sẽ bù hết.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: AWS RDS Console; RDS for MySQL; `db.t4g.micro`; EBS gp2; Single-AZ; AWS KMS encryption; automated backup; private VPC access.
+- **Mục đích chức năng / việc đã làm**: Chuẩn bị cấu hình DB đích tương thích ứng dụng và schema quan sát được, giữ mạng riêng và bảo vệ dữ liệu; chờ chủ tài khoản tự nhập master credential, xem lại billing/estimate và thực hiện bước tạo tài nguyên có thể tính phí.
