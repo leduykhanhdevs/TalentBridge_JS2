@@ -241,7 +241,50 @@
 - **Đã làm được gì**:
   - Xác nhận RDS `talentbridge-mysql` đã được tạo ở Singapore, nhưng chủ dự án xác nhận DB đích hiện còn trống, chưa import dữ liệu.
   - Chạy lại `mvnw -B verify` trên JDK 21 tại nhánh `fix/khanh/rds-mysql-cutover`: BUILD SUCCESS; 291 tests, 0 failures, 0 errors. ArchUnit và production-profile integration test đều nằm trong lượt chạy này.
-  - PR #23 vẫn là thay đổi chuẩn bị cutover; CI trước đó đã pass nhưng PR chưa merge và chưa deploy. Chưa xác nhận kết nối runtime từ Render tới RDS; chưa thay datasource production, chưa import/đối soát dữ liệu và chưa xóa TiDB.
-  - Chưa đọc hoặc tiết lộ giá trị secret của Render/AWS. Việc chuyển DB đang chờ dump nguồn TiDB và thông tin kết nối được cấu hình an toàn để thực hiện import, đối soát rồi mới cutover.
+  - PR #23 đã merge vào `dev` ngày 12/10/2026; PR #24 đã merge vào `main` bằng commit `e7a83b01f6659919127c82c639946ac94416bb88`. Các check Backend Build & Verify, Dockerfile Build Verification và Frontend Test/Lint/Build đều pass trên PR #24.
+  - Chạy `mvnw.cmd test` với JDK 21: 291 tests, 0 failures/errors; `mvnw.cmd clean package -DskipTests=true` cũng BUILD SUCCESS. Lượt test đầu dùng Java 8 và thất bại do runtime không hỗ trợ class version 65; chạy lại đúng JDK 21 thì pass.
+  - Smoke test production: `GET /api/v1/health` trả HTTP 200, `status: UP`; `GET /api/v1/jobs` trả HTTP 200 nhưng `totalElements: 0`. Hai endpoint này chưa chứng minh datasource đang là RDS; request health ban đầu timeout khi service chưa phản hồi rồi thành công sau đó.
+  - Sau đó kiểm tra kết nối TCP 3306 từ workstation tới RDS thành công qua rule `/32` tạm thời; rule này cần được gỡ sau khi xác minh Render.
+  - Đã tạo schema `talentbridge_db` cùng hai account `talentbridge_app` và `talentbridge_migrator`, đều bắt buộc TLS. Kiểm tra JDK 21/MySQL Connector/J xác nhận cả hai account đăng nhập TLS, app không có quyền DDL, migrator có quyền DDL cần thiết. Backend sau đó đã chạy Flyway V1/V2 thành công trên schema này.
+  - Password master chỉ được nhập tại cửa sổ PowerShell cục bộ với input ẩn. Credential cho Render được lưu trong thư mục Windows chỉ user hiện tại đọc được; không ghi secret vào Git, chat hoặc log.
+  - Chưa đổi biến môi trường Render, chưa deploy datasource lên Render hoặc đối soát dữ liệu production. Không xóa TiDB. Việc chạy Flyway bên dưới là từ một smoke test production-profile cục bộ, không phải deploy Render.
+  - Người dùng xác nhận RDS còn trống và cho phép tạo lại dữ liệu người dùng/tin tuyển dụng; không cần import bản sao dữ liệu TiDB để bắt đầu. TiDB vẫn được giữ làm đường lui đến khi RDS được xác minh.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Maven Wrapper với JDK 21; JUnit/Spring Boot integration tests chạy trên H2; ArchUnit; cấu hình production dùng Flyway và Hibernate schema validation; TLS MySQL/RDS `VERIFY_IDENTITY` đã chuẩn bị trong PR.
-- **Mục đích chức năng / việc đã làm**: Xác minh code chuyển đổi DB vượt qua kiểm thử mà không tác động production. Giữ nguyên DB đang phục vụ người dùng cho đến khi dữ liệu nguồn được chuyển đầy đủ và đối soát; kết quả test không được xem là bằng chứng Render đã kết nối RDS.
+- **Mục đích chức năng / việc đã làm**: Xác minh PR RDS đã lên `main`, CI/local tests xanh và backend production phản hồi; phân biệt smoke test API với bằng chứng datasource. RDS đã có schema đích và account riêng được kiểm thử TLS; việc chuyển Render datasource còn chờ PR và cấu hình Render.
+
+---
+
+## ĐỒNG BỘ BIẾN JWT GIỮA RENDER VÀ SPRING BOOT
+- **Thời gian**: 13/10/2026
+- **Đã làm được gì**:
+  - Phát hiện `render.yaml` tạo `TALENTBRIDGE_JWT_SECRET` nhưng `application.yml` chỉ đọc `JWT_SECRET`, khiến cấu hình deploy thiếu alias tương thích.
+  - Cập nhật Spring để ưu tiên `TALENTBRIDGE_JWT_SECRET`, vẫn chấp nhận `JWT_SECRET`; thông báo fail-fast nêu rõ cả hai tên biến.
+  - Sửa kiểm thử production profile để khởi động với riêng `TALENTBRIDGE_JWT_SECRET`; chạy test mục tiêu 4/4 pass và toàn bộ backend `mvnw.cmd test` 291/291 pass.
+  - PR #25 đã được mở từ nhánh `fix/khanh/rds-render-env-compat` vào `dev`; backend verify, Dockerfile build và frontend test/lint/build đều PASS. PR chưa được leader duyệt/merge; chưa deploy và không đọc/đổi secret Render.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot externalized configuration, YAML nested placeholder, JUnit/Spring Boot integration test, Maven Wrapper/JDK 21.
+- **Mục đích chức năng / việc đã làm**: Đảm bảo backend có thể đọc đúng tên secret được Render Blueprint tạo trước khi redeploy và cutover RDS.
+
+---
+
+## KHỞI TẠO SCHEMA VÀ ACCOUNT RDS - 13/10/2026
+- **Đã làm được gì**:
+  - Xác minh kết nối TCP từ workstation đến RDS Singapore trên cổng 3306; security rule workstation là `/32` tạm thời, còn Render allowlist giữ nguyên.
+  - Tạo schema `talentbridge_db` trên RDS MySQL với charset/collation `utf8mb4`; sau đó smoke test production-profile đã áp dụng Flyway V1/V2 và Hibernate xác thực mapping thành công.
+  - Tạo hai account riêng có `REQUIRE SSL`: `talentbridge_app` chỉ có quyền DML, `talentbridge_migrator` có quyền DML và các quyền DDL Flyway cần.
+  - Kiểm thử trực tiếp cả hai account bằng MySQL Connector/J 9.3 và CA bundle AWS Singapore: `sslMode=VERIFY_IDENTITY`, `SELECT 1` thành công; quyền ứng dụng không có DDL; số bảng ban đầu bằng 0 trước Flyway.
+  - Sinh mật khẩu cục bộ và lưu trong tệp nằm dưới ACL chỉ user Windows hiện tại đọc được. Chưa thay đổi datasource Render, chưa redeploy và chưa xóa TiDB.
+  - PR #25 (`fix(render): accept configured TalentBridge JWT secret`) đã có đủ 3 CI checks PASS nhưng chưa merge theo quy trình leader review. GitHub secret `RENDER_DEPLOY_HOOK_URL` chưa được cấu hình nên CD hiện không tự gọi Render.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Amazon RDS MySQL; AWS Singapore CA bundle; MySQL Connector/J 9.3; Java 21; TLS `VERIFY_IDENTITY`; MySQL least-privilege grants; Windows ACL; GitHub Actions CI/CD.
+- **Mục đích chức năng / việc đã làm**: Chuẩn bị database an toàn, tách quyền runtime khỏi quyền migration, xác minh TLS và chạy Flyway/Hibernate validation từ production profile cục bộ trước khi cấu hình datasource Render.
+
+---
+
+## KIỂM CHỨNG BACKEND PRODUCTION PROFILE KẾT NỐI RDS - 13/10/2026
+- **Đã làm được gì**:
+  - Khởi động JAR bằng JDK 21 với profile `prod`, đọc credential từ tệp cục bộ giới hạn ACL; không đưa secret vào chat, Git hoặc log. Tắt bootstrap admin trong smoke test và dùng JWT secret tạm thời.
+  - Kết nối RDS Singapore bằng TLS `VERIFY_IDENTITY`; Flyway xác thực 2 migration và áp dụng V1/V2 thành công, schema đạt version v2.
+  - Hibernate khởi tạo `EntityManagerFactory`, `ddl-auto=validate` không báo lỗi schema; ứng dụng báo `Started TalentBridgeApplication`, process exit code 0 và Hikari đóng kết nối sạch.
+  - Đây là kiểm chứng backend cục bộ truy cập RDS thật; chưa chứng minh Render đang dùng RDS. Không tạo tài khoản/job dữ liệu mẫu, không đổi Render env, không deploy và không xóa TiDB.
+  - Flyway cảnh báo MySQL 8.4 mới hơn bản đã được kiểm thử hỗ trợ (MySQL 8.1); migration vẫn hoàn tất thành công. Cần cân nhắc nâng Flyway và kiểm thử lại trước khi coi cảnh báo tương thích đã được xử lý.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot production profile; JDK 21; MySQL Connector/J; TLS `VERIFY_IDENTITY` với CA bundle AWS Singapore; Flyway V1/V2; Hibernate schema validation; HikariCP.
+- **Mục đích chức năng / việc đã làm**: Chứng minh backend build hiện tại có thể kết nối RDS thật, chạy migration và khởi động JPA mà không phụ thuộc H2. Tạo cơ sở an toàn cho bước cấu hình Render, rồi mới tái tạo dữ liệu ứng dụng.
