@@ -2,7 +2,7 @@
 
 ## Phạm vi và trạng thái đã xác minh
 
-Backend đã dùng MySQL Connector/J và profile `prod` nhận URL, username, password qua biến môi trường. Báo cáo triển khai gần nhất trong repository ghi nhận TiDB Cloud là DB production; cần xác nhận lại trên Render/TiDB trước khi chạy vì thông tin đó có thể đã thay đổi. Workspace hiện chưa có AWS CLI profile, AWS API credentials hoặc Render API credential để kiểm tra/tạo tài nguyên cloud.
+Backend đã dùng MySQL Connector/J và profile `prod` nhận URL, username, password qua biến môi trường. TiDB Cloud là DB nguồn cần giữ nguyên trong suốt quá trình chuyển. Theo lần kiểm tra AWS Console gần nhất ngày 12/10/2026, RDS `talentbridge-mysql` ở Singapore đã ở trạng thái `Available`, endpoint `talentbridge-mysql.c9g0sug2exjs.ap-southeast-1.rds.amazonaws.com`, database ban đầu `test`. Security group chỉ cho TCP 3306 từ hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`; `Publicly accessible` được bật. Đây chỉ là cấu hình mạng, chưa phải bằng chứng Render đã kết nối hoặc xác thực DB thành công. Người dùng xác nhận RDS hiện còn trống, chưa import dữ liệu. Workspace không có AWS/Render API credentials để thao tác cloud bằng API; không đọc secret đã che trong dashboard.
 
 Runbook này không yêu cầu đổi mô hình Hexagonal Architecture: cấu hình DB nằm ở composition/configuration layer, migration vẫn do Flyway quản lý, còn core domain/application không phụ thuộc RDS hay Spring Data.
 
@@ -11,8 +11,8 @@ Runbook này không yêu cầu đổi mô hình Hexagonal Architecture: cấu h�
 1. Dùng Amazon RDS for MySQL trong `ap-southeast-1` (Singapore), gần Render backend đang ở Singapore. Chọn phiên bản MySQL 8 tương thích với schema hiện tại.
 2. Chốt instance, storage, backup retention và giá dự kiến trong AWS Pricing Calculator trước khi tạo. Single-AZ có thể là cấu hình khởi điểm chi phí thấp cho dự án demo; không coi Free Tier là chắc chắn nếu chưa kiểm tra điều kiện tài khoản. Bật encryption at rest, automated backups, deletion protection và đặt retention tối thiểu 7 ngày.
    - Mốc tham khảo từ AWS Price List `ap-southeast-1`, kiểm tra ngày 12/10/2026: `db.t4g.micro` Single-AZ là `$0.025/giờ` (khoảng `$18.25` cho 730 giờ); gp3 MySQL là `$0.138/GiB-tháng`, nên 20 GiB khoảng `$2.76`; tổng cơ sở của cấu hình mẫu 20 GiB là **khoảng `$21.01/tháng`**. Đây chưa phải báo giá cuối: chưa gồm backup vượt mức miễn phí, data transfer, thuế, và CPU credits T4g khi vượt baseline (`$0.075/vCPU-giờ`). Kiểm tra kích thước DB nguồn trước khi chọn 20 GiB; nếu vượt thì tính lại. Giá có thể thay đổi, hãy kiểm tra lại bằng [AWS Pricing Calculator](https://calculator.aws/) trước lúc tạo. Nguồn: [AWS Price List cho RDS tại Singapore](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-southeast-1/index.json), [RDS MySQL pricing](https://aws.amazon.com/rds/mysql/pricing/).
-3. Tạo DB name khớp với schema nguồn sau khi đọc giá trị datasource hiện tại; không suy ra tên DB từ tài liệu cũ. Không dùng RDS master user trong ứng dụng. Tạo tài khoản runtime riêng cho CRUD và tài khoản migration riêng có quyền DDL mà Flyway cần trên đúng database. Cấu hình chúng bằng `SPRING_DATASOURCE_USERNAME/PASSWORD` và `SPRING_FLYWAY_USER/PASSWORD`; nếu hai biến Flyway chưa đặt, ứng dụng tương thích ngược bằng cách dùng datasource account.
-4. RDS phải có kết nối từ Render backend. Nếu dùng public endpoint, chỉ bật TLS và chỉ cho phép port `3306` từ outbound CIDR của đúng Render service tại **Connect → Outbound**. Các CIDR mặc định của Render được dùng chung trong region; nếu yêu cầu allowlist riêng, cần dedicated outbound IP (dịch vụ tính phí) hoặc đổi kiến trúc để app và RDS cùng private network. Không mở `3306` cho `0.0.0.0/0`.
+3. RDS hiện được khởi tạo với database `test`, trùng schema quan sát được ở TiDB trong preflight ngày 12/10; phải xác nhận lại datasource production trước khi import. Không dùng RDS master user trong ứng dụng. Tạo tài khoản runtime riêng cho CRUD và tài khoản migration riêng có quyền DDL mà Flyway cần trên đúng database. Cấu hình chúng bằng `SPRING_DATASOURCE_USERNAME/PASSWORD` và `SPRING_FLYWAY_USER/PASSWORD`; nếu hai biến Flyway chưa đặt, ứng dụng tương thích ngược bằng cách dùng datasource account.
+4. Security group RDS đã được cấu hình inbound TCP 3306 chỉ từ hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`, không mở `0.0.0.0/0`. Cấu hình này và `Publicly accessible` được kiểm tra trên AWS Console ngày 12/10/2026; vẫn cần kiểm thử kết nối TLS/authentication từ chính Render backend trước cutover. Nếu outbound CIDR của service thay đổi, cập nhật allowlist theo **Connect → Outbound**. Các CIDR mặc định của Render được dùng chung trong region; dedicated outbound IP có thể phát sinh phí hoặc cần đổi kiến trúc sang private networking.
 5. Trong URL production, bật `sslMode=VERIFY_IDENTITY`, dùng endpoint DNS của RDS, và truststore `/app/rds-ca-truststore.p12` đã được đóng gói vào image. Ví dụ, thay placeholder bằng endpoint/schema thật:
 
    ```text
@@ -35,9 +35,9 @@ Runbook này không yêu cầu đổi mô hình Hexagonal Architecture: cấu h�
 
 ## Hạn chế hiện tại
 
-- Không có AWS API/CLI credential được cấu hình trong môi trường làm việc; chưa có RDS endpoint, instance, security group hay estimate giá thực tế.
-- Chưa truy cập được secret datasource của Render hoặc TiDB để dump dữ liệu. Không yêu cầu gửi password vào chat; cần dashboard session hoặc người dùng tự cấu hình secrets.
-- Vì chưa có RDS và dump nguồn, chưa thể khẳng định data migration, production deploy hoặc việc xóa TiDB đã hoàn tất.
+- RDS đã tồn tại, nhưng người dùng xác nhận database đích còn trống. Chưa có dump nguồn được kiểm tra, chưa import/đối soát dữ liệu.
+- Chưa xác nhận lại secret datasource của Render/TiDB và không đọc các giá trị bị che. Chưa có bằng chứng backend trên Render mở được kết nối TLS và đăng nhập vào RDS.
+- TiDB vẫn là nguồn production cần được giữ lại cho đến khi backup khôi phục được, đối soát đạt và thời gian soak hoàn tất. Chưa đổi datasource production, chưa deploy cutover và chưa xóa TiDB.
 
 ## Kết quả preflight chỉ đọc - 12/10/2026
 
@@ -46,6 +46,13 @@ Runbook này không yêu cầu đổi mô hình Hexagonal Architecture: cấu h�
 - AWS RDS inventory được kiểm tra trong hai vùng Singapore (`ap-southeast-1`) và Sydney (`ap-southeast-2`); cả hai đều hiển thị **0 databases**.
 - Kích thước hiện thấy nhỏ hơn đáng kể so với cấu hình mẫu 20 GiB, nhưng schema tên `test` cùng số dòng ước tính thấp là dấu hiệu cần xác nhận đây đúng là nguồn đang phục vụ production và có đủ dữ liệu nghiệp vụ mong muốn. Chưa được cutover chỉ dựa trên số liệu này.
 - Chưa có bằng chứng về snapshot/export đã kiểm thử phục hồi, số dòng chính xác theo từng bảng, hoặc dữ liệu production. TiDB vẫn là nguồn hiện tại và không bị thay đổi/xóa trong preflight.
+
+## Trạng thái tích hợp sau khi tạo RDS - 13/10/2026
+
+- RDS `talentbridge-mysql` đã được tạo tại Singapore; AWS Console lần gần nhất xác nhận `Available`, database `test`, endpoint `talentbridge-mysql.c9g0sug2exjs.ap-southeast-1.rds.amazonaws.com`, public access bật và security group giới hạn TCP 3306 theo hai CIDR Render nêu trên. Cấu hình Free plan dùng backup retention 1 ngày do AWS từ chối retention 7 ngày ở lần tạo trước; cần xem lại yêu cầu khôi phục trước khi vận hành lâu dài.
+- Người dùng xác nhận chưa import dữ liệu. Vì vậy RDS vẫn là đích trống; không đổi datasource production sang đây trước khi dump TiDB được nhập và đối soát để tránh làm người dùng mất dữ liệu hiện hành.
+- PR #23 (`fix/khanh/rds-mysql-cutover`) chứa thay đổi cấu hình TLS/Flyway/schema validation và integration test, đang mở, chưa merge/deploy. Kiểm tra cục bộ ngày 13/10 bằng JDK 21: `mvnw -B verify` thành công, 291 tests, 0 failures/errors. Kết quả này xác nhận code/test, không xác nhận kết nối cloud.
+- Tiếp theo: tạo và kiểm tra backup TiDB; nhập vào RDS; đối soát số dòng chính xác theo từng bảng và các liên kết nghiệp vụ; sau đó mới cấu hình datasource secrets trên Render, deploy có chủ đích và smoke test. Không gửi password qua chat.
 
 ## Tài liệu kỹ thuật tham khảo
 

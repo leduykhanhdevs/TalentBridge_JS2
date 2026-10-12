@@ -234,3 +234,14 @@
   - Chưa nhập master password và chưa bấm `Create database`; tài nguyên chưa được tạo. AWS Console hiển thị `0.029 USD/hour` cho lớp Free tier đã chọn, nên chưa thể khẳng định cấu hình không phát sinh phí hoặc credits của tài khoản sẽ bù hết.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: AWS RDS Console; RDS for MySQL; `db.t4g.micro`; EBS gp2; Single-AZ; AWS KMS encryption; automated backup; private VPC access.
 - **Mục đích chức năng / việc đã làm**: Chuẩn bị cấu hình DB đích tương thích ứng dụng và schema quan sát được, giữ mạng riêng và bảo vệ dữ liệu; chờ chủ tài khoản tự nhập master credential, xem lại billing/estimate và thực hiện bước tạo tài nguyên có thể tính phí.
+
+---
+
+## CẬP NHẬT TRẠNG THÁI KẾT NỐI RDS - 13/10/2026
+- **Đã làm được gì**:
+  - Xác nhận RDS `talentbridge-mysql` đã được tạo ở Singapore, nhưng chủ dự án xác nhận DB đích hiện còn trống, chưa import dữ liệu.
+  - Chạy lại `mvnw -B verify` trên JDK 21 tại nhánh `fix/khanh/rds-mysql-cutover`: BUILD SUCCESS; 291 tests, 0 failures, 0 errors. ArchUnit và production-profile integration test đều nằm trong lượt chạy này.
+  - PR #23 vẫn là thay đổi chuẩn bị cutover; CI trước đó đã pass nhưng PR chưa merge và chưa deploy. Chưa xác nhận kết nối runtime từ Render tới RDS; chưa thay datasource production, chưa import/đối soát dữ liệu và chưa xóa TiDB.
+  - Chưa đọc hoặc tiết lộ giá trị secret của Render/AWS. Việc chuyển DB đang chờ dump nguồn TiDB và thông tin kết nối được cấu hình an toàn để thực hiện import, đối soát rồi mới cutover.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Maven Wrapper với JDK 21; JUnit/Spring Boot integration tests chạy trên H2; ArchUnit; cấu hình production dùng Flyway và Hibernate schema validation; TLS MySQL/RDS `VERIFY_IDENTITY` đã chuẩn bị trong PR.
+- **Mục đích chức năng / việc đã làm**: Xác minh code chuyển đổi DB vượt qua kiểm thử mà không tác động production. Giữ nguyên DB đang phục vụ người dùng cho đến khi dữ liệu nguồn được chuyển đầy đủ và đối soát; kết quả test không được xem là bằng chứng Render đã kết nối RDS.
