@@ -212,3 +212,15 @@
   - Chưa tạo tài nguyên RDS, chưa dump/import/đối soát DB, chưa đổi datasource production hoặc xóa TiDB. Chưa có AWS/Render API credentials hoặc RDS endpoint/estimate trong môi trường làm việc.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Amazon RDS for MySQL; Spring Boot profile `prod`; Flyway `validate-on-migrate`/`baseline-on-migrate=false`; Hibernate `ddl-auto=validate`; MySQL Connector/J TLS `VERIFY_IDENTITY`; AWS CA bundle/PKCS12; Docker multi-stage build; H2 integration test.
 - **Mục đích chức năng / việc đã làm**: Chuẩn bị chuyển DB mà không để Hibernate tự sửa schema production; giữ nguyên lịch sử migration và dữ liệu, dùng xác thực chứng thư/hostname qua TLS, đồng thời giữ TiDB làm nguồn rollback đến khi dữ liệu RDS được kiểm chứng và chạy ổn định.
+
+---
+
+## PREFLIGHT READ-ONLY CHO RDS - 12/10/2026
+- **Đã làm được gì**:
+  - Qua TiDB Cloud Overview, xác nhận cluster `talentbridge` đang Active, plan STARTER, vùng Tokyo (`ap-northeast-1`), MySQL compatible; dung lượng hiển thị 0 MiB row-based và 0 MiB columnar.
+  - Chạy truy vấn chỉ đọc trên `information_schema.tables`: schema `test` có 29 bảng; `TABLE_ROWS` tổng ước tính 53; tổng metadata `data_length + index_length` là 2,304 byte. Không đọc nội dung hồ sơ/tài khoản.
+  - Kiểm tra danh sách RDS trên AWS Console ở Singapore và Sydney; cả hai vùng đều có 0 database.
+  - Khôi phục nguyên trạng câu SQL người dùng đang soạn trong TiDB Editor sau khi kết thúc truy vấn metadata.
+  - Chưa tạo tài nguyên, chưa đổi cấu hình production, chưa xuất/nhập dữ liệu và chưa xóa TiDB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: TiDB Cloud Overview; truy vấn metadata `information_schema.tables`; AWS RDS Console inventory; không thay đổi dữ liệu ứng dụng.
+- **Mục đích chức năng / việc đã làm**: Ước lượng sơ bộ nguồn trước khi chọn dung lượng RDS, kiểm tra tài nguyên đích đã tồn tại hay chưa, và phát hiện điểm cần xác nhận: schema nguồn tên `test` với số dòng ước tính rất thấp. Cần xác minh đúng đây là DB production và đối soát chính xác từng bảng trước cutover.

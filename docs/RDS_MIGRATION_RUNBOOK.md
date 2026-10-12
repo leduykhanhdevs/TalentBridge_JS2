@@ -39,6 +39,14 @@ Runbook này không yêu cầu đổi mô hình Hexagonal Architecture: cấu h�
 - Chưa truy cập được secret datasource của Render hoặc TiDB để dump dữ liệu. Không yêu cầu gửi password vào chat; cần dashboard session hoặc người dùng tự cấu hình secrets.
 - Vì chưa có RDS và dump nguồn, chưa thể khẳng định data migration, production deploy hoặc việc xóa TiDB đã hoàn tất.
 
+## Kết quả preflight chỉ đọc - 12/10/2026
+
+- Trên TiDB Cloud, cluster `talentbridge` đang **Active**, plan **STARTER**, vùng **Tokyo (`ap-northeast-1`)**, tương thích MySQL; Overview báo **Row-based Storage: 0 MiB** và **Columnar Storage: 0 MiB**.
+- SQL Editor liệt kê schema nghiệp vụ `test`. Truy vấn chỉ đọc `information_schema.tables` trả về **29 bảng**, tổng `TABLE_ROWS` ước tính **53**, tổng `data_length + index_length` **2,304 byte**. Đây là số liệu metadata/ước tính, không thay thế dump hoặc kiểm đếm chính xác từng bảng.
+- AWS RDS inventory được kiểm tra trong hai vùng Singapore (`ap-southeast-1`) và Sydney (`ap-southeast-2`); cả hai đều hiển thị **0 databases**.
+- Kích thước hiện thấy nhỏ hơn đáng kể so với cấu hình mẫu 20 GiB, nhưng schema tên `test` cùng số dòng ước tính thấp là dấu hiệu cần xác nhận đây đúng là nguồn đang phục vụ production và có đủ dữ liệu nghiệp vụ mong muốn. Chưa được cutover chỉ dựa trên số liệu này.
+- Chưa có bằng chứng về snapshot/export đã kiểm thử phục hồi, số dòng chính xác theo từng bảng, hoặc dữ liệu production. TiDB vẫn là nguồn hiện tại và không bị thay đổi/xóa trong preflight.
+
 ## Tài liệu kỹ thuật tham khảo
 
 - [Amazon RDS for MySQL pricing](https://aws.amazon.com/rds/mysql/pricing/) — phí instance-hours, storage, backups và CPU credits.
