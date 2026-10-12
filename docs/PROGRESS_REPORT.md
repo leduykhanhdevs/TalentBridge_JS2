@@ -207,6 +207,7 @@
   - Tạo nhánh `fix/khanh/rds-mysql-cutover` và runbook cho quy trình backup, import TiDB, đối soát, cutover, rollback và giữ DB cũ trong thời gian soak.
   - Cấu hình production không tự baseline schema và Hibernate chỉ validate cấu trúc; hỗ trợ tài khoản Flyway tách biệt, dự phòng dùng datasource account để tương thích cũ.
   - Đóng gói CA bundle RDS Singapore thành truststore riêng trong Docker; runbook cấu hình MySQL Connector/J `sslMode=VERIFY_IDENTITY` và CA store cho kết nối.
+  - Tra AWS Price List Singapore: cấu hình tham khảo `db.t4g.micro` Single-AZ + 20 GiB gp3 khoảng 21.01 USD/tháng cơ sở; chưa gồm backup, truyền dữ liệu, CPU credits và thuế. Cần kiểm tra kích thước DB nguồn và estimate lại trước khi tạo.
   - Bổ sung kiểm thử khởi động profile production với H2, chạy hai migration và kiểm tra Hibernate schema validation. `mvnw -B verify` pass: 291 tests, 0 failures/errors.
   - Chưa tạo tài nguyên RDS, chưa dump/import/đối soát DB, chưa đổi datasource production hoặc xóa TiDB. Chưa có AWS/Render API credentials hoặc RDS endpoint/estimate trong môi trường làm việc.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Amazon RDS for MySQL; Spring Boot profile `prod`; Flyway `validate-on-migrate`/`baseline-on-migrate=false`; Hibernate `ddl-auto=validate`; MySQL Connector/J TLS `VERIFY_IDENTITY`; AWS CA bundle/PKCS12; Docker multi-stage build; H2 integration test.
