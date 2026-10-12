@@ -19,6 +19,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    validate-on-migrate: true
     locations: classpath:db/migration
   h2:
     console:
@@ -143,9 +144,13 @@ spring:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    # A production database must have Flyway history; never baseline an
+    # existing schema implicitly during a cutover.
+    baseline-on-migrate: false
+    user: "${SPRING_FLYWAY_USER:${SPRING_DATASOURCE_USERNAME}}"
+    password: "${SPRING_FLYWAY_PASSWORD:${SPRING_DATASOURCE_PASSWORD}}"
 

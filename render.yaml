@@ -18,11 +18,15 @@ services:
       - key: TALENTBRIDGE_JWT_SECRET
         generateValue: true
       - key: SPRING_DATASOURCE_URL
-        sync: false # Điền URL MySQL Cloud (VD: Aiven / Clever Cloud)
+        sync: false # JDBC URL MySQL Cloud; khi chuyển RDS dùng sslMode=VERIFY_IDENTITY và truststore trong Docker image
       - key: SPRING_DATASOURCE_USERNAME
-        sync: false # Điền username MySQL
+        sync: false # Tài khoản ứng dụng DB, không dùng master account RDS
       - key: SPRING_DATASOURCE_PASSWORD
-        sync: false # Điền password MySQL
+        sync: false # Secret DB chỉ lưu trong Render Environment
+      - key: SPRING_FLYWAY_USER
+        sync: false # Optional migration account; defaults to datasource account when unset
+      - key: SPRING_FLYWAY_PASSWORD
+        sync: false # Optional migration secret; defaults to datasource password when unset
       - key: GEMINI_API_KEY
         sync: false # Điền Gemini API Key
       - key: CORS_ALLOWED_ORIGINS
