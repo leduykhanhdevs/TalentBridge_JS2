@@ -19,7 +19,7 @@ class JwtSecretFailFastTest {
             assertThat(context).hasFailed();
             assertThat(context.getStartupFailure().getCause())
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("JWT Secret must be configured via environment variable JWT_SECRET and cannot be blank");
+                    .hasMessageContaining("JWT Secret must be configured via TALENTBRIDGE_JWT_SECRET or JWT_SECRET and cannot be blank");
         });
     }
 
@@ -32,7 +32,7 @@ class JwtSecretFailFastTest {
                     assertThat(context).hasFailed();
                     assertThat(context.getStartupFailure().getCause())
                             .isInstanceOf(IllegalStateException.class)
-                            .hasMessageContaining("JWT Secret must be configured via environment variable JWT_SECRET and cannot be blank");
+                            .hasMessageContaining("JWT Secret must be configured via TALENTBRIDGE_JWT_SECRET or JWT_SECRET and cannot be blank");
                 });
     }
 
