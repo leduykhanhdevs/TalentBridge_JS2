@@ -1,116 +1,73 @@
-# HƯỚNG DẪN TRIỂN KHAI TALENTBRIDGE LÊN NỀN TẢNG CLOUD RENDER
+# Hướng dẫn triển khai TalentBridge trên Render và Amazon RDS
 
-> **Tài liệu chuẩn hóa**: Triển khai trọn gói Full-stack (Spring Boot 3 + React 19 + Cloud MySQL) trên Render Free Tier.
+Tài liệu này mô tả cấu hình hiện tại của TalentBridge: React/Vite trên Render Static Site, Spring Boot 3 trên Render Web Service và MySQL trên Amazon RDS Singapore. Mật khẩu, JWT secret, Gemini key và Deploy Hook URL chỉ lưu trong dashboard tương ứng; không ghi chúng vào Git hoặc chat.
 
----
+## Kiến trúc triển khai
 
-## 1. TỔNG QUAN KIẾN TRÚC TRIỂN KHAI
+| Thành phần | Nền tảng | Cấu hình |
+| --- | --- | --- |
+| Frontend | Render Static Site | React 19, Vite, thư mục xuất bản frontend/dist |
+| Backend | Render Web Service | Spring Boot 3, Docker, Java 21 |
+| Database | Amazon RDS for MySQL | Singapore (ap-southeast-1), TLS VERIFY_IDENTITY |
 
-```
-┌─────────────────────────────────┐       ┌─────────────────────────────────┐
-│     TALENTBRIDGE FRONTEND       │       │      TALENTBRIDGE BACKEND       │
-│      Render Static Site         │──────►│       Render Web Service        │
-│   (React 19 + Vite SPA dist)    │       │     (Docker Container JRE 21)   │
-└─────────────────────────────────┘       └────────────────┬────────────────┘
-                                                           │
-                                                           ▼
-                                          ┌─────────────────────────────────┐
-                                          │         CLOUD MYSQL DB          │
-                                          │     (Aiven / Clever Cloud)      │
-                                          │    Bảo lưu 103 việc làm & 3NF   │
-                                          └─────────────────────────────────┘
-```
+Tên các dịch vụ Render trong Blueprint là talentbridge-frontend và talentbridge-backend. Blueprint hiện đặt autoDeploy: false; phát hành production được kích hoạt qua GitHub Actions khi có push vào main.
 
----
+## Biến môi trường backend
 
-## 2. BƯỚC 1: KHỞI TẠO CƠ SỞ DỮ LIỆU CLOUD MYSQL MIỄN PHÍ
+Lưu các giá trị sau trong **Render → talentbridge-backend → Environment**:
 
-Để giữ nguyên vẹn 100% CSDL MySQL và 103 tin tuyển dụng mẫu mà không tốn phí:
+- SPRING_PROFILES_ACTIVE=prod
+- SPRING_DATASOURCE_URL: JDBC URL trỏ tới schema TalentBridge trên RDS; bật sslMode=VERIFY_IDENTITY và truststore /app/rds-ca-truststore.p12.
+- SPRING_DATASOURCE_USERNAME và SPRING_DATASOURCE_PASSWORD: tài khoản runtime có quyền DML, không dùng master account RDS.
+- SPRING_FLYWAY_USER và SPRING_FLYWAY_PASSWORD: tài khoản migration có quyền DDL; nếu để trống, cấu hình hiện tại dùng lại tài khoản datasource.
+- TALENTBRIDGE_JWT_SECRET: chuỗi ngẫu nhiên bảo mật. Ứng dụng vẫn hỗ trợ alias cũ JWT_SECRET.
+- CORS_ALLOWED_ORIGINS: URL origin chính xác của frontend, không thêm đường dẫn API và không dùng * trong production.
+- GEMINI_API_KEY: tùy chọn nếu bật gọi Gemini; chatbot nội bộ vẫn có tri thức dự phòng khi nhà cung cấp AI không khả dụng.
+- RATE_LIMIT_ENABLED=true.
 
-1. Truy cập [Aiven.io](https://aiven.io/) hoặc [Clever Cloud](https://www.clever-cloud.com/) (đều có gói Free vĩnh viễn không cần thẻ tín dụng).
-2. Tạo 1 dịch vụ **MySQL Free**:
-   - Chọn Region gần nhất (Singapore hoặc Châu Á).
-   - Đặt tên database: `talentbridge_db`.
-3. Sau khi tạo xong, lấy thông tin kết nối:
-   - **Host**: `mysql-xxx.aivencloud.com`
-   - **Port**: `xxx`
-   - **User**: `avnadmin` (hoặc root)
-   - **Password**: `xxx`
-   - **JDBC URL**: `jdbc:mysql://<Host>:<Port>/talentbridge_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh`
-4. Chạy tệp `database/schema.sql` vào database mới tạo để khởi tạo 27 bảng.
+Mẫu URL JDBC có cấu trúc:
 
----
+jdbc:mysql://<RDS-endpoint>:3306/<database>?sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreUrl=file:/app/rds-ca-truststore.p12&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStorePassword=changeit&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
 
-## 3. BƯỚC 2: TRIỂN KHAI BACKEND LÊN RENDER
+Thay endpoint và tên database theo giá trị đang dùng. changeit bảo vệ truststore chứa CA công khai, không phải mật khẩu database. Không lưu mật khẩu trong URL.
 
-1. Đăng nhập [Render Dashboard](https://dashboard.render.com/).
-2. Chọn **New +** $\to$ **Web Service**.
-3. Kết nối với GitHub Repository: `leduykhanhdevs/TalentBridge_JS2`.
-4. Điền các thông số:
-   - **Name**: `talentbridge-backend`
-   - **Region**: Singapore
-   - **Branch**: `main`
-   - **Runtime**: `Docker` (Render sẽ tự động dùng file `Dockerfile` đã tối ưu hóa).
-   - **Instance Type**: `Free`
-5. Thêm các biến môi trường (**Environment Variables**):
-   - `SPRING_PROFILES_ACTIVE`: `prod`
-   - `SPRING_DATASOURCE_URL`: *(Điền JDBC URL từ Bước 1)*
-   - `SPRING_DATASOURCE_USERNAME`: *(Điền user MySQL)*
-   - `SPRING_DATASOURCE_PASSWORD`: *(Điền password MySQL)*
-   - `TALENTBRIDGE_JWT_SECRET`: *(Tạo 1 chuỗi ngẫu nhiên tối thiểu 32 ký tự)*
-   - `GEMINI_API_KEY`: *(Điền Gemini API Key của bạn)*
-   - `GEMINI_MODEL`: *(Tùy chọn; mặc định `gemini-3.5-flash-lite`)*
-   - `DB_POOL_MAX_SIZE`: *(Tùy chọn; mặc định `5` kết nối)*
-   - `CORS_ALLOWED_ORIGINS`: `*` *(sau khi có link frontend sẽ đổi lại link frontend)*
-6. Bấm **Create Web Service**. Đợi 3-5 phút để Render build và khởi chạy.
-7. Khi thành công, copy URL Backend: `https://talentbridge-backend-xxxx.onrender.com`.
+Nếu bootstrap Admin được bật tạm thời, sau khi xác nhận tài khoản đã được tạo hãy tắt ADMIN_BOOTSTRAP_ENABLED và xóa các biến bootstrap khỏi Render.
 
-Gemini API key phải được lưu trong Environment Variables của Render, không đưa vào Git hoặc URL. Kết quả nhập CV và matching trả thông tin nguồn xử lý để phân biệt Gemini với parser/thuật toán dự phòng. Endpoint matching yêu cầu đăng nhập recruiter và kiểm tra quan hệ công ty–tin tuyển dụng–đơn ứng tuyển. Kết nối TiDB dùng pool Hikari với thời gian sống 5 phút và keepalive 3 phút để tránh giữ connection quá thời hạn idle của dịch vụ DB.
+## Cấu hình frontend
 
-Gói Render Free vẫn có thể ngủ khi không có request; code không thể loại bỏ độ trễ khởi động nguội của hạ tầng. Chia route frontend, cache truy vấn danh sách trong phiên và tái sử dụng kết nối DB giúp các request thường gặp nhẹ hơn, còn luôn sẵn sàng cần cấu hình instance phù hợp trên Render.
+Blueprint dùng VITE_API_BASE_URL trỏ tới backend, ví dụ:
 
----
+https://talentbridge-backend-6rmd.onrender.com/api/v1
 
-## 4. BƯỚC 3: TRIỂN KHAI FRONTEND LÊN RENDER
+render.yaml chạy build frontend với VITE_RENDER_GIT_COMMIT lấy từ biến build có sẵn RENDER_GIT_COMMIT. HTML đầu ra có meta render-git-commit, còn health API trả data.buildCommit. Hai dấu build này cho phép CD đối chiếu đúng commit đang được phục vụ. Giá trị mặc định unknown chỉ dành cho build ngoài Render.
 
-1. Tại Render Dashboard, chọn **New +** $\to$ **Static Site**.
-2. Kết nối với GitHub Repository: `leduykhanhdevs/TalentBridge_JS2`.
-3. Cấu hình thông số:
-   - **Name**: `talentbridge-frontend`
-   - **Branch**: `main`
-   - **Build Command**: `cd frontend && npm install && npm run build`
-   - **Publish Directory**: `frontend/dist`
-4. Thêm biến môi trường:
-   - `VITE_API_BASE_URL`: `https://talentbridge-backend-xxxx.onrender.com/api/v1` *(URL Backend lấy từ Bước 2)*
-5. Cấu hình định tuyến Single Page Application (SPA):
-   - Vào mục **Redirects/Rewrites** $\to$ Thêm quy tắc:
-     - **Type**: `Rewrite`
-     - **Source**: `/*`
-     - **Destination**: `/index.html`
-6. Bấm **Create Static Site**.
+Sau khi thay đổi render.yaml, kiểm tra Blueprint đã đồng bộ cấu hình build mới cho static site trước khi chạy release gate. SPA rewrite /* → /index.html được khai báo trong Blueprint.
 
----
+## Thiết lập GitHub Actions CD
 
-## 5. BƯỚC 4: KÍCH HOẠT CI/CD TỰ ĐỘNG (CD DEPLOY HOOK)
+Tạo hai Deploy Hook riêng vì frontend và backend là hai service Render độc lập:
 
-1. Tại Web Service Backend trên Render:
-   - Vào **Settings** $\to$ cuộn xuống mục **Deploy Hook**.
-   - Bấm **Create Deploy Hook** $\to$ Copy URL Webhook.
-2. Tại GitHub Repository:
-   - Vào **Settings** $\to$ **Secrets and variables** $\to$ **Actions**.
-   - Bấm **New repository secret**.
-   - Name: `RENDER_DEPLOY_HOOK_URL`.
-   - Value: *(Dán URL Webhook vừa copy)*.
-3. **Hoàn tất**: Kể từ bây giờ, mỗi khi bạn merge mã nguồn vào nhánh `main`, GitHub Actions workflow `cd-render.yml` sẽ tự động bắn webhook yêu cầu Render kéo bản mới nhất về cập nhật!
+1. Trên service backend: **Settings → Deploy Hook**. Lưu URL trong GitHub Actions secret RENDER_BACKEND_DEPLOY_HOOK_URL. Tương thích ngược: workflow còn đọc secret hiện tại RENDER_DEPLOY_HOOK_URL nếu secret mới chưa có.
+2. Trên service frontend: tạo Deploy Hook riêng và lưu trong secret RENDER_FRONTEND_DEPLOY_HOOK_URL.
+3. Không đưa Deploy Hook URL vào file, issue, log công khai hoặc chat. URL này cho phép kích hoạt deploy.
+4. Workflow .github/workflows/cd-render.yml chạy khi push lên main. Nó gửi đúng commit SHA tới cả hai hook, chờ health API và HTML báo đúng SHA, rồi kiểm tra health, API việc làm, tiêu đề trang và CORS credentials.
 
----
+Workflow không cần Render API key. Các URL có thể cấu hình qua GitHub Actions variables RENDER_BACKEND_URL và RENDER_FRONTEND_URL; nếu bỏ trống, workflow dùng hai URL onrender.com trong file workflow.
 
-## 6. GIẢI QUYẾT CÁC ĐẶC THÙ CỦA RENDER FREE TIER
+## Quy trình phát hành
 
-1. **Cold Start (Ngủ đông sau 15 phút idle)**:
-   - Gói miễn phí của Render sẽ tạm dừng container nếu không có truy cập trong 15 phút. Khi có lượt truy cập mới, container mất khoảng 30-45 giây để thức dậy.
-   - **Mẹo**: Dùng dịch vụ miễn phí [UptimeRobot](https://uptimerobot.com/) ping URL `/actuator/health` 10 phút một lần để giữ Backend luôn thức 24/7.
-2. **Bộ nhớ RAM 512MB**:
-   - `Dockerfile` của dự án đã được cài đặt sẵn cờ tối ưu:
-     `-XX:+UseSerialGC -XX:MaxRAMPercentage=70.0 -Xss256k`
-   - Đảm bảo Spring Boot 3 chỉ tiêu thụ ~280MB - 350MB RAM, tuyệt đối không bị dính lỗi tràn RAM (OOM exit 137).
+1. Tạo nhánh fix/... hoặc feat/..., chạy test phù hợp, rồi mở PR vào dev.
+2. Review và merge PR vào dev theo quy trình nhóm.
+3. Khi dev đã được kiểm tra, mở PR phát hành từ dev sang main.
+4. Sau khi PR phát hành được merge, GitHub Actions chạy CI/CD. Release chỉ được coi là thành công khi cả hai dịch vụ Render đang phục vụ đúng commit và production smoke tests đều pass.
+5. Nếu workflow báo thiếu secret, thêm secret tương ứng trong **GitHub → Settings → Secrets and variables → Actions**; không gửi secret cho người khác qua chat.
+
+Không commit hoặc push trực tiếp lên main/dev, không merge PR khi leader chưa review và xác nhận.
+
+## Giới hạn và chẩn đoán
+
+- Render Free có thể ngủ khi ít truy cập; request đầu tiên sau thời gian idle có thể chậm. Việc tối ưu frontend không loại bỏ giới hạn cold start của hạ tầng.
+- Nếu CD hết thời gian chờ backend, kiểm tra service đã nhận commit trên main, build mới thành công và /api/v1/health trả data.buildCommit đúng SHA của workflow.
+- Nếu CD hết thời gian chờ frontend, kiểm tra Blueprint đã sync build command có VITE_RENDER_GIT_COMMIT=$RENDER_GIT_COMMIT và HTML có meta render-git-commit đúng SHA.
+- Nếu jobs API trả HTTP 200 nhưng 0 việc làm, điều đó xác nhận endpoint/DB query phản hồi chứ không chứng minh đã có dữ liệu nghiệp vụ. Cần kiểm tra số lượng dữ liệu RDS riêng.
+- Nếu preflight CORS fail, kiểm tra CORS_ALLOWED_ORIGINS khớp chính xác frontend origin, không có dấu / cuối và không có wildcard.

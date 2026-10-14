@@ -41,7 +41,7 @@ services:
     name: talentbridge-frontend
     runtime: static
     autoDeploy: false
-    buildCommand: cd frontend && npm install && npm run build
+    buildCommand: cd frontend && npm install && VITE_RENDER_GIT_COMMIT="${RENDER_GIT_COMMIT:-unknown}" npm run build
     staticPublishPath: frontend/dist
     routes:
       - type: rewrite
