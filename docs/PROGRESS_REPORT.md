@@ -300,3 +300,15 @@
   - GitHub Actions, Render Deploy Hooks, exact-commit marker qua `RENDER_GIT_COMMIT`, Spring Boot health API, Vite build-time env, PowerShell HTTP smoke test, Maven, Vitest và ESLint.
 - **Mục đích chức năng / việc đã làm**:
   - Bảo đảm CI/CD chỉ báo thành công khi cả hai service thực sự phục vụ đúng commit và smoke test production qua; nêu rõ secret frontend còn thiếu trước khi có thể redeploy.
+---
+
+## KHẮC PHỤC CHATBOT TRẮNG MÀN VÀ SIẾT KẾT NỐI RDS - 14/10/2026
+- **Đã làm được gì**:
+  - Tái hiện lỗi trắng màn bằng Playwright: `scrollIntoView()` ném `NotSupportedError` sau khi bấm câu hỏi mẫu, làm React ErrorBoundary thay nội dung chatbot.
+  - Bọc thao tác cuộn trong fallback an toàn; khi API cuộn lỗi, đặt vị trí cuộn trực tiếp trong khung hội thoại để câu trả lời và giao diện tiếp tục hiển thị.
+  - Chạy lại `scripts/run-e2e.ps1`: API E2E 28/28 và UI E2E 3/3 pass; frontend lint và production build pass.
+  - Sau khi chủ tài khoản xác nhận, xóa rule MySQL 3306 tạm từ IP workstation `14.187.179.143/32`. Xác minh security group `talentbridge-render-db` chỉ còn hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`.
+  - Kiểm tra live: RDS `talentbridge-mysql` trạng thái `Available`, lớp `db.t4g.micro`; `/api/v1/health` HTTP 200 (354 ms), `/api/v1/jobs` HTTP 200 (783 ms), nhưng hiện không có tin tuyển dụng (`totalElements: 0`).
+  - Chưa redeploy code chatbot; thay đổi đang ở nhánh tính năng riêng và cần CI, PR review/merge rồi mới kiểm tra bản live.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React `useEffect`/DOM refs; `scrollIntoView()` với fallback `scrollTop`; Playwright; Vitest API E2E chạy backend H2 biệt lập; ESLint; Vite production build; AWS EC2 Security Groups; Amazon RDS MySQL; HTTP smoke test.
+- **Mục đích chức năng / việc đã làm**: Giữ chatbot và bong bóng trợ lý hoạt động khi trình duyệt/WebView không hỗ trợ cuộn phần tử; hạn chế truy cập DB production đúng các dải IP backend Render; kiểm chứng API công khai và tình trạng DB mà không đưa secret vào chat.

@@ -44,7 +44,12 @@ export function AssistantChatPanel({ compact = false, onClose }: AssistantChatPa
         const bottomElement = bottomRef.current
         if (!bottomElement || typeof bottomElement.scrollIntoView !== 'function') return
 
-        bottomElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        try {
+            bottomElement.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        } catch {
+            const scrollContainer = bottomElement.parentElement
+            if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight
+        }
     }, [turns, isSending])
 
     async function sendMessage(text = message) {
