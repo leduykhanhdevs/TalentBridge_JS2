@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import vn.talentbridge.adapter.out.ai.TriVectorRagMatchingService;
+import vn.talentbridge.adapter.out.ai.GeminiApiClient;
 import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.CandidateSkillRepositoryPort;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
@@ -18,6 +19,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class TriVectorRagMatchingServiceTest {
@@ -116,5 +119,25 @@ class TriVectorRagMatchingServiceTest {
 
         assertThat(result.matchPercentage()).isZero();
         assertThat(result.recommendation()).isEqualTo("CHƯA PHÙ HỢP");
+    }
+
+    @Test
+    @DisplayName("Local CV assessment must not send private CV text to Gemini")
+    void shouldNeverCallGeminiForLocalCvAssessment() {
+        Long jobId = 4L;
+        Job job = new Job();
+        job.setId(jobId);
+        job.setTitle("Java backend developer");
+        job.setRequirements("Java Spring Boot API");
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        GeminiApiClient configuredGemini = mock(GeminiApiClient.class);
+        TriVectorRagMatchingService localService = new TriVectorRagMatchingService(
+                jobRepository, candidateRepository, candidateSkillRepository,
+                new ObjectMapper(), configuredGemini);
+
+        CandidateJobMatchResult result = localService.matchLocally(jobId, null, "Java Spring Boot API");
+
+        assertThat(result.source().name()).isEqualTo("DETERMINISTIC");
+        verifyNoInteractions(configuredGemini);
     }
 }

@@ -32,6 +32,23 @@ public class MatchApplicantUseCaseImpl implements MatchApplicantUseCase {
 
     @Override
     public CandidateJobMatchResult matchApplicant(Long recruiterUserId, Long jobId, Long candidateId) {
+        assertCanAssessApplicant(recruiterUserId, jobId, candidateId);
+        return matchingPort.match(jobId, candidateId);
+    }
+
+    @Override
+    public void assertCanAssessApplicant(Long recruiterUserId, Long jobId, Long candidateId) {
+        authorizeApplicant(recruiterUserId, jobId, candidateId);
+    }
+
+    @Override
+    public CandidateJobMatchResult matchApplicantLocally(
+            Long recruiterUserId, Long jobId, Long candidateId, String resumeText) {
+        assertCanAssessApplicant(recruiterUserId, jobId, candidateId);
+        return matchingPort.matchLocally(jobId, candidateId, resumeText);
+    }
+
+    private void authorizeApplicant(Long recruiterUserId, Long jobId, Long candidateId) {
         Recruiter recruiter = recruiterRepository.findByUserId(recruiterUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
         if (recruiter.getCompany() == null || recruiter.getCompany().getId() == null) {
@@ -46,7 +63,5 @@ public class MatchApplicantUseCaseImpl implements MatchApplicantUseCase {
 
         applicationRepository.findApplicantByJobIdAndCandidateId(jobId, candidateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Đơn ứng tuyển của ứng viên", candidateId));
-
-        return matchingPort.match(jobId, candidateId);
     }
 }

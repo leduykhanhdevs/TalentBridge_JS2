@@ -40,4 +40,5 @@ export interface CandidateJobAssessment {
     missingProfileSections: string[]
     candidateOverallAssessment: string
     advisoryNotice: string
+    resumeAssessmentStatus?: 'EVALUATED' | 'NO_RESUME' | 'CONTENT_UNAVAILABLE' | 'NO_READABLE_TEXT'
 }
