@@ -71,3 +71,41 @@ test('assistant page and quick widget survive starter and typed prompts with non
     await expect(page.getByRole('heading', { name: 'Tìm việc làm phù hợp' })).toBeVisible()
     expect(pageErrors).toEqual([])
 })
+
+test('assistant stays visible when browser scrolling fails after sending a prompt', async ({ page }) => {
+    const pageErrors: string[] = []
+    page.on('pageerror', (error) => pageErrors.push(error.message))
+    await page.addInitScript(() => {
+        localStorage.setItem('talentbridge_access_token', 'e2e-access-token')
+        let failAssistantScroll = false
+        document.addEventListener('click', (event) => {
+            const target = event.target
+            if (target instanceof Element && target.closest('button')?.textContent?.includes('Làm sao để ứng tuyển?')) {
+                failAssistantScroll = true
+            }
+        }, true)
+        Element.prototype.scrollIntoView = function () {
+            if (failAssistantScroll) throw new DOMException('Scroll is unavailable', 'NotSupportedError')
+        }
+    })
+    await page.route('**/api/v1/assistant/chat', async (route) => {
+        const request = route.request().postDataJSON() as { message: string }
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                statusCode: 200,
+                message: 'Trợ lý đã phản hồi',
+                data: { answer: `Hướng dẫn: ${request.message}`, source: 'KNOWLEDGE_BASE', references: [] },
+            }),
+        })
+    })
+
+    await page.goto('/assistant')
+    await expect(page.getByRole('heading', { name: 'Trợ lý TalentBridge' }).first()).toBeVisible()
+    await page.getByRole('button', { name: /Làm sao để ứng tuyển/ }).click()
+
+    await expect(page.getByText('Hướng dẫn: Làm sao để ứng tuyển?')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Trợ lý TalentBridge' }).first()).toBeVisible()
+    expect(pageErrors).toEqual([])
+})
