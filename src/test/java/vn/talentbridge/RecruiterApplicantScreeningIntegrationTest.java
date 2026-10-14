@@ -305,6 +305,7 @@ class RecruiterApplicantScreeningIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.match.jobId").value(job.getId()))
                 .andExpect(jsonPath("$.data.profileCompletenessPercentage").isNumber())
+                .andExpect(jsonPath("$.data.resumeAssessmentStatus").isNotEmpty())
                 .andExpect(jsonPath("$.data.candidateOverallAssessment").isNotEmpty())
                 .andExpect(jsonPath("$.data.advisoryNotice", containsString("không phải xác suất")));
 

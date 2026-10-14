@@ -69,6 +69,16 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
     }
 
     public CandidateJobMatchResult matchCandidateToJob(Long jobId, Long candidateId, String overrideCvText) {
+        return matchCandidateToJob(jobId, candidateId, overrideCvText, true);
+    }
+
+    @Override
+    public CandidateJobMatchResult matchLocally(Long jobId, Long candidateId, String resumeText) {
+        return matchCandidateToJob(jobId, candidateId, resumeText, false);
+    }
+
+    private CandidateJobMatchResult matchCandidateToJob(
+            Long jobId, Long candidateId, String overrideCvText, boolean allowExternalAi) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy công việc ID: " + jobId));
 
@@ -95,7 +105,7 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         candidateCvContent = truncate(candidateCvContent);
 
         // Gemini provides a grounded advisory evaluation; deterministic fallback is clearly labeled.
-        if (geminiApiClient.isConfigured()) {
+        if (allowExternalAi && geminiApiClient.isConfigured()) {
             try {
                 return matchWithGeminiAssessment(job, candidateId, candidateName, jobText, candidateCvContent);
             } catch (RestClientResponseException e) {

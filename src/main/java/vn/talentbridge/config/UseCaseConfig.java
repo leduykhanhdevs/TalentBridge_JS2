@@ -416,9 +416,12 @@ public class UseCaseConfig {
             MatchApplicantUseCase matchApplicantUseCase,
             CandidateRepositoryPort candidateRepository,
             CandidateSkillRepositoryPort candidateSkillRepository,
-            ResumeRepositoryPort resumeRepository) {
+            ResumeRepositoryPort resumeRepository,
+            FileStoragePort fileStorage,
+            CvTextExtractionPort cvTextExtraction) {
         return new AssessCandidateForJobUseCaseImpl(
-                matchApplicantUseCase, candidateRepository, candidateSkillRepository, resumeRepository);
+                matchApplicantUseCase, candidateRepository, candidateSkillRepository,
+                resumeRepository, fileStorage, cvTextExtraction);
     }
 
 }
