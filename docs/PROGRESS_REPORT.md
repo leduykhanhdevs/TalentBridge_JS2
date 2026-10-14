@@ -288,3 +288,15 @@
   - Flyway cảnh báo MySQL 8.4 mới hơn bản đã được kiểm thử hỗ trợ (MySQL 8.1); migration vẫn hoàn tất thành công. Cần cân nhắc nâng Flyway và kiểm thử lại trước khi coi cảnh báo tương thích đã được xử lý.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot production profile; JDK 21; MySQL Connector/J; TLS `VERIFY_IDENTITY` với CA bundle AWS Singapore; Flyway V1/V2; Hibernate schema validation; HikariCP.
 - **Mục đích chức năng / việc đã làm**: Chứng minh backend build hiện tại có thể kết nối RDS thật, chạy migration và khởi động JPA mà không phụ thuộc H2. Tạo cơ sở an toàn cho bước cấu hình Render, rồi mới tái tạo dữ liệu ứng dụng.
+
+## HOÀN THIỆN CI/CD DEPLOY CẢ FRONTEND VÀ BACKEND
+- **Thời gian**: 14/10/2026
+- **Đã làm được gì**:
+  - Cập nhật workflow CD để deploy hai Render service song song đúng SHA của lần chạy, chờ mỗi service báo đúng commit rồi mới chạy smoke test health, jobs, title và credentialed CORS. Thiếu deploy hook sẽ fail sớm thay vì báo xanh giả.
+  - Bổ sung build marker vào health API và frontend HTML, cập nhật hướng dẫn deploy, sửa cleanup FK trong integration test.
+  - Kiểm thử cục bộ: Maven verify 291/291; `HexagonalArchitectureTest` 11/11; frontend lint đạt, Vitest 84/84, production build đạt; `git diff --check` đạt.
+  - Render production hiện trả health/jobs HTTP 200 nhưng jobs có 0 tin; response đang chạy bản cũ chưa có build marker mới. GitHub chỉ có secret deploy hook backend; `RENDER_FRONTEND_DEPLOY_HOOK_URL` chưa được tạo. Chưa mở PR, merge hoặc deploy phiên bản này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - GitHub Actions, Render Deploy Hooks, exact-commit marker qua `RENDER_GIT_COMMIT`, Spring Boot health API, Vite build-time env, PowerShell HTTP smoke test, Maven, Vitest và ESLint.
+- **Mục đích chức năng / việc đã làm**:
+  - Bảo đảm CI/CD chỉ báo thành công khi cả hai service thực sự phục vụ đúng commit và smoke test production qua; nêu rõ secret frontend còn thiếu trước khi có thể redeploy.

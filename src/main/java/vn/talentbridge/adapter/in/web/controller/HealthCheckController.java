@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.in.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,12 @@ import java.util.Map;
 @Tag(name = "Health Check", description = "Kiểm tra trạng thái hoạt động của hệ thống")
 public class HealthCheckController {
 
+    private final String buildCommit;
+
+    public HealthCheckController(@Value("${RENDER_GIT_COMMIT:unknown}") String buildCommit) {
+        this.buildCommit = buildCommit;
+    }
+
     @GetMapping
     @Operation(summary = "Health check API", description = "Trả về trạng thái hoạt động hiện tại của TalentBridge API")
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkHealth() {
@@ -24,6 +31,7 @@ public class HealthCheckController {
         healthInfo.put("status", "UP");
         healthInfo.put("application", "TalentBridge");
         healthInfo.put("version", "1.0.0-SNAPSHOT");
+        healthInfo.put("buildCommit", buildCommit);
         healthInfo.put("framework", "Java Spring Boot 3.3.4 (Java 21 LTS)");
         healthInfo.put("serverTime", LocalDateTime.now());
 

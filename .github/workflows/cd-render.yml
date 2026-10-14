@@ -4,34 +4,205 @@ on:
   push:
     branches: [ main ]
 
-jobs:
-  deploy-to-render:
-    name: Trigger Render Production Deployment
-    runs-on: ubuntu-latest
+concurrency:
+  group: render-production-deploy
+  cancel-in-progress: false
 
+permissions:
+  contents: read
+
+jobs:
+  validate-deploy-hooks:
+    name: Validate Render deploy hooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      RENDER_BACKEND_DEPLOY_HOOK_URL: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL || secrets.RENDER_DEPLOY_HOOK_URL }}
+      RENDER_FRONTEND_DEPLOY_HOOK_URL: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}
     steps:
-      - name: Trigger Render Webhook
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      - name: Require hooks for both production services
         run: |
-          if [ -n "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "🚀 Triggering Render Deploy Hook..."
-            response=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_URL")
-            http_code=$(echo "$response" | tail -n1)
-            body=$(echo "$response" | sed '$d')
-            echo "HTTP Status Code: $http_code"
-            echo "Response: $body"
-            if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-              echo "✅ Render deployment triggered successfully!"
-            else
-              echo "❌ Render deploy hook returned error status: $http_code"
-              exit 1
-            fi
-          else
-            echo "⚠️ Secret RENDER_DEPLOY_HOOK_URL is not set in GitHub Repository Secrets."
-            echo "ℹ️ To enable auto-deployment:"
-            echo "  1. Go to your Render Dashboard -> Your Service -> Settings -> Deploy Hook."
-            echo "  2. Copy the Webhook URL."
-            echo "  3. Go to GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret."
-            echo "  4. Set name: RENDER_DEPLOY_HOOK_URL and paste the copied URL."
+          set -Eeuo pipefail
+
+          if [[ -z "$RENDER_BACKEND_DEPLOY_HOOK_URL" ]]; then
+            echo "::error::Configure RENDER_BACKEND_DEPLOY_HOOK_URL (or keep the existing RENDER_DEPLOY_HOOK_URL) in GitHub Actions secrets."
+            exit 1
           fi
+          if [[ -z "$RENDER_FRONTEND_DEPLOY_HOOK_URL" ]]; then
+            echo "::error::Configure RENDER_FRONTEND_DEPLOY_HOOK_URL in GitHub Actions secrets."
+            exit 1
+          fi
+
+  deploy-backend:
+    name: Trigger Render backend deployment
+    needs: validate-deploy-hooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DEPLOY_HOOK_URL: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL || secrets.RENDER_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Trigger backend deploy for this exact commit
+        run: |
+          set -Eeuo pipefail
+
+          response_file="$(mktemp)"
+          http_code="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+            --max-time 30 \
+            --request POST \
+            "$DEPLOY_HOOK_URL&ref=$GITHUB_SHA")"
+
+          case "$http_code" in
+            200)
+              echo "Render accepted the backend deployment request."
+              ;;
+            202)
+              echo "Render queued the backend deployment behind an in-progress deployment."
+              ;;
+            *)
+              echo "::error::Render backend deploy hook returned HTTP $http_code."
+              exit 1
+              ;;
+          esac
+
+  deploy-frontend:
+    name: Trigger Render frontend deployment
+    needs: validate-deploy-hooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DEPLOY_HOOK_URL: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Trigger frontend deploy for this exact commit
+        run: |
+          set -Eeuo pipefail
+
+          response_file="$(mktemp)"
+          http_code="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+            --max-time 30 \
+            --request POST \
+            "$DEPLOY_HOOK_URL&ref=$GITHUB_SHA")"
+
+          case "$http_code" in
+            200)
+              echo "Render accepted the frontend deployment request."
+              ;;
+            202)
+              echo "Render queued the frontend deployment behind an in-progress deployment."
+              ;;
+            *)
+              echo "::error::Render frontend deploy hook returned HTTP $http_code."
+              exit 1
+              ;;
+          esac
+
+  wait-for-backend-commit:
+    name: Verify backend is serving this commit
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BACKEND_URL: ${{ vars.RENDER_BACKEND_URL || 'https://talentbridge-backend-6rmd.onrender.com' }}
+      EXPECTED_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Poll health endpoint for the deployed commit
+        run: |
+          set -Eeuo pipefail
+
+          backend_url="${BACKEND_URL%/}"
+          for attempt in $(seq 1 60); do
+            response_file="$(mktemp)"
+            if curl --fail --silent --show-error --max-time 45 \
+              "$backend_url/api/v1/health" --output "$response_file"; then
+              deployed_commit="$(jq -r '.data.buildCommit // empty' "$response_file")"
+              if [[ "$deployed_commit" == "$EXPECTED_COMMIT" ]]; then
+                echo "Backend is serving commit $EXPECTED_COMMIT."
+                exit 0
+              fi
+              echo "Waiting for backend commit $EXPECTED_COMMIT; current build marker is '$deployed_commit' ($attempt/60)."
+            else
+              echo "Backend is not ready yet ($attempt/60)."
+            fi
+            sleep 15
+          done
+
+          echo "::error::Timed out waiting for backend to serve commit $EXPECTED_COMMIT."
+          exit 1
+
+  wait-for-frontend-commit:
+    name: Verify frontend is serving this commit
+    needs: deploy-frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FRONTEND_URL: ${{ vars.RENDER_FRONTEND_URL || 'https://talentbridge-frontend-1bid.onrender.com' }}
+      EXPECTED_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Poll HTML build marker for the deployed commit
+        run: |
+          set -Eeuo pipefail
+
+          frontend_origin="${FRONTEND_URL%/}"
+          for attempt in $(seq 1 60); do
+            html_file="$(mktemp)"
+            if curl --fail --silent --show-error --max-time 45 \
+              "$frontend_origin/" --output "$html_file"; then
+              if grep --fixed-strings --quiet "name=\"render-git-commit\" content=\"$EXPECTED_COMMIT\"" "$html_file"; then
+                echo "Frontend is serving commit $EXPECTED_COMMIT."
+                exit 0
+              fi
+              echo "Waiting for frontend commit $EXPECTED_COMMIT ($attempt/60)."
+            else
+              echo "Frontend is not ready yet ($attempt/60)."
+            fi
+            sleep 15
+          done
+
+          echo "::error::Timed out waiting for frontend to serve commit $EXPECTED_COMMIT."
+          exit 1
+
+  production-smoke:
+    name: Verify production endpoints after both deploys
+    needs: [ wait-for-backend-commit, wait-for-frontend-commit ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      BACKEND_URL: ${{ vars.RENDER_BACKEND_URL || 'https://talentbridge-backend-6rmd.onrender.com' }}
+      FRONTEND_URL: ${{ vars.RENDER_FRONTEND_URL || 'https://talentbridge-frontend-1bid.onrender.com' }}
+    steps:
+      - name: Verify backend health and database-backed jobs API
+        run: |
+          set -Eeuo pipefail
+
+          backend_url="${BACKEND_URL%/}"
+          curl --fail --silent --show-error --retry 24 --retry-all-errors --retry-delay 15 --retry-max-time 600 --max-time 30 \
+            "$backend_url/api/v1/health" --output /dev/null
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 10 --retry-max-time 180 --max-time 30 \
+            "$backend_url/api/v1/jobs" --output /dev/null
+
+      - name: Verify frontend title and credentialed CORS
+        run: |
+          set -Eeuo pipefail
+
+          backend_url="${BACKEND_URL%/}"
+          frontend_origin="${FRONTEND_URL%/}"
+          html_file="$(mktemp)"
+          curl --fail --silent --show-error --retry 6 --retry-all-errors --retry-delay 10 --retry-max-time 120 --max-time 30 \
+            "$frontend_origin/" --output "$html_file"
+          grep --fixed-strings --quiet 'TalentBridge - Nền Tảng Tuyển Dụng & ATS Chuẩn TopCV' "$html_file"
+
+          headers_file="$(mktemp)"
+          http_code="$(curl --silent --show-error --output /dev/null --dump-header "$headers_file" --write-out '%{http_code}' \
+            --request OPTIONS \
+            --header "Origin: $frontend_origin" \
+            --header 'Access-Control-Request-Method: POST' \
+            --header 'Access-Control-Request-Headers: content-type,authorization' \
+            "$backend_url/api/v1/auth/login")"
+
+          if [[ "$http_code" != "200" ]]; then
+            echo "::error::CORS preflight returned HTTP $http_code for the production frontend."
+            exit 1
+          fi
+          grep --ignore-case --quiet --fixed-strings "Access-Control-Allow-Origin: $frontend_origin" "$headers_file"
+          grep --ignore-case --quiet --fixed-strings 'Access-Control-Allow-Credentials: true' "$headers_file"
+
+          echo "Exact-commit deployments, health, database-backed jobs API, frontend, and credentialed CORS checks passed."
