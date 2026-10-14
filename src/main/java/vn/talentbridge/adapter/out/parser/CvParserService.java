@@ -16,10 +16,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import vn.talentbridge.core.application.port.out.CvParserPort;
+import vn.talentbridge.core.application.port.out.CvTextExtractionPort;
 
 @Slf4j
 @Service
-public class CvParserService implements CvParserPort {
+public class CvParserService implements CvParserPort, CvTextExtractionPort {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}"
@@ -77,7 +78,8 @@ public class CvParserService implements CvParserPort {
         );
     }
 
-    public String extractRawText(byte[] bytes, String fileName) {
+    @Override
+    public String extractText(byte[] bytes, String fileName) {
         if (bytes == null || bytes.length == 0) return "";
         String lowerName = (fileName != null ? fileName : "").toLowerCase();
 
@@ -94,6 +96,11 @@ public class CvParserService implements CvParserPort {
             log.warn("Lỗi đọc PDF, thử giải mã UTF-8 thông thường: {}", e.getMessage());
             return new String(bytes, StandardCharsets.UTF_8);
         }
+    }
+
+    /** Retained for existing callers while the application migrates to the named outbound port. */
+    public String extractRawText(byte[] bytes, String fileName) {
+        return extractText(bytes, fileName);
     }
 
     private String extractTextFromDocx(byte[] bytes) {

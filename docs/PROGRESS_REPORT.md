@@ -288,3 +288,49 @@
   - Flyway cảnh báo MySQL 8.4 mới hơn bản đã được kiểm thử hỗ trợ (MySQL 8.1); migration vẫn hoàn tất thành công. Cần cân nhắc nâng Flyway và kiểm thử lại trước khi coi cảnh báo tương thích đã được xử lý.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot production profile; JDK 21; MySQL Connector/J; TLS `VERIFY_IDENTITY` với CA bundle AWS Singapore; Flyway V1/V2; Hibernate schema validation; HikariCP.
 - **Mục đích chức năng / việc đã làm**: Chứng minh backend build hiện tại có thể kết nối RDS thật, chạy migration và khởi động JPA mà không phụ thuộc H2. Tạo cơ sở an toàn cho bước cấu hình Render, rồi mới tái tạo dữ liệu ứng dụng.
+
+## HOÀN THIỆN CI/CD DEPLOY CẢ FRONTEND VÀ BACKEND
+- **Thời gian**: 14/10/2026
+- **Đã làm được gì**:
+  - Cập nhật workflow CD để deploy hai Render service song song đúng SHA của lần chạy, chờ mỗi service báo đúng commit rồi mới chạy smoke test health, jobs, title và credentialed CORS. Thiếu deploy hook sẽ fail sớm thay vì báo xanh giả.
+  - Bổ sung build marker vào health API và frontend HTML, cập nhật hướng dẫn deploy, sửa cleanup FK trong integration test.
+  - Kiểm thử cục bộ: Maven verify 291/291; `HexagonalArchitectureTest` 11/11; frontend lint đạt, Vitest 84/84, production build đạt; `git diff --check` đạt.
+  - Render production hiện trả health/jobs HTTP 200 nhưng jobs có 0 tin; response đang chạy bản cũ chưa có build marker mới. GitHub chỉ có secret deploy hook backend; `RENDER_FRONTEND_DEPLOY_HOOK_URL` chưa được tạo. Chưa mở PR, merge hoặc deploy phiên bản này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - GitHub Actions, Render Deploy Hooks, exact-commit marker qua `RENDER_GIT_COMMIT`, Spring Boot health API, Vite build-time env, PowerShell HTTP smoke test, Maven, Vitest và ESLint.
+- **Mục đích chức năng / việc đã làm**:
+  - Bảo đảm CI/CD chỉ báo thành công khi cả hai service thực sự phục vụ đúng commit và smoke test production qua; nêu rõ secret frontend còn thiếu trước khi có thể redeploy.
+---
+
+## KHẮC PHỤC CHATBOT TRẮNG MÀN VÀ SIẾT KẾT NỐI RDS - 14/10/2026
+- **Đã làm được gì**:
+  - Tái hiện lỗi trắng màn bằng Playwright: `scrollIntoView()` ném `NotSupportedError` sau khi bấm câu hỏi mẫu, làm React ErrorBoundary thay nội dung chatbot.
+  - Bọc thao tác cuộn trong fallback an toàn; khi API cuộn lỗi, đặt vị trí cuộn trực tiếp trong khung hội thoại để câu trả lời và giao diện tiếp tục hiển thị.
+  - Chạy lại `scripts/run-e2e.ps1`: API E2E 28/28 và UI E2E 3/3 pass; frontend lint và production build pass.
+  - Sau khi chủ tài khoản xác nhận, xóa rule MySQL 3306 tạm từ IP workstation `14.187.179.143/32`. Xác minh security group `talentbridge-render-db` chỉ còn hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`.
+  - Kiểm tra live: RDS `talentbridge-mysql` trạng thái `Available`, lớp `db.t4g.micro`; `/api/v1/health` HTTP 200 (354 ms), `/api/v1/jobs` HTTP 200 (783 ms), nhưng hiện không có tin tuyển dụng (`totalElements: 0`).
+  - Chưa redeploy code chatbot; thay đổi đang ở nhánh tính năng riêng và cần CI, PR review/merge rồi mới kiểm tra bản live.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React `useEffect`/DOM refs; `scrollIntoView()` với fallback `scrollTop`; Playwright; Vitest API E2E chạy backend H2 biệt lập; ESLint; Vite production build; AWS EC2 Security Groups; Amazon RDS MySQL; HTTP smoke test.
+- **Mục đích chức năng / việc đã làm**: Giữ chatbot và bong bóng trợ lý hoạt động khi trình duyệt/WebView không hỗ trợ cuộn phần tử; hạn chế truy cập DB production đúng các dải IP backend Render; kiểm chứng API công khai và tình trạng DB mà không đưa secret vào chat.
+---
+
+## KIỂM TRA TÀI NGUYÊN TIDB VÀ RULE RDS - 14/10/2026
+- **Đã làm được gì**:
+  - Đăng nhập TiDB Cloud dưới tổ chức `Khanh's Org`, chuyển sang Resource View và tải lại trang: danh sách tài nguyên trống, giao diện hiển thị “Get started by creating a resource”. Project View xác nhận `JS2` có 0 instance và ngoài project cũng có 0 instance.
+  - Không thực hiện thao tác xóa vì tài nguyên TiDB `talentbridge` đã không còn trong danh sách; bằng chứng hiện tại không cho biết ai hoặc khi nào đã xóa.
+  - Xác minh lại Security Group RDS `talentbridge-render-db` tại Singapore: chỉ còn hai rule MySQL/TCP 3306 cho CIDR Render `74.220.60.0/24` và `74.220.52.0/24`; không còn IP workstation `/32` tạm.
+  - Việc này chỉ xác nhận inventory TiDB và firewall RDS; chưa chứng minh Render đang kết nối RDS hoặc dữ liệu nghiệp vụ đã được nạp/đối soát.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: TiDB Cloud Resource View/Project View; AWS EC2 Security Groups; Computer Use để đọc giao diện console đã đăng nhập.
+- **Mục đích chức năng / việc đã làm**: Xác định trạng thái yêu cầu ngừng TiDB và xác nhận RDS chỉ nhận kết nối từ các CIDR backend Render đã cấu hình.
+
+---
+
+## ĐÁNH GIÁ CV ỨNG VIÊN RIÊNG TƯ VÀ ĐỐI SÁNH CỤC BỘ - 15/10/2026
+- **Đã làm được gì**:
+  - Nhà tuyển dụng chỉ được đánh giá ứng viên đã nộp đơn vào tin thuộc công ty của mình; quyền được xác minh trước khi mở/tải CV.
+  - Hệ thống chọn CV mặc định/mới nhất theo thứ tự repository, trích xuất PDF/DOCX qua outbound port và chỉ gửi văn bản vào bộ đối sánh cục bộ; luồng này không gọi Gemini.
+  - Kết quả trả trạng thái CV rõ ràng: đã trích xuất, chưa có CV, không truy cập được hoặc không có văn bản đọc được. UI giải thích giới hạn và nhắc HR kiểm tra hồ sơ gốc.
+  - Backend: `mvnw test` đạt 297/297; `HexagonalArchitectureTest` đạt 11/11. Frontend: 84 test, lint và build đều đạt; `git diff --check` đạt.
+  - Đã sửa một test Mockito có stubbing thừa; không thay đổi logic chỉ để làm test xanh.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, outbound ports `CvTextExtractionPort`/`FileStoragePort`, parser CV hiện có, kiểm tra quyền ở application use case, deterministic keyword/rule matching. Đây là đối sánh từ khóa/quy tắc; không dùng embedding hoặc vector database và không gọi Gemini cho CV riêng tư.
+- **Mục đích chức năng / việc đã làm**: Giúp recruiter xem mức độ đáp ứng của ứng viên dựa trên CV đã tải lên mà giảm việc gửi dữ liệu cá nhân cho nhà cung cấp AI bên ngoài, đồng thời giữ ranh giới Hexagonal giữa use case và adapter. Thay đổi hiện đã qua kiểm thử cục bộ; chưa được merge hoặc triển khai Render.

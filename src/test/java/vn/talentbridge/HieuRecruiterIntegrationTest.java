@@ -18,6 +18,7 @@ import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RecruiterJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.UserJpaEntity;
+import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
@@ -53,6 +54,9 @@ class HieuRecruiterIntegrationTest {
 
     @Autowired
     private CompanyJpaRepository companyRepository;
+
+    @Autowired
+    private CandidateJpaRepository candidateRepository;
 
     @Autowired
     private RecruiterJpaRepository recruiterRepository;
@@ -138,6 +142,7 @@ class HieuRecruiterIntegrationTest {
     }
 
     private void cleanup() {
+        candidateRepository.deleteAll();
         recruiterRepository.deleteAll();
         companyRepository.deleteAll();
         userRepository.deleteAll();

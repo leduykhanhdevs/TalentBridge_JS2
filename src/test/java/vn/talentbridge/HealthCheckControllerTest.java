@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "RENDER_GIT_COMMIT=ci-test-commit")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class HealthCheckControllerTest {
@@ -31,6 +31,7 @@ class HealthCheckControllerTest {
                 .andExpect(jsonPath("$.message").value("Hệ thống TalentBridge đang hoạt động bình thường"))
                 .andExpect(jsonPath("$.data.status").value("UP"))
                 .andExpect(jsonPath("$.data.application").value("TalentBridge"))
+                .andExpect(jsonPath("$.data.buildCommit").value("ci-test-commit"))
                 .andExpect(jsonPath("$.data.framework").value("Java Spring Boot 3.3.4 (Java 21 LTS)"));
     }
 }

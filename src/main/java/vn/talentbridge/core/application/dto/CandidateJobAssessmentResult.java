@@ -7,10 +7,13 @@ public record CandidateJobAssessmentResult(
         int profileCompletenessPercentage,
         List<String> missingProfileSections,
         String candidateOverallAssessment,
-        String advisoryNotice
+        String advisoryNotice,
+        ResumeAssessmentStatus resumeAssessmentStatus
 ) {
     public CandidateJobAssessmentResult {
         missingProfileSections = missingProfileSections == null
                 ? List.of() : List.copyOf(missingProfileSections);
+        resumeAssessmentStatus = resumeAssessmentStatus == null
+                ? ResumeAssessmentStatus.NO_RESUME : resumeAssessmentStatus;
     }
 }

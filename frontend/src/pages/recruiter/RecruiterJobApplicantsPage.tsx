@@ -59,6 +59,21 @@ function getNextStage(currentStage: string) {
     return getAllowedStageTargets(currentStage)[0] || 'REJECTED'
 }
 
+function getResumeAssessmentMessage(status: CandidateJobAssessment['resumeAssessmentStatus']) {
+    switch (status) {
+        case 'EVALUATED':
+            return 'Đã trích xuất và đối chiếu nội dung CV ngay trên hệ thống; nội dung CV không được gửi tới Gemini.'
+        case 'NO_RESUME':
+            return 'Ứng viên chưa có CV; kết quả chỉ dựa trên thông tin hồ sơ khai báo.'
+        case 'CONTENT_UNAVAILABLE':
+            return 'Tệp CV hiện không truy cập được; kết quả chỉ dựa trên thông tin hồ sơ khai báo.'
+        case 'NO_READABLE_TEXT':
+            return 'Không trích xuất được văn bản từ CV (có thể là bản scan); kết quả chỉ dựa trên thông tin hồ sơ khai báo.'
+        default:
+            return 'Chưa xác định được trạng thái nội dung CV; hãy kiểm tra hồ sơ gốc trước khi sử dụng kết quả.'
+    }
+}
+
 export function RecruiterJobApplicantsPage() {
     const { jobId } = useParams<{ jobId: string }>()
     const numericJobId = Number(jobId)
@@ -1164,7 +1179,7 @@ export function RecruiterJobApplicantsPage() {
                                     <div className="text-right">
                                         <p className="font-bold text-slate-900">{aiMatchResult.recommendation}</p>
                                         <p className="mt-1 text-xs text-slate-600">
-                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini AI' : 'Thuật toán dự phòng'}
+                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini AI' : 'Đối sánh cục bộ'}
                                         </p>
                                     </div>
                                 </div>
@@ -1198,6 +1213,7 @@ export function RecruiterJobApplicantsPage() {
                                             <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-indigo-800">Độ hoàn thiện {candidateAssessment.profileCompletenessPercentage}%</span>
                                         </div>
                                         <p className="mt-2 text-sm leading-6 text-slate-700">{candidateAssessment.candidateOverallAssessment}</p>
+                                        <p className="mt-2 text-xs leading-5 text-indigo-800">{getResumeAssessmentMessage(candidateAssessment.resumeAssessmentStatus)}</p>
                                         {candidateAssessment.missingProfileSections.length > 0 && (
                                             <p className="mt-2 text-xs leading-5 text-slate-600">Hồ sơ còn thiếu: {candidateAssessment.missingProfileSections.join(' · ')}</p>
                                         )}
@@ -1206,7 +1222,7 @@ export function RecruiterJobApplicantsPage() {
                                 )}
                                 {aiMatchResult.matchingSource === 'DETERMINISTIC' && (
                                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                                        Gemini AI chưa phản hồi được. Điểm số này do bộ máy đối sánh quy tắc tạo ra, nên cần được HR kiểm tra thủ công.
+                                        Điểm số được tạo bằng độ phủ từ khóa và quy tắc năng lực cục bộ, không dùng embedding hay cơ sở dữ liệu vector. Hãy HR kiểm tra hồ sơ gốc trước khi ra quyết định.
                                     </p>
                                 )}
                             </div>
