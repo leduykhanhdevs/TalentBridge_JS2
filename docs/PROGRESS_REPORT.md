@@ -353,6 +353,7 @@
   - Sửa form để website và logo chỉ nhận URL HTTP(S) hợp lệ; email nhập nhầm vào website hoặc logo dạng `data:` sẽ hiện lỗi ngay tại trường và không gửi request.
   - Bỏ luồng chọn ảnh giả lập vốn chuyển ảnh thành Data URI mà backend không chấp nhận; giải thích rõ URL logo công khai là tùy chọn và tải file chưa được hỗ trợ.
   - Thêm kiểm tra giới hạn độ dài tương ứng DTO backend, trạng thái trợ năng cho lỗi trường, cùng kiểm thử UI và API cho website email / Data URI.
-  - Xác minh cục bộ: `mvnw verify` 299/299; frontend 90/90; ESLint và production build đạt; H2 API E2E 28/28; Playwright UI E2E 4/4; `git diff --check` đạt. Chưa mở PR/merge hoặc redeploy production.
+  - Xác minh cục bộ: `mvnw verify` 299/299; frontend 90/90; ESLint và production build đạt; H2 API E2E 28/28; Playwright UI E2E 4/4; `git diff --check` đạt.
+  - PR #33 đã mở vào `main`; Backend Verify, Frontend Test/Lint/Build và Dockerfile Build đều PASS trên commit triển khai mã sửa. Chưa merge hoặc redeploy production; đang chờ review của người dùng.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser chuẩn của trình duyệt, Vitest, Playwright, Spring Boot MockMvc/JUnit, Maven Wrapper/JDK 21; backend DTO/API contract làm chuẩn validation.
 - **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu doanh nghiệp thất bại sau khi bấm gửi vì website nhập sai định dạng hoặc logo tải lên thành dữ liệu không tương thích; cung cấp lỗi dễ hiểu trước khi gửi và giữ dữ liệu đúng hợp đồng backend.
