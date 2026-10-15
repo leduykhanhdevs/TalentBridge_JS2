@@ -392,3 +392,93 @@
   - Cấu hình RDS đang là `db.t4g.micro`, 20 GiB gp2, Single-AZ, autoscaling bật với mức tối đa 1000 GiB. Chưa xác minh Free Tier/credits trong Billing và chưa giới hạn storage autoscaling.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions, Render Deploy Hooks và exact-commit markers; HTTP health/jobs/CORS smoke tests; Computer Use để kiểm tra trang trợ lý và AWS RDS Console.
 - **Mục đích chức năng / việc đã làm**: Xác nhận fix form và release thực sự đang chạy trên production, phân biệt tốc độ request ấm với cold start, và ghi rõ các giới hạn còn lại ở đăng nhập, dữ liệu nghiệp vụ, TiDB và mức miễn phí AWS.
+
+---
+
+## KIỂM TRA RDS, CI/CD VÀ PHIÊN ĐĂNG NHẬP PRODUCTION - 15/10/2026
+- **Đã làm được gì**:
+  - Production đang phục vụ đúng build `ede188f`; workflow CD Render gần nhất thành công. `/api/v1/health` và `/api/v1/jobs` đều trả HTTP 200; API việc làm hiện trả danh sách rỗng (`totalElements=0`).
+  - Log khởi động xác nhận MySQL 8.4 trên RDS kết nối được, Flyway xác thực 2 migration và schema hiện ở version 2; Hikari tạo kết nối thành công. Một lần khởi động ghi nhận 200,699 giây, nên chưa thể kết luận khởi động lạnh nhanh/ổn định.
+  - Kiểm thử cục bộ: Maven verify 300/300, `HexagonalArchitectureTest` 11/11, frontend 90/90, lint/build đạt, API E2E 28/28 và Playwright UI E2E 4/4. E2E dùng H2 tạm, không ghi lên RDS production.
+  - Log xác nhận admin production đã tồn tại nên `ADMIN_BOOTSTRAP_PASSWORD` không đổi mật khẩu hiện hữu. Tab production sau lần đăng nhập lại vẫn hiển thị form đăng nhập; chưa kiểm thử chatbot có xác thực hoặc luồng ghi dữ liệu nghiệp vụ lên RDS.
+  - Không tạo/xóa dữ liệu production trong lượt kiểm tra này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot 3, Java 21, Amazon RDS MySQL 8.4, Flyway, HikariCP, GitHub Actions, Render build marker, Vitest, ESLint, Vite, H2 và Playwright.
+- **Mục đích chức năng / việc đã làm**: Phân biệt rõ health/read-path live với kiểm thử ghi đã xác thực; ghi nhận giới hạn đăng nhập hiện tại, dữ liệu việc làm trống và độ trễ khởi động trước khi kết luận hệ thống production hoàn tất.
+
+---
+
+## XÁC MINH LẠI PHIÊN LIVE, API VÀ CI/CD - 15/10/2026
+- **Đã làm được gì**:
+  - Sau khi người dùng báo đã đăng nhập lại, kiểm tra tab Edge production vẫn đang ở `/login`; không tự nhập thông tin đăng nhập. Tab AWS và TiDB Cloud hiện cũng đang ở trang sign-in, nên chưa xác minh mới được inventory/SG trong lần này.
+  - Backend live `/api/v1/health` và `/api/v1/jobs` trả HTTP 200; build marker vẫn là `ede188f`. Năm lượt GET jobs ấm có thời gian 208–527 ms (median 278 ms), kết quả 0 việc làm. Đây là đo request khi dịch vụ đang thức, không đo cold start.
+  - Route frontend `/assistant` trả HTTP 200 và SPA shell; chưa gửi prompt do chưa có phiên xác thực. Không ghi hoặc xóa dữ liệu production.
+  - CD Render run `38690585931` thành công cho commit `ede188f`; CI run mới nhất nhìn thấy là run PR `38690247959` thành công cho nhánh cập nhật báo cáo. CI branch đó không phải bằng chứng CI chạy trên chính `ede188f`.
+  - Đọc lại `HexagonalArchitectureTest` (11 luật phụ thuộc), luồng trợ lý, tạo/sửa/ứng tuyển việc, chấm chất lượng job và đánh giá CV. Các bài test trước đó vẫn xanh; kiểm toán logic toàn dự án chưa hoàn tất và health endpoint hiện chỉ báo trạng thái ứng dụng, không tự kiểm tra DB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot REST API, RDS/MySQL read path qua API việc làm, Render build marker, GitHub Actions, PowerShell Stopwatch cho độ trễ request ấm, ArchUnit cho ranh giới Hexagonal và rà soát use case.
+- **Mục đích chức năng / việc đã làm**: Phân biệt xác thực giao diện với phiên API thật, kiểm tra tốc độ có số đo, và ghi rõ giới hạn trước khi chạy chatbot, kiểm thử ghi RDS hoặc xóa resource cloud.
+
+---
+
+## KIỂM THỬ CHATBOT LIVE VÀ ĐỐI CHIẾU CI/CD - 15/10/2026
+- **Đã làm được gì**:
+  - Trên bản production `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`, trang `/assistant` và widget chatbot nổi ở `/jobs` đều render bình thường. Hai prompt thử nghiệm chỉ hỏi quy trình TalentBridge được trả lời kèm căn cứ; không tái hiện màn trắng.
+  - `/api/v1/health` trả HTTP 200, `UP`, đúng build marker; `/api/v1/jobs` trả HTTP 200 nhưng có 0 tin. Hai lượt đọc live đo được lần lượt khoảng 437 ms và 367 ms; đây chỉ là phép đo tức thời khi kiểm tra, không đại diện cold start hay tải cao.
+  - CD run `38690585931` thành công cho đúng commit production. CI gần nhất `38690247959` thành công trên PR cập nhật báo cáo (`49530f2`), không phải cùng SHA với production; CI 3/3 của PR release trước đã được ghi ở mục kiểm chứng form.
+  - Thanh điều hướng production xác định phiên hiện tại là **Ứng viên**, dù người dùng báo đã vào trang quản trị. Vì vậy chưa chạy thao tác/luồng Admin hoặc Recruiter và không ghi dữ liệu RDS. Tab TiDB hiện vẫn ở trang đăng nhập, nên chưa xác minh resource để xóa; không có thao tác xóa nào được thực hiện.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Production UI qua Computer Use, Spring REST health/jobs, build marker, GitHub Actions run metadata, Render CD và retrieval nội bộ của chatbot.
+- **Mục đích chức năng / việc đã làm**: Xác nhận hồi quy chatbot và đường đọc API sau deploy, đồng thời phân định rõ các cổng còn thiếu: tài khoản đúng vai trò để thử ghi nghiệp vụ, dữ liệu job để thử luồng tuyển dụng end-to-end, và đăng nhập TiDB để kiểm kê trước thao tác xóa.
+
+---
+
+## KIỂM THỬ TOÀN BỘ CỤC BỘ VÀ RÀ SOÁT CƠ CHẾ DỮ LIỆU - 15/10/2026
+- **Đã làm được gì**:
+  - Chạy lại `mvnw verify` bằng JDK 21: 300/300 test đạt, trong đó `HexagonalArchitectureTest` đạt 11/11. Lần chạy ban đầu dùng Java 8 từ PATH nên không nạp được class Java 21; đã dùng JDK 21 cài sẵn cho lượt chạy xác nhận, không đổi cấu hình máy.
+  - Frontend: 90/90 unit test, ESLint và Vite/TypeScript production build đều đạt. Script `scripts/run-e2e.ps1` chạy API E2E 28/28 và Playwright UI E2E 4/4 trên backend H2 cô lập; bao gồm chatbot/widget, phục hồi khi cuộn lỗi, form yêu cầu doanh nghiệp và viewport 360/555/1280px cho ba vai trò.
+  - Xác nhận `DataInitializer` chỉ chạy ở profile `local`, `test`, `dev`, `e2e`; dữ liệu công ty/tài khoản và 100 tin đang tuyển là dữ liệu demo cho môi trường không production. Không thể bật cấu hình này để nạp RDS production vì sẽ đưa dữ liệu demo sang production và tin được tạo ở trạng thái `ACTIVE`.
+  - Không có thay đổi source ứng dụng hoặc thao tác ghi DB production. E2E lưu ảnh QA trong `artifacts/roleplay-qa`; kiểm thử persistence vẫn dùng H2, còn RDS chỉ mới được xác nhận qua API đọc việc làm HTTP 200 với 0 bản ghi.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: JDK 21, Maven Surefire, ArchUnit, Vitest, ESLint, TypeScript/Vite, Playwright và backend H2 tạm thời; Spring profile gating bảo vệ initializer.
+- **Mục đích chức năng / việc đã làm**: Xác nhận bộ kiểm thử source hiện tại và ngăn dùng seed demo không phù hợp cho production; để nạp tin nghiệp vụ cần phiên Admin/Recruiter thật và luồng kiểm duyệt, còn xóa TiDB cần đăng nhập để kiểm kê resource trước.
+
+---
+
+## KIỂM TRA LẠI RELEASE LIVE VÀ RELEASE GATE MAIN - 15/10/2026
+- **Đã làm được gì**:
+  - Đo lại API việc làm production 5 lần: mọi lượt HTTP 200, `totalElements=0`, thời gian 418/205/158/194/201 ms (median 201 ms). Frontend trả HTTP 200 với marker đúng `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`.
+  - Xác nhận GitHub CI có 3 check backend/frontend/Docker đều pass ở PR gần nhất trước release; CD main hiện phục vụ đúng commit production. Phát hiện GitHub `main` đang **không có branch protection** và branch ruleset rỗng, nên CI hiện là bằng chứng xanh nhưng chưa được cài làm merge gate bắt buộc. Đã hỏi chủ repo chọn cấu hình bảo vệ; chưa thay đổi setting.
+  - Mở trang đăng nhập production để người dùng tự xác thực; trang vẫn nhận diện phiên là Ứng viên, nên chưa thực hiện tạo dữ liệu, thử ghi RDS hoặc xóa TiDB. TiDB Cloud và AWS Console cũng vẫn chờ đăng nhập.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions check-run metadata, GitHub branch protection API read-only, HTTP Stopwatch và Render build marker.
+- **Mục đích chức năng / việc đã làm**: Phân biệt pipeline đã chạy thành công với bảo vệ merge thực sự; xác nhận lại API đọc production và nêu chính xác bước xác thực/quyền còn thiếu trước các thao tác production.
+
+---
+
+## BẬT RULESET BẢO VỆ NHÁNH MAIN - 15/10/2026
+- **Đã làm được gì**:
+  - Tạo ruleset repository `Protect main: PR and all CI checks` (ID `25142828`), trạng thái active, chỉ áp dụng `refs/heads/main`.
+  - Bắt buộc mọi thay đổi vào `main` đi qua Pull Request, yêu cầu ba status check do GitHub Actions phát: `Backend Build & Verify (Spring Boot 3 + JDK 21)`, `Frontend Test, Lint & Build (React 19 + Node 20)`, `Dockerfile Build Verification`; không yêu cầu số review tối thiểu và chặn force-push.
+  - Đọc lại ruleset qua GitHub API và endpoint rule evaluation của `main`; xác nhận đủ ba rule PR, required status checks, non-fast-forward. Không sửa source ứng dụng và không redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Repository Rulesets REST API, GitHub Actions check-run metadata (integration `github-actions`, ID `15368`), ba job trong `.github/workflows/ci.yml`.
+- **Mục đích chức năng / việc đã làm**: Chuyển CI từ trạng thái chỉ chạy khi có sự kiện sang cổng merge bắt buộc cho `main`, đồng thời giữ lựa chọn không yêu cầu người duyệt PR.
+---
+
+## TÁI XÁC MINH PRODUCTION SAU KHI BẬT RULESET - 15/10/2026
+- **Đã làm được gì**:
+  - Production tại build `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`: health HTTP 200 (458 ms), API jobs HTTP 200 (196 ms, `totalElements=0`), frontend route `/assistant` HTTP 200 (125 ms). Đây là một lượt đo tức thời, không phải benchmark tải hoặc cold-start.
+  - GitHub API xác nhận ruleset `25142828` đang active trên `main`, yêu cầu PR, đúng ba check backend/frontend/Docker và chặn non-fast-forward.
+  - Browser recheck: TalentBridge hiện nhận diện tài khoản `Duy Khánh Lê` là Ứng viên; TiDB Cloud và AWS Console còn ở trang đăng nhập. Không thể chạy luồng ghi RDS, kiểm thử tuyển dụng từ đầu đến cuối hoặc xác định resource TiDB cần xóa.
+  - Không ghi/xóa dữ liệu production và không redeploy vì không có thay đổi source ứng dụng.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP GET/Stopwatch, Spring Boot health/jobs API, Render build marker, GitHub Repository Rulesets API, Computer Use đọc trạng thái phiên.
+- **Mục đích chức năng / việc đã làm**: Cập nhật bằng chứng live sau khi bật merge gate; phân định rõ API đọc đang phục vụ tốt với các luồng cần quyền Admin/Recruiter và quyền console cloud chưa được xác minh.
+
+---
+
+## XÁC MINH RDS, TIDB VÀ CI/CD SAU KHI ĐĂNG NHẬP CLOUD - 15/10/2026
+- **Đã làm được gì**:
+  - AWS Console xác nhận RDS `talentbridge-mysql` ở Singapore đang `Available`, MySQL 8.4.9, `db.t4g.micro`, Single-AZ; mã hóa lưu trữ và deletion protection bật. Storage hiện 20 GiB gp2 nhưng autoscaling cho phép đến 1000 GiB; backup tự động chỉ giữ 1 ngày và có 3 snapshot tự động ở trạng thái Available.
+  - Log Render của commit production `ede188fc9b95e14725b7b25c56b75faf68dcbfb6` ghi Flyway schema `talentbridge_db` đã up-to-date và Hikari tạo kết nối MySQL thành công. Biểu đồ RDS có DatabaseConnections dao động 0–4 trong khoảng thời gian gần nhất; kết hợp với log cho thấy luồng BE–DB đang hoạt động. URL datasource bị che nên chưa đối chiếu độc lập được hostname với endpoint RDS; RDS Console đồng thời hiển thị DB name khởi tạo là `test`, cần giữ ghi chú này khi rà soát cấu hình.
+  - Smoke test live hiện tại: `/api/v1/health` HTTP 200, build marker đúng; `/api/v1/jobs` HTTP 200 trong 281 ms, `totalElements=0`. Đây là request ấm đơn lẻ, không phải benchmark. Không ghi dữ liệu production.
+  - Log khởi động cùng deploy ghi ứng dụng mất 200.699 giây mới sẵn sàng; trước lúc mở port Render nhiều lần báo chưa phát hiện port. Hikari cũng cảnh báo `idleTimeout` mặc định lớn hơn `maxLifetime` đã cấu hình nên bị vô hiệu hóa. Đã chỉnh cấu hình source local thành `idle-timeout=240000` (nhỏ hơn `max-lifetime=300000`) và `mvnw verify` đạt 300/300; thay đổi chưa được merge/deploy. Cold start 200.699 giây vẫn chưa được giải quyết. Render Free không cung cấp metric CPU/RAM nên hiện chưa đủ dữ liệu kết luận nguyên nhân.
+  - TiDB Cloud đã đăng nhập: cả Resource View và Project View đều không còn resource/instance trong tổ chức/project JS2. Vì vậy hiện không có cluster TiDB để xóa thêm. Trạng thái danh sách không chứng minh lịch sử xóa hoặc việc dữ liệu TiDB đã được nhập/đối soát; không có bằng chứng migration đầy đủ.
+  - CI run `38690247959` pass đủ 3 job backend/frontend/Docker trên head PR `49530f2`; CD run `38690585931` thành công và Render đang phục vụ commit `ede188fc`. Không có CI run gắn trực tiếp với đúng SHA production trong danh sách hiện tại; merge gate PR đã được bật ở mục trước.
+  - Tab TalentBridge vẫn xác thực ở vai trò Ứng viên. Vì vậy chưa thể tạo 100 tin chờ duyệt qua luồng Recruiter/Admin hoặc thực hiện kiểm thử ghi/đọc nghiệp vụ bằng tài khoản có quyền. API jobs hiện không có tin.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: AWS RDS Console/CloudWatch metrics, TiDB Cloud Resource View, Render application logs, Spring Boot health/jobs API, HikariCP, Flyway, GitHub Actions CI và Render CD.
+- **Mục đích chức năng / việc đã làm**: Xác nhận DB đang nhận kết nối và CI/CD đang chạy, đồng thời tách bạch rõ giữa khả năng kết nối, migration dữ liệu, thao tác ghi nghiệp vụ và hiệu năng cold start. Không xóa thêm resource, không nạp dữ liệu mẫu, không đọc hoặc tiết lộ secret.

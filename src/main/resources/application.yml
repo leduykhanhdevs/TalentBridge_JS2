@@ -138,6 +138,7 @@ spring:
       maximum-pool-size: "${DB_POOL_MAX_SIZE:5}"
       connection-timeout: 10000
       validation-timeout: 5000
+      idle-timeout: 240000
       max-lifetime: 300000
       keepalive-time: 180000
   jpa:
