@@ -1,5 +1,6 @@
 package vn.talentbridge.core.application.usecase;
 
+import vn.talentbridge.core.application.port.in.AdminBootstrapResult;
 import vn.talentbridge.core.application.port.in.BootstrapAdminAccountUseCase;
 import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
@@ -29,29 +30,52 @@ public class BootstrapAdminAccountUseCaseImpl implements BootstrapAdminAccountUs
     }
 
     @Override
-    public boolean execute(String email, String rawPassword, String fullName) {
+    public AdminBootstrapResult execute(
+            String email,
+            String rawPassword,
+            String fullName,
+            boolean promoteExistingAccount
+    ) {
         String normalizedEmail = normalizeEmail(email);
-        validatePassword(rawPassword);
-        String normalizedFullName = normalizeFullName(fullName);
-
         var existingUser = userRepository.findByEmail(normalizedEmail);
         if (existingUser.isPresent()) {
-            if (existingUser.get().hasRole(RoleName.ROLE_ADMIN)) {
-                return false;
+            User user = existingUser.get();
+            if (user.hasRole(RoleName.ROLE_ADMIN)) {
+                return AdminBootstrapResult.ALREADY_ADMIN;
             }
+
+            if (!promoteExistingAccount) {
+                throw new IllegalStateException(
+                        "Admin bootstrap refused because the configured email belongs to a non-admin account. "
+                                + "Set ADMIN_BOOTSTRAP_PROMOTE_EXISTING=true only for an approved promotion."
+                );
+            }
+            if (!user.isActive()) {
+                throw new IllegalStateException(
+                        "Admin bootstrap refused because the existing account is not active."
+                );
+            }
+
+            user.addRole(new Role(null, RoleName.ROLE_ADMIN, "Quản trị viên hệ thống"));
+            userRepository.save(user);
+            return AdminBootstrapResult.PROMOTED_EXISTING;
+        }
+
+        if (promoteExistingAccount) {
             throw new IllegalStateException(
-                    "Admin bootstrap refused because the configured email belongs to a non-admin account."
+                    "Admin promotion refused because the configured email does not match an existing account."
             );
         }
 
+        validatePassword(rawPassword);
         User admin = new User();
         admin.setEmail(normalizedEmail);
         admin.setPasswordHash(passwordEncoder.encode(rawPassword));
-        admin.setFullName(normalizedFullName);
+        admin.setFullName(normalizeFullName(fullName));
         admin.setStatus(UserStatus.ACTIVE);
         admin.addRole(new Role(null, RoleName.ROLE_ADMIN, "Quản trị viên hệ thống"));
         userRepository.save(admin);
-        return true;
+        return AdminBootstrapResult.CREATED;
     }
 
     private String normalizeEmail(String email) {
