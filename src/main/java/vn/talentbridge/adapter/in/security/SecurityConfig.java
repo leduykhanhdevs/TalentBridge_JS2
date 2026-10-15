@@ -34,6 +34,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthRateLimitFilter authRateLimitFilter;
     private final Environment environment;
@@ -81,12 +82,14 @@ public class SecurityConfig {
                 })
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(PUBLIC_URLS).permitAll();
+                    auth.requestMatchers("/api/v1/mcp", "/api/v1/mcp/**").hasRole("RECRUITER");
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/jobs", "/api/v1/jobs/{id:[0-9]+}").permitAll();
                     if (isLocal) {
                         auth.requestMatchers("/h2-console/**").permitAll();

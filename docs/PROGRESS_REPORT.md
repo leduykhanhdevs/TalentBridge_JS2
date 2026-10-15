@@ -348,35 +348,35 @@
 
 ---
 
-## SỬA VALIDATION YÊU CẦU TẠO DOANH NGHIỆP NHÀ TUYỂN DỤNG - 15/10/2026
+## MCP JAVA SDK VÀ TÁI SỬ DỤNG RAG KNOWLEDGE PORT - 15/10/2026
 - **Đã làm được gì**:
-  - Sửa form để website và logo chỉ nhận URL HTTP(S) hợp lệ; email nhập nhầm vào website hoặc logo dạng `data:` sẽ hiện lỗi ngay tại trường và không gửi request.
-  - Bỏ luồng chọn ảnh giả lập vốn chuyển ảnh thành Data URI mà backend không chấp nhận; giải thích rõ URL logo công khai là tùy chọn và tải file chưa được hỗ trợ.
-  - Thêm kiểm tra giới hạn độ dài tương ứng DTO backend, trạng thái trợ năng cho lỗi trường, cùng kiểm thử UI và API cho website email / Data URI.
-  - Xác minh cục bộ: `mvnw verify` 299/299; frontend 90/90; ESLint và production build đạt; H2 API E2E 28/28; Playwright UI E2E 4/4; `git diff --check` đạt.
-  - PR #33 đã mở vào `main`; Backend Verify, Frontend Test/Lint/Build và Dockerfile Build đều PASS trên commit triển khai mã sửa. Chưa merge hoặc redeploy production; đang chờ review của người dùng.
-- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser chuẩn của trình duyệt, Vitest, Playwright, Spring Boot MockMvc/JUnit, Maven Wrapper/JDK 21; backend DTO/API contract làm chuẩn validation.
-- **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu doanh nghiệp thất bại sau khi bấm gửi vì website nhập sai định dạng hoặc logo tải lên thành dữ liệu không tương thích; cung cấp lỗi dễ hiểu trước khi gửi và giữ dữ liệu đúng hợp đồng backend.
+  - Thay controller JSON-RPC tự viết bằng MCP Java SDK 2.0.1, Streamable HTTP Servlet tại `/api/v1/mcp`, protocol version `2025-11-25` và schema cho các tool ATS.
+  - Bổ sung `TalentBridgeKnowledgePort` cùng inbound search use case; chatbot FAQ và MCP tool `talentbridge_search_help` dùng chung nguồn hướng dẫn TalentBridge.
+  - Giữ MCP tools ở phạm vi use case hẹp; yêu cầu Recruiter ở route và handler, quyền sở hữu dữ liệu được giữ trong application use case. Không cấp truy cập JPA/SQL trực tiếp.
+  - Sửa phản hồi phân quyền: Candidate có token hợp lệ nhưng bị thiếu role Recruiter trước đây bị luồng `/error` đổi 403 thành 401; `JwtAccessDeniedHandler` hiện trả JSON 403 trực tiếp.
+  - Test HTTP tích hợp xác nhận initialize, `notifications/initialized`, `tools/list`, `tools/call`, anonymous 401 và Candidate 403. Backend `mvnw verify` đạt 298/298; `HexagonalArchitectureTest` đạt 11/11; `git diff --check` đạt.
+  - Chưa kiểm thử giao diện live vì desktop đang ở màn hình khóa Windows; thay đổi còn ở nhánh tính năng, chưa merge hoặc deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: MCP Java SDK, Streamable HTTP, Jackson 2, Spring Security, application ports/use cases, lexical retrieval gồm token chính xác + synonym expansion + character-trigram Dice similarity, JUnit/Spring Boot integration tests, H2 test profile.
+- **Mục đích chức năng / việc đã làm**: Chuẩn hóa tích hợp MCP cho ATS trong khi chatbot vẫn chỉ trả lời theo tài liệu TalentBridge; chia sẻ một cổng RAG có kiểm soát, bảo vệ dữ liệu Recruiter bằng quyền và ownership, đồng thời trả đúng 403 cho người đã đăng nhập nhưng không đủ vai trò. Retrieval lexical hiện tại không phải embedding/vector RAG và test chưa chứng minh độ chính xác hay interoperability với MCP client độc lập.
 
 ---
 
-## KIỂM TRA LIVE FRONTEND, BACKEND VÀ RDS - 15/10/2026
+## XÁC MINH PHÁT HÀNH MCP/RAG TRÊN RENDER - 15/10/2026
 - **Đã làm được gì**:
-  - Frontend Render trả HTTP 200 và metadata build xác nhận commit đang chạy là `d7fca746ef8767c2e759bfd120beeb73fcdd99f3`.
-  - Hai request đầu tới backend health vượt timeout 40 giây và 100 giây; request sau trả HTTP 200 trong 315 ms, cho thấy độ trễ khởi động lạnh có khả năng cao. API danh sách việc làm đầu tiên trả HTTP 200 trong 1.4 giây nhưng có 0 tin. Đo ba request ấm tiếp theo: health 118–324 ms, jobs 306–403 ms, đều HTTP 200 và vẫn 0 tin.
-  - AWS Console xác nhận RDS `talentbridge-mysql` ở trạng thái Available, lớp `db.t4g.micro`, 1 kết nối đang mở, backup tự động giữ 1 ngày và 3 snapshot; có bản cập nhật hệ điều hành đang chờ lịch bảo trì.
-  - Chưa kiểm tra endpoint chatbot đã xác thực, chưa nạp dữ liệu nghiệp vụ và chưa đối soát/xóa TiDB; các phiên Render, TalentBridge và TiDB yêu cầu người dùng đăng nhập.
-- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP smoke tests từ ngoài dịch vụ, build commit marker Vite, AWS RDS Console và endpoint phân trang `/api/v1/jobs`.
-- **Mục đích chức năng / việc đã làm**: Phân biệt frontend/CDN khỏe, API hoạt động sau khi thức dậy và dữ liệu nghiệp vụ còn trống; ghi nhận giới hạn cold-start để không nhầm với lỗi truy vấn DB hoặc chatbot.
+  - PR #34 đã merge vào `main` tại commit `ac11cce4257c9539beb91d885be9ce192f7b7e2b`; CI đạt 3/3 (backend verify, frontend test/lint/build, Dockerfile build).
+  - CD Render đã trigger cả frontend và backend, xác minh build marker của hai dịch vụ đúng commit trên, rồi smoke test health, API việc làm dùng DB, frontend và CORS đều đạt.
+  - Kiểm tra trực tiếp sau deploy: `/api/v1/health` trả build commit `ac11cce...`; `/api/v1/jobs` trả HTTP 200 nhưng `totalElements=0`; MCP từ chối truy cập ẩn danh bằng HTTP 401 như yêu cầu.
+  - Giao diện production và bong bóng Trợ lý hiển thị; phiên trình duyệt hiện chưa đăng nhập nên ô gửi câu hỏi bị khóa. Chưa có bằng chứng kiểm thử hội thoại hoặc gọi MCP tool bằng phiên Recruiter trên production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions CI/CD, Render deploy hooks, build markers, production smoke tests, MCP Streamable HTTP, RAG lexical hybrid.
+- **Mục đích chức năng / việc đã làm**: Phát hành và xác minh thay đổi MCP/RAG trên cả hai dịch vụ Render; ghi rõ giới hạn còn lại: cần phiên đăng nhập Recruiter để kiểm thử hội thoại/tool thật và cần nạp dữ liệu việc làm nghiệp vụ vì danh sách công khai hiện rỗng.
 
 ---
 
-## ĐỐI CHIẾU CI/CD, PHIÊN ĐĂNG NHẬP VÀ FIREWALL RDS - 15/10/2026
+## SỬA FORM GỬI YÊU CẦU DOANH NGHIỆP - 15/10/2026
 - **Đã làm được gì**:
-  - GitHub Actions chạy trên đúng head PR #33 (`c402aa4`) hoàn tất 3/3: Backend Verify, Frontend Test/Lint/Build và Dockerfile Build. PR vẫn OPEN, mergeable nhưng chưa có review decision; chưa merge hoặc redeploy.
-  - Xác nhận repository có cả `RENDER_DEPLOY_HOOK_URL` và `RENDER_FRONTEND_DEPLOY_HOOK_URL`; không đọc hoặc in giá trị secret.
-  - Kiểm tra lại production: frontend, `/api/v1/health` và `/api/v1/jobs` đều HTTP 200; marker live vẫn là commit cũ `d7fca746ef8767c2e759bfd120beeb73fcdd99f3`; jobs trả `totalElements: 0`.
-  - AWS Console xác nhận RDS `talentbridge-mysql` Available, đang có 1 connection; inbound security group chỉ gồm hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`, không còn IP workstation `/32`.
-  - Dù người dùng báo đã đăng nhập lại, tab TalentBridge vẫn ở `/login` và TiDB Cloud vẫn ở trang Sign in. Chưa thể kiểm tra chatbot đã xác thực, tạo dữ liệu nghiệp vụ hoặc xác minh inventory TiDB trong lượt này.
-- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions/CLI để đọc trạng thái CI và tên secret; HTTP GET smoke test; AWS RDS Console; Computer Use để đối chiếu trạng thái trang và rule firewall.
-- **Mục đích chức năng / việc đã làm**: Xác định rõ bản live khác với head đã qua CI, tránh gọi PR là đã deploy; xác nhận RDS chỉ nhận MySQL inbound từ Render và nêu đúng các bước còn phụ thuộc phiên đăng nhập người dùng.
+  - Chuẩn hóa xác thực URL website và logo về HTTP(S); chặn email nhập nhầm vào website và logo dạng Data URI trước khi gửi API.
+  - Bỏ giao diện tải logo giả lập không tương thích với DTO backend; làm rõ logo URL công khai là tùy chọn, và thêm thông báo lỗi ngay tại trường nhập.
+  - Bổ sung giới hạn độ dài khớp backend, test unit, API integration và Playwright cho cả dữ liệu không hợp lệ lẫn gửi thành công.
+  - CI của PR #33 trước cập nhật nhánh đã pass đủ backend, frontend và Docker; kiểm thử cục bộ gần nhất đạt Maven 299/299, frontend 90/90, API E2E 28/28 và UI E2E 4/4. Đang cập nhật nhánh với main để chạy lại CI.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser của trình duyệt, Spring Boot Bean Validation, Vitest, MockMvc/JUnit, Playwright, Maven Wrapper và GitHub Actions.
+- **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu tạo doanh nghiệp thất bại do website/email hoặc logo sai hợp đồng; người dùng nhận chỉ dẫn chính xác trước khi request tới backend.

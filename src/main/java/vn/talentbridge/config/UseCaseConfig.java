@@ -390,6 +390,12 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public SearchTalentBridgeKnowledgeUseCase searchTalentBridgeKnowledgeUseCase(
+            TalentBridgeKnowledgePort knowledgePort) {
+        return new SearchTalentBridgeKnowledgeUseCaseImpl(knowledgePort);
+    }
+
+    @Bean
     public JobQualityScorer jobQualityScorer() {
         return new JobQualityScorer();
     }

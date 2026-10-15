@@ -22,10 +22,10 @@ RAG, embedding search và LLM generation cũng không tự động bảo đảm 
 
 ## Đối chiếu với source TalentBridge hiện tại
 
-- Chatbot truy xuất một tập hướng dẫn TalentBridge được khai báo trong source bằng chuẩn hóa từ khóa và synonym expansion; sau đó dùng nội dung đã truy xuất làm căn cứ cho Gemini nếu có API key, hoặc trả hướng dẫn dự phòng. Đây là retrieval theo từ khóa trên tập nhỏ, chưa phải vector-embedding RAG.
+- Chatbot truy xuất một tập hướng dẫn TalentBridge cố định bằng ba tín hiệu lexical: từ khóa chính xác, từ khóa mở rộng synonym và độ tương đồng character-trigram; một số FAQ có đường trả lời nhanh. Nội dung truy xuất được dùng làm căn cứ cho Gemini nếu có API key, hoặc làm câu trả lời dự phòng. MCP help tool dùng chung cổng tìm kiếm tri thức này. Đây vẫn là retrieval heuristic trên corpus nhỏ, không phải embedding/vector RAG.
 - Matching CV–tin dùng kết quả Gemini khi cấu hình được; đường dự phòng dùng độ phủ token và một tập quy tắc kỹ năng suy luận. Các token là tập đặc trưng từ văn bản, không phải vector embedding học được. Điểm matching là tín hiệu tham khảo, chưa được hiệu chuẩn bằng tập dữ liệu tuyển dụng có nhãn.
-- Endpoint `/api/v1/mcp` là giao diện JSON-RPC tùy biến, có tools/list, tools/call và ping, phân quyền Recruiter và gọi use case. Chưa tuyên bố đây là MCP server tương thích đầy đủ với vòng đời, transport, capability negotiation và schema của đặc tả MCP hiện hành.
+- Nhánh tính năng MCP hiện thay endpoint JSON-RPC tự viết bằng MCP Java SDK chính thức, Streamable HTTP Servlet tại `/api/v1/mcp`, khai báo giao thức `2025-11-25` và schema cho các tool ATS. Quyền Recruiter được kiểm tra ở Spring Security và tại thời điểm gọi tool; use case tiếp tục kiểm soát quyền sở hữu nghiệp vụ. Test HTTP tích hợp bao phủ initialize, `notifications/initialized`, `tools/list`, `tools/call`, anonymous 401 và Candidate 403. Đây là bằng chứng tương thích giao thức ở mức test trong cùng ứng dụng, chưa phải kiểm thử với MCP client độc lập; thay đổi chưa merge/deploy.
 
 ## Cách trình bày phù hợp trong báo cáo
 
-Ghi riêng: (1) điều bài báo AI-KM thực sự mô tả; (2) heuristic/kiến trúc TalentBridge tự xây dựng; (3) kết quả đo được từ test hoặc dữ liệu đánh giá. Không dùng test unit để tuyên bố độ chính xác tuyển dụng, không gọi matching hiện tại là semantic vector RAG, và không gọi endpoint JSON-RPC tùy biến là MCP chuẩn.
+Ghi riêng: (1) điều bài báo AI-KM thực sự mô tả; (2) heuristic/kiến trúc TalentBridge tự xây dựng; (3) kết quả đo được từ test hoặc dữ liệu đánh giá. Không dùng test unit để tuyên bố độ chính xác tuyển dụng, không gọi retrieval hiện tại là semantic vector RAG, và không suy rộng test SDK nội bộ thành bằng chứng interoperability với mọi MCP client.
