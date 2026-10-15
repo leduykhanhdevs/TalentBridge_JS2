@@ -404,3 +404,15 @@
   - Không tạo/xóa dữ liệu production trong lượt kiểm tra này.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot 3, Java 21, Amazon RDS MySQL 8.4, Flyway, HikariCP, GitHub Actions, Render build marker, Vitest, ESLint, Vite, H2 và Playwright.
 - **Mục đích chức năng / việc đã làm**: Phân biệt rõ health/read-path live với kiểm thử ghi đã xác thực; ghi nhận giới hạn đăng nhập hiện tại, dữ liệu việc làm trống và độ trễ khởi động trước khi kết luận hệ thống production hoàn tất.
+
+---
+
+## XÁC MINH LẠI PHIÊN LIVE, API VÀ CI/CD - 15/10/2026
+- **Đã làm được gì**:
+  - Sau khi người dùng báo đã đăng nhập lại, kiểm tra tab Edge production vẫn đang ở `/login`; không tự nhập thông tin đăng nhập. Tab AWS và TiDB Cloud hiện cũng đang ở trang sign-in, nên chưa xác minh mới được inventory/SG trong lần này.
+  - Backend live `/api/v1/health` và `/api/v1/jobs` trả HTTP 200; build marker vẫn là `ede188f`. Năm lượt GET jobs ấm có thời gian 208–527 ms (median 278 ms), kết quả 0 việc làm. Đây là đo request khi dịch vụ đang thức, không đo cold start.
+  - Route frontend `/assistant` trả HTTP 200 và SPA shell; chưa gửi prompt do chưa có phiên xác thực. Không ghi hoặc xóa dữ liệu production.
+  - CD Render run `38690585931` thành công cho commit `ede188f`; CI run mới nhất nhìn thấy là run PR `38690247959` thành công cho nhánh cập nhật báo cáo. CI branch đó không phải bằng chứng CI chạy trên chính `ede188f`.
+  - Đọc lại `HexagonalArchitectureTest` (11 luật phụ thuộc), luồng trợ lý, tạo/sửa/ứng tuyển việc, chấm chất lượng job và đánh giá CV. Các bài test trước đó vẫn xanh; kiểm toán logic toàn dự án chưa hoàn tất và health endpoint hiện chỉ báo trạng thái ứng dụng, không tự kiểm tra DB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot REST API, RDS/MySQL read path qua API việc làm, Render build marker, GitHub Actions, PowerShell Stopwatch cho độ trễ request ấm, ArchUnit cho ranh giới Hexagonal và rà soát use case.
+- **Mục đích chức năng / việc đã làm**: Phân biệt xác thực giao diện với phiên API thật, kiểm tra tốc độ có số đo, và ghi rõ giới hạn trước khi chạy chatbot, kiểm thử ghi RDS hoặc xóa resource cloud.
