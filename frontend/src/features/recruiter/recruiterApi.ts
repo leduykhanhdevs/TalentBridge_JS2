@@ -12,6 +12,7 @@ import type {
     UpdateRecruiterProfileRequest,
 } from './recruiterTypes'
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
 
 export class RecruiterApiError extends Error {
     readonly status: number
@@ -60,7 +61,7 @@ async function handleResponse<T>(response: Response, defaultErrorMsg: string): P
 
 export async function getRecruiterProfile(): Promise<RecruiterProfile> {
     const url = `${API_BASE_URL}/recruiters/profile`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -75,7 +76,7 @@ export async function updateRecruiterProfile(
     request: UpdateRecruiterProfileRequest,
 ): Promise<RecruiterProfile> {
     const url = `${API_BASE_URL}/recruiters/profile`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -91,7 +92,7 @@ export async function requestCreateCompany(
     request: RequestCreateCompanyRequest,
 ): Promise<CompanyResponse> {
     const url = `${API_BASE_URL}/recruiters/companies/request-create`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -114,7 +115,7 @@ export async function searchApprovedCompanies(
     if (params.sortDirection) query.set('sortDirection', params.sortDirection)
 
     const url = `${API_BASE_URL}/recruiters/companies/search?${query.toString()}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -130,7 +131,7 @@ export async function submitJoinCompanyRequest(
     request: SubmitJoinCompanyRequest,
 ): Promise<CompanyJoinRequestResponse> {
     const url = `${API_BASE_URL}/recruiters/companies/${companyId}/join-request`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -151,7 +152,7 @@ export async function getCompanyJoinRequests(
     if (params.status) query.set('status', params.status)
 
     const url = `${API_BASE_URL}/recruiters/companies/my-company/join-requests?${query.toString()}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -167,7 +168,7 @@ export async function reviewJoinRequest(
     request: ReviewJoinRequest,
 ): Promise<CompanyJoinRequestResponse> {
     const url = `${API_BASE_URL}/recruiters/companies/join-requests/${requestId}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -181,7 +182,7 @@ export async function reviewJoinRequest(
 
 export async function getMyPendingJoinRequest(): Promise<CompanyJoinRequestResponse | null> {
     const url = `${API_BASE_URL}/recruiters/companies/my-pending-request`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })

@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
 import type {
     AddNotePayload,
     AiMatchResult,
@@ -79,7 +80,7 @@ export async function getJobApplicants(
     const queryString = query.toString()
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants${queryString ? `?${queryString}` : ''}`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -88,7 +89,7 @@ export async function getJobApplicants(
 }
 
 export async function matchApplicantWithAi(jobId: number, candidateId: number): Promise<AiMatchResult> {
-    const response = await fetch(`${API_BASE_URL}/ai/match`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/ai/match`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ jobId, candidateId }),
@@ -103,7 +104,7 @@ export async function updateApplicantStage(
 ): Promise<JobApplicant> {
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/stage`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -117,7 +118,7 @@ export async function reopenApplicantApplication(
     applicationId: number,
     reason: string,
 ): Promise<JobApplicant> {
-    const res = await fetch(`${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/reopen`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/reopen`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ reason }),
@@ -132,7 +133,7 @@ export async function addApplicantNote(
 ): Promise<ApplicationNote> {
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/notes`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -147,7 +148,7 @@ export async function getApplicantNotes(
 ): Promise<ApplicationNote[]> {
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/notes`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -161,7 +162,7 @@ export async function getApplicantStageHistory(
 ): Promise<ApplicationStage[]> {
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/stages`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -180,7 +181,7 @@ export async function scheduleApplicantInterview(
 ): Promise<InterviewItem> {
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/interviews`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -195,7 +196,7 @@ export async function getApplicantInterviews(
 ): Promise<InterviewItem[]> {
     const url = `${API_BASE_URL}/recruiters/jobs/${jobId}/applicants/${applicationId}/interviews`
 
-    const res = await fetch(url, {
+    const res = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })

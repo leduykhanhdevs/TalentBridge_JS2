@@ -7,6 +7,7 @@ import type {
     MyJobStats,
 } from './recruiterJobTypes'
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
 
 export class RecruiterJobApiError extends Error {
     readonly status: number
@@ -65,7 +66,7 @@ export async function getMyJobs(
     if (params.status) query.set('status', params.status)
 
     const url = `${API_BASE_URL}/jobs/my-jobs?${query.toString()}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -77,7 +78,7 @@ export async function getMyJobs(
 }
 
 export async function getMyJobStats(): Promise<MyJobStats> {
-    const response = await fetch(`${API_BASE_URL}/recruiters/my-jobs/stats`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/recruiters/my-jobs/stats`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -91,7 +92,7 @@ export async function createJob(
     payload: CreateJobPayload,
 ): Promise<RecruiterJobItem> {
     const url = `${API_BASE_URL}/jobs`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -111,7 +112,7 @@ export async function updateJob(
     payload: UpdateJobPayload,
 ): Promise<RecruiterJobItem> {
     const url = `${API_BASE_URL}/jobs/${id}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -128,7 +129,7 @@ export async function updateJob(
  */
 export async function closeJob(id: number): Promise<RecruiterJobItem> {
     const url = `${API_BASE_URL}/jobs/${id}/close`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'PATCH',
         headers: getAuthHeaders(),
     })
@@ -144,7 +145,7 @@ export async function closeJob(id: number): Promise<RecruiterJobItem> {
  */
 export async function getJobDetail(id: number): Promise<RecruiterJobItem> {
     const url = `${API_BASE_URL}/jobs/${id}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
