@@ -357,3 +357,14 @@
   - PR #33 đã mở vào `main`; Backend Verify, Frontend Test/Lint/Build và Dockerfile Build đều PASS trên commit triển khai mã sửa. Chưa merge hoặc redeploy production; đang chờ review của người dùng.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser chuẩn của trình duyệt, Vitest, Playwright, Spring Boot MockMvc/JUnit, Maven Wrapper/JDK 21; backend DTO/API contract làm chuẩn validation.
 - **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu doanh nghiệp thất bại sau khi bấm gửi vì website nhập sai định dạng hoặc logo tải lên thành dữ liệu không tương thích; cung cấp lỗi dễ hiểu trước khi gửi và giữ dữ liệu đúng hợp đồng backend.
+
+---
+
+## KIỂM TRA LIVE FRONTEND, BACKEND VÀ RDS - 15/10/2026
+- **Đã làm được gì**:
+  - Frontend Render trả HTTP 200 và metadata build xác nhận commit đang chạy là `d7fca746ef8767c2e759bfd120beeb73fcdd99f3`.
+  - Hai request đầu tới backend health vượt timeout 40 giây và 100 giây; request sau trả HTTP 200 trong 315 ms, cho thấy độ trễ khởi động lạnh có khả năng cao. Sau khi backend hoạt động, API danh sách việc làm trả HTTP 200 trong 1.4 giây nhưng có 0 tin.
+  - AWS Console xác nhận RDS `talentbridge-mysql` ở trạng thái Available, lớp `db.t4g.micro`, 1 kết nối đang mở, backup tự động giữ 1 ngày và 3 snapshot; có bản cập nhật hệ điều hành đang chờ lịch bảo trì.
+  - Chưa kiểm tra endpoint chatbot đã xác thực, chưa nạp dữ liệu nghiệp vụ và chưa đối soát/xóa TiDB; các phiên Render, TalentBridge và TiDB yêu cầu người dùng đăng nhập.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP smoke tests từ ngoài dịch vụ, build commit marker Vite, AWS RDS Console và endpoint phân trang `/api/v1/jobs`.
+- **Mục đích chức năng / việc đã làm**: Phân biệt frontend/CDN khỏe, API hoạt động sau khi thức dậy và dữ liệu nghiệp vụ còn trống; ghi nhận giới hạn cold-start để không nhầm với lỗi truy vấn DB hoặc chatbot.
