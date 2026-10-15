@@ -28,6 +28,7 @@ export default defineConfig({
         timeout: 30_000,
         env: {
             TALENTBRIDGE_API_PROXY_TARGET: 'http://127.0.0.1:18080',
+            VITE_RENDER_GIT_COMMIT: 'local-e2e',
         },
     },
 })

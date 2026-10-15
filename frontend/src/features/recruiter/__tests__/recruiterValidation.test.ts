@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { RecruiterApiError } from '../recruiterApi'
+import { validateCompanyRequest } from '../companyRequestValidation'
 import type {
     CompanyResponse,
     RecruiterProfile,
-    RequestCreateCompanyRequest,
     ReviewJoinRequest,
     SubmitJoinCompanyRequest,
     UpdateRecruiterProfileRequest,
@@ -25,48 +25,50 @@ describe('Recruiter Validation and Domain Logic Rules', () => {
     })
 
     describe('Company Creation Request Validation', () => {
-        const validateCompanyCreation = (
-            req: RequestCreateCompanyRequest,
-        ): { valid: boolean; errors: Record<string, string> } => {
-            const errors: Record<string, string> = {}
-            if (!req.name || !req.name.trim()) {
-                errors.name = 'Tên công ty không được để trống'
-            } else if (req.name.trim().length > 200) {
-                errors.name = 'Tên công ty không được vượt quá 200 ký tự'
-            }
-
-            if (req.taxCode && req.taxCode.length > 50) {
-                errors.taxCode = 'Mã số thuế không được vượt quá 50 ký tự'
-            }
-
-            if (req.website && req.website.length > 255) {
-                errors.website = 'Website không được vượt quá 255 ký tự'
-            }
-
-            return { valid: Object.keys(errors).length === 0, errors }
-        }
-
         it('should reject company creation when name is empty', () => {
-            const result = validateCompanyCreation({ name: '' })
-            expect(result.valid).toBe(false)
-            expect(result.errors.name).toBe('Tên công ty không được để trống')
+            expect(validateCompanyRequest({ name: '' }).name).toBe('Tên công ty không được để trống.')
         })
 
         it('should reject company creation when name is too long', () => {
-            const result = validateCompanyCreation({ name: 'A'.repeat(201) })
-            expect(result.valid).toBe(false)
-            expect(result.errors.name).toBe('Tên công ty không được vượt quá 200 ký tự')
+            expect(validateCompanyRequest({ name: 'A'.repeat(201) }).name).toBe(
+                'Tên công ty không được vượt quá 200 ký tự.',
+            )
         })
 
-        it('should accept valid company creation request', () => {
-            const result = validateCompanyCreation({
+        it('rejects an email address in the website field', () => {
+            expect(validateCompanyRequest({
+                name: 'Công ty Vin',
+                website: 'recruiting@example.com',
+            }).website).toBe('Nhập website đầy đủ bắt đầu bằng https:// hoặc http://.')
+        })
+
+        it('rejects a data URI in the logo field instead of sending it to the API', () => {
+            expect(validateCompanyRequest({
+                name: 'Công ty Vin',
+                logoUrl: 'data:image/png;base64,aGVsbG8=',
+            }).logoUrl).toBe('Logo cần là URL ảnh công khai bắt đầu bằng https:// hoặc http://.')
+        })
+
+        it('accepts valid HTTP(S) URLs and omitted optional fields', () => {
+            const errors = validateCompanyRequest({
                 name: 'FPT Software',
                 taxCode: '0101234567',
                 website: 'https://fptsoftware.com',
+                logoUrl: 'https://cdn.example.com/logo.png',
                 city: 'Hồ Chí Minh',
             })
-            expect(result.valid).toBe(true)
-            expect(result.errors).toEqual({})
+            expect(errors).toEqual({})
+            expect(validateCompanyRequest({ name: 'Công ty Vin' })).toEqual({})
+        })
+
+        it('enforces backend length limits for website and logo URLs', () => {
+            const errors = validateCompanyRequest({
+                name: 'Công ty Vin',
+                website: `https://${'a'.repeat(250)}`,
+                logoUrl: `https://${'a'.repeat(500)}`,
+            })
+            expect(errors.website).toBe('Website không được vượt quá 255 ký tự.')
+            expect(errors.logoUrl).toBe('URL logo không được vượt quá 500 ký tự.')
         })
     })
 

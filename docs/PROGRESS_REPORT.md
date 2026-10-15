@@ -369,3 +369,14 @@
   - Giao diện production và bong bóng Trợ lý hiển thị; phiên trình duyệt hiện chưa đăng nhập nên ô gửi câu hỏi bị khóa. Chưa có bằng chứng kiểm thử hội thoại hoặc gọi MCP tool bằng phiên Recruiter trên production.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions CI/CD, Render deploy hooks, build markers, production smoke tests, MCP Streamable HTTP, RAG lexical hybrid.
 - **Mục đích chức năng / việc đã làm**: Phát hành và xác minh thay đổi MCP/RAG trên cả hai dịch vụ Render; ghi rõ giới hạn còn lại: cần phiên đăng nhập Recruiter để kiểm thử hội thoại/tool thật và cần nạp dữ liệu việc làm nghiệp vụ vì danh sách công khai hiện rỗng.
+
+---
+
+## SỬA FORM GỬI YÊU CẦU DOANH NGHIỆP - 15/10/2026
+- **Đã làm được gì**:
+  - Chuẩn hóa xác thực URL website và logo về HTTP(S); chặn email nhập nhầm vào website và logo dạng Data URI trước khi gửi API.
+  - Bỏ giao diện tải logo giả lập không tương thích với DTO backend; làm rõ logo URL công khai là tùy chọn, và thêm thông báo lỗi ngay tại trường nhập.
+  - Bổ sung giới hạn độ dài khớp backend, test unit, API integration và Playwright cho cả dữ liệu không hợp lệ lẫn gửi thành công.
+  - Sau khi cập nhật với main, CI trên head 90418a8 đã pass đủ 3/3: backend, frontend và Docker; kiểm thử cục bộ gần nhất đạt Maven 299/299, frontend 90/90, API E2E 28/28 và UI E2E 4/4.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser của trình duyệt, Spring Boot Bean Validation, Vitest, MockMvc/JUnit, Playwright, Maven Wrapper và GitHub Actions.
+- **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu tạo doanh nghiệp thất bại do website/email hoặc logo sai hợp đồng; người dùng nhận chỉ dẫn chính xác trước khi request tới backend.

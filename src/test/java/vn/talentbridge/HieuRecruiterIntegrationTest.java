@@ -215,6 +215,38 @@ class HieuRecruiterIntegrationTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/recruiters/companies/request-create - email không được dùng làm website")
+    void testRequestCreateCompanyRejectsEmailAsWebsite() throws Exception {
+        RequestCreateCompanyRequest request = RequestCreateCompanyRequest.builder()
+                .name("Công ty mới")
+                .website("recruiting@example.com")
+                .logoUrl("https://cdn.example.com/logo.png")
+                .build();
+
+        mockMvc.perform(post("/api/v1/recruiters/companies/request-create")
+                        .header("Authorization", "Bearer " + hrToken2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/recruiters/companies/request-create - từ chối logo dạng data URI")
+    void testRequestCreateCompanyRejectsDataUriLogo() throws Exception {
+        RequestCreateCompanyRequest request = RequestCreateCompanyRequest.builder()
+                .name("Công ty mới")
+                .website("https://company.example")
+                .logoUrl("data:image/png;base64,aGVsbG8=")
+                .build();
+
+        mockMvc.perform(post("/api/v1/recruiters/companies/request-create")
+                        .header("Authorization", "Bearer " + hrToken2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/recruiters/companies/request-create - Trùng mã số thuế trả về 409 Conflict")
     void testRequestCreateCompanyDuplicateTaxCode() throws Exception {
         RequestCreateCompanyRequest request = RequestCreateCompanyRequest.builder()
