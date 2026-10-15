@@ -427,3 +427,14 @@
   - Thanh điều hướng production xác định phiên hiện tại là **Ứng viên**, dù người dùng báo đã vào trang quản trị. Vì vậy chưa chạy thao tác/luồng Admin hoặc Recruiter và không ghi dữ liệu RDS. Tab TiDB hiện vẫn ở trang đăng nhập, nên chưa xác minh resource để xóa; không có thao tác xóa nào được thực hiện.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Production UI qua Computer Use, Spring REST health/jobs, build marker, GitHub Actions run metadata, Render CD và retrieval nội bộ của chatbot.
 - **Mục đích chức năng / việc đã làm**: Xác nhận hồi quy chatbot và đường đọc API sau deploy, đồng thời phân định rõ các cổng còn thiếu: tài khoản đúng vai trò để thử ghi nghiệp vụ, dữ liệu job để thử luồng tuyển dụng end-to-end, và đăng nhập TiDB để kiểm kê trước thao tác xóa.
+
+---
+
+## KIỂM THỬ TOÀN BỘ CỤC BỘ VÀ RÀ SOÁT CƠ CHẾ DỮ LIỆU - 15/10/2026
+- **Đã làm được gì**:
+  - Chạy lại `mvnw verify` bằng JDK 21: 300/300 test đạt, trong đó `HexagonalArchitectureTest` đạt 11/11. Lần chạy ban đầu dùng Java 8 từ PATH nên không nạp được class Java 21; đã dùng JDK 21 cài sẵn cho lượt chạy xác nhận, không đổi cấu hình máy.
+  - Frontend: 90/90 unit test, ESLint và Vite/TypeScript production build đều đạt. Script `scripts/run-e2e.ps1` chạy API E2E 28/28 và Playwright UI E2E 4/4 trên backend H2 cô lập; bao gồm chatbot/widget, phục hồi khi cuộn lỗi, form yêu cầu doanh nghiệp và viewport 360/555/1280px cho ba vai trò.
+  - Xác nhận `DataInitializer` chỉ chạy ở profile `local`, `test`, `dev`, `e2e`; dữ liệu công ty/tài khoản và 100 tin đang tuyển là dữ liệu demo cho môi trường không production. Không thể bật cấu hình này để nạp RDS production vì sẽ đưa dữ liệu demo sang production và tin được tạo ở trạng thái `ACTIVE`.
+  - Không có thay đổi source ứng dụng hoặc thao tác ghi DB production. E2E lưu ảnh QA trong `artifacts/roleplay-qa`; kiểm thử persistence vẫn dùng H2, còn RDS chỉ mới được xác nhận qua API đọc việc làm HTTP 200 với 0 bản ghi.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: JDK 21, Maven Surefire, ArchUnit, Vitest, ESLint, TypeScript/Vite, Playwright và backend H2 tạm thời; Spring profile gating bảo vệ initializer.
+- **Mục đích chức năng / việc đã làm**: Xác nhận bộ kiểm thử source hiện tại và ngăn dùng seed demo không phù hợp cho production; để nạp tin nghiệp vụ cần phiên Admin/Recruiter thật và luồng kiểm duyệt, còn xóa TiDB cần đăng nhập để kiểm kê resource trước.
