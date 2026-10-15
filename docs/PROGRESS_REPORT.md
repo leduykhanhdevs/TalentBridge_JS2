@@ -438,3 +438,13 @@
   - Không có thay đổi source ứng dụng hoặc thao tác ghi DB production. E2E lưu ảnh QA trong `artifacts/roleplay-qa`; kiểm thử persistence vẫn dùng H2, còn RDS chỉ mới được xác nhận qua API đọc việc làm HTTP 200 với 0 bản ghi.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: JDK 21, Maven Surefire, ArchUnit, Vitest, ESLint, TypeScript/Vite, Playwright và backend H2 tạm thời; Spring profile gating bảo vệ initializer.
 - **Mục đích chức năng / việc đã làm**: Xác nhận bộ kiểm thử source hiện tại và ngăn dùng seed demo không phù hợp cho production; để nạp tin nghiệp vụ cần phiên Admin/Recruiter thật và luồng kiểm duyệt, còn xóa TiDB cần đăng nhập để kiểm kê resource trước.
+
+---
+
+## KIỂM TRA LẠI RELEASE LIVE VÀ RELEASE GATE MAIN - 15/10/2026
+- **Đã làm được gì**:
+  - Đo lại API việc làm production 5 lần: mọi lượt HTTP 200, `totalElements=0`, thời gian 418/205/158/194/201 ms (median 201 ms). Frontend trả HTTP 200 với marker đúng `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`.
+  - Xác nhận GitHub CI có 3 check backend/frontend/Docker đều pass ở PR gần nhất trước release; CD main hiện phục vụ đúng commit production. Phát hiện GitHub `main` đang **không có branch protection** và branch ruleset rỗng, nên CI hiện là bằng chứng xanh nhưng chưa được cài làm merge gate bắt buộc. Đã hỏi chủ repo chọn cấu hình bảo vệ; chưa thay đổi setting.
+  - Mở trang đăng nhập production để người dùng tự xác thực; trang vẫn nhận diện phiên là Ứng viên, nên chưa thực hiện tạo dữ liệu, thử ghi RDS hoặc xóa TiDB. TiDB Cloud và AWS Console cũng vẫn chờ đăng nhập.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions check-run metadata, GitHub branch protection API read-only, HTTP Stopwatch và Render build marker.
+- **Mục đích chức năng / việc đã làm**: Phân biệt pipeline đã chạy thành công với bảo vệ merge thực sự; xác nhận lại API đọc production và nêu chính xác bước xác thực/quyền còn thiếu trước các thao tác production.
