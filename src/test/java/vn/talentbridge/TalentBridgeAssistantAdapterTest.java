@@ -59,4 +59,13 @@ class TalentBridgeAssistantAdapterTest {
             assertThat(result.references()).isNotEmpty();
         });
     }
+
+    @Test
+    void exposesTheSameGroundedKnowledgeToTheMcpSearchPort() {
+        var results = adapter.search("How do I apply for a job on TalentBridge?", 3);
+
+        assertThat(results).isNotEmpty();
+        assertThat(results.getFirst().title()).isEqualTo("Tìm việc và ứng tuyển");
+        assertThat(results.getFirst().answer()).contains("mục Việc làm");
+    }
 }

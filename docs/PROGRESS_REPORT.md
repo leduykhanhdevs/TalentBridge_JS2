@@ -345,3 +345,16 @@
   - Backend JDK 21: `mvnw verify` đạt 297/297; frontend: 87/87 tests, ESLint và production build đạt; `git diff --check` đạt. Chưa merge hoặc redeploy.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/Vite TypeScript; `authenticatedFetch`; single-flight promise để tránh refresh trùng trong cùng tab; refresh-token rotation hiện có ở Spring Boot; Vitest, ESLint và Vite.
 - **Mục đích chức năng / việc đã làm**: Ngăn token hết hạn làm chatbot, bong bóng trợ lý và các màn có xác thực liên tục báo 401; tự gia hạn phiên hợp lệ an toàn, đồng thời bỏ trạng thái quyền cũ nếu phiên không thể khôi phục.
+
+---
+
+## MCP JAVA SDK VÀ TÁI SỬ DỤNG RAG KNOWLEDGE PORT - 15/10/2026
+- **Đã làm được gì**:
+  - Thay controller JSON-RPC tự viết bằng MCP Java SDK 2.0.1, Streamable HTTP Servlet tại `/api/v1/mcp`, protocol version `2025-11-25` và schema cho các tool ATS.
+  - Bổ sung `TalentBridgeKnowledgePort` cùng inbound search use case; chatbot FAQ và MCP tool `talentbridge_search_help` dùng chung nguồn hướng dẫn TalentBridge.
+  - Giữ MCP tools ở phạm vi use case hẹp; yêu cầu Recruiter ở route và handler, quyền sở hữu dữ liệu được giữ trong application use case. Không cấp truy cập JPA/SQL trực tiếp.
+  - Sửa phản hồi phân quyền: Candidate có token hợp lệ nhưng bị thiếu role Recruiter trước đây bị luồng `/error` đổi 403 thành 401; `JwtAccessDeniedHandler` hiện trả JSON 403 trực tiếp.
+  - Test HTTP tích hợp xác nhận initialize, `notifications/initialized`, `tools/list`, `tools/call`, anonymous 401 và Candidate 403. Backend `mvnw verify` đạt 298/298; `HexagonalArchitectureTest` đạt 11/11; `git diff --check` đạt.
+  - Chưa kiểm thử giao diện live vì desktop đang ở màn hình khóa Windows; thay đổi còn ở nhánh tính năng, chưa merge hoặc deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: MCP Java SDK, Streamable HTTP, Jackson 2, Spring Security, application ports/use cases, lexical retrieval gồm token chính xác + synonym expansion + character-trigram Dice similarity, JUnit/Spring Boot integration tests, H2 test profile.
+- **Mục đích chức năng / việc đã làm**: Chuẩn hóa tích hợp MCP cho ATS trong khi chatbot vẫn chỉ trả lời theo tài liệu TalentBridge; chia sẻ một cổng RAG có kiểm soát, bảo vệ dữ liệu Recruiter bằng quyền và ownership, đồng thời trả đúng 403 cho người đã đăng nhập nhưng không đủ vai trò. Retrieval lexical hiện tại không phải embedding/vector RAG và test chưa chứng minh độ chính xác hay interoperability với MCP client độc lập.
