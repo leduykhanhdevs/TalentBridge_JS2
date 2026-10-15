@@ -368,3 +368,15 @@
   - Chưa kiểm tra endpoint chatbot đã xác thực, chưa nạp dữ liệu nghiệp vụ và chưa đối soát/xóa TiDB; các phiên Render, TalentBridge và TiDB yêu cầu người dùng đăng nhập.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP smoke tests từ ngoài dịch vụ, build commit marker Vite, AWS RDS Console và endpoint phân trang `/api/v1/jobs`.
 - **Mục đích chức năng / việc đã làm**: Phân biệt frontend/CDN khỏe, API hoạt động sau khi thức dậy và dữ liệu nghiệp vụ còn trống; ghi nhận giới hạn cold-start để không nhầm với lỗi truy vấn DB hoặc chatbot.
+
+---
+
+## ĐỐI CHIẾU CI/CD, PHIÊN ĐĂNG NHẬP VÀ FIREWALL RDS - 15/10/2026
+- **Đã làm được gì**:
+  - GitHub Actions chạy trên đúng head PR #33 (`c402aa4`) hoàn tất 3/3: Backend Verify, Frontend Test/Lint/Build và Dockerfile Build. PR vẫn OPEN, mergeable nhưng chưa có review decision; chưa merge hoặc redeploy.
+  - Xác nhận repository có cả `RENDER_DEPLOY_HOOK_URL` và `RENDER_FRONTEND_DEPLOY_HOOK_URL`; không đọc hoặc in giá trị secret.
+  - Kiểm tra lại production: frontend, `/api/v1/health` và `/api/v1/jobs` đều HTTP 200; marker live vẫn là commit cũ `d7fca746ef8767c2e759bfd120beeb73fcdd99f3`; jobs trả `totalElements: 0`.
+  - AWS Console xác nhận RDS `talentbridge-mysql` Available, đang có 1 connection; inbound security group chỉ gồm hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`, không còn IP workstation `/32`.
+  - Dù người dùng báo đã đăng nhập lại, tab TalentBridge vẫn ở `/login` và TiDB Cloud vẫn ở trang Sign in. Chưa thể kiểm tra chatbot đã xác thực, tạo dữ liệu nghiệp vụ hoặc xác minh inventory TiDB trong lượt này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions/CLI để đọc trạng thái CI và tên secret; HTTP GET smoke test; AWS RDS Console; Computer Use để đối chiếu trạng thái trang và rule firewall.
+- **Mục đích chức năng / việc đã làm**: Xác định rõ bản live khác với head đã qua CI, tránh gọi PR là đã deploy; xác nhận RDS chỉ nhận MySQL inbound từ Render và nêu đúng các bước còn phụ thuộc phiên đăng nhập người dùng.
