@@ -458,3 +458,13 @@
   - Đọc lại ruleset qua GitHub API và endpoint rule evaluation của `main`; xác nhận đủ ba rule PR, required status checks, non-fast-forward. Không sửa source ứng dụng và không redeploy.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Repository Rulesets REST API, GitHub Actions check-run metadata (integration `github-actions`, ID `15368`), ba job trong `.github/workflows/ci.yml`.
 - **Mục đích chức năng / việc đã làm**: Chuyển CI từ trạng thái chỉ chạy khi có sự kiện sang cổng merge bắt buộc cho `main`, đồng thời giữ lựa chọn không yêu cầu người duyệt PR.
+---
+
+## TÁI XÁC MINH PRODUCTION SAU KHI BẬT RULESET - 15/10/2026
+- **Đã làm được gì**:
+  - Production tại build `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`: health HTTP 200 (458 ms), API jobs HTTP 200 (196 ms, `totalElements=0`), frontend route `/assistant` HTTP 200 (125 ms). Đây là một lượt đo tức thời, không phải benchmark tải hoặc cold-start.
+  - GitHub API xác nhận ruleset `25142828` đang active trên `main`, yêu cầu PR, đúng ba check backend/frontend/Docker và chặn non-fast-forward.
+  - Browser recheck: TalentBridge hiện nhận diện tài khoản `Duy Khánh Lê` là Ứng viên; TiDB Cloud và AWS Console còn ở trang đăng nhập. Không thể chạy luồng ghi RDS, kiểm thử tuyển dụng từ đầu đến cuối hoặc xác định resource TiDB cần xóa.
+  - Không ghi/xóa dữ liệu production và không redeploy vì không có thay đổi source ứng dụng.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP GET/Stopwatch, Spring Boot health/jobs API, Render build marker, GitHub Repository Rulesets API, Computer Use đọc trạng thái phiên.
+- **Mục đích chức năng / việc đã làm**: Cập nhật bằng chứng live sau khi bật merge gate; phân định rõ API đọc đang phục vụ tốt với các luồng cần quyền Admin/Recruiter và quyền console cloud chưa được xác minh.
