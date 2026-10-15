@@ -21,6 +21,11 @@ import {
     RecruiterApiError,
     requestCreateCompany,
 } from '../../features/recruiter/recruiterApi'
+import {
+    isValidHttpUrl,
+    validateCompanyRequest,
+    type CompanyRequestFieldErrors,
+} from '../../features/recruiter/companyRequestValidation'
 import type { RequestCreateCompanyRequest } from '../../features/recruiter/recruiterTypes'
 
 type CompanyFormValues = {
@@ -34,7 +39,7 @@ type CompanyFormValues = {
     logoUrl: string
 }
 
-type FormErrors = Partial<Record<keyof CompanyFormValues, string>>
+type FormErrors = CompanyRequestFieldErrors
 
 const initialFormValues: CompanyFormValues = {
     name: '',
@@ -85,41 +90,9 @@ export function RecruiterCompanyPage() {
         },
     })
 
-    function validate(): FormErrors {
-        const errors: FormErrors = {}
-
-        if (!formValues.name.trim()) {
-            errors.name = 'Tên công ty không được để trống.'
-        } else if (formValues.name.trim().length > 200) {
-            errors.name = 'Tên công ty không được vượt quá 200 ký tự.'
-        }
-
-        if (formValues.taxCode.trim().length > 50) {
-            errors.taxCode = 'Mã số thuế không được vượt quá 50 ký tự.'
-        }
-
-        if (formValues.website.trim().length > 255) {
-            errors.website = 'Website không được vượt quá 255 ký tự.'
-        }
-
-        if (formValues.address.trim().length > 255) {
-            errors.address = 'Địa chỉ không được vượt quá 255 ký tự.'
-        }
-
-        if (formValues.city.trim().length > 100) {
-            errors.city = 'Thành phố không được vượt quá 100 ký tự.'
-        }
-
-        if (formValues.logoUrl.trim().length > 500) {
-            errors.logoUrl = 'URL logo không được vượt quá 500 ký tự.'
-        }
-
-        return errors
-    }
-
     function handleSubmit(e: FormEvent) {
         e.preventDefault()
-        const errors = validate()
+        const errors = validateCompanyRequest(formValues)
         setFieldErrors(errors)
         setServerError('')
         setSuccessMessage('')
@@ -138,20 +111,6 @@ export function RecruiterCompanyPage() {
             description: formValues.description.trim() || undefined,
             logoUrl: formValues.logoUrl.trim() || undefined,
         })
-    }
-
-    function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
-                    setFormValues((prev) => ({ ...prev, logoUrl: reader.result as string }))
-                    setFieldErrors((prev) => ({ ...prev, logoUrl: undefined }))
-                }
-            }
-            reader.readAsDataURL(file)
-        }
     }
 
     if (isLoading) {
@@ -496,14 +455,29 @@ export function RecruiterCompanyPage() {
                                 <div className="relative">
                                     <Globe className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                     <input
-                                        className="h-11 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                                        aria-describedby={fieldErrors.website ? 'comp-website-error' : 'comp-website-help'}
+                                        aria-invalid={Boolean(fieldErrors.website)}
+                                        className={`h-11 w-full rounded-xl border bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 ${fieldErrors.website ? 'border-red-400 focus:border-red-500' : 'border-slate-300'}`}
                                         id="comp-website"
-                                        onChange={(e) => setFormValues((prev) => ({ ...prev, website: e.target.value }))}
+                                        inputMode="url"
+                                        onChange={(e) => {
+                                            setFormValues((prev) => ({ ...prev, website: e.target.value }))
+                                            setFieldErrors((prev) => ({ ...prev, website: undefined }))
+                                        }}
                                         placeholder="https://fptsoftware.com"
-                                        type="url"
+                                        type="text"
                                         value={formValues.website}
                                     />
                                 </div>
+                                {fieldErrors.website ? (
+                                    <p className="mt-1 text-xs text-red-600" id="comp-website-error" role="alert">
+                                        {fieldErrors.website}
+                                    </p>
+                                ) : (
+                                    <p className="mt-1 text-xs text-slate-500" id="comp-website-help">
+                                        Chỉ nhập website công ty; nếu chưa có, hãy để trống.
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -523,30 +497,37 @@ export function RecruiterCompanyPage() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="comp-logo">
-                                Logo công ty (Upload ảnh hoặc nhập URL)
+                                Logo công ty (URL ảnh công khai, không bắt buộc)
                             </label>
                             <div className="space-y-3">
-                                <div className="flex flex-col sm:flex-row gap-3">
+                                <div>
                                     <input
-                                        className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                                        aria-describedby={fieldErrors.logoUrl ? 'comp-logo-error' : 'comp-logo-help'}
+                                        aria-invalid={Boolean(fieldErrors.logoUrl)}
+                                        className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 ${fieldErrors.logoUrl ? 'border-red-400 focus:border-red-500' : 'border-slate-300'}`}
                                         id="comp-logo"
-                                        onChange={(e) => setFormValues((prev) => ({ ...prev, logoUrl: e.target.value }))}
-                                        placeholder="Nhập link ảnh (https://...) hoặc bấm nút tải ảnh bên cạnh"
-                                        type="url"
+                                        inputMode="url"
+                                        onChange={(e) => {
+                                            setFormValues((prev) => ({ ...prev, logoUrl: e.target.value }))
+                                            setFieldErrors((prev) => ({ ...prev, logoUrl: undefined }))
+                                        }}
+                                        placeholder="https://example.com/logo.png"
+                                        type="text"
                                         value={formValues.logoUrl}
                                     />
-                                    <label className="inline-flex items-center justify-center gap-2 cursor-pointer h-11 px-4 rounded-xl border border-dashed border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition shrink-0">
-                                        <span>Tải ảnh lên</span>
-                                        <input
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleLogoFileChange}
-                                            type="file"
-                                        />
-                                    </label>
                                 </div>
 
-                                {formValues.logoUrl && (
+                                {fieldErrors.logoUrl ? (
+                                    <p className="text-xs text-red-600" id="comp-logo-error" role="alert">
+                                        {fieldErrors.logoUrl}
+                                    </p>
+                                ) : (
+                                    <p className="text-xs text-slate-500" id="comp-logo-help">
+                                        Dùng URL ảnh có thể truy cập công khai hoặc để trống; tải tệp trực tiếp chưa được hỗ trợ.
+                                    </p>
+                                )}
+
+                                {formValues.logoUrl && isValidHttpUrl(formValues.logoUrl) && (
                                     <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
                                         <span className="text-xs font-medium text-slate-500">Xem trước logo:</span>
                                         <img

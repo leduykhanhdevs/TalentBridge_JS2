@@ -345,3 +345,14 @@
   - Backend JDK 21: `mvnw verify` đạt 297/297; frontend: 87/87 tests, ESLint và production build đạt; `git diff --check` đạt. Chưa merge hoặc redeploy.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/Vite TypeScript; `authenticatedFetch`; single-flight promise để tránh refresh trùng trong cùng tab; refresh-token rotation hiện có ở Spring Boot; Vitest, ESLint và Vite.
 - **Mục đích chức năng / việc đã làm**: Ngăn token hết hạn làm chatbot, bong bóng trợ lý và các màn có xác thực liên tục báo 401; tự gia hạn phiên hợp lệ an toàn, đồng thời bỏ trạng thái quyền cũ nếu phiên không thể khôi phục.
+
+---
+
+## SỬA VALIDATION YÊU CẦU TẠO DOANH NGHIỆP NHÀ TUYỂN DỤNG - 15/10/2026
+- **Đã làm được gì**:
+  - Sửa form để website và logo chỉ nhận URL HTTP(S) hợp lệ; email nhập nhầm vào website hoặc logo dạng `data:` sẽ hiện lỗi ngay tại trường và không gửi request.
+  - Bỏ luồng chọn ảnh giả lập vốn chuyển ảnh thành Data URI mà backend không chấp nhận; giải thích rõ URL logo công khai là tùy chọn và tải file chưa được hỗ trợ.
+  - Thêm kiểm tra giới hạn độ dài tương ứng DTO backend, trạng thái trợ năng cho lỗi trường, cùng kiểm thử UI và API cho website email / Data URI.
+  - Xác minh cục bộ: `mvnw verify` 299/299; frontend 90/90; ESLint và production build đạt; H2 API E2E 28/28; Playwright UI E2E 4/4; `git diff --check` đạt. Chưa mở PR/merge hoặc redeploy production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser chuẩn của trình duyệt, Vitest, Playwright, Spring Boot MockMvc/JUnit, Maven Wrapper/JDK 21; backend DTO/API contract làm chuẩn validation.
+- **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu doanh nghiệp thất bại sau khi bấm gửi vì website nhập sai định dạng hoặc logo tải lên thành dữ liệu không tương thích; cung cấp lỗi dễ hiểu trước khi gửi và giữ dữ liệu đúng hợp đồng backend.
