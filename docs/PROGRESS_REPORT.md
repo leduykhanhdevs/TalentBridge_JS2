@@ -448,3 +448,13 @@
   - Mở trang đăng nhập production để người dùng tự xác thực; trang vẫn nhận diện phiên là Ứng viên, nên chưa thực hiện tạo dữ liệu, thử ghi RDS hoặc xóa TiDB. TiDB Cloud và AWS Console cũng vẫn chờ đăng nhập.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions check-run metadata, GitHub branch protection API read-only, HTTP Stopwatch và Render build marker.
 - **Mục đích chức năng / việc đã làm**: Phân biệt pipeline đã chạy thành công với bảo vệ merge thực sự; xác nhận lại API đọc production và nêu chính xác bước xác thực/quyền còn thiếu trước các thao tác production.
+
+---
+
+## BẬT RULESET BẢO VỆ NHÁNH MAIN - 15/10/2026
+- **Đã làm được gì**:
+  - Tạo ruleset repository `Protect main: PR and all CI checks` (ID `25142828`), trạng thái active, chỉ áp dụng `refs/heads/main`.
+  - Bắt buộc mọi thay đổi vào `main` đi qua Pull Request, yêu cầu ba status check do GitHub Actions phát: `Backend Build & Verify (Spring Boot 3 + JDK 21)`, `Frontend Test, Lint & Build (React 19 + Node 20)`, `Dockerfile Build Verification`; không yêu cầu số review tối thiểu và chặn force-push.
+  - Đọc lại ruleset qua GitHub API và endpoint rule evaluation của `main`; xác nhận đủ ba rule PR, required status checks, non-fast-forward. Không sửa source ứng dụng và không redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Repository Rulesets REST API, GitHub Actions check-run metadata (integration `github-actions`, ID `15368`), ba job trong `.github/workflows/ci.yml`.
+- **Mục đích chức năng / việc đã làm**: Chuyển CI từ trạng thái chỉ chạy khi có sự kiện sang cổng merge bắt buộc cho `main`, đồng thời giữ lựa chọn không yêu cầu người duyệt PR.
