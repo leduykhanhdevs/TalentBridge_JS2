@@ -363,7 +363,7 @@
 ## KIỂM TRA LIVE FRONTEND, BACKEND VÀ RDS - 15/10/2026
 - **Đã làm được gì**:
   - Frontend Render trả HTTP 200 và metadata build xác nhận commit đang chạy là `d7fca746ef8767c2e759bfd120beeb73fcdd99f3`.
-  - Hai request đầu tới backend health vượt timeout 40 giây và 100 giây; request sau trả HTTP 200 trong 315 ms, cho thấy độ trễ khởi động lạnh có khả năng cao. Sau khi backend hoạt động, API danh sách việc làm trả HTTP 200 trong 1.4 giây nhưng có 0 tin.
+  - Hai request đầu tới backend health vượt timeout 40 giây và 100 giây; request sau trả HTTP 200 trong 315 ms, cho thấy độ trễ khởi động lạnh có khả năng cao. API danh sách việc làm đầu tiên trả HTTP 200 trong 1.4 giây nhưng có 0 tin. Đo ba request ấm tiếp theo: health 118–324 ms, jobs 306–403 ms, đều HTTP 200 và vẫn 0 tin.
   - AWS Console xác nhận RDS `talentbridge-mysql` ở trạng thái Available, lớp `db.t4g.micro`, 1 kết nối đang mở, backup tự động giữ 1 ngày và 3 snapshot; có bản cập nhật hệ điều hành đang chờ lịch bảo trì.
   - Chưa kiểm tra endpoint chatbot đã xác thực, chưa nạp dữ liệu nghiệp vụ và chưa đối soát/xóa TiDB; các phiên Render, TalentBridge và TiDB yêu cầu người dùng đăng nhập.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP smoke tests từ ngoài dịch vụ, build commit marker Vite, AWS RDS Console và endpoint phân trang `/api/v1/jobs`.
