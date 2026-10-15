@@ -358,3 +358,14 @@
   - Chưa kiểm thử giao diện live vì desktop đang ở màn hình khóa Windows; thay đổi còn ở nhánh tính năng, chưa merge hoặc deploy.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: MCP Java SDK, Streamable HTTP, Jackson 2, Spring Security, application ports/use cases, lexical retrieval gồm token chính xác + synonym expansion + character-trigram Dice similarity, JUnit/Spring Boot integration tests, H2 test profile.
 - **Mục đích chức năng / việc đã làm**: Chuẩn hóa tích hợp MCP cho ATS trong khi chatbot vẫn chỉ trả lời theo tài liệu TalentBridge; chia sẻ một cổng RAG có kiểm soát, bảo vệ dữ liệu Recruiter bằng quyền và ownership, đồng thời trả đúng 403 cho người đã đăng nhập nhưng không đủ vai trò. Retrieval lexical hiện tại không phải embedding/vector RAG và test chưa chứng minh độ chính xác hay interoperability với MCP client độc lập.
+
+---
+
+## XÁC MINH PHÁT HÀNH MCP/RAG TRÊN RENDER - 15/10/2026
+- **Đã làm được gì**:
+  - PR #34 đã merge vào `main` tại commit `ac11cce4257c9539beb91d885be9ce192f7b7e2b`; CI đạt 3/3 (backend verify, frontend test/lint/build, Dockerfile build).
+  - CD Render đã trigger cả frontend và backend, xác minh build marker của hai dịch vụ đúng commit trên, rồi smoke test health, API việc làm dùng DB, frontend và CORS đều đạt.
+  - Kiểm tra trực tiếp sau deploy: `/api/v1/health` trả build commit `ac11cce...`; `/api/v1/jobs` trả HTTP 200 nhưng `totalElements=0`; MCP từ chối truy cập ẩn danh bằng HTTP 401 như yêu cầu.
+  - Giao diện production và bong bóng Trợ lý hiển thị; phiên trình duyệt hiện chưa đăng nhập nên ô gửi câu hỏi bị khóa. Chưa có bằng chứng kiểm thử hội thoại hoặc gọi MCP tool bằng phiên Recruiter trên production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions CI/CD, Render deploy hooks, build markers, production smoke tests, MCP Streamable HTTP, RAG lexical hybrid.
+- **Mục đích chức năng / việc đã làm**: Phát hành và xác minh thay đổi MCP/RAG trên cả hai dịch vụ Render; ghi rõ giới hạn còn lại: cần phiên đăng nhập Recruiter để kiểm thử hội thoại/tool thật và cần nạp dữ liệu việc làm nghiệp vụ vì danh sách công khai hiện rỗng.
