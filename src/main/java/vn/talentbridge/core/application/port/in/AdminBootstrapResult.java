@@ -4,5 +4,6 @@ package vn.talentbridge.core.application.port.in;
 public enum AdminBootstrapResult {
     CREATED,
     PROMOTED_EXISTING,
+    REACTIVATED_EXISTING_ADMIN,
     ALREADY_ADMIN
 }
