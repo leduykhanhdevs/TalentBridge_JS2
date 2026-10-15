@@ -489,3 +489,13 @@
 - **Đã làm được gì**: Gỡ khối nút điền nhanh tài khoản mẫu khỏi trang đăng nhập. Bổ sung cờ `ADMIN_BOOTSTRAP_PROMOTE_EXISTING` mặc định tắt; khi bật chỉ nâng đúng tài khoản hiện hữu đang ACTIVE, giữ nguyên mật khẩu/hồ sơ/các role, và lỗi an toàn nếu email không khớp. Cập nhật runbook và test cho các trường hợp tạo mới, đã là Admin, nâng quyền, tài khoản khóa và email không tồn tại. Xác minh `mvnw verify` đạt 304/304; frontend ESLint, 90/90 unit test và Vite production build đều đạt. Chưa thay đổi Render production hoặc cấp role trong DB.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript; Spring Boot ApplicationRunner chỉ trong profile `prod`; inbound use case/port, persistence adapter và role domain theo kiến trúc hexagonal; JUnit 5/Mockito, Vitest, ESLint, TypeScript/Vite.
 - **Mục đích chức năng / việc đã làm**: Loại bỏ thông tin đăng nhập mẫu gây nhầm lẫn và cung cấp đường nâng quyền một lần có kiểm soát, không mở đăng ký Admin công khai và không thay mật khẩu tài khoản sẵn có.
+
+---
+
+## KHÔI PHỤC TÀI KHOẢN ADMIN ĐANG BỊ KHÓA - 15/10/2026
+- **Đã làm được gì**:
+  - Đã xác minh Render Free không hỗ trợ Shell, vì vậy không dùng được SQL trực tiếp từ service.
+  - Thêm cờ một lần `ADMIN_BOOTSTRAP_REACTIVATE_LOCKED_ADMIN` mặc định `false`; chỉ khi cờ được bật, email bootstrap khớp tài khoản hiện có có `ROLE_ADMIN`, và trạng thái là `LOCKED` thì use case mới chuyển trạng thái sang `ACTIVE`. Giữ nguyên password hash, hồ sơ và roles; từ chối trạng thái `BANNED`, `INACTIVE`, `PENDING` và không tác động tài khoản không phải Admin.
+  - Thêm test cho mở khóa được phê duyệt, cờ mặc định tắt, không tự mở khóa và từ chối tài khoản BANNED. `mvnw verify` bằng JDK 21 đạt 308/308, gồm kiểm tra kiến trúc hexagonal 11/11. Chưa thay đổi production; đang chuẩn bị PR để CI kiểm tra trước khi deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot ApplicationRunner chỉ trong profile `prod`, cờ cấu hình opt-in, domain `User.activate()`, port/use case hexagonal, JUnit 5/Mockito, Maven và JDK 21.
+- **Mục đích chức năng / việc đã làm**: Khôi phục quyền truy cập cho đúng tài khoản Admin bị khóa do đăng nhập sai, không đặt lại mật khẩu hoặc mở rộng quyền cho tài khoản khác; cờ sẽ được tắt và gỡ sau khi xác minh.

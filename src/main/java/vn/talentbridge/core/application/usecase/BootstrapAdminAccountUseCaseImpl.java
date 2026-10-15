@@ -34,13 +34,24 @@ public class BootstrapAdminAccountUseCaseImpl implements BootstrapAdminAccountUs
             String email,
             String rawPassword,
             String fullName,
-            boolean promoteExistingAccount
+            boolean promoteExistingAccount,
+            boolean reactivateLockedAdmin
     ) {
         String normalizedEmail = normalizeEmail(email);
         var existingUser = userRepository.findByEmail(normalizedEmail);
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             if (user.hasRole(RoleName.ROLE_ADMIN)) {
+                if (user.getStatus() == UserStatus.LOCKED && reactivateLockedAdmin) {
+                    user.activate();
+                    userRepository.save(user);
+                    return AdminBootstrapResult.REACTIVATED_EXISTING_ADMIN;
+                }
+                if (reactivateLockedAdmin && user.getStatus() != UserStatus.ACTIVE) {
+                    throw new IllegalStateException(
+                            "Admin reactivation refused because the existing administrator is not locked."
+                    );
+                }
                 return AdminBootstrapResult.ALREADY_ADMIN;
             }
 

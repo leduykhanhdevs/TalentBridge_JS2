@@ -26,7 +26,8 @@ public class AdminBootstrapConfiguration {
             @Value("${talentbridge.admin-bootstrap.email:}") String email,
             @Value("${talentbridge.admin-bootstrap.password:}") String password,
             @Value("${talentbridge.admin-bootstrap.full-name:TalentBridge Administrator}") String fullName,
-            @Value("${talentbridge.admin-bootstrap.promote-existing:false}") boolean promoteExistingAccount
+            @Value("${talentbridge.admin-bootstrap.promote-existing:false}") boolean promoteExistingAccount,
+            @Value("${talentbridge.admin-bootstrap.reactivate-locked-admin:false}") boolean reactivateLockedAdmin
     ) {
         return args -> {
             if (email.isBlank()) {
@@ -34,10 +35,13 @@ public class AdminBootstrapConfiguration {
                         "Admin bootstrap is enabled but ADMIN_BOOTSTRAP_EMAIL is missing."
                 );
             }
-            AdminBootstrapResult result = useCase.execute(email, password, fullName, promoteExistingAccount);
+            AdminBootstrapResult result = useCase.execute(
+                    email, password, fullName, promoteExistingAccount, reactivateLockedAdmin
+            );
             switch (result) {
                 case CREATED -> log.info("Initial production administrator was created from operator-provided credentials.");
                 case PROMOTED_EXISTING -> log.info("Existing active production account was granted ROLE_ADMIN by explicit operator opt-in.");
+                case REACTIVATED_EXISTING_ADMIN -> log.info("Existing locked production administrator was reactivated by explicit operator opt-in; credentials were left unchanged.");
                 case ALREADY_ADMIN -> log.info("Initial production administrator already exists; credentials were left unchanged.");
             }
         };

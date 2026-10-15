@@ -46,7 +46,7 @@ class BootstrapAdminAccountUseCaseImplTest {
 
         assertEquals(
                 AdminBootstrapResult.CREATED,
-                useCase.execute(" Admin@Example.com ", PASSWORD, "  Platform Admin  ", false)
+                useCase.execute(" Admin@Example.com ", PASSWORD, "  Platform Admin  ", false, false)
         );
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -65,7 +65,7 @@ class BootstrapAdminAccountUseCaseImplTest {
         User existingAdmin = userWithRole(RoleName.ROLE_ADMIN);
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(existingAdmin));
 
-        assertEquals(AdminBootstrapResult.ALREADY_ADMIN, useCase.execute(EMAIL, "", "", false));
+        assertEquals(AdminBootstrapResult.ALREADY_ADMIN, useCase.execute(EMAIL, "", "", false, false));
 
         verify(userRepository, never()).save(any());
         verifyNoInteractions(passwordEncoder);
@@ -77,7 +77,7 @@ class BootstrapAdminAccountUseCaseImplTest {
 
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
-                () -> useCase.execute(EMAIL, "", "Admin", false)
+                () -> useCase.execute(EMAIL, "", "Admin", false, false)
         );
 
         assertTrue(error.getMessage().contains("non-admin"));
@@ -94,7 +94,7 @@ class BootstrapAdminAccountUseCaseImplTest {
 
         assertEquals(
                 AdminBootstrapResult.PROMOTED_EXISTING,
-                useCase.execute(EMAIL, "", "Ignored name", true)
+                useCase.execute(EMAIL, "", "Ignored name", true, false)
         );
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -116,7 +116,7 @@ class BootstrapAdminAccountUseCaseImplTest {
 
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
-                () -> useCase.execute(EMAIL, "", "Admin", true)
+                () -> useCase.execute(EMAIL, "", "Admin", true, false)
         );
 
         assertTrue(error.getMessage().contains("not active"));
@@ -130,7 +130,7 @@ class BootstrapAdminAccountUseCaseImplTest {
 
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
-                () -> useCase.execute(EMAIL, "", "Admin", true)
+                () -> useCase.execute(EMAIL, "", "Admin", true, false)
         );
 
         assertTrue(error.getMessage().contains("does not match an existing account"));
@@ -142,8 +142,8 @@ class BootstrapAdminAccountUseCaseImplTest {
     void rejectsWeakOrMissingPasswordsWhenCreatingNewAccount() {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> useCase.execute(EMAIL, "short", "Admin", false));
-        assertThrows(IllegalArgumentException.class, () -> useCase.execute(EMAIL, null, "Admin", false));
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(EMAIL, "short", "Admin", false, false));
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(EMAIL, null, "Admin", false, false));
 
         verify(userRepository, times(2)).findByEmail(EMAIL);
         verify(userRepository, never()).save(any());
@@ -156,11 +156,63 @@ class BootstrapAdminAccountUseCaseImplTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> useCase.execute(EMAIL, oversizedUtf8Password, "Admin", false)
+                () -> useCase.execute(EMAIL, oversizedUtf8Password, "Admin", false, false)
         );
 
         verify(userRepository).findByEmail(EMAIL);
         verifyNoMoreInteractions(userRepository);
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    void reactivatesOnlyLockedExistingAdminWhenExplicitlyEnabledAndPreservesCredentials() {
+        User existingAdmin = userWithRole(RoleName.ROLE_ADMIN);
+        existingAdmin.addRole(new Role(2L, RoleName.ROLE_CANDIDATE, "Ứng viên"));
+        existingAdmin.setStatus(UserStatus.LOCKED);
+        String originalPasswordHash = existingAdmin.getPasswordHash();
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(existingAdmin));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertEquals(
+                AdminBootstrapResult.REACTIVATED_EXISTING_ADMIN,
+                useCase.execute(EMAIL, "", "Ignored name", false, true)
+        );
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User saved = captor.getValue();
+        assertEquals(UserStatus.ACTIVE, saved.getStatus());
+        assertEquals(originalPasswordHash, saved.getPasswordHash());
+        assertEquals("Existing user", saved.getFullName());
+        assertTrue(saved.hasRole(RoleName.ROLE_ADMIN));
+        assertTrue(saved.hasRole(RoleName.ROLE_CANDIDATE));
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    void doesNotReactivateAnExistingAdminWhenExplicitOptInIsDisabled() {
+        User lockedAdmin = userWithRole(RoleName.ROLE_ADMIN);
+        lockedAdmin.setStatus(UserStatus.LOCKED);
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(lockedAdmin));
+
+        assertEquals(AdminBootstrapResult.ALREADY_ADMIN, useCase.execute(EMAIL, "", "", false, false));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void refusesToReactivateExistingAdminWithStatusOtherThanLockedOrActive() {
+        User bannedAdmin = userWithRole(RoleName.ROLE_ADMIN);
+        bannedAdmin.setStatus(UserStatus.BANNED);
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(bannedAdmin));
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> useCase.execute(EMAIL, "", "", false, true)
+        );
+
+        assertTrue(error.getMessage().contains("not locked"));
+        verify(userRepository, never()).save(any());
         verifyNoInteractions(passwordEncoder);
     }
 

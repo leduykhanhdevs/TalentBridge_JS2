@@ -72,6 +72,7 @@ talentbridge:
     password: "${ADMIN_BOOTSTRAP_PASSWORD:}"
     full-name: "${ADMIN_BOOTSTRAP_FULL_NAME:TalentBridge Administrator}"
     promote-existing: "${ADMIN_BOOTSTRAP_PROMOTE_EXISTING:false}"
+    reactivate-locked-admin: "${ADMIN_BOOTSTRAP_REACTIVATE_LOCKED_ADMIN:false}"
   gemini:
     api-key: "${GEMINI_API_KEY:}"
     model: "${GEMINI_MODEL:gemini-3.5-flash-lite}"

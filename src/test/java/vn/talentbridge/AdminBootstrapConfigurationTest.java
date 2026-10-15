@@ -37,7 +37,7 @@ class AdminBootstrapConfigurationTest {
 
     @Test
     void enabledRunnerUsesCreateModeByDefault() {
-        when(useCase.execute("admin@example.com", "", "Production Admin", false))
+        when(useCase.execute("admin@example.com", "", "Production Admin", false, false))
                 .thenReturn(AdminBootstrapResult.CREATED);
 
         productionContext()
@@ -50,13 +50,13 @@ class AdminBootstrapConfigurationTest {
                     assertTrue(context.containsBean("bootstrapAdminAccount"));
                     ApplicationRunner runner = context.getBean("bootstrapAdminAccount", ApplicationRunner.class);
                     assertDoesNotThrow(() -> runner.run(new DefaultApplicationArguments(new String[0])));
-                    verify(useCase).execute("admin@example.com", "", "Production Admin", false);
+                    verify(useCase).execute("admin@example.com", "", "Production Admin", false, false);
                 });
     }
 
     @Test
     void enabledRunnerPassesExplicitPromotionFlagWithoutRequestingNewPassword() {
-        when(useCase.execute("existing@example.com", "", "Existing Admin", true))
+        when(useCase.execute("existing@example.com", "", "Existing Admin", true, false))
                 .thenReturn(AdminBootstrapResult.PROMOTED_EXISTING);
 
         productionContext()
@@ -69,7 +69,26 @@ class AdminBootstrapConfigurationTest {
                 .run(context -> {
                     ApplicationRunner runner = context.getBean("bootstrapAdminAccount", ApplicationRunner.class);
                     assertDoesNotThrow(() -> runner.run(new DefaultApplicationArguments(new String[0])));
-                    verify(useCase).execute("existing@example.com", "", "Existing Admin", true);
+                    verify(useCase).execute("existing@example.com", "", "Existing Admin", true, false);
+                });
+    }
+
+    @Test
+    void enabledRunnerPassesExplicitAdminReactivationFlag() {
+        when(useCase.execute("locked@example.com", "", "Existing Admin", false, true))
+                .thenReturn(AdminBootstrapResult.REACTIVATED_EXISTING_ADMIN);
+
+        productionContext()
+                .withPropertyValues(
+                        "talentbridge.admin-bootstrap.enabled=true",
+                        "talentbridge.admin-bootstrap.email=locked@example.com",
+                        "talentbridge.admin-bootstrap.full-name=Existing Admin",
+                        "talentbridge.admin-bootstrap.reactivate-locked-admin=true"
+                )
+                .run(context -> {
+                    ApplicationRunner runner = context.getBean("bootstrapAdminAccount", ApplicationRunner.class);
+                    assertDoesNotThrow(() -> runner.run(new DefaultApplicationArguments(new String[0])));
+                    verify(useCase).execute("locked@example.com", "", "Existing Admin", false, true);
                 });
     }
 
