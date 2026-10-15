@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
 import type { CandidateJobAssessment, JobQualityReport, RecruiterPipelineAnalytics } from './statisticsTypes'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
@@ -21,7 +22,7 @@ interface ApiEnvelope<T> {
 async function getData<T>(path: string): Promise<T> {
     const token = getAccessToken()
     if (!token) throw new StatisticsApiError('Phiên đăng nhập đã hết hạn.', 401)
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}${path}`, {
         headers: { Authorization: `Bearer ${token}` },
     })
     let body: ApiEnvelope<T> | undefined

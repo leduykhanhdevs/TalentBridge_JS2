@@ -9,6 +9,7 @@ import type {
     ResetPasswordRequest,
 } from './authTypes'
 import { getAccessToken, clearAuthTokens } from './tokenStorage'
+import { authenticatedFetch } from './authenticatedFetch'
 
 export class AuthApiError extends Error {
     readonly status: number
@@ -168,7 +169,7 @@ export async function logoutUser(): Promise<void> {
     const token = getAccessToken()
     try {
         if (token) {
-            await fetch(`${API_BASE_URL}/auth/logout`, {
+            await authenticatedFetch(`${API_BASE_URL}/auth/logout`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -276,7 +277,7 @@ export async function changePassword(
     let response: Response
 
     try {
-        response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        response = await authenticatedFetch(`${API_BASE_URL}/auth/change-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json; charset=UTF-8',

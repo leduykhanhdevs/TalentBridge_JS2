@@ -16,6 +16,7 @@ import type {
     AdminJobStatus,
 } from './adminTypes'
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
 
 export class AdminApiError extends Error {
     readonly status: number
@@ -72,7 +73,7 @@ export async function getAdminCandidates(
     if (params.status) query.set('status', params.status)
 
     const url = `${API_BASE_URL}/admin/candidates?${query.toString()}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -85,7 +86,7 @@ export async function getAdminCandidates(
 
 export async function getCandidateById(id: number): Promise<CandidateAdminResponse> {
     const url = `${API_BASE_URL}/admin/candidates/${id}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -101,7 +102,7 @@ export async function updateUserStatus(
     request: UpdateUserStatusRequest,
 ): Promise<void> {
     const url = `${API_BASE_URL}/admin/users/${userId}/status`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -119,7 +120,7 @@ export async function getAdminRecruiters(
     if (params.keyword?.trim()) query.set('keyword', params.keyword.trim())
 
     const url = `${API_BASE_URL}/admin/recruiters?${query.toString()}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -132,7 +133,7 @@ export async function getAdminRecruiters(
 
 export async function getRecruiterById(id: number): Promise<RecruiterAdminResponse> {
     const url = `${API_BASE_URL}/admin/recruiters/${id}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -153,7 +154,7 @@ export async function getAdminCompanies(
     if (params.status) query.set('status', params.status)
 
     const url = `${API_BASE_URL}/admin/companies?${query.toString()}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -166,7 +167,7 @@ export async function getAdminCompanies(
 
 export async function getCompanyById(id: number): Promise<CompanyAdminResponse> {
     const url = `${API_BASE_URL}/admin/companies/${id}`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -182,7 +183,7 @@ export async function updateCompanyStatus(
     request: UpdateCompanyStatusRequest,
 ): Promise<CompanyAdminResponse> {
     const url = `${API_BASE_URL}/admin/companies/${companyId}/status`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -196,7 +197,7 @@ export async function updateCompanyStatus(
 
 export async function getAdminDashboardStats(): Promise<AdminDashboardStatsResponse> {
     const url = `${API_BASE_URL}/admin/dashboard/stats`
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -212,14 +213,14 @@ export async function getAdminJobs(params: JobFilterParams = {}): Promise<PageRe
     if (params.page !== undefined) query.set('page', String(params.page))
     if (params.size !== undefined) query.set('size', String(params.size))
     if (params.status) query.set('status', params.status)
-    const response = await fetch(`${API_BASE_URL}/admin/jobs?${query.toString()}`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/admin/jobs?${query.toString()}`, {
         method: 'GET', headers: getAuthHeaders(),
     })
     return handleResponse<PageResponse<AdminJobResponse>>(response, 'Không thể tải danh sách tin cần kiểm duyệt.')
 }
 
 export async function getJobStatusHistory(jobId: number): Promise<JobStatusHistoryResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/admin/jobs/${jobId}/status-history`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/admin/jobs/${jobId}/status-history`, {
         method: 'GET', headers: getAuthHeaders(),
     })
     return handleResponse<JobStatusHistoryResponse[]>(response, 'Không thể tải lịch sử kiểm duyệt tin.')
@@ -230,7 +231,7 @@ export async function updateAdminJobStatus(
     status: AdminJobStatus,
     reason?: string,
 ): Promise<AdminJobResponse> {
-    const response = await fetch(`${API_BASE_URL}/admin/jobs/${jobId}/status`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/admin/jobs/${jobId}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ status, reason }),

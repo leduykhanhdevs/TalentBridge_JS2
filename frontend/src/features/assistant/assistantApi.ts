@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
 import type { AssistantApiEnvelope, AssistantReply, AssistantTurn } from './assistantTypes'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
@@ -22,7 +23,7 @@ export async function askTalentBridge(message: string, history: AssistantTurn[])
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
     let response: Response
     try {
-        response = await fetch(`${API_BASE_URL}/assistant/chat`, {
+        response = await authenticatedFetch(`${API_BASE_URL}/assistant/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json; charset=UTF-8',

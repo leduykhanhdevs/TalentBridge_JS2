@@ -334,3 +334,14 @@
   - Đã sửa một test Mockito có stubbing thừa; không thay đổi logic chỉ để làm test xanh.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, outbound ports `CvTextExtractionPort`/`FileStoragePort`, parser CV hiện có, kiểm tra quyền ở application use case, deterministic keyword/rule matching. Đây là đối sánh từ khóa/quy tắc; không dùng embedding hoặc vector database và không gọi Gemini cho CV riêng tư.
 - **Mục đích chức năng / việc đã làm**: Giúp recruiter xem mức độ đáp ứng của ứng viên dựa trên CV đã tải lên mà giảm việc gửi dữ liệu cá nhân cho nhà cung cấp AI bên ngoài, đồng thời giữ ranh giới Hexagonal giữa use case và adapter. Thay đổi hiện đã qua kiểm thử cục bộ; chưa được merge hoặc triển khai Render.
+
+---
+
+## TỰ GIA HẠN PHIÊN ĐĂNG NHẬP VÀ SỬA 401 TRÊN API ĐÃ XÁC THỰC - 15/10/2026
+- **Đã làm được gì**:
+  - Kiểm tra log Render xác định request từ giao diện vẫn dùng access token hết hạn ngày 10/10; dữ liệu tên/vai trò trong localStorage khiến giao diện trông như còn đăng nhập dù API đã trả 401.
+  - Thêm một client dùng chung: khi API được bảo vệ trả 401, client gọi `/auth/refresh-token`, lưu cặp token đã xoay và thử lại request đúng một lần. Các request đồng thời dùng chung một refresh operation; refresh token không hợp lệ thì xóa phiên cũ và phát sự kiện để UI cập nhật.
+  - Áp dụng cho API trợ lý, ứng viên, recruiter, admin, thống kê, đổi mật khẩu và đăng xuất; không thay đổi các API công khai.
+  - Backend JDK 21: `mvnw verify` đạt 297/297; frontend: 87/87 tests, ESLint và production build đạt; `git diff --check` đạt. Chưa merge hoặc redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/Vite TypeScript; `authenticatedFetch`; single-flight promise để tránh refresh trùng trong cùng tab; refresh-token rotation hiện có ở Spring Boot; Vitest, ESLint và Vite.
+- **Mục đích chức năng / việc đã làm**: Ngăn token hết hạn làm chatbot, bong bóng trợ lý và các màn có xác thực liên tục báo 401; tự gia hạn phiên hợp lệ an toàn, đồng thời bỏ trạng thái quyền cũ nếu phiên không thể khôi phục.
