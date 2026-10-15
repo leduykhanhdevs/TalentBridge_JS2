@@ -380,3 +380,15 @@
   - Sau khi cập nhật với main, CI trên head 90418a8 đã pass đủ 3/3: backend, frontend và Docker; kiểm thử cục bộ gần nhất đạt Maven 299/299, frontend 90/90, API E2E 28/28 và UI E2E 4/4.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser của trình duyệt, Spring Boot Bean Validation, Vitest, MockMvc/JUnit, Playwright, Maven Wrapper và GitHub Actions.
 - **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu tạo doanh nghiệp thất bại do website/email hoặc logo sai hợp đồng; người dùng nhận chỉ dẫn chính xác trước khi request tới backend.
+
+---
+
+## XÁC MINH RELEASE FORM DOANH NGHIỆP VÀ TRẠNG THÁI LIVE - 15/10/2026
+- **Đã làm được gì**:
+  - PR #33 đã merge vào main tại 52d808e; CI hoàn tất 3/3 (backend verify, frontend test/lint/build, Docker build). GitHub Actions/CD Render run 38689713703 thành công và xác minh cả hai dịch vụ phục vụ đúng commit.
+  - Kiểm tra trực tiếp production: frontend marker `52d808e76a67816896b0871d69fa2b50cd833016`; `/api/v1/health` HTTP 200 trong 0,19 giây; `/api/v1/jobs` HTTP 200 trong 0,57 giây và `totalElements=0`. Smoke test CORS credentialed cũng đạt trong workflow.
+  - Mở trang `/assistant` và bong bóng trợ lý trên production: đều render, không trắng. Trạng thái khách thấy thông báo cần đăng nhập và không thể gửi prompt; tab TalentBridge tại thời điểm kiểm tra vẫn chưa có phiên được backend nhận.
+  - RDS `talentbridge-mysql` đã thấy ở trạng thái Available; security group chỉ cho MySQL từ hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`. Chưa xác minh được inventory TiDB trong tab hiện đăng xuất, chưa tạo job vì API công khai không có dữ liệu và chưa có phiên Recruiter đã xác thực cùng công ty được duyệt.
+  - Cấu hình RDS đang là `db.t4g.micro`, 20 GiB gp2, Single-AZ, autoscaling bật với mức tối đa 1000 GiB. Chưa xác minh Free Tier/credits trong Billing và chưa giới hạn storage autoscaling.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions, Render Deploy Hooks và exact-commit markers; HTTP health/jobs/CORS smoke tests; Computer Use để kiểm tra trang trợ lý và AWS RDS Console.
+- **Mục đích chức năng / việc đã làm**: Xác nhận fix form và release thực sự đang chạy trên production, phân biệt tốc độ request ấm với cold start, và ghi rõ các giới hạn còn lại ở đăng nhập, dữ liệu nghiệp vụ, TiDB và mức miễn phí AWS.
