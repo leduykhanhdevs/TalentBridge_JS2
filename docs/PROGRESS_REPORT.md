@@ -416,3 +416,14 @@
   - Đọc lại `HexagonalArchitectureTest` (11 luật phụ thuộc), luồng trợ lý, tạo/sửa/ứng tuyển việc, chấm chất lượng job và đánh giá CV. Các bài test trước đó vẫn xanh; kiểm toán logic toàn dự án chưa hoàn tất và health endpoint hiện chỉ báo trạng thái ứng dụng, không tự kiểm tra DB.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot REST API, RDS/MySQL read path qua API việc làm, Render build marker, GitHub Actions, PowerShell Stopwatch cho độ trễ request ấm, ArchUnit cho ranh giới Hexagonal và rà soát use case.
 - **Mục đích chức năng / việc đã làm**: Phân biệt xác thực giao diện với phiên API thật, kiểm tra tốc độ có số đo, và ghi rõ giới hạn trước khi chạy chatbot, kiểm thử ghi RDS hoặc xóa resource cloud.
+
+---
+
+## KIỂM THỬ CHATBOT LIVE VÀ ĐỐI CHIẾU CI/CD - 15/10/2026
+- **Đã làm được gì**:
+  - Trên bản production `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`, trang `/assistant` và widget chatbot nổi ở `/jobs` đều render bình thường. Hai prompt thử nghiệm chỉ hỏi quy trình TalentBridge được trả lời kèm căn cứ; không tái hiện màn trắng.
+  - `/api/v1/health` trả HTTP 200, `UP`, đúng build marker; `/api/v1/jobs` trả HTTP 200 nhưng có 0 tin. Hai lượt đọc live đo được lần lượt khoảng 437 ms và 367 ms; đây chỉ là phép đo tức thời khi kiểm tra, không đại diện cold start hay tải cao.
+  - CD run `38690585931` thành công cho đúng commit production. CI gần nhất `38690247959` thành công trên PR cập nhật báo cáo (`49530f2`), không phải cùng SHA với production; CI 3/3 của PR release trước đã được ghi ở mục kiểm chứng form.
+  - Thanh điều hướng production xác định phiên hiện tại là **Ứng viên**, dù người dùng báo đã vào trang quản trị. Vì vậy chưa chạy thao tác/luồng Admin hoặc Recruiter và không ghi dữ liệu RDS. Tab TiDB hiện vẫn ở trang đăng nhập, nên chưa xác minh resource để xóa; không có thao tác xóa nào được thực hiện.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Production UI qua Computer Use, Spring REST health/jobs, build marker, GitHub Actions run metadata, Render CD và retrieval nội bộ của chatbot.
+- **Mục đích chức năng / việc đã làm**: Xác nhận hồi quy chatbot và đường đọc API sau deploy, đồng thời phân định rõ các cổng còn thiếu: tài khoản đúng vai trò để thử ghi nghiệp vụ, dữ liệu job để thử luồng tuyển dụng end-to-end, và đăng nhập TiDB để kiểm kê trước thao tác xóa.
