@@ -392,3 +392,15 @@
   - Cấu hình RDS đang là `db.t4g.micro`, 20 GiB gp2, Single-AZ, autoscaling bật với mức tối đa 1000 GiB. Chưa xác minh Free Tier/credits trong Billing và chưa giới hạn storage autoscaling.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions, Render Deploy Hooks và exact-commit markers; HTTP health/jobs/CORS smoke tests; Computer Use để kiểm tra trang trợ lý và AWS RDS Console.
 - **Mục đích chức năng / việc đã làm**: Xác nhận fix form và release thực sự đang chạy trên production, phân biệt tốc độ request ấm với cold start, và ghi rõ các giới hạn còn lại ở đăng nhập, dữ liệu nghiệp vụ, TiDB và mức miễn phí AWS.
+
+---
+
+## KIỂM TRA RDS, CI/CD VÀ PHIÊN ĐĂNG NHẬP PRODUCTION - 15/10/2026
+- **Đã làm được gì**:
+  - Production đang phục vụ đúng build `ede188f`; workflow CD Render gần nhất thành công. `/api/v1/health` và `/api/v1/jobs` đều trả HTTP 200; API việc làm hiện trả danh sách rỗng (`totalElements=0`).
+  - Log khởi động xác nhận MySQL 8.4 trên RDS kết nối được, Flyway xác thực 2 migration và schema hiện ở version 2; Hikari tạo kết nối thành công. Một lần khởi động ghi nhận 200,699 giây, nên chưa thể kết luận khởi động lạnh nhanh/ổn định.
+  - Kiểm thử cục bộ: Maven verify 300/300, `HexagonalArchitectureTest` 11/11, frontend 90/90, lint/build đạt, API E2E 28/28 và Playwright UI E2E 4/4. E2E dùng H2 tạm, không ghi lên RDS production.
+  - Log xác nhận admin production đã tồn tại nên `ADMIN_BOOTSTRAP_PASSWORD` không đổi mật khẩu hiện hữu. Tab production sau lần đăng nhập lại vẫn hiển thị form đăng nhập; chưa kiểm thử chatbot có xác thực hoặc luồng ghi dữ liệu nghiệp vụ lên RDS.
+  - Không tạo/xóa dữ liệu production trong lượt kiểm tra này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot 3, Java 21, Amazon RDS MySQL 8.4, Flyway, HikariCP, GitHub Actions, Render build marker, Vitest, ESLint, Vite, H2 và Playwright.
+- **Mục đích chức năng / việc đã làm**: Phân biệt rõ health/read-path live với kiểm thử ghi đã xác thực; ghi nhận giới hạn đăng nhập hiện tại, dữ liệu việc làm trống và độ trễ khởi động trước khi kết luận hệ thống production hoàn tất.
