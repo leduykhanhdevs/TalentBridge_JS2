@@ -107,12 +107,6 @@ export function LoginPage() {
         return `${baseClass} border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100`
     }
 
-    function quickFill(email: string, pass: string) {
-        setFormValues({ email, password: pass })
-        setFieldErrors({})
-        setServerError(null)
-    }
-
     return (
         <section className="bg-bento-canvas min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
             <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-2xl bento-card border border-slate-200/80 bg-white shadow-xl lg:grid-cols-12 rounded-3xl">
@@ -177,36 +171,6 @@ export function LoginPage() {
                         <p className="mt-1 text-sm text-slate-600">
                             Nhập email và mật khẩu để truy cập hệ thống.
                         </p>
-
-                        {/* Quick-test credential helper */}
-                        <div className="mt-5 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3.5">
-                            <p className="text-xs font-bold text-slate-700">
-                                Tài khoản mẫu thử nghiệm (Nhấn để điền):
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                <button
-                                    className="bento-badge bg-blue-50 text-blue-700 border-blue-200 cursor-pointer hover:bg-blue-100"
-                                    onClick={() => quickFill('candidate@talentbridge.vn', 'Password123!')}
-                                    type="button"
-                                >
-                                    Ứng viên
-                                </button>
-                                <button
-                                    className="bento-badge bg-emerald-50 text-emerald-700 border-emerald-200 cursor-pointer hover:bg-emerald-100"
-                                    onClick={() => quickFill('recruiter@fpt.com', 'Password123!')}
-                                    type="button"
-                                >
-                                    Nhà tuyển dụng
-                                </button>
-                                <button
-                                    className="bento-badge bg-rose-50 text-rose-700 border-rose-200 cursor-pointer hover:bg-rose-100"
-                                    onClick={() => quickFill('admin@talentbridge.vn', 'AdminPassword123!')}
-                                    type="button"
-                                >
-                                    Quản trị viên
-                                </button>
-                            </div>
-                        </div>
 
                         <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
                             <div>

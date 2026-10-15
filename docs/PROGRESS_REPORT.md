@@ -482,3 +482,10 @@
   - Tab TalentBridge vẫn xác thực ở vai trò Ứng viên. Vì vậy chưa thể tạo 100 tin chờ duyệt qua luồng Recruiter/Admin hoặc thực hiện kiểm thử ghi/đọc nghiệp vụ bằng tài khoản có quyền. API jobs hiện không có tin.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: AWS RDS Console/CloudWatch metrics, TiDB Cloud Resource View, Render application logs, Spring Boot health/jobs API, HikariCP, Flyway, GitHub Actions CI và Render CD.
 - **Mục đích chức năng / việc đã làm**: Xác nhận DB đang nhận kết nối và CI/CD đang chạy, đồng thời tách bạch rõ giữa khả năng kết nối, migration dữ liệu, thao tác ghi nghiệp vụ và hiệu năng cold start. Không xóa thêm resource, không nạp dữ liệu mẫu, không đọc hoặc tiết lộ secret.
+
+---
+
+## GỠ TÀI KHOẢN MẪU VÀ NÂNG QUYỀN ADMIN CÓ KIỂM SOÁT - 15/10/2026
+- **Đã làm được gì**: Gỡ khối nút điền nhanh tài khoản mẫu khỏi trang đăng nhập. Bổ sung cờ `ADMIN_BOOTSTRAP_PROMOTE_EXISTING` mặc định tắt; khi bật chỉ nâng đúng tài khoản hiện hữu đang ACTIVE, giữ nguyên mật khẩu/hồ sơ/các role, và lỗi an toàn nếu email không khớp. Cập nhật runbook và test cho các trường hợp tạo mới, đã là Admin, nâng quyền, tài khoản khóa và email không tồn tại. Xác minh `mvnw verify` đạt 304/304; frontend ESLint, 90/90 unit test và Vite production build đều đạt. Chưa thay đổi Render production hoặc cấp role trong DB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript; Spring Boot ApplicationRunner chỉ trong profile `prod`; inbound use case/port, persistence adapter và role domain theo kiến trúc hexagonal; JUnit 5/Mockito, Vitest, ESLint, TypeScript/Vite.
+- **Mục đích chức năng / việc đã làm**: Loại bỏ thông tin đăng nhập mẫu gây nhầm lẫn và cung cấp đường nâng quyền một lần có kiểm soát, không mở đăng ký Admin công khai và không thay mật khẩu tài khoản sẵn có.
