@@ -377,6 +377,6 @@
   - Chuẩn hóa xác thực URL website và logo về HTTP(S); chặn email nhập nhầm vào website và logo dạng Data URI trước khi gửi API.
   - Bỏ giao diện tải logo giả lập không tương thích với DTO backend; làm rõ logo URL công khai là tùy chọn, và thêm thông báo lỗi ngay tại trường nhập.
   - Bổ sung giới hạn độ dài khớp backend, test unit, API integration và Playwright cho cả dữ liệu không hợp lệ lẫn gửi thành công.
-  - CI của PR #33 trước cập nhật nhánh đã pass đủ backend, frontend và Docker; kiểm thử cục bộ gần nhất đạt Maven 299/299, frontend 90/90, API E2E 28/28 và UI E2E 4/4. Đang cập nhật nhánh với main để chạy lại CI.
+  - Sau khi cập nhật với main, CI trên head 90418a8 đã pass đủ 3/3: backend, frontend và Docker; kiểm thử cục bộ gần nhất đạt Maven 299/299, frontend 90/90, API E2E 28/28 và UI E2E 4/4.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser của trình duyệt, Spring Boot Bean Validation, Vitest, MockMvc/JUnit, Playwright, Maven Wrapper và GitHub Actions.
 - **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu tạo doanh nghiệp thất bại do website/email hoặc logo sai hợp đồng; người dùng nhận chỉ dẫn chính xác trước khi request tới backend.
