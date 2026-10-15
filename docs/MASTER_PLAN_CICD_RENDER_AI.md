@@ -105,14 +105,14 @@ RAG truy xuất tri thức để làm căn cứ cho câu trả lời; MCP chuẩ
 
 #### 2. Phần hiện có trong source
 
-- Chatbot `/api/v1/assistant/chat`: truy xuất lexical từ hướng dẫn TalentBridge, rồi tùy chọn gọi Gemini; fallback trả nội dung đã truy xuất. Không có embedding/vector store; không tra cứu hồ sơ riêng và không thực hiện mutation.
+- Chatbot `/api/v1/assistant/chat`: truy xuất lexical hybrid từ hướng dẫn TalentBridge (token chính xác, synonym và character-trigram), rồi tùy chọn gọi Gemini; fallback trả nội dung đã truy xuất. Không có embedding/vector store; không tra cứu hồ sơ riêng và không thực hiện mutation. MCP help tool dùng chung cổng truy xuất hướng dẫn.
 - CV–job matching: Gemini khi có cấu hình; fallback từ độ phủ token, cosine trên tập token và quy tắc suy luận kỹ năng. Đây là heuristic advisory, chưa có bộ dữ liệu đánh giá để chứng minh accuracy.
-- `/api/v1/mcp`: JSON-RPC tùy biến, có tools/list, tools/call, ping; yêu cầu Recruiter và kiểm quyền qua use case. Chưa tuyên bố tương thích MCP đầy đủ, chatbot FAQ chưa gọi endpoint này.
+- `/api/v1/mcp`: nhánh tính năng dùng MCP Java SDK chính thức với Streamable HTTP Servlet và protocol version `2025-11-25`; tool schemas đi qua application use cases, route yêu cầu Recruiter, quyền sở hữu vẫn được kiểm trong use case. HTTP integration tests bao phủ initialize, initialized notification, tools/list/call, anonymous 401 và Candidate 403. Chưa chạy interoperability test với MCP client độc lập, chưa merge/deploy; chatbot FAQ không gọi MCP endpoint.
 - Statistics: chất lượng tin dựa vào trường dữ liệu và tín hiệu nội bộ; candidate assessment là gợi ý; pipeline là ảnh chụp theo vòng hiện tại, không phải chuyển đổi lịch sử.
 
 #### 3. Việc cần làm trước khi nâng mức khẳng định
 
-Nếu cần semantic RAG, xây corpus có nguồn, chunking/embedding và evaluation set có nhãn; báo precision/recall hoặc hit-rate sau đo. Nếu cần MCP chuẩn, dùng SDK tương thích và interoperability test với client thật. Nếu cần chatbot gọi tool, chỉ công bố tool tối thiểu theo role/ownership, không cho LLM đi thẳng đến repository. Tất cả kết quả tuyển dụng phải giữ nhãn tham khảo cho đến khi được hiệu chuẩn và đánh giá bias.
+Nếu cần semantic RAG, xây corpus có nguồn, chunking/embedding và evaluation set có nhãn; báo precision/recall hoặc hit-rate sau đo. Với MCP, bổ sung interoperability test bằng client độc lập và đánh giá transport/session khi chạy nhiều instance. Nếu cần chatbot gọi tool, chỉ công bố tool tối thiểu theo role/ownership, không cho LLM đi thẳng đến repository. Tất cả kết quả tuyển dụng phải giữ nhãn tham khảo cho đến khi được hiệu chuẩn và đánh giá bias.
 
 Nguồn, cách phân biệt claim và chi tiết thuật toán hiện có: [AI-KM research note](research/AI_KM_RAG_WORKFLOW_ANALYSIS.md), [RAG/MCP and source audit](research/AI_MCP_VS_RAG_COMPREHENSIVE_ANALYSIS.md).
 

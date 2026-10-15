@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
 import vn.talentbridge.core.application.dto.AssistantChatResult;
 import vn.talentbridge.core.application.dto.AssistantConversationTurn;
+import vn.talentbridge.core.application.dto.TalentBridgeKnowledgeEntry;
 import vn.talentbridge.core.application.port.out.TalentBridgeAssistantPort;
+import vn.talentbridge.core.application.port.out.TalentBridgeKnowledgePort;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssistantPort {
+public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssistantPort, TalentBridgeKnowledgePort {
     private static final String OUT_OF_SCOPE_ANSWER =
             "Mình chỉ hỗ trợ các câu hỏi về cách sử dụng TalentBridge, hồ sơ, việc làm, ứng tuyển, tuyển dụng và quản trị trong ứng dụng này.";
     private static final Set<String> STOP_WORDS = Set.of(
@@ -33,7 +35,8 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
     private static final Set<String> TALENTBRIDGE_TERMS = Set.of(
             "talentbridge", "viec", "lam", "job", "jobs", "tuyen", "dung", "ung", "vien", "ho", "so", "cv",
             "don", "ungtuyen", "nha", "recruiter", "company", "doanh", "nghiep", "admin", "phong", "van",
-            "pipeline", "ats", "cong", "ty", "tin", "dang", "ky", "tai", "khoan", "mat", "khau", "ai", "chatbot"
+            "pipeline", "ats", "cong", "ty", "tin", "dang", "ky", "tai", "khoan", "mat", "khau", "ai", "chatbot",
+            "apply", "application", "candidate", "recruitment", "resume", "password", "account", "interview"
     );
     private static final Set<String> FAST_FAQ_QUESTIONS = Set.of(
             "lam sao de ung tuyen",
@@ -72,7 +75,7 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
                 .filter(turn -> "USER".equals(turn.role()))
                 .map(AssistantConversationTurn::content)
                 .collect(Collectors.joining(" ")) + " " + message;
-        List<KnowledgeEntry> evidence = retrieve(retrievalText);
+        List<KnowledgeEntry> evidence = retrieve(retrievalText, 3);
         if (evidence.isEmpty()) {
             return new AssistantChatResult(OUT_OF_SCOPE_ANSWER, "KNOWLEDGE_BASE", List.of());
         }
@@ -97,6 +100,13 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
             log.warn("TalentBridge assistant provider failed ({}); using retrieved guidance.", exception.getClass().getSimpleName());
         }
         return new AssistantChatResult(groundedFallback, "KNOWLEDGE_BASE", references);
+    }
+
+    @Override
+    public List<TalentBridgeKnowledgeEntry> search(String query, int limit) {
+        return retrieve(query, limit).stream()
+                .map(entry -> new TalentBridgeKnowledgeEntry(entry.title(), entry.answer()))
+                .toList();
     }
 
     private String generateGroundedAnswer(
@@ -131,17 +141,56 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
         return root.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText("").trim();
     }
 
-    private List<KnowledgeEntry> retrieve(String question) {
-        Set<String> queryTerms = tokenize(expandSynonyms(question));
-        if (queryTerms.stream().noneMatch(TALENTBRIDGE_TERMS::contains)) return List.of();
+    private List<KnowledgeEntry> retrieve(String question, int limit) {
+        Set<String> exactTerms = tokenize(question);
+        Set<String> expandedTerms = tokenize(expandSynonyms(question));
+        if (exactTerms.stream().noneMatch(TALENTBRIDGE_TERMS::contains)
+                && expandedTerms.stream().noneMatch(TALENTBRIDGE_TERMS::contains)) {
+            return List.of();
+        }
 
+        Set<String> queryTrigrams = characterTrigrams(normalize(question));
         return KNOWLEDGE.stream()
-                .map(entry -> Map.entry(entry, entry.keywords().stream().filter(queryTerms::contains).count()))
-                .filter(row -> row.getValue() > 0)
-                .sorted(Comparator.<Map.Entry<KnowledgeEntry, Long>>comparingLong(Map.Entry::getValue).reversed())
-                .limit(3)
+                .map(entry -> Map.entry(entry, hybridSimilarity(entry, exactTerms, expandedTerms, queryTrigrams)))
+                .filter(row -> row.getValue() > 0.0)
+                .sorted(Comparator.<Map.Entry<KnowledgeEntry, Double>>comparingDouble(Map.Entry::getValue).reversed())
+                .limit(limit)
                 .map(Map.Entry::getKey)
                 .toList();
+    }
+
+    /**
+     * A transparent three-vector lexical hybrid: exact tokens, synonym-expanded tokens,
+     * and character trigrams. It is deliberately not described as an embedding model.
+     */
+    private double hybridSimilarity(KnowledgeEntry entry, Set<String> exactTerms,
+                                    Set<String> expandedTerms, Set<String> queryTrigrams) {
+        double exactScore = tokenCoverage(exactTerms, entry.keywords());
+        double synonymScore = tokenCoverage(expandedTerms, entry.keywords());
+        double trigramScore = diceSimilarity(queryTrigrams, characterTrigrams(entry.searchableText()));
+        return 0.55 * exactScore + 0.30 * synonymScore + 0.15 * trigramScore;
+    }
+
+    private double tokenCoverage(Set<String> query, Set<String> document) {
+        if (query.isEmpty()) return 0.0;
+        long overlap = query.stream().filter(document::contains).count();
+        return (double) overlap / query.size();
+    }
+
+    private double diceSimilarity(Set<String> left, Set<String> right) {
+        if (left.isEmpty() || right.isEmpty()) return 0.0;
+        long overlap = left.stream().filter(right::contains).count();
+        return (2.0 * overlap) / (left.size() + right.size());
+    }
+
+    private Set<String> characterTrigrams(String text) {
+        String compact = normalize(text).replaceAll("[^a-z0-9]+", " ").trim().replaceAll("\\s+", " ");
+        if (compact.length() < 3) return compact.isEmpty() ? Set.of() : Set.of(compact);
+        Set<String> trigrams = new LinkedHashSet<>();
+        for (int index = 0; index <= compact.length() - 3; index++) {
+            trigrams.add(compact.substring(index, index + 3));
+        }
+        return trigrams;
     }
 
     private static String expandSynonyms(String text) {
@@ -175,9 +224,9 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
     private static KnowledgeEntry entry(String title, String answer, String keyText, String... extraKeywords) {
         Set<String> keywords = new LinkedHashSet<>(tokenize(keyText));
         for (String keyword : extraKeywords) keywords.addAll(tokenize(keyword));
-        return new KnowledgeEntry(title, answer, Set.copyOf(keywords));
+        return new KnowledgeEntry(title, answer, Set.copyOf(keywords), title + " " + answer);
     }
 
-    private record KnowledgeEntry(String title, String answer, Set<String> keywords) {
+    private record KnowledgeEntry(String title, String answer, Set<String> keywords, String searchableText) {
     }
 }
