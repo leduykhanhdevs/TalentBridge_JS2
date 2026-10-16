@@ -573,3 +573,12 @@
   - React/TypeScript Fetch API, kiểu lỗi `AuthApiError`, Vitest; tích hợp với envelope `ApiResponse` hiện có của Spring Boot.
 - **Mục đích chức năng / việc đã làm**:
   - Giúp phân biệt lỗi dữ liệu/tài khoản với lỗi API, gateway hoặc giới hạn tốc độ để chẩn đoán đăng nhập/đăng ký mà không lộ thông tin xác thực.
+
+## CẬP NHẬT PR VÀ XÁC MINH PREVIEW V2 — 16/10/2026
+- **Đã làm được gì**:
+  - Đồng bộ nhánh giao diện với `main` sau khi PR #44 được merge; giữ phần xử lý lỗi đăng nhập/đăng ký mới nhất, giải quyết xung đột tài liệu và cập nhật PR #43 lên commit `b5ae44c`.
+  - Xác minh local `http://localhost:5176`: trang chủ có header chính; `/login` và `/register` không có menu Trang chủ/Việc làm/Trợ lý; form đăng nhập/đăng ký và chatbot hiển thị.
+  - Lint và production build đạt; Vitest 92/92; E2E H2 cô lập gần nhất đạt API 28/28 và UI 7/7. PR #43 hiện mergeable; CI Frontend, Backend và Docker 3/3 đạt.
+  - Chưa merge/deploy production; chờ trưởng nhóm review theo quy trình dự án. Figma MCP vẫn bị giới hạn ở Starter/View nên không xác minh pixel/layer cho mọi frame.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, Vite, React Router, Vitest, Playwright, Spring Boot trên H2 cô lập, GitHub Actions.
+- **Mục đích chức năng / việc đã làm**: Đưa bản FE V2 có thể xem tại localhost và review trên PR, đồng thời giữ kiểm soát phát hành trước khi Render nhận deploy.
