@@ -171,7 +171,7 @@ export function ResetPasswordPage() {
                             />
                             <input
                                 autoComplete="new-password"
-                                className="h-11 w-full rounded-none border border-slate-200 bg-slate-50 pl-10 pr-3 font-mono text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                                className="h-11 w-full rounded-none border border-slate-200 bg-slate-50 pl-10 pr-3 font-mono text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
                                 id="reset-new-password"
                                 name="newPassword"
                                 placeholder="Tối thiểu 6 ký tự"
@@ -204,7 +204,7 @@ export function ResetPasswordPage() {
                             />
                             <input
                                 autoComplete="new-password"
-                                className="h-11 w-full rounded-none border border-slate-200 bg-slate-50 pl-10 pr-3 font-mono text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                                className="h-11 w-full rounded-none border border-slate-200 bg-slate-50 pl-10 pr-3 font-mono text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
                                 id="reset-confirm-password"
                                 name="confirmPassword"
                                 placeholder="Nhập lại mật khẩu mới"
@@ -257,7 +257,7 @@ export function ResetPasswordPage() {
 
                 <div className="mt-6 border-t border-slate-100 pt-4 text-center">
                     <Link
-                        className="inline-flex items-center gap-2 text-xs font-bold text-slate-800 hover:text-indigo-600 underline"
+                        className="inline-flex items-center gap-2 text-xs font-bold text-slate-800 hover:text-blue-700 underline"
                         to="/login"
                     >
                         <ArrowLeft size={14} /> Quay lại trang Đăng nhập

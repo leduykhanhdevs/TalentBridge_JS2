@@ -80,7 +80,7 @@ export function AdminJobsPage() {
         <section className="space-y-5">
             <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <span className="bento-badge border-indigo-200 bg-indigo-50 text-indigo-700">MODERATION</span>
+                    <span className="bento-badge border-blue-200 bg-blue-50 text-blue-800">MODERATION</span>
                     <h1 className="mt-2 text-2xl font-black text-slate-900">Kiểm duyệt tin tuyển dụng</h1>
                     <p className="mt-1 text-sm text-slate-500">Chỉ tin được duyệt mới hiển thị công khai và nhận hồ sơ.</p>
                 </div>
@@ -108,7 +108,7 @@ export function AdminJobsPage() {
                         <p className="text-sm text-slate-600">{job.companyName || 'Chưa có doanh nghiệp'} · {job.city || 'Chưa có địa điểm'}</p>
                         <p className="text-xs text-slate-500">Hạn nộp: {job.deadline || 'Chưa thiết lập'}</p>
                         <details className="pt-2 text-sm">
-                            <summary className="cursor-pointer font-semibold text-indigo-700">Xem nội dung để kiểm duyệt</summary>
+                            <summary className="cursor-pointer font-semibold text-blue-800">Xem nội dung để kiểm duyệt</summary>
                             <div className="mt-3 space-y-3 rounded-xl bg-slate-50 p-3 text-slate-700">
                                 <div><h3 className="text-xs font-bold uppercase text-slate-500">Mô tả</h3><p className="mt-1 whitespace-pre-wrap">{job.description || 'Chưa có mô tả.'}</p></div>
                                 <div><h3 className="text-xs font-bold uppercase text-slate-500">Yêu cầu</h3><p className="mt-1 whitespace-pre-wrap">{job.requirements || 'Chưa có yêu cầu.'}</p></div>
@@ -144,7 +144,7 @@ export function AdminJobsPage() {
                     {action.status !== 'ACTIVE' && <label className="mt-4 block text-sm font-semibold text-slate-700">Lý do bắt buộc<textarea value={reason} onChange={(event) => setReason(event.target.value)} maxLength={1000} rows={4} className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm" /></label>}
                     <div className="mt-5 flex justify-end gap-2">
                         <button type="button" disabled={busy} onClick={() => setAction(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold">Hủy</button>
-                        <button type="button" disabled={busy} onClick={() => void submitAction()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white">{busy ? 'Đang lưu…' : 'Xác nhận'}</button>
+                        <button type="button" disabled={busy} onClick={() => void submitAction()} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white">{busy ? 'Đang lưu…' : 'Xác nhận'}</button>
                     </div>
                 </div>
             </div>}

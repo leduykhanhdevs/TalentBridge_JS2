@@ -4,6 +4,7 @@ import { AppProviders } from './app/providers/AppProviders'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import App from './App'
 import './index.css'
+import './design-system-v2.css'
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>

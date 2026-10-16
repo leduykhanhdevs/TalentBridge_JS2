@@ -11,6 +11,7 @@ const actors = [
         password: 'Password123!',
         route: '/candidate/profile',
         heading: 'Trần Minh Anh',
+        routes: ['/', '/jobs', '/jobs/1', '/candidate/profile', '/candidate/applications'],
     },
     {
         name: 'recruiter',
@@ -18,6 +19,7 @@ const actors = [
         password: 'Password123!',
         route: '/recruiter/jobs',
         heading: 'Quản lý tin tuyển dụng',
+        routes: ['/recruiter/profile', '/recruiter/jobs', '/recruiter/jobs/1/applicants', '/recruiter/company', '/recruiter/join-company', '/recruiter/peer-approval'],
     },
     {
         name: 'admin',
@@ -25,6 +27,7 @@ const actors = [
         password: 'AdminPassword123!',
         route: '/admin/jobs',
         heading: 'Kiểm duyệt tin tuyển dụng',
+        routes: ['/admin/candidates', '/admin/recruiters', '/admin/companies', '/admin/jobs'],
     },
 ] as const
 
@@ -38,11 +41,11 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         page.on('pageerror', (error) => pageErrors.push(error.message))
 
         await page.goto(`${baseURL}/login`)
-        await page.getByLabel('Địa chỉ email').fill(actor.email)
+        await page.getByLabel('Email').fill(actor.email)
         await page.getByLabel('Mật khẩu').fill(actor.password)
         await Promise.all([
             page.waitForURL((url) => !url.pathname.endsWith('/login')),
-            page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click(),
+            page.getByRole('button', { name: 'Đăng nhập' }).click(),
         ])
         await page.goto(`${baseURL}${actor.route}`)
         await expect(page.getByRole('heading', { name: actor.heading, exact: false }).first()).toBeVisible()
@@ -111,7 +114,91 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             }
         }
 
+        for (const route of actor.routes) {
+            await page.goto(`${baseURL}${route}`)
+            await expect(page.locator('main').first(), `${actor.name} route ${route} phải render main`).toBeVisible()
+            const contentLength = await page.locator('main').first().evaluate((element) => element.textContent?.trim().length ?? 0)
+            expect(contentLength, `${actor.name} route ${route} không được trắng`).toBeGreaterThan(40)
+        }
+
         expect(pageErrors, `Lỗi JavaScript ở phân hệ ${actor.name}`).toEqual([])
         await context.close()
     }
+})
+
+test('trang chủ hiển thị việc làm từ API và không tràn ngang ở desktop/mobile', async ({ page, baseURL }) => {
+    const pageErrors: string[] = []
+    page.on('pageerror', (error) => pageErrors.push(error.message))
+    await page.goto(`${baseURL}/`)
+    await expect(page.getByRole('heading', { name: 'Tìm một công việc đáng để bắt đầu' })).toBeVisible()
+    await expect.poll(() => page.locator('article a[href^="/jobs/"]').count()).toBeGreaterThan(0)
+
+    for (const width of [360, 555, 1280]) {
+        await page.setViewportSize({ width, height: 900 })
+        const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+        expect(documentWidth, `Trang chủ tràn ngang tại viewport ${width}px`).toBeLessThanOrEqual(width)
+        await page.screenshot({
+            path: join(screenshotDirectory, `home-${width}.png`),
+            fullPage: true,
+            animations: 'disabled',
+        })
+    }
+    expect(pageErrors, 'Lỗi JavaScript trên trang chủ').toEqual([])
+})
+
+test('các route công khai và route 404 có nội dung, không render màn hình trắng', async ({ page, baseURL }) => {
+    const pageErrors: string[] = []
+    page.on('pageerror', (error) => pageErrors.push(error.message))
+    const routes = [
+        '/',
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/reset-password',
+        '/jobs',
+        '/jobs/1',
+        '/route-kiem-thu-khong-ton-tai',
+    ]
+
+    for (const route of routes) {
+        await page.goto(`${baseURL}${route}`)
+        const main = page.locator('main').first()
+        await expect(main, `Route ${route} cần hiển thị nội dung chính`).toBeVisible()
+        const contentLength = await main.evaluate((element) => element.textContent?.trim().length ?? 0)
+        expect(contentLength, `Route ${route} không được trắng`).toBeGreaterThan(30)
+    }
+    expect(pageErrors, 'Lỗi JavaScript trên route công khai').toEqual([])
+})
+
+test('trang chủ có thông báo lỗi và trạng thái rỗng khi API không có việc làm', async ({ page, baseURL }) => {
+    let calls = 0
+    let returnEmptyResult = false
+    await page.route('**/api/v1/jobs?*', async (route) => {
+        calls += 1
+        if (!returnEmptyResult) {
+            await route.fulfill({
+                status: 503,
+                contentType: 'application/json',
+                body: JSON.stringify({ statusCode: 503, message: 'Dịch vụ đang tạm thời không khả dụng.' }),
+            })
+            return
+        }
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                statusCode: 200,
+                message: 'Tải thành công.',
+                data: { content: [], pageNumber: 1, pageSize: 2, totalElements: 0, totalPages: 0, isLast: true },
+            }),
+        })
+    })
+
+    await page.goto(`${baseURL}/`)
+    await expect(page.getByRole('alert')).toContainText('Chưa tải được danh sách việc làm')
+    expect(calls).toBe(1)
+    returnEmptyResult = true
+    await page.getByRole('button', { name: 'Thử lại' }).click()
+    await expect(page.getByText('Chưa có tin tuyển dụng đang mở')).toBeVisible()
+    expect(calls).toBe(2)
 })

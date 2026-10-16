@@ -157,16 +157,12 @@ export function RecruiterLayout() {
     ]
 
     return (
-        <div className="relative flex min-h-screen flex-col overflow-x-clip bg-bento-canvas text-slate-900 selection:bg-emerald-600 selection:text-white">
-            {/* Ambient Background Glows */}
-            <div className="pointer-events-none fixed -top-40 right-10 size-[32rem] rounded-full bg-emerald-100/40 blur-3xl" />
-            <div className="pointer-events-none fixed top-72 -left-20 size-[28rem] rounded-full bg-teal-100/30 blur-3xl" />
-
+        <div className="recruiter-shell relative flex min-h-screen flex-col overflow-x-clip bg-bento-canvas text-slate-900 selection:bg-blue-100 selection:text-blue-900">
             {/* Header */}
             <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md text-slate-900 shadow-2xs">
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3">
-                        <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold shadow-xs border border-emerald-400/20">
+                        <div className="grid size-10 place-items-center rounded-lg bg-blue-700 text-white font-bold shadow-xs">
                             <Building2 size={20} />
                         </div>
                         <div>
@@ -174,7 +170,7 @@ export function RecruiterLayout() {
                                 <span className="text-sm font-bold tracking-tight text-slate-900 sm:text-lg">
                                     TalentBridge Recruiter
                                 </span>
-                                <span className="hidden items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 shadow-2xs md:inline-flex">
+                                <span className="hidden items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-800 shadow-2xs md:inline-flex">
                                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     HR_PORTAL
                                 </span>
@@ -197,7 +193,7 @@ export function RecruiterLayout() {
                         {/* Bento Recruiter User Capsule */}
                         <div className="hidden items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs md:flex">
                             <div className="flex items-center gap-2 pl-1.5 pr-2 py-0.5">
-                                <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 text-[11px] font-bold text-white shadow-2xs">
+                                <span className="grid size-7 place-items-center rounded-lg bg-blue-700 text-[11px] font-bold text-white shadow-2xs">
                                     {getInitials(displayName)}
                                 </span>
                                 <div className="flex items-center gap-1.5">
@@ -213,7 +209,7 @@ export function RecruiterLayout() {
                             <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
 
                             <button
-                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/70 transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
                                 onClick={() => setIsChangePasswordOpen(true)}
                                 title="Đổi mật khẩu"
                                 type="button"
@@ -248,7 +244,7 @@ export function RecruiterLayout() {
 
                 {/* Subnav Bento Navigation Dock */}
                 <div className="border-t border-slate-200/60 bg-slate-50/70 backdrop-blur-xs px-4 sm:px-6 lg:px-8 py-2">
-                    <div className="mx-auto flex min-w-0 max-w-7xl items-center justify-between gap-4">
+                    <div className="mx-auto flex min-w-0 max-w-[1200px] items-center justify-between gap-4">
                         <nav
                             aria-label="Điều hướng nhà tuyển dụng"
                             className="inline-flex min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-slate-200/60 bg-slate-100/80 p-1 shadow-2xs backdrop-blur-xs sm:gap-1.5 scrollbar-none"
@@ -261,7 +257,7 @@ export function RecruiterLayout() {
                                         className={({ isActive }) =>
                                             `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-150 sm:gap-2 sm:px-3 sm:text-sm ${
                                                 isActive
-                                                    ? 'bg-white text-emerald-700 shadow-2xs border-slate-200/60'
+                                                ? 'bg-blue-50 text-blue-800 shadow-2xs border-blue-200'
                                                     : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                             }`
                                         }
@@ -308,7 +304,7 @@ export function RecruiterLayout() {
             </header>
 
             {/* Main Content Area */}
-            <main className="relative z-10 mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <main className="relative z-10 mx-auto flex-1 w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
                 <Outlet />
             </main>
 

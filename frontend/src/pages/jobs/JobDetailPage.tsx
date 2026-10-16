@@ -65,7 +65,7 @@ function JobNotFoundState() {
 
 function JobDetailSkeleton() {
     return (
-        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-7xl animate-pulse px-4 py-8 sm:px-6 lg:px-8">
+        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-[1200px] animate-pulse px-4 py-8 sm:px-6 lg:px-8">
             <div className="h-5 w-40 rounded bg-slate-200" />
             <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-8">
                 <div className="h-7 w-2/3 rounded bg-slate-200" />
@@ -163,7 +163,7 @@ export function JobDetailPage() {
 
         return (
             <button
-                className={`btn-bento-primary inline-flex items-center justify-center gap-2 shadow-md hover:shadow-indigo-500/20 ${extraClass}`}
+                className={`btn-bento-primary inline-flex items-center justify-center gap-2 shadow-md hover:shadow-blue-600/20 ${extraClass}`}
                 onClick={() => setIsApplyModalOpen(true)}
                 type="button"
             >
@@ -215,20 +215,20 @@ export function JobDetailPage() {
 
     return (
         <div className="bg-bento-canvas min-h-full py-8 sm:py-10">
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
                 <Link
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-700"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-blue-800"
                     to="/"
                 >
                     <ArrowLeft aria-hidden="true" size={17} />
                     <span>Về trang chủ</span>
                 </Link>
 
-                <header className="relative mt-5 overflow-hidden rounded-3xl border border-indigo-100 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-                    <div aria-hidden="true" className="absolute -top-24 -right-20 size-72 rounded-full bg-indigo-100/70 blur-3xl" />
+                <header className="relative mt-5 overflow-hidden rounded-3xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+                    <div aria-hidden="true" className="absolute -top-24 -right-20 size-72 rounded-full bg-blue-100/70 blur-3xl" />
                     <div className="relative flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex min-w-0 gap-4 sm:gap-5">
-                            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md sm:size-16">
+                            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-700 to-blue-700 text-white shadow-md sm:size-16">
                                 <Building2 aria-hidden="true" size={28} />
                             </span>
                             <div className="min-w-0">
@@ -246,9 +246,9 @@ export function JobDetailPage() {
                         </div>
 
                         <div className="flex flex-col gap-3 lg:items-end">
-                            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-4 lg:min-w-64">
-                                <p className="text-xs font-bold tracking-wide text-indigo-700 uppercase">Mức lương</p>
-                                <p className="mt-2 text-xl font-extrabold text-indigo-950">
+                            <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-5 py-4 lg:min-w-64">
+                                <p className="text-xs font-bold tracking-wide text-blue-800 uppercase">Mức lương</p>
+                                <p className="mt-2 text-xl font-extrabold text-blue-950">
                                     {formatSalaryRange(job.minSalary, job.maxSalary)}
                                 </p>
                             </div>
@@ -267,14 +267,14 @@ export function JobDetailPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                            <BriefcaseBusiness className="shrink-0 text-indigo-500" aria-hidden="true" size={20} />
+                            <BriefcaseBusiness className="shrink-0 text-blue-600" aria-hidden="true" size={20} />
                             <div>
                                 <p className="text-xs font-medium text-slate-500">Hình thức</p>
                                 <p className="mt-1 text-sm font-bold text-slate-800">{formatJobType(job.jobType)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                            <UserRoundCheck className="shrink-0 text-violet-500" aria-hidden="true" size={20} />
+                            <UserRoundCheck className="shrink-0 text-blue-600" aria-hidden="true" size={20} />
                             <div>
                                 <p className="text-xs font-medium text-slate-500">Kinh nghiệm</p>
                                 <p className="mt-1 text-sm font-bold text-slate-800">{formatExperienceLevel(job.experienceLevel)}</p>
@@ -308,7 +308,7 @@ export function JobDetailPage() {
                                 </div>
                             </div>
                             <div className="flex gap-3">
-                                <Clock3 className="mt-0.5 shrink-0 text-indigo-600" aria-hidden="true" size={20} />
+                                <Clock3 className="mt-0.5 shrink-0 text-blue-700" aria-hidden="true" size={20} />
                                 <div>
                                     <dt className="text-xs font-medium text-slate-500">Ngày đăng</dt>
                                     <dd className="mt-1 text-sm font-bold text-slate-800">{formatDate(job.createdAt)}</dd>

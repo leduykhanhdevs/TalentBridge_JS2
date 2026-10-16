@@ -135,7 +135,7 @@ export function JobFormModal({
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div className="flex items-center gap-3">
-                        <div className="grid size-10 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                        <div className="grid size-10 place-items-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100">
                             <Briefcase size={20} />
                         </div>
                         <div>
@@ -170,7 +170,7 @@ export function JobFormModal({
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Ví dụ: Senior Java Spring Boot Developer..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                         {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title}</p>}
                     </div>
@@ -184,7 +184,7 @@ export function JobFormModal({
                             <select
                                 value={jobType}
                                 onChange={(e) => setJobType(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             >
                                 {Object.entries(JOB_TYPE_LABELS).map(([val, label]) => (
                                     <option key={val} value={val}>
@@ -201,7 +201,7 @@ export function JobFormModal({
                             <select
                                 value={experienceLevel}
                                 onChange={(e) => setExperienceLevel(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             >
                                 {Object.entries(EXPERIENCE_LABELS).map(([val, label]) => (
                                     <option key={val} value={val}>
@@ -223,7 +223,7 @@ export function JobFormModal({
                                 value={city}
                                 onChange={(e) => setCity(e.target.value)}
                                 placeholder="Hồ Chí Minh, Hà Nội..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             />
                             {errors.city && <p className="mt-1 text-xs text-rose-500">{errors.city}</p>}
                         </div>
@@ -237,7 +237,7 @@ export function JobFormModal({
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                                 placeholder="Tại văn phòng, Hybrid..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             />
                         </div>
 
@@ -250,7 +250,7 @@ export function JobFormModal({
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 placeholder="Tòa nhà, số đường..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             />
                         </div>
                     </div>
@@ -266,7 +266,7 @@ export function JobFormModal({
                                     type="checkbox"
                                     checked={isNegotiable}
                                     onChange={(e) => setIsNegotiable(e.target.checked)}
-                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="rounded border-slate-300 text-blue-700 focus:ring-blue-600"
                                 />
                                 Lương thỏa thuận
                             </label>
@@ -282,7 +282,7 @@ export function JobFormModal({
                                         value={minSalary}
                                         onChange={(e) => setMinSalary(e.target.value)}
                                         placeholder="Lương tối thiểu (ví dụ: 15000000)"
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                     />
                                     {errors.minSalary && <p className="mt-1 text-xs text-rose-500">{errors.minSalary}</p>}
                                 </div>
@@ -294,7 +294,7 @@ export function JobFormModal({
                                         value={maxSalary}
                                         onChange={(e) => setMaxSalary(e.target.value)}
                                         placeholder="Lương tối đa (ví dụ: 30000000)"
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                     />
                                     {errors.maxSalary && <p className="mt-1 text-xs text-rose-500">{errors.maxSalary}</p>}
                                 </div>
@@ -305,13 +305,13 @@ export function JobFormModal({
                     {/* Hạn nộp hồ sơ */}
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5">
-                            <Calendar size={14} className="text-indigo-600" /> Hạn nộp hồ sơ <span className="text-rose-500">*</span>
+                            <Calendar size={14} className="text-blue-700" /> Hạn nộp hồ sơ <span className="text-rose-500">*</span>
                         </label>
                         <input
                             type="date"
                             value={deadline}
                             onChange={(e) => setDeadline(e.target.value)}
-                            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                         {errors.deadline && <p className="mt-1 text-xs text-rose-500">{errors.deadline}</p>}
                     </div>
@@ -333,7 +333,7 @@ export function JobFormModal({
                                     }
                                 }}
                                 placeholder="Nhập tên kỹ năng (ví dụ: Docker, Redis) rồi bấm Thêm..."
-                                className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
                             />
                             <button
                                 type="button"
@@ -348,13 +348,13 @@ export function JobFormModal({
                                 {skills.map((skill) => (
                                     <span
                                         key={skill}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800"
                                     >
                                         {skill}
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveSkill(skill)}
-                                            className="text-indigo-400 hover:text-indigo-900"
+                                            className="text-blue-400 hover:text-blue-950"
                                         >
                                             <X size={12} />
                                         </button>
@@ -374,7 +374,7 @@ export function JobFormModal({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Mô tả trách nhiệm, công việc hàng ngày của vị trí này..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                         {errors.description && <p className="mt-1 text-xs text-rose-500">{errors.description}</p>}
                     </div>
@@ -389,7 +389,7 @@ export function JobFormModal({
                             value={requirements}
                             onChange={(e) => setRequirements(e.target.value)}
                             placeholder="- Tối thiểu 2 năm kinh nghiệm với Java...&#10;- Khả năng giải quyết vấn đề tốt..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                     </div>
 
@@ -403,7 +403,7 @@ export function JobFormModal({
                             value={benefits}
                             onChange={(e) => setBenefits(e.target.value)}
                             placeholder="- Lương tháng 13 + thưởng KPI...&#10;- Gói bảo hiểm sức khỏe cao cấp..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                     </div>
 
@@ -419,7 +419,7 @@ export function JobFormModal({
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition disabled:opacity-50 shadow-md shadow-indigo-600/20"
+                            className="rounded-xl bg-blue-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-blue-800 transition disabled:opacity-50 shadow-md shadow-blue-700/20"
                         >
                             {isSubmitting
                                 ? 'Đang lưu...'

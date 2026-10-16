@@ -178,17 +178,17 @@ export function AdminCompaniesPage() {
     return (
         <div className="space-y-6 sm:space-y-8 pb-12">
             {/* 1. Bento Hero Command Banner */}
-            <div className="bento-card relative overflow-hidden border border-slate-200/90 bg-gradient-to-br from-white via-indigo-50/25 to-violet-50/35 p-6 sm:p-8 shadow-sm">
-                <div className="pointer-events-none absolute -right-12 -top-12 size-64 rounded-full bg-indigo-200/30 blur-2xl" />
+            <div className="bento-card relative overflow-hidden border border-slate-200/90 bg-gradient-to-br from-white via-blue-50/25 to-blue-50/35 p-6 sm:p-8 shadow-sm">
+                <div className="pointer-events-none absolute -right-12 -top-12 size-64 rounded-full bg-blue-200/30 blur-2xl" />
                 <div className="pointer-events-none absolute bottom-0 right-1/4 size-48 rounded-full bg-amber-200/20 blur-2xl" />
 
                 <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="max-w-2xl space-y-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-50/90 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-700 shadow-2xs">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/90 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-blue-800 shadow-2xs">
                             <Sparkles className="size-3.5 text-amber-500 animate-pulse" />
                             <span>Kiểm Duyệt & Bảo Chứng Pháp Nhân</span>
-                            <span className="h-2 w-px bg-indigo-300" />
-                            <span className="text-indigo-600 font-extrabold">TalentBridge Enterprise</span>
+                            <span className="h-2 w-px bg-blue-300" />
+                            <span className="text-blue-700 font-extrabold">TalentBridge Enterprise</span>
                         </div>
 
                         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
@@ -201,18 +201,18 @@ export function AdminCompaniesPage() {
 
                         <div className="pt-1 flex flex-wrap items-center gap-3">
                             <button
-                                className="btn-bento-secondary inline-flex items-center gap-2 text-xs sm:text-sm font-bold shadow-xs hover:border-indigo-300 hover:text-indigo-600 transition"
+                                className="btn-bento-secondary inline-flex items-center gap-2 text-xs sm:text-sm font-bold shadow-xs hover:border-blue-300 hover:text-blue-700 transition"
                                 disabled={isFetching}
                                 onClick={() => refetch()}
                                 type="button"
                             >
-                                <RefreshCw className={isFetching ? 'animate-spin text-indigo-600' : 'text-slate-500'} size={16} />
+                                <RefreshCw className={isFetching ? 'animate-spin text-blue-700' : 'text-slate-500'} size={16} />
                                 <span>{isFetching ? 'Đang cập nhật...' : 'Làm mới dữ liệu'}</span>
                             </button>
 
                             <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 bg-white/80 border border-slate-200 rounded-xl px-3 py-2">
                                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>Quy trình thẩm định: Tuân thủ 100% tiêu chuẩn pháp nhân</span>
+                                <span>Quy trình thẩm định: đối chiếu thông tin pháp nhân và hồ sơ cung cấp</span>
                             </div>
                         </div>
                     </div>
@@ -322,7 +322,7 @@ export function AdminCompaniesPage() {
                 <div
                     className={`bento-card group p-5 sm:p-6 border transition-all duration-300 shadow-sm cursor-pointer ${
                         activeTab === 'ALL'
-                            ? 'border-indigo-400/90 bg-indigo-50/20 ring-2 ring-indigo-400/30'
+                            ? 'border-blue-400/90 bg-blue-50/20 ring-2 ring-blue-400/30'
                             : 'border-slate-200/90 bg-white hover:border-sky-300/80'
                     }`}
                     onClick={() => handleTabChange('ALL')}
@@ -398,7 +398,7 @@ export function AdminCompaniesPage() {
                     <button
                         className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
                             activeTab === 'ALL'
-                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-900/30 font-black'
+                                ? 'bg-blue-700 text-white shadow-sm shadow-blue-950/30 font-black'
                                 : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
                         }`}
                         onClick={() => handleTabChange('ALL')}
@@ -414,7 +414,7 @@ export function AdminCompaniesPage() {
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
-                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-3 pl-12 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-3 pl-12 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
                             onChange={(e) => setKeywordInput(e.target.value)}
                             placeholder="Tìm kiếm theo tên doanh nghiệp, mã số thuế (MST), địa chỉ trụ sở..."
                             type="text"
@@ -455,10 +455,10 @@ export function AdminCompaniesPage() {
                 {activeKeyword && (
                     <div className="flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
                         <span className="font-bold text-slate-500">Từ khóa tìm kiếm:</span>
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 font-bold text-indigo-700">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 font-bold text-blue-800">
                             "{activeKeyword}"
                             <X
-                                className="cursor-pointer hover:text-indigo-900"
+                                className="cursor-pointer hover:text-blue-950"
                                 onClick={() => {
                                     setActiveKeyword('')
                                     setKeywordInput('')
@@ -480,7 +480,7 @@ export function AdminCompaniesPage() {
                             {activeTab === 'REJECTED' && 'Danh sách hồ sơ doanh nghiệp bị từ chối'}
                             {activeTab === 'ALL' && 'Toàn bộ danh sách doanh nghiệp'}
                         </h2>
-                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-extrabold text-indigo-700">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-extrabold text-blue-800">
                             {totalCompanies} kết quả
                         </span>
                     </div>
@@ -493,7 +493,7 @@ export function AdminCompaniesPage() {
                 {isLoading ? (
                     <div className="flex h-72 items-center justify-center">
                         <div className="flex flex-col items-center gap-3 text-slate-500">
-                            <RefreshCw className="animate-spin text-indigo-600" size={28} />
+                            <RefreshCw className="animate-spin text-blue-700" size={28} />
                             <span className="text-sm font-bold text-slate-700">Đang tải dữ liệu thẩm định doanh nghiệp...</span>
                         </div>
                     </div>
@@ -522,7 +522,7 @@ export function AdminCompaniesPage() {
                             <tbody className="divide-y divide-slate-200/90">
                                 {companiesPage?.content.map((company) => (
                                     <tr
-                                        className="group hover:bg-indigo-50/20 transition-colors duration-150"
+                                        className="group hover:bg-blue-50/20 transition-colors duration-150"
                                         key={company.id}
                                     >
                                         <td className="px-6 py-4 sm:py-5">
@@ -534,17 +534,17 @@ export function AdminCompaniesPage() {
                                                         src={company.logoUrl}
                                                     />
                                                 ) : (
-                                                    <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-base shadow-2xs">
+                                                    <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-base shadow-2xs">
                                                         {company.name.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <div className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                    <div className="text-base font-black text-slate-900 group-hover:text-blue-700 transition-colors">
                                                         {company.name}
                                                     </div>
                                                     {company.website ? (
                                                         <a
-                                                            className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:underline mt-0.5"
+                                                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline mt-0.5"
                                                             href={company.website}
                                                             rel="noreferrer"
                                                             target="_blank"
@@ -601,7 +601,7 @@ export function AdminCompaniesPage() {
                                         <td className="px-6 py-4 sm:py-5 text-right">
                                             <div className="inline-flex items-center gap-2">
                                                 <button
-                                                    className="btn-bento-secondary px-3 py-1.5 text-xs sm:text-sm font-bold shadow-2xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300"
+                                                    className="btn-bento-secondary px-3 py-1.5 text-xs sm:text-sm font-bold shadow-2xs hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300"
                                                     onClick={() => handleViewDetail(company.id)}
                                                     type="button"
                                                 >
@@ -689,7 +689,7 @@ export function AdminCompaniesPage() {
                             >
                                 Trang trước
                             </button>
-                            <span className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-extrabold text-xs sm:text-sm shadow-2xs">
+                            <span className="px-3 py-1.5 rounded-lg bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-2xs">
                                 {companiesPage.pageNumber}
                             </span>
                             <button
@@ -725,7 +725,7 @@ export function AdminCompaniesPage() {
                                     src={selectedCompany.logoUrl}
                                 />
                             ) : (
-                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm">
+                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-700 text-white font-black text-2xl shadow-sm">
                                     {selectedCompany.name.charAt(0).toUpperCase()}
                                 </div>
                             )}
@@ -767,7 +767,7 @@ export function AdminCompaniesPage() {
                                     <span className="font-semibold text-slate-500">Website:</span>{' '}
                                     {selectedCompany.website ? (
                                         <a
-                                            className="text-indigo-600 font-bold hover:underline inline-flex items-center gap-1"
+                                            className="text-blue-700 font-bold hover:underline inline-flex items-center gap-1"
                                             href={selectedCompany.website}
                                             rel="noreferrer"
                                             target="_blank"
@@ -802,8 +802,8 @@ export function AdminCompaniesPage() {
                         </div>
 
                         {selectedCompany.description && (
-                            <div className="mt-4 rounded-xl bg-indigo-50/40 p-4 text-sm border border-indigo-100">
-                                <div className="font-black text-indigo-900 mb-1">Mô tả doanh nghiệp & Lĩnh vực hoạt động:</div>
+                            <div className="mt-4 rounded-xl bg-blue-50/40 p-4 text-sm border border-blue-100">
+                                <div className="font-black text-blue-950 mb-1">Mô tả doanh nghiệp & Lĩnh vực hoạt động:</div>
                                 <p className="leading-relaxed whitespace-pre-wrap font-medium text-slate-700">{selectedCompany.description}</p>
                             </div>
                         )}

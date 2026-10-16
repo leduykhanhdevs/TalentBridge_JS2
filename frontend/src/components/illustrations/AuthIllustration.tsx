@@ -23,7 +23,7 @@ export function AuthIllustration({ className = 'w-full h-auto' }: IllustrationPr
 
                 <linearGradient id="shieldGrad" x1="0%" x2="0%" y1="0%" y2="100%">
                     <stop offset="0%" stopColor="#4f46e5" />
-                    <stop offset="100%" stopColor="#3730a3" />
+                    <stop offset="100%" stopColor="#173fae" />
                 </linearGradient>
 
                 <filter id="authShadow" height="130%" width="130%" x="-15%" y="-10%">

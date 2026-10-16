@@ -52,7 +52,7 @@ export function MainLayout() {
         ? { label: 'Quản trị', className: 'bg-amber-50 text-amber-700 border-amber-200/80' }
         : isRecruiter
         ? { label: 'Tuyển dụng', className: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' }
-        : { label: 'Ứng viên', className: 'bg-indigo-50 text-indigo-700 border-indigo-200/80' }
+        : { label: 'Ứng viên', className: 'bg-blue-50 text-blue-800 border-blue-200/80' }
 
     const mobileLinks = [
         { to: '/', label: 'Trang chủ' },
@@ -69,13 +69,13 @@ export function MainLayout() {
     return (
         <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
             <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-2xs">
-                <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
                     <NavLink
                         className="flex items-center gap-3 transition-transform hover:-translate-y-0.5 active:translate-y-0"
                         end
                         to="/"
                     >
-                        <span className="grid size-10 place-items-center rounded-xl bg-indigo-600 text-white shadow-xs">
+                        <span className="grid size-10 place-items-center rounded-xl bg-blue-700 text-white shadow-xs">
                             <BriefcaseBusiness aria-hidden="true" size={20} />
                         </span>
 
@@ -100,7 +100,7 @@ export function MainLayout() {
                                 className={({ isActive }) =>
                                     `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                         isActive
-                                            ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                            ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                             : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                     }`
                                 }
@@ -114,7 +114,7 @@ export function MainLayout() {
                                 className={({ isActive }) =>
                                     `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                         isActive
-                                            ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                            ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                             : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                     }`
                                 }
@@ -144,7 +144,7 @@ export function MainLayout() {
                                         className={({ isActive }) =>
                                             `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                                 isActive
-                                                    ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                                    ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                                     : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                             }`
                                         }
@@ -158,7 +158,7 @@ export function MainLayout() {
                                         className={({ isActive }) =>
                                             `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                                 isActive
-                                                    ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                                    ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                                     : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                             }`
                                         }
@@ -191,7 +191,7 @@ export function MainLayout() {
                                     className={({ isActive }) =>
                                         `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                                             isActive
-                                                ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
+                                                ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
                                         }`
                                     }
@@ -208,7 +208,7 @@ export function MainLayout() {
                             <div className="hidden items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs lg:flex">
                                 {/* User Identity Chip */}
                                 <div className="flex items-center gap-2 pl-1.5 pr-2 py-0.5">
-                                    <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 text-[11px] font-bold text-white shadow-2xs">
+                                    <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-blue-700 to-blue-600 text-[11px] font-bold text-white shadow-2xs">
                                         {getInitials(displayName)}
                                     </span>
                                     <div className="flex items-center gap-1.5">
@@ -226,7 +226,7 @@ export function MainLayout() {
 
                                 {/* Change Password Action */}
                                 <button
-                                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70 transition-colors"
+                                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-blue-700 hover:bg-blue-50/70 transition-colors"
                                     onClick={() => setIsChangePasswordOpen(true)}
                                     title="Đổi mật khẩu"
                                     type="button"
@@ -285,7 +285,7 @@ export function MainLayout() {
                             {mobileLinks.map((link) => (
                                 <NavLink
                                     key={link.to}
-                                    className={({ isActive }) => `rounded-lg px-3 py-2.5 text-sm font-semibold ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-50'}`}
+                                    className={({ isActive }) => `rounded-lg px-3 py-2.5 text-sm font-semibold ${isActive ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-50'}`}
                                     onClick={() => setIsMobileNavOpen(false)}
                                     to={link.to}
                                 >
@@ -337,19 +337,17 @@ export function MainLayout() {
             </main>
 
             <footer className="border-t border-slate-200/80 bg-white">
-                <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-2 font-mono">
-                        <span className="bento-badge bg-slate-900 text-white text-[10px]">
-                            TALENTBRIDGE v1.0
+                <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-4 py-6 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+                    <div className="flex items-center gap-2">
+                        <span className="bento-badge border border-slate-200 bg-slate-50 text-slate-700 text-[10px]">
+                            TALENTBRIDGE
                         </span>
-                        <span>(C) {new Date().getFullYear()} TalentBridge Ecosystem</span>
+                        <span>© {new Date().getFullYear()} TalentBridge</span>
                     </div>
-                    <div className="flex items-center gap-4 font-mono text-slate-500">
-                        <span>27 TABLES 3NF</span>
-                        <span>*</span>
-                        <span>TOPCV STANDARD</span>
-                        <span>*</span>
-                        <span>ATS PIPELINE</span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-600">
+                        <span>Tìm việc minh bạch</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Quản lý tuyển dụng</span>
                     </div>
                 </div>
             </footer>

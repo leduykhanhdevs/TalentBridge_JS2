@@ -38,7 +38,7 @@ export const AdminControlCenterIllustration: React.FC<IllustrationProps> = ({
 
                 <linearGradient id="adminPrimaryGrad" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#4338ca" />
+                    <stop offset="100%" stopColor="#173fae" />
                 </linearGradient>
 
                 <linearGradient id="adminAmberGrad" x1="0" y1="0" x2="1" y2="1">
@@ -53,7 +53,7 @@ export const AdminControlCenterIllustration: React.FC<IllustrationProps> = ({
 
                 <linearGradient id="adminShieldGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#818cf8" />
-                    <stop offset="100%" stopColor="#4f46e5" />
+                    <stop offset="100%" stopColor="#1d4ed8" />
                 </linearGradient>
             </defs>
 

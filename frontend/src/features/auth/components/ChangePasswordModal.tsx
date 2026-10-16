@@ -91,7 +91,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl transition-all">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div className="flex items-center gap-2 text-slate-800">
-                        <div className="grid size-9 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <div className="grid size-9 place-items-center rounded-xl bg-blue-50 text-blue-700">
                             <KeyRound size={20} />
                         </div>
                         <h2 className="text-lg font-bold">Đổi mật khẩu</h2>
@@ -129,7 +129,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                             </div>
                             <input
                                 autoComplete="current-password"
-                                className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 disabled={loading}
                                 id="current-password"
                                 onChange={(e) => setCurrentPassword(e.target.value)}
@@ -159,7 +159,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                             </div>
                             <input
                                 autoComplete="new-password"
-                                className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 disabled={loading}
                                 id="new-password"
                                 onChange={(e) => setNewPassword(e.target.value)}
@@ -189,7 +189,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                             </div>
                             <input
                                 autoComplete="new-password"
-                                className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-10 text-sm placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 disabled={loading}
                                 id="confirm-password"
                                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -219,7 +219,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                             Hủy
                         </button>
                         <button
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 disabled:opacity-50"
                             disabled={loading}
                             type="submit"
                         >

@@ -285,7 +285,7 @@ export function RecruiterJobApplicantsPage() {
             <div>
                 <Link
                     to="/recruiter/jobs"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition mb-3"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 transition mb-3"
                 >
                     <ArrowLeft size={14} />
                     <span>Quay lại Quản lý tin đăng</span>
@@ -297,7 +297,7 @@ export function RecruiterJobApplicantsPage() {
                             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                                 Sàng lọc ứng viên
                             </h1>
-                            <span className="bento-badge border-indigo-200 bg-indigo-50 text-indigo-700 text-xs">
+                            <span className="bento-badge border-blue-200 bg-blue-50 text-blue-800 text-xs">
                                 {applicants.length} ỨNG VIÊN
                             </span>
                         </div>
@@ -375,14 +375,14 @@ export function RecruiterJobApplicantsPage() {
                             onClick={() => setStageFilter(key)}
                             className={`rounded-xl px-3 py-1.5 text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
                                 isActive
-                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                    ? 'bg-blue-700 text-white shadow-xs'
                                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                             }`}
                         >
                             <span>{config.label}</span>
                             <span
                                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                                    isActive ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-700'
+                                    isActive ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-700'
                                 }`}
                             >
                                 {count}
@@ -414,7 +414,7 @@ export function RecruiterJobApplicantsPage() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Họ tên, email, số điện thoại..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                             />
                         </div>
                     </div>
@@ -428,7 +428,7 @@ export function RecruiterJobApplicantsPage() {
                             id={stageSelectId}
                             value={stageFilter}
                             onChange={(e) => setStageFilter(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                         >
                             <option value="">Tất cả các vòng</option>
                             {Object.entries(APPLICANT_STAGE_CONFIG).map(([val, conf]) => (
@@ -450,7 +450,7 @@ export function RecruiterJobApplicantsPage() {
                             onChange={(e) =>
                                 setMinExpFilter(e.target.value === '' ? '' : Number(e.target.value))
                             }
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                         >
                             <option value="">Tất cả kinh nghiệm</option>
                             <option value="1">1+ năm</option>
@@ -471,7 +471,7 @@ export function RecruiterJobApplicantsPage() {
                                 id={sortSelectId}
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                             >
                                 <option value="appliedDate">Ngày nộp</option>
                                 <option value="score">Điểm AI Match</option>
@@ -496,13 +496,13 @@ export function RecruiterJobApplicantsPage() {
             {/* Applicant List View */}
             {isLoading ? (
                 <div className="bento-card flex flex-col items-center justify-center p-12 text-center">
-                    <RefreshCw size={28} className="animate-spin text-indigo-600 mb-3" />
+                    <RefreshCw size={28} className="animate-spin text-blue-700 mb-3" />
                     <p className="text-sm font-bold text-slate-800">Đang tải danh sách hồ sơ ứng viên...</p>
                     <p className="text-xs text-slate-500 mt-1">Hệ thống đang đồng bộ dữ liệu và tính toán điểm phù hợp</p>
                 </div>
             ) : applicants.length === 0 ? (
                 <div className="bento-card flex flex-col items-center justify-center p-12 text-center">
-                    <div className="grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 mb-3">
+                    <div className="grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-700 mb-3">
                         <UserCheck size={24} />
                     </div>
                     <h3 className="text-base font-bold text-slate-900">Không tìm thấy ứng viên nào</h3>
@@ -540,13 +540,13 @@ export function RecruiterJobApplicantsPage() {
                         return (
                             <div
                                 key={app.id}
-                                className="bento-card p-5 transition hover:border-indigo-200 hover:shadow-md"
+                                className="bento-card p-5 transition hover:border-blue-200 hover:shadow-md"
                             >
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                     {/* Left: Candidate Info */}
                                     <div className="flex items-start gap-4">
                                         {/* Avatar */}
-                                        <div className="size-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-700 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                                        <div className="size-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-800 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                                             {app.candidateFullName
                                                 .trim()
                                                 .split(/\s+/)
@@ -576,7 +576,7 @@ export function RecruiterJobApplicantsPage() {
 
                                             {/* Candidate Title & Exp */}
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 font-medium">
-                                                <span className="text-indigo-600 font-bold">
+                                                <span className="text-blue-700 font-bold">
                                                     {app.candidateTitle || 'Chưa cập nhật chức danh'}
                                                 </span>
                                                 <span className="text-slate-300">•</span>
@@ -647,7 +647,7 @@ export function RecruiterJobApplicantsPage() {
                                                                 content: app.coverLetter || '',
                                                             })
                                                         }
-                                                        className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
+                                                        className="text-xs text-blue-700 hover:text-blue-900 underline font-medium"
                                                     >
                                                         Xem thư giới thiệu
                                                     </button>
@@ -702,7 +702,7 @@ export function RecruiterJobApplicantsPage() {
                                         {app.status !== 'WITHDRAWN' && !['HIRED', 'REJECTED', 'OFFERED'].includes(app.currentStage) && <button
                                             type="button"
                                             onClick={() => setInterviewModalApplicant(app)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-bold text-purple-700 hover:bg-purple-100 transition shadow-2xs"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 transition shadow-2xs"
                                             title="Lên lịch phỏng vấn và đồng bộ Google Calendar"
                                         >
                                             <CalendarCheck2 size={13} />
@@ -717,7 +717,7 @@ export function RecruiterJobApplicantsPage() {
                                                 setTargetStage(getNextStage(app.currentStage))
                                                 setStageNote('')
                                             }}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 transition shadow-2xs"
                                             title="Chuyển vòng tuyển dụng"
                                         >
                                             <RefreshCw size={13} />
@@ -734,7 +734,7 @@ export function RecruiterJobApplicantsPage() {
                                             <MessageSquare size={13} />
                                             <span>Đánh giá</span>
                                             {app.notesCount > 0 && (
-                                                <span className="ml-0.5 rounded-full bg-indigo-100 px-1.5 py-0.2 text-[10px] font-bold text-indigo-700">
+                                                <span className="ml-0.5 rounded-full bg-blue-100 px-1.5 py-0.2 text-[10px] font-bold text-blue-800">
                                                     {app.notesCount}
                                                 </span>
                                             )}
@@ -786,7 +786,7 @@ export function RecruiterJobApplicantsPage() {
                                                 onClick={() => setTargetStage(key)}
                                                 className={`text-left p-2.5 rounded-xl border transition ${
                                                     isSelected
-                                                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20'
+                                                        ? 'border-blue-700 bg-blue-50/70 ring-2 ring-blue-600/20'
                                                         : 'border-slate-200 bg-white hover:bg-slate-50'
                                                 }`}
                                             >
@@ -811,7 +811,7 @@ export function RecruiterJobApplicantsPage() {
                                     value={stageNote}
                                     onChange={(e) => setStageNote(e.target.value)}
                                     placeholder="Ví dụ: Đạt yêu cầu CV kỹ thuật, mời phỏng vấn vòng 1 ngày 05/10..."
-                                    className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                                    className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                                 />
                             </div>
 
@@ -856,7 +856,7 @@ export function RecruiterJobApplicantsPage() {
                         </label>
                         <div className="flex justify-end gap-2">
                             <button type="button" disabled={isReopening} onClick={() => setReopenApplicant(null)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold">Hủy</button>
-                            <button type="submit" disabled={isReopening || !reopenReason.trim()} className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{isReopening ? 'Đang mở lại…' : 'Xác nhận mở lại'}</button>
+                            <button type="submit" disabled={isReopening || !reopenReason.trim()} className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{isReopening ? 'Đang mở lại…' : 'Xác nhận mở lại'}</button>
                         </div>
                     </form>
                 </div>
@@ -892,7 +892,7 @@ export function RecruiterJobApplicantsPage() {
                                 onClick={() => setActiveTab('notes')}
                                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                                     activeTab === 'notes'
-                                        ? 'bg-indigo-600 text-white shadow-xs'
+                                        ? 'bg-blue-700 text-white shadow-xs'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
@@ -904,7 +904,7 @@ export function RecruiterJobApplicantsPage() {
                                 onClick={() => setActiveTab('history')}
                                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                                     activeTab === 'history'
-                                        ? 'bg-indigo-600 text-white shadow-xs'
+                                        ? 'bg-blue-700 text-white shadow-xs'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
@@ -927,9 +927,9 @@ export function RecruiterJobApplicantsPage() {
                                     {/* Add Note Form */}
                                     <form
                                         onSubmit={handleAddNoteSubmit}
-                                        className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3"
+                                        className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 space-y-3"
                                     >
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
                                             <Star size={13} className="text-amber-500 fill-amber-500" />
                                             <span>Thêm đánh giá & Ghi chú mới</span>
                                         </h4>
@@ -972,7 +972,7 @@ export function RecruiterJobApplicantsPage() {
                                                     onChange={(e) => setNewTag(e.target.value)}
                                                     placeholder="Nhãn tag (ví dụ: Senior, Tiềm năng)"
                                                     maxLength={50}
-                                                    className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                                                    className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                                                 />
                                             </div>
                                         </div>
@@ -984,7 +984,7 @@ export function RecruiterJobApplicantsPage() {
                                                 value={newComment}
                                                 onChange={(e) => setNewComment(e.target.value)}
                                                 placeholder="Ghi nhận xét buổi phỏng vấn, điểm mạnh, điểm yếu, deal lương... *"
-                                                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                                                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                                                 required
                                             />
                                         </div>
@@ -1023,7 +1023,7 @@ export function RecruiterJobApplicantsPage() {
                                                                 {note.recruiterName || 'HR Nhà tuyển dụng'}
                                                             </strong>
                                                             {note.tag && (
-                                                                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-100">
+                                                                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 border border-blue-100">
                                                                     #{note.tag}
                                                                 </span>
                                                             )}
@@ -1070,7 +1070,7 @@ export function RecruiterJobApplicantsPage() {
                                                     }
                                                 return (
                                                     <div key={stg.id} className="relative pl-6">
-                                                        <div className="absolute -left-2 top-0.5 size-3.5 rounded-full border-2 border-white bg-indigo-600 shadow-xs" />
+                                                        <div className="absolute -left-2 top-0.5 size-3.5 rounded-full border-2 border-white bg-blue-700 shadow-xs" />
                                                         <div className="space-y-1">
                                                             <div className="flex items-center gap-2">
                                                                 <span

@@ -140,7 +140,7 @@ export function RecruiterJobsPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <div className="flex items-center gap-2">
-                        <span className="bento-badge border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px]">
+                        <span className="bento-badge border-blue-200 bg-blue-50 text-blue-800 text-[10px]">
                             JOB_MANAGEMENT
                         </span>
                         <span className="text-xs font-semibold text-slate-500">• My Jobs Dashboard</span>
@@ -159,7 +159,7 @@ export function RecruiterJobsPage() {
                         setEditingJob(null)
                         setIsModalOpen(true)
                     }}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-700/20 hover:bg-blue-800 transition"
                 >
                     <Plus size={16} />
                     <span>Đăng tin tuyển dụng mới</span>
@@ -255,7 +255,7 @@ export function RecruiterJobsPage() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Tìm theo tiêu đề, kỹ năng..."
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
                 </div>
@@ -264,12 +264,12 @@ export function RecruiterJobsPage() {
             {/* Job List Table / Cards */}
             {isLoading ? (
                 <div className="bento-card p-12 text-center">
-                    <div className="inline-block size-8 animate-spin rounded-full border-3 border-indigo-600 border-t-transparent" />
+                    <div className="inline-block size-8 animate-spin rounded-full border-3 border-blue-700 border-t-transparent" />
                     <p className="mt-3 text-xs font-semibold text-slate-500">Đang tải danh sách tin tuyển dụng...</p>
                 </div>
             ) : filteredJobs.length === 0 ? (
                 <div className="bento-card p-12 text-center">
-                    <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100">
                         <Briefcase size={24} />
                     </div>
                     <h3 className="mt-4 text-base font-bold text-slate-900">Chưa có tin tuyển dụng nào</h3>
@@ -282,7 +282,7 @@ export function RecruiterJobsPage() {
                             setEditingJob(null)
                             setIsModalOpen(true)
                         }}
-                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-sm"
+                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white hover:bg-blue-800 transition shadow-sm"
                     >
                         <Plus size={14} />
                         <span>Đăng tin tuyển dụng ngay</span>
@@ -300,7 +300,7 @@ export function RecruiterJobsPage() {
                         return (
                             <div
                                 key={job.id}
-                                className="bento-card p-5 transition hover:border-indigo-200 hover:shadow-md"
+                                className="bento-card p-5 transition hover:border-blue-200 hover:shadow-md"
                             >
                                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                     {/* Left Info */}
@@ -315,7 +315,7 @@ export function RecruiterJobsPage() {
                                             >
                                                 {statusLabels[job.status] || job.status}
                                             </span>
-                                            <span className="text-xs font-bold text-indigo-600">
+                                            <span className="text-xs font-bold text-blue-700">
                                                 {JOB_TYPE_LABELS[job.jobType] || job.jobType}
                                             </span>
                                             <span className="text-slate-300">•</span>
@@ -324,7 +324,7 @@ export function RecruiterJobsPage() {
                                             </span>
                                         </div>
 
-                                        <h3 className="text-base font-bold text-slate-900 hover:text-indigo-600 transition">
+                                        <h3 className="text-base font-bold text-slate-900 hover:text-blue-700 transition">
                                             <Link to={`/jobs/${job.id}`} target="_blank">
                                                 {job.title}
                                             </Link>
@@ -367,7 +367,7 @@ export function RecruiterJobsPage() {
                                     <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:shrink-0 lg:border-t-0 lg:pt-0">
                                         <Link
                                             to={`/recruiter/jobs/${job.id}/applicants`}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-600 bg-indigo-600 px-3.5 py-2 text-xs font-bold !text-white hover:bg-indigo-700 hover:!text-white shadow-sm transition"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-700 bg-blue-700 px-3.5 py-2 text-xs font-bold !text-white hover:bg-blue-800 hover:!text-white shadow-sm transition"
                                             title="Xem và sàng lọc hồ sơ ứng viên"
                                         >
                                             <Users size={13} className="!text-white shrink-0" />
@@ -399,7 +399,7 @@ export function RecruiterJobsPage() {
                                                 setEditingJob(job)
                                                 setIsModalOpen(true)
                                             }}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 transition"
                                             title="Chỉnh sửa tin"
                                         >
                                             <Edit3 size={13} />
