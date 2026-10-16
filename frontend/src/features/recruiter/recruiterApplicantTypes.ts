@@ -30,8 +30,10 @@ export interface AiMatchResult {
     candidateName: string
     matchPercentage: number
     directKeywordScore: number
+    contextualSimilarityScore: number
     inferredCapabilityScore: number
     inferredCapabilities: string[]
+    verificationQuestions: string[]
     matchingStrengths: string[]
     missingCriticalSkills: string[]
     recommendation: string

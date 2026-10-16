@@ -98,7 +98,7 @@ class TalentBridgeMcpProtocolIntegrationTest {
         HttpResponse<String> listed = post(
                 "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}", recruiterToken, sessionId);
         assertThat(listed.statusCode()).isBetween(200, 299);
-        assertThat(listed.body()).contains("talentbridge_search_help", "talentbridge_search_jobs");
+        assertThat(listed.body()).contains("talentbridge_search_help", "talentbridge_search_jobs", "talentbridge_update_application_stage", "confirm");
 
         HttpResponse<String> called = post("""
                 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{
@@ -107,6 +107,27 @@ class TalentBridgeMcpProtocolIntegrationTest {
                 """, recruiterToken, sessionId);
         assertThat(called.statusCode()).isBetween(200, 299);
         assertThat(called.body()).contains("Việc làm", "Tìm việc và ứng tuyển");
+    }
+
+    @Test
+    void mcpWriteToolRequiresExplicitConfirmationBeforeCallingBusinessUseCase() {
+        HttpResponse<String> initialized = post("""
+                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+                  "protocolVersion":"2025-11-25","capabilities":{},
+                  "clientInfo":{"name":"talentbridge-confirmation-test","version":"1.0.0"}}}
+                """, recruiterToken, null);
+        assertThat(initialized.statusCode()).isBetween(200, 299);
+        String sessionId = initialized.headers().firstValue("Mcp-Session-Id").orElseThrow();
+        post("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}", recruiterToken, sessionId);
+
+        HttpResponse<String> response = post("""
+                {"jsonrpc":"2.0","id":4,"method":"tools/call","params":{
+                  "name":"talentbridge_update_application_stage",
+                  "arguments":{"jobId":1,"applicationId":1,"stage":"SCREENING","confirm":false}}}
+                """, recruiterToken, sessionId);
+
+        assertThat(response.statusCode()).isBetween(200, 299);
+        assertThat(response.body()).contains("confirm=true");
     }
 
     @Test

@@ -58,8 +58,8 @@ class MatchApplicantUseCaseImplTest {
     @Test
     void matchesOnlyAnApplicantOfAJobOwnedByRecruitersCompany() {
         CandidateJobMatchResult expected = new CandidateJobMatchResult(
-                jobId, "Backend Developer", candidateId, "Candidate", 86.0, 0.82, 0.90,
-                List.of("REST API"), List.of("Java"), List.of(), "CẦN ĐÁNH GIÁ THÊM", "Analysis",
+                jobId, "Backend Developer", candidateId, "Candidate", 86.0, 0.82, 0.74, 0.90,
+                List.of("REST API"), List.of("Xác minh API"), List.of("Java"), List.of(), "CẦN ĐÁNH GIÁ THÊM", "Analysis",
                 AiMatchingSource.DETERMINISTIC);
         when(matchingPort.match(jobId, candidateId)).thenReturn(expected);
 

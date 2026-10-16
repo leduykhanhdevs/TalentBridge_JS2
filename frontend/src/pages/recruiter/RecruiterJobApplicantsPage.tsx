@@ -1173,27 +1173,47 @@ export function RecruiterJobApplicantsPage() {
                             <div className="mt-5 space-y-5">
                                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-violet-50 p-4">
                                     <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Điểm phù hợp</p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Điểm tương đồng tham khảo</p>
                                         <p className="mt-1 text-3xl font-bold text-violet-950">{aiMatchResult.matchPercentage.toFixed(1)}%</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-bold text-slate-900">{aiMatchResult.recommendation}</p>
                                         <p className="mt-1 text-xs text-slate-600">
-                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini AI' : 'Đối sánh cục bộ'}
+                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini' : 'Tri-Vector nội bộ'}
                                         </p>
                                     </div>
                                 </div>
                                 <p className="text-sm leading-6 text-slate-700">{aiMatchResult.analysisSummary}</p>
+                                <div className="grid gap-3 sm:grid-cols-3" aria-label="Ba thành phần điểm tương đồng">
+                                    {[
+                                        { label: 'Yêu cầu ↔ bằng chứng trực tiếp', score: aiMatchResult.directKeywordScore },
+                                        { label: 'Ngữ cảnh công việc ↔ hồ sơ', score: aiMatchResult.contextualSimilarityScore },
+                                        { label: 'Yêu cầu ↔ năng lực liên quan', score: aiMatchResult.inferredCapabilityScore },
+                                    ].map((item) => {
+                                        const percentage = Math.round(Math.max(0, Math.min(1, item.score)) * 100)
+                                        return (
+                                            <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-3">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <span className="text-xs font-semibold leading-5 text-slate-700">{item.label}</span>
+                                                    <span className="text-xs font-bold text-slate-900">{percentage}%</span>
+                                                </div>
+                                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                                                    <div className="h-full rounded-full bg-blue-600" style={{ width: percentage + '%' }} />
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">Điểm phù hợp</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">Bằng chứng khớp trực tiếp</h4>
                                         <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
                                             {aiMatchResult.matchingStrengths.map((item) => <li key={item}>{item}</li>)}
                                             {aiMatchResult.matchingStrengths.length === 0 && <li>Chưa có điểm nổi bật được xác định.</li>}
                                         </ul>
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">Kỹ năng còn thiếu</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">Chưa thấy bằng chứng trực tiếp</h4>
                                         <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
                                             {aiMatchResult.missingCriticalSkills.map((item) => <li key={item}>{item}</li>)}
                                             {aiMatchResult.missingCriticalSkills.length === 0 && <li>Không phát hiện kỹ năng thiếu rõ ràng.</li>}
@@ -1202,8 +1222,17 @@ export function RecruiterJobApplicantsPage() {
                                 </div>
                                 {aiMatchResult.inferredCapabilities.length > 0 && (
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">Năng lực suy luận</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">Năng lực liên quan suy luận · cần xác minh</h4>
                                         <p className="mt-2 text-sm text-slate-600">{aiMatchResult.inferredCapabilities.join(' · ')}</p>
+                                    </div>
+                                )}
+                                {aiMatchResult.verificationQuestions.length > 0 && (
+                                    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                                        <h4 className="text-sm font-bold text-slate-900">Câu hỏi gợi ý để xác minh</h4>
+                                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-700">
+                                            {aiMatchResult.verificationQuestions.map((question) => <li key={question}>{question}</li>)}
+                                        </ul>
+                                        <p className="mt-2 text-xs text-slate-600">Câu hỏi được tạo từ kỹ năng liên quan và bằng chứng còn thiếu trong tin; Recruiter cần xem xét và tự quyết định sử dụng.</p>
                                     </div>
                                 )}
                                 {candidateAssessment && (
@@ -1222,7 +1251,7 @@ export function RecruiterJobApplicantsPage() {
                                 )}
                                 {aiMatchResult.matchingSource === 'DETERMINISTIC' && (
                                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                                        Điểm số được tạo bằng độ phủ từ khóa và quy tắc năng lực cục bộ, không dùng embedding hay cơ sở dữ liệu vector. Hãy HR kiểm tra hồ sơ gốc trước khi ra quyết định.
+                                        Đây là đối sánh từ khóa cục bộ theo ba thành phần có trọng số 60% / 25% / 15%, chưa được hiệu chuẩn bằng dữ liệu tuyển dụng có nhãn. Gợi ý suy luận cần HR xác minh; điểm không phải xác suất tuyển dụng hoặc quyết định tuyển chọn.
                                     </p>
                                 )}
                             </div>
