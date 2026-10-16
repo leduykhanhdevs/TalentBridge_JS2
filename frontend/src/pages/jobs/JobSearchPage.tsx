@@ -61,7 +61,7 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
     { value: '50', label: '50 việc làm / trang' },
 ]
 
-const inputClassName = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-3 focus:ring-blue-100 hover:border-slate-300'
+const inputClassName = 'mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-3 focus:ring-blue-100 hover:border-slate-300'
 
 export function JobSearchPage() {
     const [formValues, setFormValues] = useState<JobFilterFormValues>(EMPTY_JOB_FILTERS)
@@ -121,16 +121,16 @@ export function JobSearchPage() {
     const jobs = jobsQuery.data?.content ?? []
 
     return (
-        <main className="min-h-[calc(100vh-4rem)] bg-slate-50">
-            <section className="border-b border-slate-200 bg-gradient-to-br from-blue-50 via-white to-blue-50">
-                <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8">
+        <main className="min-h-[calc(100vh-5.5rem)] bg-bento-canvas">
+            <section className="border-b border-slate-200 bg-white">
+                <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8 lg:py-9">
                     <div className="flex items-start gap-4">
-                        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-700 text-white shadow-sm">
+                            <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-blue-700 text-white">
                             <Search aria-hidden="true" size={23} />
                         </span>
                         <div>
-                            <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">TalentBridge Jobs</p>
-                            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Tìm việc làm phù hợp</h1>
+                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Cơ hội nghề nghiệp</p>
+                            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">Tìm việc làm phù hợp</h1>
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                                 Lọc cơ hội theo từ khóa, địa điểm, hình thức, kinh nghiệm và mức lương mong muốn.
                             </p>
@@ -140,7 +140,7 @@ export function JobSearchPage() {
             </section>
 
             <div className="mx-auto grid max-w-[1200px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[300px_1fr] lg:px-8">
-                <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-xs lg:sticky lg:top-24">
+                <aside className="h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
                     <div className="flex items-center gap-2 text-slate-900">
                         <SlidersHorizontal aria-hidden="true" size={18} />
                         <h2 className="font-bold">Bộ lọc việc làm</h2>
@@ -298,7 +298,7 @@ export function JobSearchPage() {
                     {jobsQuery.isSuccess && jobs.length > 0 && (
                         <div className="space-y-4">
                             {jobs.map((job) => (
-                                <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm sm:p-6" key={job.id}>
+                                <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:p-6" key={job.id}>
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div>
                                             <Link className="group" to={`/jobs/${job.id}`}>

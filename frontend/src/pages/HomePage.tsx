@@ -5,7 +5,6 @@ import {
     CheckCircle2,
     MapPin,
     RefreshCw,
-    ShieldCheck,
     TriangleAlert,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -37,7 +36,7 @@ export function HomePage() {
 
     return (
         <div className="min-h-screen bg-bento-canvas text-slate-900">
-            <section className="mx-auto grid w-full max-w-[1200px] items-center gap-8 px-4 py-12 sm:px-6 lg:min-h-[590px] lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-16">
+            <section className="mx-auto grid w-full max-w-[1200px] items-center gap-8 px-4 py-10 sm:px-6 lg:min-h-[470px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-8 lg:py-12">
                 <div className="max-w-[590px]">
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700 sm:text-sm">
                         Kết nối đúng người, đúng cơ hội
@@ -61,10 +60,14 @@ export function HomePage() {
                         </Link>
                     </div>
 
-                    <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-slate-600">
+                    <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-slate-600">
                         <span className="inline-flex items-center gap-2">
                             <CheckCircle2 aria-hidden="true" className="text-emerald-700" size={16} />
                             Thông tin tuyển dụng rõ ràng
+                        </span>
+                        <span className="inline-flex items-center gap-2">
+                            <CheckCircle2 aria-hidden="true" className="text-emerald-700" size={16} />
+                            Quy trình rõ ràng
                         </span>
                         <span className="inline-flex items-center gap-2">
                             <CheckCircle2 aria-hidden="true" className="text-emerald-700" size={16} />
@@ -73,7 +76,7 @@ export function HomePage() {
                     </div>
                 </div>
 
-                <div className="relative mx-auto flex w-full max-w-[520px] items-center justify-center py-5 lg:py-0">
+                <div className="relative mx-auto flex w-full max-w-[440px] items-center justify-center py-2 lg:py-0">
                     <HeroTalentIllustration className="h-auto w-full" />
                 </div>
             </section>
@@ -173,24 +176,6 @@ export function HomePage() {
                 </div>
             </section>
 
-            <section className="mx-auto w-full max-w-[1200px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-                <div className="flex flex-col gap-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
-                    <div className="flex items-start gap-4">
-                        <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700">
-                            {isAdmin ? <ShieldCheck aria-hidden="true" size={21} /> : <Building2 aria-hidden="true" size={21} />}
-                        </span>
-                        <div>
-                            <h2 className="text-xl font-semibold text-slate-900">Quy trình tuyển dụng có kiểm soát</h2>
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                                Doanh nghiệp và tin tuyển dụng được quản lý theo trạng thái xét duyệt; nhà tuyển dụng có thể theo dõi hồ sơ trong cùng một quy trình.
-                            </p>
-                        </div>
-                    </div>
-                    <Link className="btn-bento-secondary shrink-0 text-sm" to={secondaryLink.to}>
-                        {secondaryLink.label}
-                    </Link>
-                </div>
-            </section>
         </div>
     )
 }

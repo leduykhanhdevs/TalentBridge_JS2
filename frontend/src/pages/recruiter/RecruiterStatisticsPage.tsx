@@ -73,8 +73,8 @@ export function RecruiterStatisticsPage() {
         <div className="space-y-6">
             <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Recruiter Analytics</p>
-                    <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Thống kê tin và pipeline</h1>
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Tuyển dụng</p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Thống kê tin và pipeline</h1>
                     <p className="mt-1 text-sm text-slate-600">Đo độ đầy đủ của tin và xem phân bố hồ sơ theo vòng hiện tại.</p>
                 </div>
                 <label className="w-full text-xs font-bold text-slate-600 sm:w-80">
@@ -102,11 +102,11 @@ export function RecruiterStatisticsPage() {
                     <section className="bento-card p-5 sm:p-6" aria-labelledby="job-quality-title">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Job Quality</p>
+                                <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Chất lượng tin</p>
                                 <h2 className="mt-1 text-lg font-bold text-slate-900" id="job-quality-title">Độ rõ ràng và minh bạch của tin</h2>
                                 <p className="mt-1 line-clamp-2 text-sm text-slate-600">{selectedJob.title}</p>
                             </div>
-                            <div className="shrink-0 rounded-2xl bg-indigo-50 px-3 py-2 text-center text-indigo-800">
+                            <div className="shrink-0 rounded-lg bg-blue-50 px-3 py-2 text-center text-blue-800">
                                 <p className="text-2xl font-black">{quality.qualityScore}<span className="text-sm">/100</span></p>
                                 <p className="text-[11px] font-bold">{quality.qualityLabel}</p>
                             </div>
@@ -119,7 +119,7 @@ export function RecruiterStatisticsPage() {
                                         <span className="shrink-0 font-bold text-slate-600">{criterion.points}/{criterion.maximumPoints}</span>
                                     </div>
                                     <div aria-label={`${criterion.name}: ${criterion.points} trên ${criterion.maximumPoints}`} className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100" role="img">
-                                        <div className="h-full rounded-full bg-indigo-500" style={{ width: `${criterion.maximumPoints ? (criterion.points / criterion.maximumPoints) * 100 : 0}%` }} />
+                                        <div className="h-full rounded-full bg-blue-700" style={{ width: `${criterion.maximumPoints ? (criterion.points / criterion.maximumPoints) * 100 : 0}%` }} />
                                     </div>
                                     <p className="mt-1 text-[11px] leading-5 text-slate-500">{criterion.evidence}</p>
                                 </div>

@@ -214,7 +214,7 @@ export function JobDetailPage() {
     const job = jobQuery.data
 
     return (
-        <div className="bg-bento-canvas min-h-full py-8 sm:py-10">
+        <div className="min-h-full bg-bento-canvas py-7 sm:py-9">
             <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
                 <Link
                     className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-blue-800"
@@ -224,11 +224,10 @@ export function JobDetailPage() {
                     <span>Về trang chủ</span>
                 </Link>
 
-                <header className="relative mt-5 overflow-hidden rounded-3xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-                    <div aria-hidden="true" className="absolute -top-24 -right-20 size-72 rounded-full bg-blue-100/70 blur-3xl" />
-                    <div className="relative flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
+                <header className="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 lg:p-8">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex min-w-0 gap-4 sm:gap-5">
-                            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-700 to-blue-700 text-white shadow-md sm:size-16">
+                            <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-blue-700 text-white sm:size-14">
                                 <Building2 aria-hidden="true" size={28} />
                             </span>
                             <div className="min-w-0">
@@ -246,7 +245,7 @@ export function JobDetailPage() {
                         </div>
 
                         <div className="flex flex-col gap-3 lg:items-end">
-                            <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-5 py-4 lg:min-w-64">
+                            <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3.5 lg:min-w-64">
                                 <p className="text-xs font-bold tracking-wide text-blue-800 uppercase">Mức lương</p>
                                 <p className="mt-2 text-xl font-extrabold text-blue-950">
                                     {formatSalaryRange(job.minSalary, job.maxSalary)}
@@ -259,28 +258,28 @@ export function JobDetailPage() {
                     </div>
 
                     <div className="relative mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3.5">
                             <MapPin className="shrink-0 text-rose-500" aria-hidden="true" size={20} />
                             <div className="min-w-0">
                                 <p className="text-xs font-medium text-slate-500">Địa điểm</p>
                                 <p className="mt-1 truncate text-sm font-bold text-slate-800">{job.location || 'Chưa cập nhật'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3.5">
                             <BriefcaseBusiness className="shrink-0 text-blue-600" aria-hidden="true" size={20} />
                             <div>
                                 <p className="text-xs font-medium text-slate-500">Hình thức</p>
                                 <p className="mt-1 text-sm font-bold text-slate-800">{formatJobType(job.jobType)}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3.5">
                             <UserRoundCheck className="shrink-0 text-blue-600" aria-hidden="true" size={20} />
                             <div>
                                 <p className="text-xs font-medium text-slate-500">Kinh nghiệm</p>
                                 <p className="mt-1 text-sm font-bold text-slate-800">{formatExperienceLevel(job.experienceLevel)}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3.5">
                             <CalendarDays className="shrink-0 text-amber-500" aria-hidden="true" size={20} />
                             <div>
                                 <p className="text-xs font-medium text-slate-500">Hạn nộp hồ sơ</p>
@@ -297,7 +296,7 @@ export function JobDetailPage() {
                         <DetailSection content={job.benefits} title="Quyền lợi" />
                     </div>
 
-                    <aside className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs lg:sticky lg:top-24">
+                    <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
                         <h2 className="text-lg font-bold text-slate-900">Thông tin chung</h2>
                         <dl className="mt-5 space-y-5">
                             <div className="flex gap-3">
