@@ -472,8 +472,8 @@ export function AdminCompaniesPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-600">
+                    <div aria-label="Bảng danh sách doanh nghiệp" className="overflow-x-auto" role="region" tabIndex={0}>
+                        <table className="w-full min-w-[1080px] text-left text-sm text-slate-600">
                             <thead className="border-b border-slate-200 bg-slate-100/90 text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                                 <tr>
                                     <th className="px-6 py-4" scope="col">Doanh nghiệp</th>

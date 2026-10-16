@@ -263,7 +263,7 @@ export function CandidateApplicationsPage() {
             <div className="bento-card p-4 sm:p-5 space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Stage tabs */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                    <div aria-label="Lọc theo trạng thái đơn ứng tuyển" className="flex flex-wrap items-center gap-1.5" role="group">
                         {[
                             { key: 'ALL', label: `Tất cả (${totalApps})` },
                             { key: 'APPLIED', label: 'Đã nộp' },

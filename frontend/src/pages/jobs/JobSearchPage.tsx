@@ -139,8 +139,8 @@ export function JobSearchPage() {
                 </div>
             </section>
 
-            <div className="mx-auto grid max-w-[1200px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[300px_1fr] lg:px-8">
-                <aside className="h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
+            <div className="mx-auto grid min-w-0 max-w-[1200px] grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
+                <aside className="h-fit min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
                     <div className="flex items-center gap-2 text-slate-900">
                         <SlidersHorizontal aria-hidden="true" size={18} />
                         <h2 className="font-bold">Bộ lọc việc làm</h2>
@@ -240,7 +240,7 @@ export function JobSearchPage() {
                     </form>
                 </aside>
 
-                <section aria-live="polite">
+                <section aria-live="polite" className="min-w-0">
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-slate-950">Cơ hội đang tuyển</h2>

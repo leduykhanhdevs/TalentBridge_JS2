@@ -353,7 +353,7 @@ export function RecruiterJobApplicantsPage() {
             )}
 
             {/* Quick Stage Tabs / Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div aria-label="Lọc theo vòng tuyển dụng" className="flex flex-wrap items-center gap-2" role="group">
                 <button
                     type="button"
                     onClick={() => setStageFilter('')}
@@ -542,9 +542,9 @@ export function RecruiterJobApplicantsPage() {
                                 key={app.id}
                                 className="bento-card p-5 transition hover:border-blue-200 hover:shadow-md"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,0.9fr)_minmax(0,2.1fr)] lg:items-start">
                                     {/* Left: Candidate Info */}
-                                    <div className="flex items-start gap-4">
+                                    <div className="flex min-w-0 items-start gap-4">
                                         {/* Avatar */}
                                         <div className="size-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-800 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                                             {app.candidateFullName
@@ -556,7 +556,7 @@ export function RecruiterJobApplicantsPage() {
                                                 .toUpperCase() || 'CV'}
                                         </div>
 
-                                        <div className="space-y-1.5">
+                                        <div className="min-w-0 space-y-1.5">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <h3 className="text-base font-bold text-slate-900">
                                                     {app.candidateFullName}
@@ -657,7 +657,7 @@ export function RecruiterJobApplicantsPage() {
                                     </div>
 
                                     {/* Right: Actions */}
-                                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0 shrink-0">
+                                    <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:justify-end lg:border-t-0 lg:pt-0">
                                         <button
                                             type="button"
                                             disabled={isAiMatching}

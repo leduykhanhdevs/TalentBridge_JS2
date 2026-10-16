@@ -19,7 +19,7 @@ const actors = [
         password: 'Password123!',
         route: '/recruiter/jobs',
         heading: 'Quản lý tin tuyển dụng',
-        routes: ['/recruiter/profile', '/recruiter/jobs', '/recruiter/jobs/1/applicants', '/recruiter/company', '/recruiter/join-company', '/recruiter/peer-approval'],
+        routes: ['/recruiter/profile', '/recruiter/jobs', '/recruiter/jobs/1/applicants', '/recruiter/statistics', '/recruiter/company', '/recruiter/join-company', '/recruiter/peer-approval'],
     },
     {
         name: 'admin',
@@ -119,6 +119,31 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             await expect(page.locator('main').first(), `${actor.name} route ${route} phải render main`).toBeVisible()
             const contentLength = await page.locator('main').first().evaluate((element) => element.textContent?.trim().length ?? 0)
             expect(contentLength, `${actor.name} route ${route} không được trắng`).toBeGreaterThan(40)
+
+            const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
+            for (const width of [360, 1280]) {
+                await page.setViewportSize({ width, height: 900 })
+                const layout = await page.evaluate(() => ({
+                    documentWidth: document.documentElement.scrollWidth,
+                    offenders: Array.from(document.querySelectorAll('body *'))
+                        .map((element) => {
+                            const rect = element.getBoundingClientRect()
+                            return { tag: element.tagName, className: typeof element.className === 'string' ? element.className : '', text: element.textContent?.trim().slice(0, 70), left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) }
+                        })
+                        .filter((element) => element.right > window.innerWidth + 1 && element.width > 0)
+                        .sort((left, right) => right.right - left.right)
+                        .slice(0, 8),
+                }))
+                if (layout.documentWidth > width) {
+                    await page.screenshot({ path: join(screenshotDirectory, `${actor.name}-route-${routeSlug}-${width}-overflow.png`), fullPage: true })
+                }
+                expect(layout.documentWidth, `${actor.name} route ${route} tràn ngang tại ${width}px: ${JSON.stringify(layout.offenders)}`).toBeLessThanOrEqual(width)
+                await page.screenshot({
+                    path: join(screenshotDirectory, `${actor.name}-route-${routeSlug}-${width}.png`),
+                    fullPage: true,
+                    animations: 'disabled',
+                })
+            }
         }
 
         expect(pageErrors, `Lỗi JavaScript ở phân hệ ${actor.name}`).toEqual([])
@@ -166,6 +191,18 @@ test('các route công khai và route 404 có nội dung, không render màn hì
         await expect(main, `Route ${route} cần hiển thị nội dung chính`).toBeVisible()
         const contentLength = await main.evaluate((element) => element.textContent?.trim().length ?? 0)
         expect(contentLength, `Route ${route} không được trắng`).toBeGreaterThan(30)
+        const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
+        for (const width of [360, 1280]) {
+            await page.setViewportSize({ width, height: 900 })
+            await expect(main).toBeVisible()
+            const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+            expect(documentWidth, `Route ${route} tràn ngang tại ${width}px`).toBeLessThanOrEqual(width)
+            await page.screenshot({
+                path: join(screenshotDirectory, `public-route-${routeSlug}-${width}.png`),
+                fullPage: true,
+                animations: 'disabled',
+            })
+        }
     }
     expect(pageErrors, 'Lỗi JavaScript trên route công khai').toEqual([])
 })
