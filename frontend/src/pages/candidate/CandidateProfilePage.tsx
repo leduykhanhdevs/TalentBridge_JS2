@@ -252,11 +252,11 @@ export function CandidateProfilePage() {
 
                 {/* Profile Hero Card */}
                 <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-                    <div className="absolute top-0 right-0 h-40 w-40 translate-x-8 -translate-y-8 rounded-full bg-gradient-to-br from-blue-400/10 to-indigo-500/20 blur-2xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 h-40 w-40 translate-x-8 -translate-y-8 rounded-full bg-gradient-to-br from-blue-400/10 to-blue-600/20 blur-2xl pointer-events-none" />
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                         <div className="flex items-center gap-5">
-                            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-2xl font-bold text-white shadow-md">
+                            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-2xl font-bold text-white shadow-md">
                                 {profile.avatarUrl ? (
                                     <img
                                         src={profile.avatarUrl}
@@ -308,9 +308,9 @@ export function CandidateProfilePage() {
                                 <button
                                     type="button"
                                     onClick={() => setIsCvImportOpen(true)}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2.5 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-100 transition"
+                                    className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-xs font-bold text-blue-800 shadow-2xs hover:bg-blue-100 transition"
                                 >
-                                    <Sparkles className="h-4 w-4 text-indigo-600" /> Nhập nhanh từ CV
+                                    <Sparkles className="h-4 w-4 text-blue-700" /> Nhập nhanh từ CV
                                 </button>
                                 <button
                                     type="button"
@@ -466,7 +466,7 @@ export function CandidateProfilePage() {
                         {/* Professional Info Group */}
                         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
                             <h2 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2">
-                                <Briefcase className="h-5 w-5 text-indigo-600" /> Thông tin nghề nghiệp
+                                <Briefcase className="h-5 w-5 text-blue-700" /> Thông tin nghề nghiệp
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
@@ -482,9 +482,9 @@ export function CandidateProfilePage() {
                                     />
                                 </div>
 
-                                <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5">
-                                    <p className="text-xs font-semibold text-indigo-900">Kinh nghiệm được tính từ lịch sử làm việc</p>
-                                    <p className="mt-1 text-xs text-indigo-700">Cập nhật các mốc công việc bên dưới để hệ thống tự tính tổng số năm.</p>
+                                <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5">
+                                    <p className="text-xs font-semibold text-blue-950">Kinh nghiệm được tính từ lịch sử làm việc</p>
+                                    <p className="mt-1 text-xs text-blue-800">Cập nhật các mốc công việc bên dưới để hệ thống tự tính tổng số năm.</p>
                                 </div>
 
                                 <div>
@@ -626,7 +626,7 @@ export function CandidateProfilePage() {
                             {/* Career & Salary */}
                             <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-4">
                                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                    <Briefcase className="h-4 w-4 text-indigo-600" /> Kỳ vọng công việc & Lương
+                                    <Briefcase className="h-4 w-4 text-blue-700" /> Kỳ vọng công việc & Lương
                                 </h3>
                                 <div className="space-y-3 text-sm">
                                     <div className="flex justify-between border-b border-slate-100 pb-2">
@@ -769,12 +769,12 @@ export function CandidateProfilePage() {
                         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                                    <Award className="h-5 w-5 text-indigo-600" /> Kỹ năng chuyên môn
+                                    <Award className="h-5 w-5 text-blue-700" /> Kỹ năng chuyên môn
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => setIsSkillModalOpen(true)}
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition"
                                 >
                                     <Plus className="h-4 w-4" /> Thêm kỹ năng
                                 </button>
@@ -795,7 +795,7 @@ export function CandidateProfilePage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsSkillModalOpen(true)}
-                                        className="mt-4 inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition shadow-sm"
+                                        className="mt-4 inline-flex items-center gap-1 rounded-xl bg-blue-700 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 transition shadow-sm"
                                     >
                                         <Plus className="h-3.5 w-3.5" /> Thêm kỹ năng ngay
                                     </button>
@@ -805,13 +805,13 @@ export function CandidateProfilePage() {
                                     {skills.map((s: CandidateSkill) => (
                                         <div
                                             key={s.id}
-                                            className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/40 p-4 hover:border-indigo-300 hover:bg-white hover:shadow-sm transition"
+                                            className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/40 p-4 hover:border-blue-300 hover:bg-white hover:shadow-sm transition"
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
                                                     <h4 className="text-sm font-bold text-slate-900">{s.skillName}</h4>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                                                        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-800">
                                                             {s.proficiencyLevel === 'BEGINNER'
                                                                 ? 'Cơ bản'
                                                                 : s.proficiencyLevel === 'ELEMENTARY'

@@ -12,12 +12,12 @@ export function EmptyStateIllustration({ className = 'w-24 h-auto' }: Illustrati
         >
             <defs>
                 <linearGradient id="folderBack" x1="0%" x2="0%" y1="0%" y2="100%">
-                    <stop offset="0%" stopColor="#c7d2fe" />
-                    <stop offset="100%" stopColor="#a5b4fc" />
+                    <stop offset="0%" stopColor="#dce7fb" />
+                    <stop offset="100%" stopColor="#b9cdf7" />
                 </linearGradient>
                 <linearGradient id="folderFront" x1="0%" x2="0%" y1="0%" y2="100%">
-                    <stop offset="0%" stopColor="#e0e7ff" />
-                    <stop offset="100%" stopColor="#c7d2fe" />
+                    <stop offset="0%" stopColor="#eff4ff" />
+                    <stop offset="100%" stopColor="#dce7fb" />
                 </linearGradient>
             </defs>
 

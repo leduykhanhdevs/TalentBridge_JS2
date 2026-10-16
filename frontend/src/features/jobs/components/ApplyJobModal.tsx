@@ -129,9 +129,9 @@ export function ApplyJobModal({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 p-6">
+                <div className="flex items-start justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50/30 to-slate-50 p-6">
                     <div>
-                        <span className="bento-badge bg-indigo-50 text-indigo-700 text-xs">
+                        <span className="bento-badge bg-blue-50 text-blue-800 text-xs">
                             Nộp hồ sơ trực tuyến
                         </span>
                         <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950">
@@ -189,7 +189,7 @@ export function ApplyJobModal({
                                     <label className="text-sm font-bold text-slate-900">
                                         Chọn CV ứng tuyển <span className="text-rose-500">*</span>
                                     </label>
-                                    <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer">
+                                    <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 hover:text-blue-800 cursor-pointer">
                                         <Plus size={14} />
                                         <span>Tải lên CV khác</span>
                                         <input
@@ -210,7 +210,7 @@ export function ApplyJobModal({
                                 )}
 
                                 {isUploadingResume && (
-                                    <div className="mt-3 flex items-center gap-2.5 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-3.5 text-xs font-medium text-indigo-700">
+                                    <div className="mt-3 flex items-center gap-2.5 rounded-2xl border border-blue-200 bg-blue-50/60 p-3.5 text-xs font-medium text-blue-800">
                                         <Loader2 className="animate-spin" size={16} />
                                         <span>Đang tải lên và xử lý file CV...</span>
                                     </div>
@@ -251,7 +251,7 @@ export function ApplyJobModal({
                                                 <label
                                                     className={`flex items-center justify-between rounded-2xl border p-3.5 cursor-pointer transition-all ${
                                                         isSelected
-                                                            ? 'border-indigo-600 bg-indigo-50/40 shadow-xs ring-1 ring-indigo-500'
+                                                            ? 'border-blue-700 bg-blue-50/40 shadow-xs ring-1 ring-blue-600'
                                                             : 'border-slate-200 bg-white hover:border-slate-300'
                                                     }`}
                                                     key={resume.id}
@@ -259,7 +259,7 @@ export function ApplyJobModal({
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <input
                                                             checked={isSelected}
-                                                            className="text-indigo-600 focus:ring-indigo-500 size-4 border-slate-300"
+                                                            className="text-blue-700 focus:ring-blue-600 size-4 border-slate-300"
                                                             name="selectedResume"
                                                             onChange={() =>
                                                                 setSelectedResumeId(resume.id)
@@ -307,7 +307,7 @@ export function ApplyJobModal({
                                     </span>
                                 </div>
                                 <textarea
-                                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100"
+                                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-100"
                                     id="coverLetter"
                                     maxLength={1000}
                                     onChange={(e) => setCoverLetter(e.target.value)}

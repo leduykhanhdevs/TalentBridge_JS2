@@ -68,7 +68,7 @@ export function ForgotPasswordPage() {
                     </span>
                 </div>
 
-                <div className="mx-auto grid size-12 place-items-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+                <div className="mx-auto grid size-12 place-items-center rounded-xl bg-blue-50 border border-blue-100 text-blue-700">
                     <KeyRound size={22} />
                 </div>
 
@@ -101,7 +101,7 @@ export function ForgotPasswordPage() {
                                 className={`h-12 w-full rounded-xl border-2 bg-white pl-11 pr-4 text-slate-900 outline-none font-mono text-sm transition placeholder:text-slate-400 ${
                                     emailError
                                         ? 'border-rose-500 bg-rose-50/20 focus:border-rose-600 focus:shadow-[2px_2px_0px_0px_#f43f5e]'
-                                        : 'border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100'
+                                        : 'border-slate-200 focus:border-blue-700 focus:ring-2 focus:ring-blue-100'
                                 }`}
                                 id="forgot-email"
                                 name="email"
@@ -156,7 +156,7 @@ export function ForgotPasswordPage() {
 
                 <div className="mt-6 border-t border-slate-100 pt-4 text-center">
                     <Link
-                        className="inline-flex items-center gap-2 text-xs font-bold text-slate-800 hover:text-indigo-600 underline"
+                        className="inline-flex items-center gap-2 text-xs font-bold text-slate-800 hover:text-blue-700 underline"
                         to="/login"
                     >
                         <ArrowLeft size={14} /> Quay lại trang Đăng nhập

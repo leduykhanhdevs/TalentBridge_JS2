@@ -311,9 +311,9 @@ export function RecruiterCompanyPage() {
                     </div>
 
                     {/* Option 2: Search & Join Existing Company */}
-                    <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:border-indigo-300 transition">
+                    <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:border-blue-300 transition">
                         <div>
-                            <div className="grid size-12 place-items-center rounded-xl bg-indigo-100 text-indigo-700 mb-4">
+                            <div className="grid size-12 place-items-center rounded-xl bg-blue-100 text-blue-800 mb-4">
                                 <Users size={24} />
                             </div>
                             <h2 className="text-lg font-bold text-slate-900">
@@ -324,18 +324,18 @@ export function RecruiterCompanyPage() {
                             </p>
                             <ul className="mt-4 space-y-2 text-xs text-slate-500">
                                 <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="text-indigo-600" size={14} />
+                                    <CheckCircle2 className="text-blue-700" size={14} />
                                     <span>Tham gia ngay không cần chờ Admin xác thực giấy tờ</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <CheckCircle2 className="text-indigo-600" size={14} />
+                                    <CheckCircle2 className="text-blue-700" size={14} />
                                     <span>Chia sẻ quyền đăng tin và theo dõi ứng viên cùng đồng nghiệp</span>
                                 </li>
                             </ul>
                         </div>
 
                         <Link
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-800 transition hover:bg-blue-100"
                             to="/recruiter/join-company"
                         >
                             <span>Tìm kiếm & nộp đơn</span>

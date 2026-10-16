@@ -1,0 +1,190 @@
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-Bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --tb-bg: #f5f7fb;
+  --tb-surface: #ffffff;
+  --tb-ink: #172033;
+  --tb-muted: #475467;
+  --tb-blue: #1d4ed8;
+  --tb-blue-dark: #173fae;
+  --tb-tint: #eff4ff;
+  --tb-line: #e2e8f0;
+  --tb-control: #7c8a9d;
+  --tb-shadow-card: 0 1px 2px rgb(23 32 51 / 4%), 0 8px 24px rgb(23 32 51 / 4%);
+  --tb-shadow-menu: 0 12px 32px rgb(23 32 51 / 12%);
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  font-family: 'Be Vietnam Pro', Inter, ui-sans-serif, system-ui, sans-serif;
+  color: var(--tb-ink);
+  background: var(--tb-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  background: var(--tb-bg);
+  color: var(--tb-ink);
+  font-family: 'Be Vietnam Pro', Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display,
+.font-editorial {
+  font-family: 'Be Vietnam Pro', Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.bg-bento-canvas {
+  background: var(--tb-bg);
+  background-image: none;
+}
+
+.bento-card {
+  border: 1px solid var(--tb-line);
+  border-radius: 12px;
+  background-color: var(--tb-surface);
+  box-shadow: var(--tb-shadow-card);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.bento-card:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px rgb(23 32 51 / 7%);
+}
+
+.admin-shell {
+  background-color: var(--tb-bg);
+}
+
+.admin-shell header {
+  background-color: rgb(255 255 255 / 96%);
+  color: var(--tb-ink);
+}
+
+.recruiter-shell header {
+  background-color: rgb(255 255 255 / 96%);
+}
+
+@layer components {
+  .btn-bento-primary,
+  .btn-bento-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+  }
+
+  .btn-bento-primary {
+    padding: 0.65rem 1.25rem;
+    border: 1px solid transparent;
+    color: #fff;
+    background-color: var(--tb-blue);
+    box-shadow: 0 1px 2px rgb(23 32 51 / 10%);
+  }
+
+  .btn-bento-primary:hover:not(:disabled) {
+    color: #fff;
+    background-color: var(--tb-blue-dark);
+    box-shadow: 0 3px 10px rgb(29 78 216 / 18%);
+  }
+
+  .btn-bento-primary:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn-bento-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .btn-bento-secondary {
+    padding: 0.65rem 1.25rem;
+    border: 1px solid var(--tb-line);
+    color: var(--tb-ink);
+    background-color: var(--tb-surface);
+    box-shadow: none;
+  }
+
+  .btn-bento-secondary:hover {
+    border-color: #b8c4d4;
+    color: var(--tb-ink);
+    background-color: #f8fafc;
+  }
+}
+
+.btn-bento-accent {
+  border-radius: 8px;
+}
+
+.bento-badge {
+  border-radius: 999px;
+  letter-spacing: 0;
+}
+
+input,
+select,
+textarea {
+  color: var(--tb-ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #667085;
+  opacity: 1;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(29 78 216 / 28%);
+  outline-offset: 2px;
+}
+
+table {
+  border-color: var(--tb-line);
+}
+
+th {
+  color: #344054;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -17,7 +17,7 @@ import { AuthApiError, registerCandidate } from '../features/auth/authApi'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
 
 const inputClassName =
-    'h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100'
+    'h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
 
 const invalidInputClassName =
     'border-red-400 focus:border-red-500 focus:ring-red-100'
@@ -212,17 +212,17 @@ export function RegisterPage() {
         <section className="relative overflow-hidden bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
             <div
                 aria-hidden="true"
-                className="absolute -left-32 bottom-10 size-80 rounded-full bg-violet-100/70 blur-3xl"
+                className="absolute -left-32 bottom-10 size-80 rounded-full bg-blue-100/70 blur-3xl"
             />
             <div
                 aria-hidden="true"
-                className="absolute -right-32 top-20 size-80 rounded-full bg-indigo-100/70 blur-3xl"
+                className="absolute -right-32 top-20 size-80 rounded-full bg-blue-100/70 blur-3xl"
             />
 
             <div className="relative mx-auto grid w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 lg:grid-cols-[0.95fr_1.05fr]">
                 <div
                     className={`relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between transition-colors duration-300 ${
-                        formValues.role === 'ROLE_RECRUITER' ? 'bg-emerald-700' : 'bg-indigo-600'
+                        formValues.role === 'ROLE_RECRUITER' ? 'bg-emerald-700' : 'bg-blue-700'
                     }`}
                 >
                     <div
@@ -302,7 +302,7 @@ export function RegisterPage() {
                             <button
                                 className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
                                     formValues.role === 'ROLE_CANDIDATE'
-                                        ? 'bg-white text-indigo-700 shadow-sm'
+                                        ? 'bg-white text-blue-800 shadow-sm'
                                         : 'text-slate-600 hover:text-slate-900'
                                 }`}
                                 onClick={() => {
@@ -333,7 +333,7 @@ export function RegisterPage() {
 
                         <p
                             className={`text-sm font-semibold ${
-                                formValues.role === 'ROLE_RECRUITER' ? 'text-emerald-600' : 'text-indigo-600'
+                                formValues.role === 'ROLE_RECRUITER' ? 'text-emerald-600' : 'text-blue-700'
                             }`}
                         >
                             {formValues.role === 'ROLE_RECRUITER' ? 'Recruiter account' : 'Candidate account'}
@@ -538,7 +538,7 @@ export function RegisterPage() {
                                         aria-describedby={fieldErrors.terms ? 'terms-error' : undefined}
                                         aria-invalid={Boolean(fieldErrors.terms)}
                                         checked={acceptedTerms}
-                                        className="mt-1 size-4 shrink-0 rounded border-slate-300 accent-indigo-600"
+                                        className="mt-1 size-4 shrink-0 rounded border-slate-300 accent-blue-700"
                                         onChange={(event) => {
                                             setAcceptedTerms(event.target.checked)
                                             setFieldErrors((currentErrors) => ({
@@ -577,7 +577,7 @@ export function RegisterPage() {
                             )}
 
                             <button
-                                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-70"
+                                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-wait disabled:opacity-70"
                                 disabled={registerMutation.isPending}
                                 type="submit"
                             >
@@ -593,7 +593,7 @@ export function RegisterPage() {
                         <p className="mt-7 text-center text-sm text-slate-600">
                             Đã có tài khoản?{' '}
                             <Link
-                                className="font-semibold text-indigo-600 hover:text-indigo-700"
+                                className="font-semibold text-blue-700 hover:text-blue-800"
                                 to="/login"
                             >
                                 Đăng nhập
