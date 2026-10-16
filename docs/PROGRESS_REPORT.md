@@ -522,3 +522,8 @@
   - React/TypeScript, Tailwind CSS, Vite, Be Vietnam Pro cục bộ, SVG 2.5D; pnpm 9, Vitest, ESLint, Playwright, Spring Boot và H2 tạm cho E2E.
 - **Mục đích chức năng / việc đã làm**:
   - Đưa Sapphire & Graphite V2 vào `main` và Render production, vẫn giữ hành vi trợ lý; xác nhận qua unit, build, E2E và smoke test production đa vai trò/API.
+
+## SỬA LỖI HEADER RESPONSIVE V2 - 16/10/2026
+- **Đã làm được gì**: Chặn menu và cụm tài khoản bị ép xuống nhiều dòng; từ 1024–1279px dùng điều hướng biểu tượng có nhãn truy cập, từ 1280px hiển thị đầy đủ nhãn; thu gọn thao tác đổi mật khẩu/đăng xuất thành nút biểu tượng có accessible label. Kiểm tra Playwright ở 1780, 1440, 1280, 1024, 1000 và 390px: không tràn ngang, các mục desktop cao 40px và không xuống dòng. `pnpm lint`, `pnpm test` (12 file/90 test) và `pnpm run build` đều đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `NavLink`, Tailwind responsive utilities, Lucide icons, ARIA labels, Playwright Chromium, ESLint, Vitest, TypeScript và Vite.
+- **Mục đích chức năng / việc đã làm**: Làm thanh điều hướng V2 dễ đọc và dùng ổn định trên desktop/tablet/mobile; giữ toàn bộ chức năng theo vai trò và tránh các nhãn tài khoản bị bẻ dòng như ảnh production.

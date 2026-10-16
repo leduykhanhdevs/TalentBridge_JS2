@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, Building2, FileText, KeyRound, LogIn, LogOut, Menu, MessageCircle, Search, ShieldCheck, User, UserPlus, X } from 'lucide-react'
+import { BriefcaseBusiness, Building2, FileText, Home, KeyRound, LogIn, LogOut, Menu, MessageCircle, Search, ShieldCheck, User, UserPlus, X } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
@@ -69,9 +69,9 @@ export function MainLayout() {
     return (
         <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
             <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-2xs">
-                <div className="mx-auto flex min-h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-16 w-full max-w-[1200px] items-center gap-3 px-4 sm:px-6 lg:px-8">
                     <NavLink
-                        className="flex items-center gap-3 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+                        className="flex shrink-0 items-center gap-3 transition-transform hover:-translate-y-0.5 active:translate-y-0"
                         end
                         to="/"
                     >
@@ -83,22 +83,23 @@ export function MainLayout() {
                             <span className="block text-base font-bold tracking-tight text-slate-900">
                                 TalentBridge
                             </span>
-                            <span className="hidden sm:inline-block bento-badge bg-amber-100 text-amber-950 text-[10px]">
+                            <span className="hidden shrink-0 whitespace-nowrap bento-badge bg-amber-100 text-amber-950 text-[10px] sm:inline-block">
                                 ATS 2026
                             </span>
                         </span>
                     </NavLink>
 
                     {/* Bento Header Right Cluster */}
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
                         {/* Bento Navigation Dock */}
                         <nav
                             aria-label="Điều hướng chính"
-                            className="hidden items-center rounded-xl border border-slate-200/60 bg-slate-100/80 p-1 shadow-2xs backdrop-blur-xs lg:flex"
+                            className="hidden shrink-0 flex-nowrap items-center gap-0.5 rounded-xl border border-slate-200/60 bg-slate-100/80 p-1 shadow-2xs backdrop-blur-xs lg:flex"
                         >
                             <NavLink
+                                aria-label="Trang chủ"
                                 className={({ isActive }) =>
-                                    `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                    `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                         isActive
                                             ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                             : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -107,12 +108,14 @@ export function MainLayout() {
                                 end
                                 to="/"
                             >
-                                <span>Trang chủ</span>
+                                <Home aria-hidden="true" className="xl:hidden" size={14} />
+                                <span className="hidden xl:inline">Trang chủ</span>
                             </NavLink>
 
                             <NavLink
+                                aria-label="Việc làm"
                                 className={({ isActive }) =>
-                                    `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                    `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                         isActive
                                             ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                             : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -120,13 +123,14 @@ export function MainLayout() {
                                 }
                                 to="/jobs"
                             >
-                                <Search size={14} />
-                                <span>Việc làm</span>
+                                <Search aria-hidden="true" size={14} />
+                                <span className="hidden xl:inline">Việc làm</span>
                             </NavLink>
 
                             <NavLink
+                                aria-label="Trợ lý"
                                 className={({ isActive }) =>
-                                    `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                    `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                         isActive
                                             ? 'bg-white text-indigo-700 shadow-2xs border-slate-200/60'
                                             : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -135,14 +139,15 @@ export function MainLayout() {
                                 to="/assistant"
                             >
                                 <MessageCircle aria-hidden="true" size={14} />
-                                <span>Trợ lý</span>
+                                <span className="hidden xl:inline">Trợ lý</span>
                             </NavLink>
 
                             {isCandidate && (
                                 <>
                                     <NavLink
+                                        aria-label="Hồ sơ TopCV"
                                         className={({ isActive }) =>
-                                            `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                            `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                                 isActive
                                                     ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                                     : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -150,13 +155,14 @@ export function MainLayout() {
                                         }
                                         to="/candidate/profile"
                                     >
-                                        <User size={14} />
-                                        <span>Hồ sơ TopCV</span>
+                                        <User aria-hidden="true" size={14} />
+                                        <span className="hidden xl:inline">Hồ sơ TopCV</span>
                                     </NavLink>
 
                                     <NavLink
+                                        aria-label="Đơn ứng tuyển"
                                         className={({ isActive }) =>
-                                            `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                            `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                                 isActive
                                                     ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                                     : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -164,16 +170,17 @@ export function MainLayout() {
                                         }
                                         to="/candidate/applications"
                                     >
-                                        <FileText size={14} />
-                                        <span>Đơn ứng tuyển</span>
+                                        <FileText aria-hidden="true" size={14} />
+                                        <span className="hidden xl:inline">Đơn ứng tuyển</span>
                                     </NavLink>
                                 </>
                             )}
 
                             {isRecruiter && (
                                 <NavLink
+                                    aria-label="Tuyển dụng"
                                     className={({ isActive }) =>
-                                        `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                        `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                             isActive
                                                 ? 'bg-white text-emerald-700 shadow-2xs border-slate-200/60'
                                                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -181,15 +188,16 @@ export function MainLayout() {
                                     }
                                     to="/recruiter/profile"
                                 >
-                                    <Building2 size={14} />
-                                    <span>Tuyển dụng</span>
+                                    <Building2 aria-hidden="true" size={14} />
+                                    <span className="hidden xl:inline">Tuyển dụng</span>
                                 </NavLink>
                             )}
 
                             {isAdmin && (
                                 <NavLink
+                                    aria-label="Quản trị"
                                     className={({ isActive }) =>
-                                        `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
+                                        `inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all xl:px-2.5 xl:text-xs ${
                                             isActive
                                                 ? 'bg-white text-blue-800 shadow-2xs border-slate-200/60'
                                                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -197,59 +205,59 @@ export function MainLayout() {
                                     }
                                     to="/admin/candidates"
                                 >
-                                    <ShieldCheck size={14} />
-                                    <span>Quản trị</span>
+                                    <ShieldCheck aria-hidden="true" size={14} />
+                                    <span className="hidden xl:inline">Quản trị</span>
                                 </NavLink>
                             )}
                         </nav>
 
                         {/* Bento User Control Hub (When Authenticated) */}
                         {authenticated && user ? (
-                            <div className="hidden items-center rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs lg:flex">
+                            <div className="hidden shrink-0 items-center gap-1 rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xs lg:flex">
                                 {/* User Identity Chip */}
-                                <div className="flex items-center gap-2 pl-1.5 pr-2 py-0.5">
-                                    <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-tr from-blue-700 to-blue-600 text-[11px] font-bold text-white shadow-2xs">
+                                <div role="group" aria-label={`${displayName}, ${userRoleBadge.label}`} title={displayName} className="flex min-w-0 items-center gap-2 pl-1.5 pr-2 py-0.5">
+                                    <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-lg bg-gradient-to-tr from-blue-700 to-blue-600 text-[11px] font-bold text-white shadow-2xs">
                                         {getInitials(displayName)}
                                     </span>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="max-w-[120px] truncate text-xs font-semibold text-slate-850 sm:max-w-none">
+                                    <div className="hidden min-w-0 items-center gap-1.5 xl:flex">
+                                        <span className="max-w-[108px] truncate text-xs font-semibold text-slate-850">
                                             {displayName}
                                         </span>
-                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold border ${userRoleBadge.className}`}>
+                                        <span className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${userRoleBadge.className}`}>
                                             {userRoleBadge.label}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Micro Divider */}
-                                <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+                                <div className="mx-0.5 h-5 w-px bg-slate-200/80" />
 
                                 {/* Change Password Action */}
                                 <button
-                                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-blue-700 hover:bg-blue-50/70 transition-colors"
+                                    aria-label="Đổi mật khẩu"
+                                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-blue-50/70 hover:text-blue-700"
                                     onClick={() => setIsChangePasswordOpen(true)}
                                     title="Đổi mật khẩu"
                                     type="button"
                                 >
-                                    <KeyRound size={13} />
-                                    <span className="hidden md:inline">Đổi mật khẩu</span>
+                                    <KeyRound aria-hidden="true" size={15} />
                                 </button>
 
                                 {/* Logout Action */}
                                 <button
-                                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                    aria-label="Đăng xuất"
+                                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-600"
                                     onClick={handleLogout}
                                     title="Đăng xuất"
                                     type="button"
                                 >
-                                    <LogOut size={13} />
-                                    <span className="hidden sm:inline">Đăng xuất</span>
+                                    <LogOut aria-hidden="true" size={15} />
                                 </button>
                             </div>
                         ) : (
-                            <div className="hidden items-center gap-2 lg:flex">
+                            <div className="hidden shrink-0 items-center gap-2 lg:flex">
                                 <NavLink
-                                    className="btn-bento-secondary text-xs sm:text-sm py-1.5 px-3"
+                                    className="btn-bento-secondary shrink-0 whitespace-nowrap px-3 py-2 text-xs"
                                     to="/login"
                                 >
                                     <LogIn aria-hidden="true" size={15} />
@@ -257,7 +265,7 @@ export function MainLayout() {
                                 </NavLink>
 
                                 <NavLink
-                                    className="btn-bento-primary text-xs sm:text-sm py-1.5 px-3"
+                                    className="btn-bento-primary shrink-0 whitespace-nowrap px-3 py-2 text-xs"
                                     to="/register"
                                 >
                                     <UserPlus aria-hidden="true" size={15} />
@@ -270,7 +278,7 @@ export function MainLayout() {
                             aria-controls="mobile-navigation"
                             aria-expanded={isMobileNavOpen}
                             aria-label={isMobileNavOpen ? 'Đóng menu' : 'Mở menu'}
-                            className="inline-flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 lg:hidden"
+                            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 lg:hidden"
                             onClick={() => setIsMobileNavOpen((open) => !open)}
                             type="button"
                         >
