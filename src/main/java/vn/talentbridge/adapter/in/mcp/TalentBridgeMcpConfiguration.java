@@ -34,6 +34,9 @@ import java.util.Map;
 @Configuration
 public class TalentBridgeMcpConfiguration {
     private static final int MAX_SEARCH_LIMIT = 20;
+    private static final int MAX_QUERY_LENGTH = 1_000;
+    private static final int MAX_SEARCH_TEXT_LENGTH = 100;
+    private static final int MAX_NOTE_LENGTH = 500;
 
     @Bean
     McpJsonMapper mcpJsonMapper(ObjectMapper objectMapper) {
@@ -74,8 +77,8 @@ public class TalentBridgeMcpConfiguration {
                         "limit", integerSchema("Số lượng kết quả (1-20), mặc định 5")), List.of())),
                         (exchange, request) -> invoke(exchange, () -> {
                             Map<String, Object> args = request.arguments();
-                            String keyword = optionalText(args, "keyword");
-                            String city = optionalText(args, "city");
+                            String keyword = optionalText(args, "keyword", MAX_SEARCH_TEXT_LENGTH);
+                            String city = optionalText(args, "city", MAX_SEARCH_TEXT_LENGTH);
                             int limit = optionalInteger(args, "limit", 5);
                             if (limit < 1 || limit > MAX_SEARCH_LIMIT) {
                                 throw new IllegalArgumentException("limit phải từ 1 đến 20.");
@@ -106,21 +109,26 @@ public class TalentBridgeMcpConfiguration {
                         "jobId", integerSchema("Mã tin tuyển dụng"),
                         "applicationId", integerSchema("Mã đơn ứng tuyển"),
                         "stage", stringSchema("Giai đoạn mới"),
-                        "note", stringSchema("Ghi chú tùy chọn")), List.of("jobId", "applicationId", "stage"))),
+                        "note", stringSchema("Ghi chú tùy chọn, tối đa 500 ký tự"),
+                        "confirm", booleanSchema("Bắt buộc true để xác nhận ghi thay đổi")), List.of("jobId", "applicationId", "stage", "confirm"))),
                         (exchange, request) -> invoke(exchange, () -> {
                             Map<String, Object> args = request.arguments();
+                            if (!requiredBoolean(args, "confirm")) {
+                                throw new IllegalArgumentException("Thao tác ghi cần confirm=true để xác nhận.");
+                            }
                             JobApplicantResult result = mcpUseCase.updateApplicationStage(
                                     recruiterId(exchange), requiredLong(args, "jobId"),
-                                    requiredLong(args, "applicationId"), requiredText(args, "stage"),
-                                    optionalText(args, "note"));
+                                    requiredLong(args, "applicationId"), requiredText(args, "stage", 40),
+                                    optionalText(args, "note", MAX_NOTE_LENGTH));
                             return json(objectMapper, result);
                         }))
                 .toolCall(tool("talentbridge_search_help", "Tìm hướng dẫn đã được kiểm duyệt về quy trình và chức năng TalentBridge. Chỉ đọc tài liệu hướng dẫn; không truy cập dữ liệu riêng.", objectSchema(Map.of(
                         "query", stringSchema("Câu hỏi về cách sử dụng TalentBridge"),
                         "limit", integerSchema("Số kết quả (1-5), mặc định 3")), List.of("query"))),
                         (exchange, request) -> invoke(exchange, () -> {
-                            String query = requiredText(request.arguments(), "query");
+                            String query = requiredText(request.arguments(), "query", MAX_QUERY_LENGTH);
                             int limit = optionalInteger(request.arguments(), "limit", 3);
+                            if (limit < 1 || limit > 5) throw new IllegalArgumentException("limit phải từ 1 đến 5.");
                             List<TalentBridgeKnowledgeEntry> entries = knowledgeUseCase.search(query, limit);
                             return json(objectMapper, entries);
                         }))
@@ -155,6 +163,10 @@ public class TalentBridgeMcpConfiguration {
         return Map.of("type", "integer", "description", description);
     }
 
+    private Map<String, Object> booleanSchema(String description) {
+        return Map.of("type", "boolean", "description", description);
+    }
+
     private String json(ObjectMapper objectMapper, Object value) throws JsonProcessingException {
         return objectMapper.writeValueAsString(value);
     }
@@ -181,16 +193,36 @@ public class TalentBridgeMcpConfiguration {
     }
 
     private String requiredText(Map<String, Object> arguments, String field) {
-        String value = optionalText(arguments, field);
+        return requiredText(arguments, field, MAX_QUERY_LENGTH);
+    }
+
+    private String requiredText(Map<String, Object> arguments, String field, int maxLength) {
+        String value = optionalText(arguments, field, maxLength);
         if (value.isBlank()) throw new IllegalArgumentException(field + " là bắt buộc.");
         return value;
     }
 
     private String optionalText(Map<String, Object> arguments, String field) {
+        return optionalText(arguments, field, MAX_QUERY_LENGTH);
+    }
+
+    private String optionalText(Map<String, Object> arguments, String field, int maxLength) {
         Object value = arguments.get(field);
         if (value == null) return "";
         if (!(value instanceof String text)) throw new IllegalArgumentException(field + " phải là chuỗi.");
-        return text.trim();
+        String trimmed = text.trim();
+        if (trimmed.length() > maxLength) {
+            throw new IllegalArgumentException(field + " vượt quá giới hạn " + maxLength + " ký tự.");
+        }
+        return trimmed;
+    }
+
+    private boolean requiredBoolean(Map<String, Object> arguments, String field) {
+        Object value = arguments.get(field);
+        if (!(value instanceof Boolean confirmation)) {
+            throw new IllegalArgumentException(field + " phải là true hoặc false.");
+        }
+        return confirmation;
     }
 
     private Long requiredLong(Map<String, Object> arguments, String field) {

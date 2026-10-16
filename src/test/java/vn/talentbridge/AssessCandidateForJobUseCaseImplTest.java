@@ -136,7 +136,7 @@ class AssessCandidateForJobUseCaseImplTest {
 
     private CandidateJobMatchResult matchResult() {
         return new CandidateJobMatchResult(JOB_ID, "Backend Developer", CANDIDATE_ID, "Candidate",
-                72.0, 0.75, 0.60, List.of("backend"), List.of("Java"), List.of(),
+                72.0, 0.75, 0.65, 0.60, List.of("backend"), List.of("Xác minh backend"), List.of("Java"), List.of(),
                 "CẦN ĐÁNH GIÁ THÊM", "Local matching", AiMatchingSource.DETERMINISTIC);
     }
 }

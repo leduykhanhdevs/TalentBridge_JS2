@@ -14,9 +14,9 @@ import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.core.application.port.in.MatchApplicantUseCase;
 
 /**
- * Controller cung cấp REST API đánh giá độ tương đồng giữa ứng viên và công việc
- * dựa trên phương pháp luận Tri-Vector RAG từ công trình SoftwareX 2025:
- * "Version 5.4.18 - AI-KM: Knowledge enhancement with RAG and workflow".
+ * REST API for transparent, advisory CV-to-job similarity.
+ * The project-defined three-vector lexical score is not an embedding model,
+ * hiring probability, or formula attributed to the SoftwareX AI-KM paper.
  */
 @Slf4j
 @RestController
