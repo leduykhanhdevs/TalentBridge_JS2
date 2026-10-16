@@ -57,6 +57,31 @@ const API_BASE_URL = (
     import.meta.env.VITE_API_BASE_URL || '/api/v1'
 ).replace(/\/$/, '')
 
+function fallbackHttpErrorMessage(
+    status: number,
+    action: 'đăng ký' | 'đăng nhập',
+): string {
+    if (status === 401 && action === 'đăng nhập') {
+        return 'Email hoặc mật khẩu không chính xác.'
+    }
+    if (status === 409 && action === 'đăng ký') {
+        return 'Email này đã được sử dụng.'
+    }
+    if (status === 429) {
+        return `Hệ thống đang giới hạn yêu cầu ${action} (HTTP 429). Vui lòng chờ một phút rồi thử lại.`
+    }
+    if (status === 404) {
+        return `Không tìm thấy API ${action} (HTTP 404). Hãy kiểm tra backend đang chạy đúng phiên bản.`
+    }
+    if (status === 400) {
+        return `Yêu cầu ${action} không hợp lệ (HTTP 400). Vui lòng kiểm tra lại thông tin.`
+    }
+    if (status >= 500) {
+        return `Backend gặp lỗi HTTP ${status} khi xử lý yêu cầu ${action}. Hãy dùng mã này để tra log.`
+    }
+    return `Yêu cầu ${action} thất bại (HTTP ${status}). Hãy dùng mã này để kiểm tra phản hồi backend.`
+}
+
 export async function registerCandidate(
     request: CandidateRegisterRequest,
 ): Promise<AuthResponse> {
@@ -88,10 +113,6 @@ export async function registerCandidate(
     }
 
     if (!response.ok) {
-        const defaultMessage =
-            response.status === 409
-                ? 'Email này đã được sử dụng.'
-                : 'Đăng ký không thành công. Vui lòng thử lại.'
         const fieldErrors =
             response.status === 400 && isValidationErrors(body?.data)
                 ? body.data
@@ -99,7 +120,7 @@ export async function registerCandidate(
 
         throw new AuthApiError(
             response.status,
-            body?.message || defaultMessage,
+            body?.message || fallbackHttpErrorMessage(response.status, 'đăng ký'),
             fieldErrors,
         )
     }
@@ -142,10 +163,6 @@ export async function loginUser(
     }
 
     if (!response.ok) {
-        const defaultMessage =
-            response.status === 401
-                ? 'Email hoặc mật khẩu không chính xác.'
-                : 'Đăng nhập không thành công. Vui lòng thử lại.'
         const fieldErrors =
             response.status === 400 && isValidationErrors(body?.data)
                 ? body.data
@@ -153,7 +170,7 @@ export async function loginUser(
 
         throw new AuthApiError(
             response.status,
-            body?.message || defaultMessage,
+            body?.message || fallbackHttpErrorMessage(response.status, 'đăng nhập'),
             fieldErrors,
         )
     }

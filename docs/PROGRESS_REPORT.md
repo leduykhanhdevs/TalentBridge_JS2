@@ -563,3 +563,12 @@
   - Figma MCP Starter đã hết lượt gọi trong phiên; đối chiếu bằng ảnh thiết kế được cung cấp và ảnh render local, chưa xác nhận parity từng layer/nút với mọi frame trong Figma.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React + TypeScript + Tailwind CSS; CSS Grid responsive; Playwright, Vitest, ESLint, TypeScript/Vite; backend E2E trên H2 cô lập.
 - **Mục đích chức năng / việc đã làm**: Đưa các luồng chính về cùng hệ Sapphire & Graphite V2, giảm sai khác bố cục desktop/mobile và ngăn tái xuất hiện lỗi cột thao tác bị cắt mà không đổi hợp đồng backend.
+## HIỂN THỊ MÃ LỖI ĐĂNG NHẬP VÀ ĐĂNG KÝ — 16/10/2026
+- **Đã làm được gì**:
+  - Cập nhật fallback của API xác thực để hiển thị mã HTTP khi backend/proxy trả lỗi không kèm thông báo chuẩn; thêm hướng dẫn rõ cho HTTP 400, 404, 409, 429 và 5xx.
+  - Thêm test cho phản hồi HTML 502 của gateway và phản hồi 429 thiếu message; bảo toàn ưu tiên hiển thị thông điệp backend khi có.
+  - Bản sửa được cô lập trên nhánh phát hành riêng để không đưa các thay đổi backend/AI chưa liên quan vào production; xác minh `pnpm test` đạt 92/92, `pnpm lint`, `pnpm build` và `git diff --check` đều đạt. Đang chờ CI/review PR trước khi deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - React/TypeScript Fetch API, kiểu lỗi `AuthApiError`, Vitest; tích hợp với envelope `ApiResponse` hiện có của Spring Boot.
+- **Mục đích chức năng / việc đã làm**:
+  - Giúp phân biệt lỗi dữ liệu/tài khoản với lỗi API, gateway hoặc giới hạn tốc độ để chẩn đoán đăng nhập/đăng ký mà không lộ thông tin xác thực.
