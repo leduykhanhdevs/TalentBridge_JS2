@@ -545,3 +545,21 @@
   - `pnpm run lint`, `pnpm run test` (90/90) và `pnpm run build` đều đạt; không thay đổi backend hoặc deploy.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `useLocation` kiểm tra pathname trong `MainLayout`; render có điều kiện trong React; Vitest, ESLint, TypeScript/Vite và kiểm tra DOM qua trình duyệt local.
 - **Mục đích chức năng / việc đã làm**: Tạo màn xác thực gọn, không có điều hướng gây phân tán; giữ trải nghiệm đăng nhập và trợ lý nhanh, không ảnh hưởng điều hướng ở các trang khác.
+
+## CHẨN ĐOÁN ĐĂNG NHẬP VÀ ĐĂNG KÝ LOCAL — 16/10/2026
+- **Đã làm được gì**:
+  - Xác nhận frontend `127.0.0.1:5175` gọi qua Vite proxy tới backend TalentBridge `127.0.0.1:8081`; `GET /api/v1/health` và đọc danh sách việc làm trả HTTP 200. Endpoint đăng ký/đăng nhập nhận đúng request thiếu dữ liệu và trả HTTP 400 validation; không gửi hay đọc payload người dùng.
+  - Xác nhận cổng 8080 hiện do ứng dụng `agent-demo` chiếm; frontend auth dùng cùng-origin `/api/v1`, nên không gọi nhầm ứng dụng này.
+  - Chạy kiểm thử Java 21 trên H2 cô lập: `AuthControllerTest` 11/11 và `RegisterRoleValidationIntegrationTest` 3/3 đạt. Lần chạy đầu dùng nhầm Java 8; đã chuyển sang JDK 21 và chạy lại thành công.
+  - Backend local hiện chạy profile `local` với H2 file, không phải RDS. Tài khoản chỉ tồn tại trên RDS có thể không đăng nhập được ở localhost. Chưa bắt được HTTP status của lần gửi form thật và chưa xác minh ghi trên H2 file đang chạy; nguyên nhân riêng của lần thử đó còn mở.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Spring Security, Vite proxy, H2, Maven Wrapper, JDK 21, JUnit, MockMvc và Spring Boot integration tests.
+- **Mục đích chức năng / việc đã làm**: Phân biệt lỗi backend ngừng hoạt động, sai proxy và khác môi trường DB; xác nhận luồng auth trong code hoạt động trên DB kiểm thử và khoanh vùng phần còn cần mã HTTP của request thật.
+
+## ĐỒNG BỘ FE LOCAL THEO FIGMA V2 VÀ KIỂM TRA RESPONSIVE — 16/10/2026
+- **Đã làm được gì**:
+  - Rà giao diện công khai, ứng viên, nhà tuyển dụng và quản trị trên desktop/mobile; đồng bộ lại chi tiết việc làm, danh sách tin nhà tuyển dụng và hồ sơ ứng viên theo bố cục V2, giữ nguyên API, phân quyền, dữ liệu và thao tác hiện có.
+  - Sửa bảng ứng viên quản trị để hiển thị đủ cột thao tác ở desktop; thêm kiểm tra Playwright cho bố cục hồ sơ hai cột và vị trí nút thao tác.
+  - Xác minh `npm run lint`, `npm run build`, `npm run test` (90/90), E2E API (28/28) và E2E UI (7/7) đạt; kiểm tra viewport 360/555/1280px và lưu ảnh QA riêng tại `artifacts/roleplay-parity-final`.
+  - Figma MCP Starter đã hết lượt gọi trong phiên; đối chiếu bằng ảnh thiết kế được cung cấp và ảnh render local, chưa xác nhận parity từng layer/nút với mọi frame trong Figma.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React + TypeScript + Tailwind CSS; CSS Grid responsive; Playwright, Vitest, ESLint, TypeScript/Vite; backend E2E trên H2 cô lập.
+- **Mục đích chức năng / việc đã làm**: Đưa các luồng chính về cùng hệ Sapphire & Graphite V2, giảm sai khác bố cục desktop/mobile và ngăn tái xuất hiện lỗi cột thao tác bị cắt mà không đổi hợp đồng backend.

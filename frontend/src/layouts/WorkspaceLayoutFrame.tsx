@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, BriefcaseBusiness, Home, KeyRound, LogOut, Menu, MessageCircle, Search, X, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, BriefcaseBusiness, KeyRound, LogOut, Menu, X, type LucideIcon } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { ChangePasswordModal } from '../features/auth/components/ChangePasswordModal'
 import { logoutUser } from '../features/auth/authApi'
@@ -37,57 +37,49 @@ export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigation
     }
 
     return (
-        <div className="min-h-screen bg-bento-canvas text-slate-900">
-            <header className="sticky top-0 z-40 h-[68px] border-b border-slate-200 bg-white md:h-[72px]">
-                <div className="mx-auto flex h-full w-full max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-6 xl:px-0">
-                    <NavLink aria-label="TalentBridge — Trang chủ" className="flex shrink-0 items-center gap-3" end to="/">
-                        <span className="grid size-10 place-items-center rounded-xl bg-blue-700 text-white">
-                            <BriefcaseBusiness aria-hidden="true" size={20} />
+        <div className="min-h-screen bg-[#F5F7FB] text-[#172033]">
+            <header className="sticky top-0 z-40 h-16 border-b border-slate-200 bg-white md:h-[84px]">
+                <div className="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6 lg:px-8">
+                    <NavLink aria-label="TalentBridge — Trang chủ" className="flex w-fit shrink-0 items-center gap-2.5" end to="/">
+                        <span className="grid size-9 place-items-center rounded-lg bg-[#1D4ED8] text-white">
+                            <BriefcaseBusiness aria-hidden="true" size={18} />
                         </span>
-                        <span className="text-base font-bold tracking-tight text-slate-900">TalentBridge</span>
+                        <span className="text-base font-bold tracking-tight text-[#172033]">TalentBridge</span>
                     </NavLink>
 
-                    <nav aria-label="Điều hướng chính" className="hidden items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 lg:flex">
-                        {[
-                            { to: '/', label: 'Trang chủ', icon: Home, end: true },
-                            { to: '/jobs', label: 'Việc làm', icon: Search },
-                            { to: '/assistant', label: 'Trợ lý', icon: MessageCircle },
-                        ].map(({ to, label, icon: Icon, end }) => (
-                            <NavLink
-                                className={({ isActive }) => `inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-[13px] font-semibold transition-colors ${isActive ? 'border-slate-200 bg-white text-slate-900 shadow-xs' : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-blue-700'}`}
-                                end={end}
-                                key={to}
-                                to={to}
-                            >
-                                <Icon aria-hidden="true" size={15} />{label}
-                            </NavLink>
-                        ))}
-                    </nav>
+                    <p className="hidden text-sm font-semibold text-slate-700 sm:block">Không gian làm việc</p>
 
-                    <div className="hidden min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 md:flex">
-                        <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-700 text-xs font-bold text-white">{initialsFor(displayName)}</span>
-                        <span className="max-w-[150px] truncate text-sm font-semibold text-slate-800">{displayName}</span>
-                        <span className="inline-flex shrink-0 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-700">{roleLabel}</span>
-                        <span aria-hidden="true" className="mx-1 h-6 w-px bg-slate-200" />
-                        <button aria-label="Đổi mật khẩu" className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-blue-700" onClick={() => setIsChangePasswordOpen(true)} title="Đổi mật khẩu" type="button"><KeyRound aria-hidden="true" size={16} /></button>
-                        <button aria-label="Đăng xuất" className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-blue-700" onClick={() => void handleLogout()} title="Đăng xuất" type="button"><LogOut aria-hidden="true" size={16} /></button>
+                    <div className="flex justify-end">
+                        <span className="hidden items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 sm:inline-flex">
+                            {roleLabel}
+                        </span>
+                        <button
+                            aria-controls="workspace-navigation"
+                            aria-expanded={isMenuOpen}
+                            aria-label={isMenuOpen ? 'Đóng điều hướng' : 'Mở điều hướng'}
+                            className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 md:hidden"
+                            onClick={() => setIsMenuOpen((open) => !open)}
+                            type="button"
+                        >
+                            {isMenuOpen ? <X aria-hidden="true" size={19} /> : <Menu aria-hidden="true" size={19} />}
+                        </button>
                     </div>
-
-                    <button aria-controls="workspace-navigation" aria-expanded={isMenuOpen} aria-label={isMenuOpen ? 'Đóng điều hướng' : 'Mở điều hướng'} className="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 md:hidden" onClick={() => setIsMenuOpen((open) => !open)} type="button">
-                        {isMenuOpen ? <X aria-hidden="true" size={19} /> : <Menu aria-hidden="true" size={19} />}
-                    </button>
                 </div>
             </header>
 
-            <div className="relative min-h-[calc(100dvh-132px)] md:min-h-[calc(100dvh-136px)] md:grid md:grid-cols-[232px_minmax(0,1fr)]">
-                {isMenuOpen && <button aria-label="Đóng điều hướng" className="fixed inset-x-0 bottom-0 top-[68px] z-20 bg-slate-950/20 md:hidden" onClick={() => setIsMenuOpen(false)} type="button" />}
-                <aside id="workspace-navigation" className={`${isMenuOpen ? 'fixed inset-y-[68px] left-0 z-30 flex w-[min(86vw,288px)] shadow-xl' : 'hidden'} flex-col border-r border-slate-200 bg-white px-3 py-6 md:sticky md:top-[72px] md:flex md:h-[calc(100dvh-136px)] md:w-[232px] md:self-start md:shadow-none`}>
+            <div className="relative min-h-[calc(100dvh-128px)] md:grid md:grid-cols-[232px_minmax(0,1fr)]">
+                {isMenuOpen && <button aria-label="Đóng điều hướng" className="fixed inset-x-0 bottom-0 top-16 z-20 bg-slate-950/20 md:hidden" onClick={() => setIsMenuOpen(false)} type="button" />}
+
+                <aside
+                    id="workspace-navigation"
+                    className={`${isMenuOpen ? 'fixed inset-y-16 left-0 z-30 flex w-[min(86vw,288px)] shadow-xl' : 'hidden'} flex-col border-r border-slate-200 bg-white px-3 py-5 md:sticky md:top-[84px] md:flex md:h-[calc(100dvh-148px)] md:w-[232px] md:self-start md:shadow-none`}
+                >
                     <p className="px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{sectionLabel}</p>
                     <nav aria-label={`Điều hướng ${sectionLabel.toLowerCase()}`} className="mt-4 grid gap-1">
                         {navigationItems.map(({ to, label, icon: Icon }) => (
                             <NavLink
                                 aria-label={label}
-                                className={({ isActive }) => `flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                className={({ isActive }) => `flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-[#EFF4FF] text-[#1D4ED8]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                 key={to}
                                 onClick={() => setIsMenuOpen(false)}
                                 title={label}
@@ -100,16 +92,31 @@ export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigation
                     </nav>
 
                     <div className="mt-auto border-t border-slate-200 px-3 pt-4">
-                        <NavLink className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-blue-700" to="/">
+                        <div className="mb-3 flex min-w-0 items-center gap-2.5">
+                            <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#EFF4FF] text-[11px] font-bold text-[#1D4ED8]">{initialsFor(displayName)}</span>
+                            <div className="min-w-0">
+                                <p className="truncate text-xs font-semibold text-slate-800" title={displayName}>{displayName}</p>
+                                <p className="mt-0.5 text-[11px] text-slate-500">{roleLabel}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button aria-label="Đổi mật khẩu" className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]" onClick={() => setIsChangePasswordOpen(true)} title="Đổi mật khẩu" type="button">
+                                <KeyRound aria-hidden="true" size={15} />
+                            </button>
+                            <button aria-label="Đăng xuất" className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]" onClick={() => void handleLogout()} title="Đăng xuất" type="button">
+                                <LogOut aria-hidden="true" size={15} />
+                            </button>
+                        </div>
+                        <NavLink className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-[#1D4ED8]" to="/">
                             <ArrowLeft aria-hidden="true" size={14} />Về TalentBridge
                         </NavLink>
-                        <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
-                            <span className="size-2 rounded-full bg-emerald-500" />Phiên làm việc an toàn
-                        </div>
+                        <p className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
+                            <span className="size-1.5 rounded-full bg-emerald-500" />Phiên làm việc an toàn
+                        </p>
                     </div>
                 </aside>
 
-                <main className="min-w-0 px-5 py-8 sm:px-7 md:px-8 lg:px-10 lg:py-10">
+                <main className="min-w-0 px-4 py-7 sm:px-6 md:px-8 lg:px-10 lg:py-9">
                     <div className="mx-auto w-full max-w-[1176px]">
                         <Outlet />
                     </div>
@@ -118,17 +125,8 @@ export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigation
 
             <footer className="flex min-h-16 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 text-xs text-slate-600 sm:px-8">
                 <span>TalentBridge · Kết nối nghề nghiệp có trách nhiệm</span>
-                <span className="hidden font-semibold text-slate-500 sm:inline">{roleLabel}</span>
+                <span className="hidden font-semibold text-slate-500 sm:inline">TalentBridge ATS</span>
             </footer>
-
-            {isMenuOpen && <div className="fixed bottom-0 left-0 z-40 w-[min(86vw,288px)] border-t border-slate-200 bg-white p-4 md:hidden">
-                <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{roleLabel}</p>
-                <div className="mt-3 flex gap-2">
-                    <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700" onClick={() => { setIsMenuOpen(false); setIsChangePasswordOpen(true) }} type="button"><KeyRound aria-hidden="true" size={14} />Đổi mật khẩu</button>
-                    <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700" onClick={() => void handleLogout()} type="button"><LogOut aria-hidden="true" size={14} />Đăng xuất</button>
-                </div>
-            </div>}
 
             <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
         </div>

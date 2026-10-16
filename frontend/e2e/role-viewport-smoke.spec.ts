@@ -18,7 +18,7 @@ const actors = [
         email: 'recruiter@fpt.com',
         password: 'Password123!',
         route: '/recruiter/jobs',
-        heading: 'Quản lý tin tuyển dụng',
+        heading: 'Tin tuyển dụng của doanh nghiệp',
         routes: ['/recruiter/profile', '/recruiter/jobs', '/recruiter/jobs/1/applicants', '/recruiter/statistics', '/recruiter/company', '/recruiter/join-company', '/recruiter/peer-approval'],
     },
     {
@@ -49,19 +49,20 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         ])
         await page.goto(`${baseURL}${actor.route}`)
         await expect(page.getByRole('heading', { name: actor.heading, exact: false }).first()).toBeVisible()
+        if (actor.name === 'candidate') {
+            await expect(page.getByRole('heading', { name: 'Thể hiện năng lực bằng trải nghiệm', exact: true })).toBeVisible()
+            await expect(page.getByRole('complementary')).toContainText(actor.heading)
+            await expect(page.getByRole('region', { name: 'Nội dung hồ sơ' })).toBeVisible()
+        }
         if (actor.name === 'recruiter') {
-            const token = await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))
-            const stats = await page.evaluate(async (accessToken) => {
-                const response = await fetch('/api/v1/recruiters/my-jobs/stats', {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                })
-                const body = await response.json()
-                return body.data as { total: number; active: number }
-            }, token)
-            await expect(page.getByText('Tổng tin tuyển dụng', { exact: true }).locator('xpath=../..'))
-                .toContainText(String(stats.total))
-            await expect(page.getByText('Đang tuyển dụng', { exact: true }).locator('xpath=../..'))
-                .toContainText(String(stats.active))
+            const statusTabs = page.getByRole('navigation', { name: 'Lọc tin theo trạng thái' })
+            await expect(statusTabs.getByRole('button', { name: 'Tất cả' })).toHaveAttribute('aria-pressed', 'true')
+            await expect(statusTabs.getByRole('button', { name: 'Đang mở' })).toBeVisible()
+            await expect(statusTabs.getByRole('button', { name: 'Chờ duyệt' })).toBeVisible()
+            await expect(statusTabs.getByRole('button', { name: 'Bản nháp' })).toBeVisible()
+            await expect(page.getByText('Tổng tin tuyển dụng', { exact: true })).toHaveCount(0)
+            await page.getByRole('button', { name: 'Tìm tin tuyển dụng' }).click()
+            await expect(page.getByRole('searchbox', { name: 'Tìm theo tiêu đề, địa điểm hoặc kỹ năng' })).toBeVisible()
         }
         if (actor.name === 'admin') {
             await expect(page.getByRole('button', { name: 'Duyệt' }).first()).toBeVisible()
@@ -123,6 +124,9 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
             for (const width of [360, 1280]) {
                 await page.setViewportSize({ width, height: 900 })
+                if (actor.name === 'admin' && route === '/admin/candidates' && width === 1280) {
+                    await expect(page.getByRole('button', { name: 'Khóa', exact: true }).first()).toBeInViewport()
+                }
                 const layout = await page.evaluate(() => ({
                     documentWidth: document.documentElement.scrollWidth,
                     offenders: Array.from(document.querySelectorAll('body *'))

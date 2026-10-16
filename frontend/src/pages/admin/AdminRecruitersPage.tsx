@@ -174,7 +174,7 @@ export function AdminRecruitersPage() {
             )}
 
             {/* 2. Bento Stat Cards Grid (4 Thẻ Chỉ Số Bento với Soft 3D Badges) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div aria-hidden="true" className="hidden">
                 {/* Bento Stat Card 1: Tổng HR */}
                 <div className="bento-card group p-5 sm:p-6 border border-slate-200/90 bg-white hover:border-blue-300/80 transition-all duration-300 shadow-sm">
                     <div className="flex items-start justify-between">

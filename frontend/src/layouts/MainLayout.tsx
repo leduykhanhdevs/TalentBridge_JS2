@@ -30,7 +30,9 @@ function initialsFor(name: string) {
 
 export function MainLayout() {
     const navigate = useNavigate()
-    const isLoginPage = useLocation().pathname === '/login'
+    const pathname = useLocation().pathname
+    const isLoginPage = pathname === '/login'
+    const isRegisterPage = pathname === '/register'
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
@@ -86,7 +88,7 @@ export function MainLayout() {
         <div className="flex min-h-screen flex-col bg-bento-canvas text-slate-900">
             {!isLoginPage && (
             <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
-                <div className="mx-auto flex h-[72px] w-full max-w-[1200px] items-center justify-between gap-3 px-4 sm:px-6 xl:px-0">
+                <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:h-[72px] sm:px-6 xl:h-[84px] xl:px-0">
                     <NavLink aria-label="TalentBridge — Trang chủ" className="flex shrink-0 items-center gap-2.5" end to="/">
                         <span className="grid size-9 place-items-center rounded-lg bg-blue-700 text-white">
                             <BriefcaseBusiness aria-hidden="true" size={18} />
@@ -94,7 +96,7 @@ export function MainLayout() {
                         <span className="text-base font-bold tracking-tight text-slate-900">TalentBridge</span>
                     </NavLink>
 
-                    <nav aria-label="Điều hướng chính" className="hidden min-w-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 xl:flex">
+                    {!isRegisterPage && <nav aria-label="Điều hướng chính" className="hidden min-w-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 xl:flex">
                         {navigationLinks.map(({ to, label, icon: Icon, end }) => (
                             <NavLink
                                 aria-label={label}
@@ -111,7 +113,7 @@ export function MainLayout() {
                                 <span>{label}</span>
                             </NavLink>
                         ))}
-                    </nav>
+                    </nav>}
 
                     {authenticated && user ? (
                         <div className="hidden min-w-0 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 xl:flex">
@@ -139,7 +141,14 @@ export function MainLayout() {
                         </div>
                     )}
 
-                    <button
+                    {isRegisterPage && !authenticated && (
+                        <div className="flex shrink-0 items-center gap-2 xl:hidden">
+                            <NavLink className="btn-bento-secondary h-9 px-3 text-xs" to="/login">Đăng nhập</NavLink>
+                            <span className="btn-bento-primary h-9 px-3 text-xs" aria-current="page">Đăng ký</span>
+                        </div>
+                    )}
+
+                    {!isRegisterPage && <button
                         aria-controls="mobile-navigation"
                         aria-expanded={isMobileNavOpen}
                         aria-label={isMobileNavOpen ? 'Đóng menu' : 'Mở menu'}
@@ -148,7 +157,7 @@ export function MainLayout() {
                         type="button"
                     >
                         {isMobileNavOpen ? <X aria-hidden="true" size={19} /> : <Menu aria-hidden="true" size={19} />}
-                    </button>
+                    </button>}
                 </div>
 
                 {isMobileNavOpen && (
@@ -193,7 +202,7 @@ export function MainLayout() {
             </main>
 
             <footer className="border-t border-slate-200 bg-white">
-                <div className="mx-auto flex min-h-16 w-full max-w-[1200px] flex-col justify-center gap-2 px-4 py-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:px-0">
+                <div className="mx-auto flex min-h-16 w-full max-w-[1280px] flex-col justify-center gap-2 px-4 py-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:px-0">
                     <span>TalentBridge · Kết nối nghề nghiệp có trách nhiệm</span>
                     <span className="font-medium text-slate-500">Thông tin tuyển dụng do doanh nghiệp cung cấp</span>
                 </div>

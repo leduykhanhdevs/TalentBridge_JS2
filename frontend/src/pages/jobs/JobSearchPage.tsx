@@ -10,7 +10,6 @@ import {
     Filter,
     MapPin,
     RefreshCw,
-    Search,
     SlidersHorizontal,
     TriangleAlert,
 } from 'lucide-react'
@@ -121,25 +120,18 @@ export function JobSearchPage() {
     const jobs = jobsQuery.data?.content ?? []
 
     return (
-        <main className="min-h-[calc(100vh-5.5rem)] bg-bento-canvas">
-            <section className="border-b border-slate-200 bg-white">
-                <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8 lg:py-9">
-                    <div className="flex items-start gap-4">
-                            <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-blue-700 text-white">
-                            <Search aria-hidden="true" size={23} />
-                        </span>
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Cơ hội nghề nghiệp</p>
-                            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">Tìm việc làm phù hợp</h1>
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                                Lọc cơ hội theo từ khóa, địa điểm, hình thức, kinh nghiệm và mức lương mong muốn.
-                            </p>
-                        </div>
-                    </div>
+        <main className="min-h-[calc(100vh-5.5rem)] bg-[#F5F7FB]">
+            <section>
+                <div className="mx-auto max-w-[1200px] px-4 pb-1 pt-7 sm:px-6 lg:px-8 lg:pt-8">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#1D4ED8]">Cơ hội nghề nghiệp</p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#172033] sm:text-[28px]">Tìm việc làm phù hợp</h1>
+                    <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                        Lọc cơ hội theo từ khóa, địa điểm, hình thức, kinh nghiệm và mức lương mong muốn.
+                    </p>
                 </div>
             </section>
 
-            <div className="mx-auto grid min-w-0 max-w-[1200px] grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
+            <div className="mx-auto grid min-w-0 max-w-[1200px] grid-cols-1 gap-6 px-4 pb-8 pt-5 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
                 <aside className="h-fit min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
                     <div className="flex items-center gap-2 text-slate-900">
                         <SlidersHorizontal aria-hidden="true" size={18} />
