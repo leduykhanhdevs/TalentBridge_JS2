@@ -353,7 +353,7 @@ export function RecruiterJobApplicantsPage() {
             )}
 
             {/* Quick Stage Tabs / Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div aria-label="Lọc theo vòng tuyển dụng" className="flex flex-wrap items-center gap-2" role="group">
                 <button
                     type="button"
                     onClick={() => setStageFilter('')}
@@ -542,9 +542,9 @@ export function RecruiterJobApplicantsPage() {
                                 key={app.id}
                                 className="bento-card p-5 transition hover:border-blue-200 hover:shadow-md"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,0.9fr)_minmax(0,2.1fr)] lg:items-start">
                                     {/* Left: Candidate Info */}
-                                    <div className="flex items-start gap-4">
+                                    <div className="flex min-w-0 items-start gap-4">
                                         {/* Avatar */}
                                         <div className="size-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-800 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                                             {app.candidateFullName
@@ -556,7 +556,7 @@ export function RecruiterJobApplicantsPage() {
                                                 .toUpperCase() || 'CV'}
                                         </div>
 
-                                        <div className="space-y-1.5">
+                                        <div className="min-w-0 space-y-1.5">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <h3 className="text-base font-bold text-slate-900">
                                                     {app.candidateFullName}
@@ -657,12 +657,12 @@ export function RecruiterJobApplicantsPage() {
                                     </div>
 
                                     {/* Right: Actions */}
-                                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0 shrink-0">
+                                    <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:justify-end lg:border-t-0 lg:pt-0">
                                         <button
                                             type="button"
                                             disabled={isAiMatching}
                                             onClick={() => void handleAiMatch(app)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-100 disabled:cursor-wait disabled:opacity-60 transition shadow-2xs"
+                                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60 transition shadow-2xs"
                                             title="Phân tích mức độ phù hợp giữa hồ sơ ứng viên và yêu cầu công việc"
                                         >
                                             <Sparkles size={13} />
@@ -1165,16 +1165,16 @@ export function RecruiterJobApplicantsPage() {
 
                         {isAiMatching && (
                             <div className="grid min-h-48 place-items-center text-sm font-medium text-slate-600" role="status">
-                                <span className="inline-flex items-center gap-2"><Sparkles className="animate-pulse text-violet-600" size={18} /> Đang phân tích hồ sơ và yêu cầu công việc...</span>
+                                <span className="inline-flex items-center gap-2"><Sparkles className="animate-pulse text-blue-700" size={18} /> Đang phân tích hồ sơ và yêu cầu công việc...</span>
                             </div>
                         )}
                         {aiMatchError && <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">{aiMatchError}</p>}
                         {aiMatchResult && (
                             <div className="mt-5 space-y-5">
-                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-violet-50 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-blue-50 p-4">
                                     <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Điểm tương đồng tham khảo</p>
-                                        <p className="mt-1 text-3xl font-bold text-violet-950">{aiMatchResult.matchPercentage.toFixed(1)}%</p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Điểm tương đồng tham khảo</p>
+                                        <p className="mt-1 text-3xl font-bold text-blue-950">{aiMatchResult.matchPercentage.toFixed(1)}%</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-bold text-slate-900">{aiMatchResult.recommendation}</p>
@@ -1236,17 +1236,17 @@ export function RecruiterJobApplicantsPage() {
                                     </div>
                                 )}
                                 {candidateAssessment && (
-                                    <section className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4" aria-label="Đánh giá tổng quan ứng viên">
+                                    <section className="rounded-xl border border-blue-100 bg-blue-50/70 p-4" aria-label="Đánh giá tổng quan ứng viên">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
-                                            <h4 className="text-sm font-bold text-indigo-950">Đánh giá tổng quan hồ sơ</h4>
-                                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-indigo-800">Độ hoàn thiện {candidateAssessment.profileCompletenessPercentage}%</span>
+                                            <h4 className="text-sm font-bold text-blue-950">Đánh giá tổng quan hồ sơ</h4>
+                                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-blue-800">Độ hoàn thiện {candidateAssessment.profileCompletenessPercentage}%</span>
                                         </div>
                                         <p className="mt-2 text-sm leading-6 text-slate-700">{candidateAssessment.candidateOverallAssessment}</p>
-                                        <p className="mt-2 text-xs leading-5 text-indigo-800">{getResumeAssessmentMessage(candidateAssessment.resumeAssessmentStatus)}</p>
+                                        <p className="mt-2 text-xs leading-5 text-blue-800">{getResumeAssessmentMessage(candidateAssessment.resumeAssessmentStatus)}</p>
                                         {candidateAssessment.missingProfileSections.length > 0 && (
                                             <p className="mt-2 text-xs leading-5 text-slate-600">Hồ sơ còn thiếu: {candidateAssessment.missingProfileSections.join(' · ')}</p>
                                         )}
-                                        <p className="mt-3 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-600">{candidateAssessment.advisoryNotice}</p>
+                                        <p className="mt-3 border-t border-blue-100 pt-3 text-[11px] leading-5 text-slate-600">{candidateAssessment.advisoryNotice}</p>
                                     </section>
                                 )}
                                 {aiMatchResult.matchingSource === 'DETERMINISTIC' && (

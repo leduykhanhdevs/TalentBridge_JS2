@@ -523,6 +523,47 @@
 - **Mục đích chức năng / việc đã làm**:
   - Đưa Sapphire & Graphite V2 vào `main` và Render production, vẫn giữ hành vi trợ lý; xác nhận qua unit, build, E2E và smoke test production đa vai trò/API.
 
+## SỬA LỖI HEADER RESPONSIVE V2 - 16/10/2026
+- **Đã làm được gì**: Chặn menu và cụm tài khoản bị ép xuống nhiều dòng; từ 1024–1279px dùng điều hướng biểu tượng có nhãn truy cập, từ 1280px hiển thị đầy đủ nhãn; thu gọn thao tác đổi mật khẩu/đăng xuất thành nút biểu tượng có accessible label. Kiểm tra Playwright ở 1780, 1440, 1280, 1024, 1000 và 390px: không tràn ngang, các mục desktop cao 40px và không xuống dòng. `pnpm lint`, `pnpm test` (12 file/90 test) và `pnpm run build` đều đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `NavLink`, Tailwind responsive utilities, Lucide icons, ARIA labels, Playwright Chromium, ESLint, Vitest, TypeScript và Vite.
+- **Mục đích chức năng / việc đã làm**: Làm thanh điều hướng V2 dễ đọc và dùng ổn định trên desktop/tablet/mobile; giữ toàn bộ chức năng theo vai trò và tránh các nhãn tài khoản bị bẻ dòng như ảnh production.
+
+## RÀ SOÁT VÀ ĐỒNG BỘ GIAO DIỆN V2 THEO FIGMA - 16/10/2026
+- **Đã làm được gì**:
+  - Chuẩn hóa header dùng chung theo cấu trúc Figma: thương hiệu bên trái, nhóm điều hướng dạng pill với mục hiện tại có nền trắng, cụm tài khoản có avatar/vai trò và thao tác đổi mật khẩu/đăng xuất. Gộp khung workspace của Recruiter/Admin để cùng dùng header, sidebar, vùng nội dung và mobile drawer; giữ guard RBAC và các route hiện hành.
+  - Rà soát và chỉnh các màn trang chủ, tìm việc/chi tiết việc, trợ lý và bong bóng chat, hồ sơ ứng viên, workspace tuyển dụng/thống kê/sàng lọc ứng viên và danh sách quản trị. Dữ liệu hiển thị vẫn lấy từ API; trạng thái lỗi/rỗng không bị thay bằng số liệu giả. Ảnh QA dùng fixture trên H2 cô lập.
+  - Mở rộng kiểm thử viewport để chụp và xác nhận tất cả route công khai cùng route theo ba vai trò tại 360px và 1280px. Lượt kiểm tra phát hiện rồi sửa tràn ngang ở trang tìm việc mobile, bộ lọc trạng thái bị cắt, bảng quản trị bị nén chữ và cụm thao tác ứng viên recruiter chật; bảng admin nay có vùng cuộn ngang đặt tên và nhận focus bàn phím.
+  - Kiểm tra ảnh desktop/mobile cho trang chủ, tìm việc, ứng viên, recruiter và admin; E2E cuối trên H2 tạm: API 28/28, Playwright 7/7, không có route trắng hoặc tràn ngang. Frontend `pnpm lint`, Vitest 90/90, TypeScript/Vite production build và `git diff --check` đều đạt.
+  - Source đã sẵn sàng để cập nhật PR #43; chưa merge hoặc redeploy. Figma MCP từ chối thêm thao tác do hết quota Starter và tài khoản chỉ có ghế View, nên không thể sửa/đồng bộ trực tiếp file Figma trong lượt này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, React Router `NavLink`, Lucide icons, layout dùng chung theo vai trò, responsive breakpoints, ARIA labels, ESLint, Vitest, Vite, Playwright Chromium và backend H2 tạm cho E2E.
+- **Mục đích chức năng / việc đã làm**: Làm giao diện nhất quán giữa các vai trò và thiết bị theo cấu trúc Sapphire & Graphite V2, giữ luồng điều hướng/quyền truy cập và khả năng thao tác hiện có; phân biệt rõ dữ liệu kiểm thử với dữ liệu production và giới hạn chỉnh sửa trực tiếp trong Figma.
+
+## ẨN HEADER Ở MÀN ĐĂNG NHẬP — 16/10/2026
+- **Đã làm được gì**:
+  - Ẩn hoàn toàn header điều hướng dùng chung tại `/login`, giữ nguyên header trên trang chủ và các route khác.
+  - Giữ nguyên form, footer và bong bóng truy cập nhanh chatbot; kiểm tra trực tiếp trên Vite local: trang đăng nhập có 0 header, trang chủ có 1 header và chatbot vẫn hiện.
+  - `pnpm run lint`, `pnpm run test` (90/90) và `pnpm run build` đều đạt; không thay đổi backend hoặc deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `useLocation` kiểm tra pathname trong `MainLayout`; render có điều kiện trong React; Vitest, ESLint, TypeScript/Vite và kiểm tra DOM qua trình duyệt local.
+- **Mục đích chức năng / việc đã làm**: Tạo màn xác thực gọn, không có điều hướng gây phân tán; giữ trải nghiệm đăng nhập và trợ lý nhanh, không ảnh hưởng điều hướng ở các trang khác.
+
+## CHẨN ĐOÁN ĐĂNG NHẬP VÀ ĐĂNG KÝ LOCAL — 16/10/2026
+- **Đã làm được gì**:
+  - Xác nhận frontend `127.0.0.1:5175` gọi qua Vite proxy tới backend TalentBridge `127.0.0.1:8081`; `GET /api/v1/health` và đọc danh sách việc làm trả HTTP 200. Endpoint đăng ký/đăng nhập nhận đúng request thiếu dữ liệu và trả HTTP 400 validation; không gửi hay đọc payload người dùng.
+  - Xác nhận cổng 8080 hiện do ứng dụng `agent-demo` chiếm; frontend auth dùng cùng-origin `/api/v1`, nên không gọi nhầm ứng dụng này.
+  - Chạy kiểm thử Java 21 trên H2 cô lập: `AuthControllerTest` 11/11 và `RegisterRoleValidationIntegrationTest` 3/3 đạt. Lần chạy đầu dùng nhầm Java 8; đã chuyển sang JDK 21 và chạy lại thành công.
+  - Backend local hiện chạy profile `local` với H2 file, không phải RDS. Tài khoản chỉ tồn tại trên RDS có thể không đăng nhập được ở localhost. Chưa bắt được HTTP status của lần gửi form thật và chưa xác minh ghi trên H2 file đang chạy; nguyên nhân riêng của lần thử đó còn mở.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Spring Security, Vite proxy, H2, Maven Wrapper, JDK 21, JUnit, MockMvc và Spring Boot integration tests.
+- **Mục đích chức năng / việc đã làm**: Phân biệt lỗi backend ngừng hoạt động, sai proxy và khác môi trường DB; xác nhận luồng auth trong code hoạt động trên DB kiểm thử và khoanh vùng phần còn cần mã HTTP của request thật.
+
+## ĐỒNG BỘ FE LOCAL THEO FIGMA V2 VÀ KIỂM TRA RESPONSIVE — 16/10/2026
+- **Đã làm được gì**:
+  - Rà giao diện công khai, ứng viên, nhà tuyển dụng và quản trị trên desktop/mobile; đồng bộ lại chi tiết việc làm, danh sách tin nhà tuyển dụng và hồ sơ ứng viên theo bố cục V2, giữ nguyên API, phân quyền, dữ liệu và thao tác hiện có.
+  - Sửa bảng ứng viên quản trị để hiển thị đủ cột thao tác ở desktop; thêm kiểm tra Playwright cho bố cục hồ sơ hai cột và vị trí nút thao tác.
+  - Xác minh `npm run lint`, `npm run build`, `npm run test` (90/90), E2E API (28/28) và E2E UI (7/7) đạt; kiểm tra viewport 360/555/1280px và lưu ảnh QA riêng tại `artifacts/roleplay-parity-final`.
+  - Figma MCP Starter đã hết lượt gọi trong phiên; đối chiếu bằng ảnh thiết kế được cung cấp và ảnh render local, chưa xác nhận parity từng layer/nút với mọi frame trong Figma.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React + TypeScript + Tailwind CSS; CSS Grid responsive; Playwright, Vitest, ESLint, TypeScript/Vite; backend E2E trên H2 cô lập.
+- **Mục đích chức năng / việc đã làm**: Đưa các luồng chính về cùng hệ Sapphire & Graphite V2, giảm sai khác bố cục desktop/mobile và ngăn tái xuất hiện lỗi cột thao tác bị cắt mà không đổi hợp đồng backend.
+
 ## HIỂN THỊ MÃ LỖI ĐĂNG NHẬP VÀ ĐĂNG KÝ — 16/10/2026
 - **Đã làm được gì**:
   - Cập nhật fallback của API xác thực để hiển thị mã HTTP khi backend/proxy trả lỗi không kèm thông báo chuẩn; thêm hướng dẫn rõ cho HTTP 400, 404, 409, 429 và 5xx.
@@ -532,3 +573,12 @@
   - React/TypeScript Fetch API, kiểu lỗi `AuthApiError`, Vitest; tích hợp với envelope `ApiResponse` hiện có của Spring Boot.
 - **Mục đích chức năng / việc đã làm**:
   - Giúp phân biệt lỗi dữ liệu/tài khoản với lỗi API, gateway hoặc giới hạn tốc độ để chẩn đoán đăng nhập/đăng ký mà không lộ thông tin xác thực.
+
+## CẬP NHẬT PR VÀ XÁC MINH PREVIEW V2 — 16/10/2026
+- **Đã làm được gì**:
+  - Đồng bộ nhánh giao diện với `main` sau khi PR #44 được merge; giữ phần xử lý lỗi đăng nhập/đăng ký mới nhất, giải quyết xung đột tài liệu và cập nhật PR #43 lên commit `b5ae44c`.
+  - Xác minh local `http://localhost:5176`: trang chủ có header chính; `/login` và `/register` không có menu Trang chủ/Việc làm/Trợ lý; form đăng nhập/đăng ký và chatbot hiển thị.
+  - Lint và production build đạt; Vitest 92/92; E2E H2 cô lập gần nhất đạt API 28/28 và UI 7/7. PR #43 hiện mergeable; CI Frontend, Backend và Docker 3/3 đạt.
+  - Chưa merge/deploy production; chờ trưởng nhóm review theo quy trình dự án. Figma MCP vẫn bị giới hạn ở Starter/View nên không xác minh pixel/layer cho mọi frame.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, Vite, React Router, Vitest, Playwright, Spring Boot trên H2 cô lập, GitHub Actions.
+- **Mục đích chức năng / việc đã làm**: Đưa bản FE V2 có thể xem tại localhost và review trên PR, đồng thời giữ kiểm soát phát hành trước khi Render nhận deploy.

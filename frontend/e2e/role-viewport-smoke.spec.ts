@@ -18,8 +18,8 @@ const actors = [
         email: 'recruiter@fpt.com',
         password: 'Password123!',
         route: '/recruiter/jobs',
-        heading: 'Quản lý tin tuyển dụng',
-        routes: ['/recruiter/profile', '/recruiter/jobs', '/recruiter/jobs/1/applicants', '/recruiter/company', '/recruiter/join-company', '/recruiter/peer-approval'],
+        heading: 'Tin tuyển dụng của doanh nghiệp',
+        routes: ['/recruiter/profile', '/recruiter/jobs', '/recruiter/jobs/1/applicants', '/recruiter/statistics', '/recruiter/company', '/recruiter/join-company', '/recruiter/peer-approval'],
     },
     {
         name: 'admin',
@@ -49,19 +49,20 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         ])
         await page.goto(`${baseURL}${actor.route}`)
         await expect(page.getByRole('heading', { name: actor.heading, exact: false }).first()).toBeVisible()
+        if (actor.name === 'candidate') {
+            await expect(page.getByRole('heading', { name: 'Thể hiện năng lực bằng trải nghiệm', exact: true })).toBeVisible()
+            await expect(page.getByRole('complementary')).toContainText(actor.heading)
+            await expect(page.getByRole('region', { name: 'Nội dung hồ sơ' })).toBeVisible()
+        }
         if (actor.name === 'recruiter') {
-            const token = await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))
-            const stats = await page.evaluate(async (accessToken) => {
-                const response = await fetch('/api/v1/recruiters/my-jobs/stats', {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                })
-                const body = await response.json()
-                return body.data as { total: number; active: number }
-            }, token)
-            await expect(page.getByText('Tổng tin tuyển dụng', { exact: true }).locator('xpath=../..'))
-                .toContainText(String(stats.total))
-            await expect(page.getByText('Đang tuyển dụng', { exact: true }).locator('xpath=../..'))
-                .toContainText(String(stats.active))
+            const statusTabs = page.getByRole('navigation', { name: 'Lọc tin theo trạng thái' })
+            await expect(statusTabs.getByRole('button', { name: 'Tất cả' })).toHaveAttribute('aria-pressed', 'true')
+            await expect(statusTabs.getByRole('button', { name: 'Đang mở' })).toBeVisible()
+            await expect(statusTabs.getByRole('button', { name: 'Chờ duyệt' })).toBeVisible()
+            await expect(statusTabs.getByRole('button', { name: 'Bản nháp' })).toBeVisible()
+            await expect(page.getByText('Tổng tin tuyển dụng', { exact: true })).toHaveCount(0)
+            await page.getByRole('button', { name: 'Tìm tin tuyển dụng' }).click()
+            await expect(page.getByRole('searchbox', { name: 'Tìm theo tiêu đề, địa điểm hoặc kỹ năng' })).toBeVisible()
         }
         if (actor.name === 'admin') {
             await expect(page.getByRole('button', { name: 'Duyệt' }).first()).toBeVisible()
@@ -119,6 +120,34 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             await expect(page.locator('main').first(), `${actor.name} route ${route} phải render main`).toBeVisible()
             const contentLength = await page.locator('main').first().evaluate((element) => element.textContent?.trim().length ?? 0)
             expect(contentLength, `${actor.name} route ${route} không được trắng`).toBeGreaterThan(40)
+
+            const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
+            for (const width of [360, 1280]) {
+                await page.setViewportSize({ width, height: 900 })
+                if (actor.name === 'admin' && route === '/admin/candidates' && width === 1280) {
+                    await expect(page.getByRole('button', { name: 'Khóa', exact: true }).first()).toBeInViewport()
+                }
+                const layout = await page.evaluate(() => ({
+                    documentWidth: document.documentElement.scrollWidth,
+                    offenders: Array.from(document.querySelectorAll('body *'))
+                        .map((element) => {
+                            const rect = element.getBoundingClientRect()
+                            return { tag: element.tagName, className: typeof element.className === 'string' ? element.className : '', text: element.textContent?.trim().slice(0, 70), left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) }
+                        })
+                        .filter((element) => element.right > window.innerWidth + 1 && element.width > 0)
+                        .sort((left, right) => right.right - left.right)
+                        .slice(0, 8),
+                }))
+                if (layout.documentWidth > width) {
+                    await page.screenshot({ path: join(screenshotDirectory, `${actor.name}-route-${routeSlug}-${width}-overflow.png`), fullPage: true })
+                }
+                expect(layout.documentWidth, `${actor.name} route ${route} tràn ngang tại ${width}px: ${JSON.stringify(layout.offenders)}`).toBeLessThanOrEqual(width)
+                await page.screenshot({
+                    path: join(screenshotDirectory, `${actor.name}-route-${routeSlug}-${width}.png`),
+                    fullPage: true,
+                    animations: 'disabled',
+                })
+            }
         }
 
         expect(pageErrors, `Lỗi JavaScript ở phân hệ ${actor.name}`).toEqual([])
@@ -166,6 +195,18 @@ test('các route công khai và route 404 có nội dung, không render màn hì
         await expect(main, `Route ${route} cần hiển thị nội dung chính`).toBeVisible()
         const contentLength = await main.evaluate((element) => element.textContent?.trim().length ?? 0)
         expect(contentLength, `Route ${route} không được trắng`).toBeGreaterThan(30)
+        const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
+        for (const width of [360, 1280]) {
+            await page.setViewportSize({ width, height: 900 })
+            await expect(main).toBeVisible()
+            const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+            expect(documentWidth, `Route ${route} tràn ngang tại ${width}px`).toBeLessThanOrEqual(width)
+            await page.screenshot({
+                path: join(screenshotDirectory, `public-route-${routeSlug}-${width}.png`),
+                fullPage: true,
+                animations: 'disabled',
+            })
+        }
     }
     expect(pageErrors, 'Lỗi JavaScript trên route công khai').toEqual([])
 })

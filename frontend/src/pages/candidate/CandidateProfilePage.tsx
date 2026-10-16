@@ -233,8 +233,18 @@ export function CandidateProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-5xl space-y-6">
+        <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-6xl space-y-5">
+                <header className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Hồ sơ ứng viên</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
+                        {isEditing ? 'Hoàn thiện hồ sơ của bạn' : 'Thể hiện năng lực bằng trải nghiệm'}
+                    </h1>
+                    <p className="max-w-2xl text-sm leading-6 text-slate-600">
+                        Quản lý thông tin nghề nghiệp, kinh nghiệm và CV tại một nơi.
+                    </p>
+                </header>
+
                 {/* Header Actions & Notifications */}
                 {successMessage && (
                     <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 shadow-sm animate-in fade-in">
@@ -250,30 +260,29 @@ export function CandidateProfilePage() {
                     </div>
                 )}
 
-                {/* Profile Hero Card */}
-                <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-                    <div className="absolute top-0 right-0 h-40 w-40 translate-x-8 -translate-y-8 rounded-full bg-gradient-to-br from-blue-400/10 to-blue-600/20 blur-2xl pointer-events-none" />
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                        <div className="flex items-center gap-5">
-                            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-2xl font-bold text-white shadow-md">
+                <div className={isEditing ? 'space-y-5' : 'grid grid-cols-1 items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]'}>
+                    <aside className={isEditing ? 'contents' : 'min-w-0 lg:sticky lg:top-24'}>
+                        {/* Profile summary follows the compact left rail in the V2 profile layout. */}
+                        <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${isEditing ? '' : 'space-y-5'}`}>
+                    <div className={`flex flex-col justify-between gap-5 ${isEditing ? 'sm:flex-row sm:items-center' : 'items-start'}`}>
+                        <div className={`flex min-w-0 ${isEditing ? 'items-center gap-5' : 'w-full flex-col items-start gap-4'}`}>
+                            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-blue-50 text-2xl font-bold text-blue-700 ring-1 ring-blue-100">
                                 {profile.avatarUrl ? (
                                     <img
                                         src={profile.avatarUrl}
                                         alt={profile.fullName}
-                                        className="h-full w-full rounded-2xl object-cover"
+                                        className="h-full w-full object-cover"
                                     />
                                 ) : (
                                     profile.fullName?.charAt(0)?.toUpperCase() || 'U'
                                 )}
-                                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <h1 className="text-2xl font-black tracking-tight text-slate-900">
+                                    <h2 className="break-words text-xl font-bold tracking-tight text-slate-900">
                                         {profile.fullName || 'Chưa cập nhật tên'}
-                                    </h1>
+                                    </h2>
                                     <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">
                                         Ứng viên
                                     </span>
@@ -282,19 +291,19 @@ export function CandidateProfilePage() {
                                     <Briefcase className="h-4 w-4 text-slate-400" />
                                     {profile.title || 'Chưa có chức danh nghề nghiệp'}
                                 </p>
-                                <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                                    <span className="flex items-center gap-1">
+                                <div className={`mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 ${isEditing ? 'items-center' : 'flex-col'}`}>
+                                    <span className="flex min-w-0 items-center gap-1.5 break-all">
                                         <Mail className="h-3.5 w-3.5 text-slate-400" />
                                         {profile.email}
                                     </span>
                                     {profile.phone && (
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1.5">
                                             <Phone className="h-3.5 w-3.5 text-slate-400" />
                                             {profile.phone}
                                         </span>
                                     )}
                                     {profile.city && (
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center gap-1.5">
                                             <MapPin className="h-3.5 w-3.5 text-slate-400" />
                                             {profile.city}
                                         </span>
@@ -304,25 +313,25 @@ export function CandidateProfilePage() {
                         </div>
 
                         {!isEditing ? (
-                            <div className="flex flex-wrap items-center gap-2.5">
+                            <div className={`flex gap-2.5 ${isEditing ? 'flex-wrap items-center' : 'w-full flex-col'}`}>
                                 <button
                                     type="button"
                                     onClick={() => setIsCvImportOpen(true)}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-xs font-bold text-blue-800 shadow-2xs hover:bg-blue-100 transition"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50"
                                 >
                                     <Sparkles className="h-4 w-4 text-blue-700" /> Nhập nhanh từ CV
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsCvBuilderOpen(true)}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-100 transition"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50"
                                 >
                                     <FileText className="h-4 w-4 text-blue-600" /> Tạo CV từ Hồ sơ
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleStartEditing}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
+                                    className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-2.5 text-left text-xs font-semibold text-white transition hover:bg-blue-800"
                                 >
                                     <Edit3 className="h-4 w-4" /> Chỉnh sửa hồ sơ
                                 </button>
@@ -352,18 +361,20 @@ export function CandidateProfilePage() {
                             </div>
                         )}
                     </div>
-                </div>
+                        </div>
+                    </aside>
 
                 {/* Main Content Area */}
+                    <section aria-label="Nội dung hồ sơ" className={isEditing ? 'contents' : 'min-w-0 space-y-5'}>
                 {isEditing ? (
                     /* EDIT FORM */
                     <form
                         id="candidate-profile-form"
                         onSubmit={handleSubmit}
-                        className="space-y-6"
+                        className="space-y-5"
                     >
                         {/* Personal Info Group */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <h2 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2">
                                 <User className="h-5 w-5 text-blue-600" /> Thông tin cá nhân
                             </h2>
@@ -464,7 +475,7 @@ export function CandidateProfilePage() {
                         </div>
 
                         {/* Professional Info Group */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <h2 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2">
                                 <Briefcase className="h-5 w-5 text-blue-700" /> Thông tin nghề nghiệp
                             </h2>
@@ -522,7 +533,7 @@ export function CandidateProfilePage() {
                         </div>
 
                         {/* Social & Portfolio Links */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <h2 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2">
                                 <Globe className="h-5 w-5 text-emerald-600" /> Mạng xã hội & Portfolio
                             </h2>
@@ -570,9 +581,9 @@ export function CandidateProfilePage() {
                     </form>
                 ) : (
                     /* VIEW MODE */
-                    <div className="space-y-6">
+                    <div className="space-y-5">
                         {/* Summary Block */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
                                 <Sparkles className="h-5 w-5 text-amber-500" /> Tóm tắt giới thiệu
                             </h2>
@@ -586,9 +597,9 @@ export function CandidateProfilePage() {
                         </div>
 
                         {/* Details Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                             {/* Personal & Contact */}
-                            <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-4">
+                            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                     <User className="h-4 w-4 text-blue-600" /> Thông tin cơ bản
                                 </h3>
@@ -624,7 +635,7 @@ export function CandidateProfilePage() {
                             </div>
 
                             {/* Career & Salary */}
-                            <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-4">
+                            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                     <Briefcase className="h-4 w-4 text-blue-700" /> Kỳ vọng công việc & Lương
                                 </h3>
@@ -656,7 +667,7 @@ export function CandidateProfilePage() {
                         />
 
                         {/* Work Experience Section (TopCV Standard) */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                                     <Building2 className="h-5 w-5 text-blue-600" /> Kinh nghiệm làm việc
@@ -766,7 +777,7 @@ export function CandidateProfilePage() {
                         </div>
 
                         {/* Professional Skills Section (TopCV Standard) */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                                     <Award className="h-5 w-5 text-blue-700" /> Kỹ năng chuyên môn
@@ -863,7 +874,7 @@ export function CandidateProfilePage() {
                         </div>
 
                         {/* Social & Portfolio Links Card */}
-                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                             <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
                                 <Globe className="h-4 w-4 text-emerald-600" /> Liên kết nghề nghiệp
                             </h3>
@@ -937,6 +948,8 @@ export function CandidateProfilePage() {
                         </div>
                     </div>
                 )}
+                    </section>
+                </div>
 
                 {/* Modals */}
                 <WorkExperienceModal
