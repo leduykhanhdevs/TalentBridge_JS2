@@ -537,3 +537,11 @@
   - Source đã sẵn sàng để cập nhật PR #43; chưa merge hoặc redeploy. Figma MCP từ chối thêm thao tác do hết quota Starter và tài khoản chỉ có ghế View, nên không thể sửa/đồng bộ trực tiếp file Figma trong lượt này.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, React Router `NavLink`, Lucide icons, layout dùng chung theo vai trò, responsive breakpoints, ARIA labels, ESLint, Vitest, Vite, Playwright Chromium và backend H2 tạm cho E2E.
 - **Mục đích chức năng / việc đã làm**: Làm giao diện nhất quán giữa các vai trò và thiết bị theo cấu trúc Sapphire & Graphite V2, giữ luồng điều hướng/quyền truy cập và khả năng thao tác hiện có; phân biệt rõ dữ liệu kiểm thử với dữ liệu production và giới hạn chỉnh sửa trực tiếp trong Figma.
+
+## ẨN HEADER Ở MÀN ĐĂNG NHẬP — 16/10/2026
+- **Đã làm được gì**:
+  - Ẩn hoàn toàn header điều hướng dùng chung tại `/login`, giữ nguyên header trên trang chủ và các route khác.
+  - Giữ nguyên form, footer và bong bóng truy cập nhanh chatbot; kiểm tra trực tiếp trên Vite local: trang đăng nhập có 0 header, trang chủ có 1 header và chatbot vẫn hiện.
+  - `pnpm run lint`, `pnpm run test` (90/90) và `pnpm run build` đều đạt; không thay đổi backend hoặc deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `useLocation` kiểm tra pathname trong `MainLayout`; render có điều kiện trong React; Vitest, ESLint, TypeScript/Vite và kiểm tra DOM qua trình duyệt local.
+- **Mục đích chức năng / việc đã làm**: Tạo màn xác thực gọn, không có điều hướng gây phân tán; giữ trải nghiệm đăng nhập và trợ lý nhanh, không ảnh hưởng điều hướng ở các trang khác.

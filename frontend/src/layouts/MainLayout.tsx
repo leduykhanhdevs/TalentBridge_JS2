@@ -15,7 +15,7 @@ import {
     UserPlus,
     X,
 } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
 import type { UserResponse } from '../features/auth/authTypes'
@@ -30,6 +30,7 @@ function initialsFor(name: string) {
 
 export function MainLayout() {
     const navigate = useNavigate()
+    const isLoginPage = useLocation().pathname === '/login'
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
@@ -83,6 +84,7 @@ export function MainLayout() {
 
     return (
         <div className="flex min-h-screen flex-col bg-bento-canvas text-slate-900">
+            {!isLoginPage && (
             <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
                 <div className="mx-auto flex h-[72px] w-full max-w-[1200px] items-center justify-between gap-3 px-4 sm:px-6 xl:px-0">
                     <NavLink aria-label="TalentBridge — Trang chủ" className="flex shrink-0 items-center gap-2.5" end to="/">
@@ -184,6 +186,7 @@ export function MainLayout() {
                     </div>
                 )}
             </header>
+            )}
 
             <main className="flex-1">
                 <Outlet />
