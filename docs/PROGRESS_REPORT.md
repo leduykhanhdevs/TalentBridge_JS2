@@ -522,3 +522,13 @@
   - React/TypeScript, Tailwind CSS, Vite, Be Vietnam Pro cục bộ, SVG 2.5D; pnpm 9, Vitest, ESLint, Playwright, Spring Boot và H2 tạm cho E2E.
 - **Mục đích chức năng / việc đã làm**:
   - Đưa Sapphire & Graphite V2 vào `main` và Render production, vẫn giữ hành vi trợ lý; xác nhận qua unit, build, E2E và smoke test production đa vai trò/API.
+
+## HIỂN THỊ MÃ LỖI ĐĂNG NHẬP VÀ ĐĂNG KÝ — 16/10/2026
+- **Đã làm được gì**:
+  - Cập nhật fallback của API xác thực để hiển thị mã HTTP khi backend/proxy trả lỗi không kèm thông báo chuẩn; thêm hướng dẫn rõ cho HTTP 400, 404, 409, 429 và 5xx.
+  - Thêm test cho phản hồi HTML 502 của gateway và phản hồi 429 thiếu message; bảo toàn ưu tiên hiển thị thông điệp backend khi có.
+  - Bản sửa được cô lập trên nhánh phát hành riêng để không đưa các thay đổi backend/AI chưa liên quan vào production; xác minh `pnpm test` đạt 92/92, `pnpm lint`, `pnpm build` và `git diff --check` đều đạt. Đang chờ CI/review PR trước khi deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - React/TypeScript Fetch API, kiểu lỗi `AuthApiError`, Vitest; tích hợp với envelope `ApiResponse` hiện có của Spring Boot.
+- **Mục đích chức năng / việc đã làm**:
+  - Giúp phân biệt lỗi dữ liệu/tài khoản với lỗi API, gateway hoặc giới hạn tốc độ để chẩn đoán đăng nhập/đăng ký mà không lộ thông tin xác thực.
