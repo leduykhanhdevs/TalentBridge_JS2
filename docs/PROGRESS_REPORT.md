@@ -517,7 +517,7 @@
   - Chuyển riêng thay đổi giao diện V2 lên nhánh tính năng dựa trên `origin/main` hiện tại, giữ các route Trợ lý, bong bóng chatbot và thay đổi đăng nhập đã được merge ở PR #40/#38. Không đưa các sửa đổi backend/AI còn dang dở trong checkout khác vào PR giao diện.
   - Giải quyết xung đột router, đăng nhập và báo cáo tiến độ; điều chỉnh selector Playwright cũ để khớp nhãn đăng nhập V2.
   - Xác minh frontend: lint đạt, 90/90 unit tests, production build đạt. E2E trên H2 cô lập: API 28/28, Playwright UI 7/7, gồm ba vai trò, trang trợ lý/widget, luồng gửi yêu cầu doanh nghiệp và viewport 360/555/1280px.
-  - Chưa merge/deploy production; PR và CI từ GitHub là cổng xác nhận tiếp theo.
+  - PR #41 mở vào `main`; GitHub Actions run `38866412131` đạt 3/3 check Backend/Frontend/Docker. PR sạch và mergeable, hiện chờ leader review/merge theo Gitflow; CD Render chưa chạy và production chưa đổi.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
   - React/TypeScript, Tailwind CSS, Vite, Be Vietnam Pro cục bộ, SVG 2.5D; pnpm 9, Vitest, ESLint, Playwright, Spring Boot và H2 tạm cho E2E.
 - **Mục đích chức năng / việc đã làm**:
