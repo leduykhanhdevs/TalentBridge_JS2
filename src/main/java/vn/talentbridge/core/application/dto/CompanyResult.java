@@ -16,7 +16,8 @@ public record CompanyResult(
     String taxCode,
     String status,
     Long createdByUserId,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    boolean isDemo
 ) {
     public static CompanyResult from(Company company) {
         return new CompanyResult(
@@ -31,7 +32,8 @@ public record CompanyResult(
             company.getTaxCode(),
             company.getStatus() != null ? company.getStatus().name() : null,
             company.getCreatedByUserId(),
-            company.getCreatedAt()
+            company.getCreatedAt(),
+            company.isDemo()
         );
     }
 }

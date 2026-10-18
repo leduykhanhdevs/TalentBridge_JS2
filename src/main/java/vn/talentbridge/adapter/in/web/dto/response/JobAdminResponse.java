@@ -33,6 +33,8 @@ public class JobAdminResponse {
     private BigDecimal salaryMax;
     private String city;
     private Long recruiterUserId;
+    @com.fasterxml.jackson.annotation.JsonProperty("isDemo")
+    private boolean isDemo;
     private List<String> skills;
     private JobStatus status;
     private LocalDate deadline;
@@ -53,6 +55,7 @@ public class JobAdminResponse {
                 .salaryMax(result.maxSalary())
                 .city(result.city())
                 .recruiterUserId(result.recruiterUserId())
+                .isDemo(result.isDemo())
                 .skills(result.skills())
                 .status(result.status() != null ? JobStatus.valueOf(result.status()) : null)
                 .deadline(result.deadline())

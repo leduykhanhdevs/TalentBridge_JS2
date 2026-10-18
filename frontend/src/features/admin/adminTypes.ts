@@ -69,6 +69,7 @@ export type CompanyAdminResponse = {
     taxCode?: string
     description?: string
     status: CompanyStatus
+    isDemo?: boolean
     createdByUserId?: number
     createdAt?: string
 }
@@ -128,6 +129,7 @@ export type AdminJobResponse = {
     recruiterUserId?: number
     skills?: string[]
     status: AdminJobStatus
+    isDemo?: boolean
     deadline?: string
     createdAt?: string
 }

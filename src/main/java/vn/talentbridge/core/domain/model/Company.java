@@ -18,6 +18,7 @@ public class Company {
     private Long createdByUserId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean demo;
 
     public Company() {
         this.status = CompanyStatus.PENDING;
@@ -32,6 +33,13 @@ public class Company {
     public Company(Long id, String name, String logoUrl, String website, String description,
                    String companySize, String address, String city, String taxCode, CompanyStatus status,
                    Long createdByUserId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, name, logoUrl, website, description, companySize, address, city, taxCode, status,
+                createdByUserId, createdAt, updatedAt, false);
+    }
+
+    public Company(Long id, String name, String logoUrl, String website, String description,
+                   String companySize, String address, String city, String taxCode, CompanyStatus status,
+                   Long createdByUserId, LocalDateTime createdAt, LocalDateTime updatedAt, boolean demo) {
         this.id = id;
         this.name = name;
         this.logoUrl = logoUrl;
@@ -45,6 +53,7 @@ public class Company {
         this.createdByUserId = createdByUserId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.demo = demo;
     }
 
     public void approve() { this.status = CompanyStatus.APPROVED; }
@@ -88,4 +97,7 @@ public class Company {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public boolean isDemo() { return demo; }
+    public void setDemo(boolean demo) { this.demo = demo; }
 }

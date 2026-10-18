@@ -148,6 +148,11 @@ export function HomePage() {
                                             <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
                                                 <Link className="hover:text-blue-700" to={`/jobs/${job.id}`}>{job.title}</Link>
                                             </h3>
+                                            {job.isDemo && (
+                                                <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900">
+                                                    Tin mô phỏng · Không nhận hồ sơ
+                                                </span>
+                                            )}
                                             <p className="mt-1 truncate text-sm font-medium text-slate-700">{job.companyName}</p>
                                             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-slate-600">
                                                 <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden="true" size={14} />{job.city || job.location || 'Chưa cập nhật địa điểm'}</span>

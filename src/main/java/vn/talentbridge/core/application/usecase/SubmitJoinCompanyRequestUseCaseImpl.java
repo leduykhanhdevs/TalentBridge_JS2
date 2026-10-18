@@ -46,6 +46,10 @@ public class SubmitJoinCompanyRequestUseCaseImpl implements SubmitJoinCompanyReq
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy công ty với ID: " + companyId));
 
+        if (company.isDemo()) {
+            throw new DomainException(40001, "Không thể gửi yêu cầu gia nhập doanh nghiệp mô phỏng.");
+        }
+
         if (company.getStatus() != CompanyStatus.APPROVED) {
             throw new DomainException(40001, "Chỉ có thể gửi yêu cầu gia nhập vào công ty đã được phê duyệt");
         }

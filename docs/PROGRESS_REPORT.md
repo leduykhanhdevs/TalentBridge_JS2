@@ -582,3 +582,12 @@
   - Chưa merge/deploy production; chờ trưởng nhóm review theo quy trình dự án. Figma MCP vẫn bị giới hạn ở Starter/View nên không xác minh pixel/layer cho mọi frame.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, Vite, React Router, Vitest, Playwright, Spring Boot trên H2 cô lập, GitHub Actions.
 - **Mục đích chức năng / việc đã làm**: Đưa bản FE V2 có thể xem tại localhost và review trên PR, đồng thời giữ kiểm soát phát hành trước khi Render nhận deploy.
+
+## CATALOG MÔ PHỎNG 20 DOANH NGHIỆP VÀ 100 VIỆC LÀM — 18/10/2026
+- **Đã làm được gì**:
+  - Thêm Flyway V3 tạo 20 hồ sơ doanh nghiệp hư cấu có tiền tố `DEMO` và 100 tin mô phỏng (5 vai trò mỗi doanh nghiệp), kèm 280 liên kết kỹ năng mẫu. Không dùng website, mã số thuế, văn phòng, nhà tuyển dụng hay lợi ích tuyển dụng có thật; hồ sơ công ty giữ trạng thái `PENDING`.
+  - Truyền cờ `isDemo` qua JPA, domain, DTO/API; trang chủ, tìm việc, chi tiết tin và danh sách admin ghi rõ nội dung mô phỏng. Tin chỉ cho xem; use case backend từ chối ứng tuyển, yêu cầu gia nhập hoặc phê duyệt hồ sơ công ty mô phỏng.
+  - Thêm kiểm thử migration trên H2 chế độ MySQL: xác nhận đúng 20 công ty, 100 tin `ACTIVE` để xuất hiện trong tìm kiếm, không gắn recruiter, không có đơn ứng tuyển và có đủ liên kết kỹ năng. Backend `mvnw verify` đạt 315/315; frontend `pnpm test` đạt 92/92, `pnpm run lint`, `pnpm run build` và `git diff --check` đạt.
+  - Chưa đưa dữ liệu lên production: migration sẽ chạy khi bản thay đổi được trưởng nhóm review/merge và Render deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Flyway SQL V3; MySQL/H2 tương thích; Spring Boot, JPA, DTO REST, use case hexagonal; React/TypeScript, Vitest, ESLint, Vite và Maven/JDK 21.
+- **Mục đích chức năng / việc đã làm**: Có dữ liệu để xem thử luồng tìm kiếm và ATS trên website mà không mạo nhận tuyển dụng thật, nhận hồ sơ ứng viên hoặc xác thực doanh nghiệp hư cấu.

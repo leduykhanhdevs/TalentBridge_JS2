@@ -39,6 +39,8 @@ public class JobResponse {
     private LocalDate deadline;
     private JobStatus status;
     private Long recruiterUserId;
+    @com.fasterxml.jackson.annotation.JsonProperty("isDemo")
+    private boolean isDemo;
     private List<String> skills;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -66,6 +68,7 @@ public class JobResponse {
                 .deadline(result.deadline())
                 .status(result.status() != null ? JobStatus.valueOf(result.status()) : null)
                 .recruiterUserId(result.recruiterUserId())
+                .isDemo(result.isDemo())
                 .skills(result.skills())
                 .createdAt(result.createdAt())
                 .updatedAt(result.updatedAt())
@@ -95,6 +98,7 @@ public class JobResponse {
                 .deadline(job.getDeadline())
                 .status(job.getStatus())
                 .recruiterUserId(job.getRecruiterUserId())
+                .isDemo(job.isDemo())
                 .skills(job.getSkills())
                 .createdAt(job.getCreatedAt())
                 .updatedAt(job.getUpdatedAt())

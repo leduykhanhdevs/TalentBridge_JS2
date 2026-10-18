@@ -49,6 +49,7 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
         entity.setTaxCode(domainCompany.getTaxCode());
         entity.setStatus(domainCompany.getStatus());
         entity.setCreatedByUserId(domainCompany.getCreatedByUserId());
+        entity.setIsDemo(domainCompany.isDemo());
 
         CompanyJpaEntity saved = companyJpaRepository.save(entity);
         return toDomain(saved);
@@ -99,7 +100,8 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
                 entity.getStatus(),
                 entity.getCreatedByUserId(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                Boolean.TRUE.equals(entity.getIsDemo())
         );
     }
 }

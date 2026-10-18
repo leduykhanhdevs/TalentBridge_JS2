@@ -29,6 +29,8 @@ public class CompanyAdminResponse {
     private CompanyStatus status;
     private Long createdByUserId;
     private LocalDateTime createdAt;
+    @com.fasterxml.jackson.annotation.JsonProperty("isDemo")
+    private boolean isDemo;
 
     public static CompanyAdminResponse from(CompanyResult result) {
         return CompanyAdminResponse.builder()
@@ -44,6 +46,7 @@ public class CompanyAdminResponse {
                 .status(result.status() != null ? CompanyStatus.valueOf(result.status()) : null)
                 .createdByUserId(result.createdByUserId())
                 .createdAt(result.createdAt())
+                .isDemo(result.isDemo())
                 .build();
     }
 }

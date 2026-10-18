@@ -20,6 +20,7 @@ export interface JobDetail {
     maxSalary: number | null
     deadline: string | null
     status: string
+    isDemo?: boolean
     createdAt: string | null
     updatedAt: string | null
 }
