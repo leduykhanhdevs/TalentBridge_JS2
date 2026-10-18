@@ -233,9 +233,14 @@ export function JobSearchPage() {
                 </aside>
 
                 <section aria-live="polite" className="min-w-0">
+                    {jobsQuery.isSuccess && jobs.some((job) => job.isDemo) && (
+                        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="note">
+                            Danh sách có tin tuyển dụng mô phỏng để xem thử giao diện. Tin được gắn nhãn “Mô phỏng” không đại diện vị trí thật và không nhận hồ sơ.
+                        </p>
+                    )}
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 className="text-xl font-bold text-slate-950">Cơ hội đang tuyển</h2>
+                            <h2 className="text-xl font-bold text-slate-950">Danh sách việc làm</h2>
                             {jobsQuery.data && (
                                 <p className="mt-1 text-sm text-slate-500">
                                     Tìm thấy <span className="font-semibold text-blue-700">{jobsQuery.data.totalElements}</span> việc làm
@@ -298,20 +303,25 @@ export function JobSearchPage() {
                                                     {job.title}
                                                 </h3>
                                             </Link>
+                                            {job.isDemo && (
+                                                <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900">
+                                                    DEMO · Không nhận hồ sơ
+                                                </span>
+                                            )}
                                             <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-blue-800">
                                                 <Building2 aria-hidden="true" size={15} />
                                                 {job.companyName}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                                                Đang tuyển
+                                            <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${job.isDemo ? 'bg-amber-50 text-amber-900' : 'bg-emerald-50 text-emerald-700'}`}>
+                                                {job.isDemo ? 'Tin mô phỏng' : 'Đang tuyển'}
                                             </span>
                                             <Link
                                                 className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-1 text-xs font-bold text-blue-800 transition hover:bg-blue-700 hover:text-white"
                                                 to={`/jobs/${job.id}`}
                                             >
-                                                <span>Ứng tuyển</span>
+                                                <span>{job.isDemo ? 'Xem mẫu' : 'Ứng tuyển'}</span>
                                                 <ExternalLink size={13} />
                                             </Link>
                                         </div>

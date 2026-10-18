@@ -33,6 +33,9 @@ public class UpdateCompanyStatusUseCaseImpl implements UpdateCompanyStatusUseCas
         if (status == null) throw new DomainException(40001, "Trạng thái doanh nghiệp không hợp lệ");
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doanh nghiệp", companyId));
+        if (company.isDemo() && status == CompanyStatus.APPROVED) {
+            throw new DomainException(40001, "Không thể xác thực hồ sơ doanh nghiệp mô phỏng.");
+        }
         company.setStatus(status);
         Company updated = companyRepository.save(company);
 

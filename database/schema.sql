@@ -282,6 +282,7 @@ CREATE TABLE `companies` (
     `description` TEXT NULL,
     `status` VARCHAR(20) DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
     `created_by_user_id` BIGINT NULL,
+    `is_demo` BOOLEAN NOT NULL DEFAULT FALSE, -- TRUE nếu hồ sơ mô phỏng, không phải doanh nghiệp thật
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX `idx_companies_name` (`name`),
@@ -355,6 +356,7 @@ CREATE TABLE `jobs` (
     `is_negotiable` BOOLEAN DEFAULT FALSE,
     `status` VARCHAR(20) DEFAULT 'ACTIVE', -- DRAFT, PENDING, ACTIVE, EXPIRED, CLOSED
     `deadline` DATE NULL,
+    `is_demo` BOOLEAN NOT NULL DEFAULT FALSE, -- TRUE nếu tin chỉ dùng để trình diễn, không nhận hồ sơ
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_jobs_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,

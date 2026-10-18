@@ -28,7 +28,8 @@ public record JobDetailResult(
         Long recruiterUserId,
         List<String> skills,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        boolean isDemo
 ) {
     public static JobDetailResult from(Job job) {
         return new JobDetailResult(
@@ -52,7 +53,8 @@ public record JobDetailResult(
                 job.getRecruiterUserId(),
                 job.getSkills() != null ? job.getSkills() : List.of(),
                 job.getCreatedAt(),
-                job.getUpdatedAt()
+                job.getUpdatedAt(),
+                job.isDemo()
         );
     }
 }

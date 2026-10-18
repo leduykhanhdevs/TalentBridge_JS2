@@ -231,7 +231,7 @@ Quản lý cả CV tải lên từ máy tính (`UPLOADED`) và CV tạo tự đ�
 ---
 
 ### 2.4. Nhóm Doanh nghiệp & Nhà tuyển dụng (Companies & Recruiters)
-- `companies`: Hồ sơ doanh nghiệp tuyển dụng (`id`, `name`, `logo_url`, `banner_url`, `website`, `company_size`, `address`, `city`, `status`).
+- `companies`: Hồ sơ doanh nghiệp tuyển dụng (`id`, `name`, `logo_url`, `banner_url`, `website`, `company_size`, `address`, `city`, `status`, `is_demo`). `is_demo = TRUE` đánh dấu hồ sơ hư cấu; không được hiểu là doanh nghiệp đã xác minh.
 - `recruiters`: Nhân viên tuyển dụng thuộc một doanh nghiệp cụ thể (quan hệ 1-1 với `users`, N-1 với `companies`).
 - `company_join_requests`: Quản lý yêu cầu xin gia nhập doanh nghiệp của HR Recruiter (`id`, `company_id`, `recruiter_id`, `status` [PENDING, APPROVED, REJECTED], `request_note`, `response_note`, `reviewed_by`, `created_at`, `updated_at`).
 
@@ -239,7 +239,7 @@ Quản lý cả CV tải lên từ máy tính (`UPLOADED`) và CV tạo tự đ�
 
 ### 2.5. Nhóm Việc làm & Tìm kiếm (Jobs & Search Engine)
 - `categories`: Nhóm ngành nghề tuyển dụng (slug URL thân thiện SEO).
-- `jobs`: Tin tuyển dụng do nhà tuyển dụng đăng tải (`salary_min`, `salary_max`, `job_type`, `experience_level`, `deadline`, `status`).
+- `jobs`: Tin tuyển dụng do nhà tuyển dụng đăng tải (`salary_min`, `salary_max`, `job_type`, `experience_level`, `deadline`, `status`, `is_demo`). `is_demo = TRUE` là tin mô phỏng để xem giao diện; backend chặn nộp hồ sơ.
 - `job_skills`: Bảng trung gian N-N giữa Jobs và Skills.
 - `saved_jobs`: Ứng viên lưu việc làm quan tâm (ràng buộc `UNIQUE(candidate_id, job_id)`).
 

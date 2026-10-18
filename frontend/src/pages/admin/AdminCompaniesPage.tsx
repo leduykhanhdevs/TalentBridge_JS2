@@ -506,6 +506,11 @@ export function AdminCompaniesPage() {
                                                     <div className="text-base font-black text-slate-900 group-hover:text-blue-700 transition-colors">
                                                         {company.name}
                                                     </div>
+                                                    {company.isDemo && (
+                                                        <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                                                            HỒ SƠ MÔ PHỎNG · KHÔNG XÁC MINH
+                                                        </span>
+                                                    )}
                                                     {company.website ? (
                                                         <a
                                                             className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline mt-0.5"
@@ -542,19 +547,24 @@ export function AdminCompaniesPage() {
                                         </td>
 
                                         <td className="px-6 py-4 sm:py-5">
-                                            {company.status === 'APPROVED' && (
+                                            {company.isDemo && (
+                                                <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-amber-900">
+                                                    Mô phỏng · Không xác thực
+                                                </span>
+                                            )}
+                                            {!company.isDemo && company.status === 'APPROVED' && (
                                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 border border-emerald-200 shadow-2xs">
                                                     <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                                                     Đã xác thực
                                                 </span>
                                             )}
-                                            {company.status === 'PENDING' && (
+                                            {!company.isDemo && company.status === 'PENDING' && (
                                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-amber-800 border border-amber-300 shadow-2xs">
                                                     <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
                                                     Chờ phê duyệt
                                                 </span>
                                             )}
-                                            {company.status === 'REJECTED' && (
+                                            {!company.isDemo && company.status === 'REJECTED' && (
                                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200 shadow-2xs">
                                                     <span className="size-2 rounded-full bg-rose-500" />
                                                     Bị từ chối
@@ -572,7 +582,11 @@ export function AdminCompaniesPage() {
                                                     Chi tiết
                                                 </button>
 
-                                                {company.status === 'PENDING' && (
+                                                {company.isDemo && (
+                                                    <span className="text-xs font-semibold text-amber-900">Không duyệt hồ sơ mô phỏng</span>
+                                                )}
+
+                                                {!company.isDemo && company.status === 'PENDING' && (
                                                     <>
                                                         <button
                                                             className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-600 px-3 py-1.5 text-xs sm:text-sm font-black text-white shadow-2xs hover:bg-emerald-700 transition"
@@ -601,7 +615,7 @@ export function AdminCompaniesPage() {
                                                     </>
                                                 )}
 
-                                                {company.status === 'APPROVED' && (
+                                                {!company.isDemo && company.status === 'APPROVED' && (
                                                     <button
                                                         className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 transition hover:bg-rose-100 shadow-2xs"
                                                         disabled={statusMutation.isPending}
@@ -617,7 +631,7 @@ export function AdminCompaniesPage() {
                                                     </button>
                                                 )}
 
-                                                {company.status === 'REJECTED' && (
+                                                {!company.isDemo && company.status === 'REJECTED' && (
                                                     <button
                                                         className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 shadow-2xs"
                                                         disabled={statusMutation.isPending}

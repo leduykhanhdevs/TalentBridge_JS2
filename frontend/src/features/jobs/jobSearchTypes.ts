@@ -32,6 +32,7 @@ export interface JobSummary {
     isNegotiable: boolean | null
     deadline: string | null
     status: string
+    isDemo?: boolean
     skills: string[] | null
     createdAt: string | null
 }

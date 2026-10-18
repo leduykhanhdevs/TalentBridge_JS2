@@ -108,6 +108,17 @@ export function JobDetailPage() {
     const existingApplication = myApplicationsQuery.data?.find((app) => app.jobId === jobId)
 
     function renderApplyAction(extraClass = '') {
+        if (job.isDemo) {
+            return (
+                <div
+                    className={`rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950 ${extraClass}`}
+                    role="note"
+                >
+                    Tin mô phỏng chỉ để xem giao diện, không nhận hồ sơ ứng tuyển.
+                </div>
+            )
+        }
+
         if (!authenticated) {
             return (
                 <button
@@ -225,6 +236,11 @@ export function JobDetailPage() {
                 </nav>
 
                 <header className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                    {job.isDemo && (
+                        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-amber-950" role="note">
+                            DỮ LIỆU MÔ PHỎNG — Doanh nghiệp và vị trí này không có thật; thông tin chỉ dùng để xem thử TalentBridge.
+                        </div>
+                    )}
                     <div className="flex items-start gap-4">
                         <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#EFF4FF] text-sm font-bold text-[#1D4ED8]">
                             {companyInitials || <Building2 size={20} />}
@@ -237,10 +253,10 @@ export function JobDetailPage() {
                                 {job.companyName || 'Doanh nghiệp chưa cập nhật'}
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-2">
-                                <span className={`inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${isActiveJob ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
-                                    {isActiveJob ? 'Đang nhận hồ sơ' : 'Tin tuyển dụng'}
+                                <span className={`inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${job.isDemo ? 'bg-amber-50 text-amber-900' : isActiveJob ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
+                                    {job.isDemo ? 'Tin mô phỏng' : isActiveJob ? 'Đang nhận hồ sơ' : 'Tin tuyển dụng'}
                                 </span>
-                                <span className="text-xs text-slate-500">Thông tin tuyển dụng do doanh nghiệp cung cấp.</span>
+                                {!job.isDemo && <span className="text-xs text-slate-500">Thông tin tuyển dụng do doanh nghiệp cung cấp.</span>}
                             </div>
                         </div>
                     </div>
@@ -290,7 +306,7 @@ export function JobDetailPage() {
                 {/* Apply Modal */}
                 <ApplyJobModal
                     companyName={job.companyName || 'Doanh nghiệp'}
-                    isOpen={isApplyModalOpen}
+                    isOpen={isApplyModalOpen && !job.isDemo}
                     jobId={job.id}
                     jobTitle={job.title}
                     onApplySuccess={() => {
