@@ -71,6 +71,7 @@ export function RecruiterJobsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingJob, setEditingJob] = useState<RecruiterJobItem | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
 
     // Confirm close modal
     const [confirmCloseId, setConfirmCloseId] = useState<number | null>(null)
@@ -108,6 +109,8 @@ export function RecruiterJobsPage() {
 
     async function handleFormSubmit(payload: CreateJobPayload) {
         setIsSubmitting(true)
+        setSubmitError(null)
+        setErrorMsg(null)
         try {
             if (editingJob) {
                 await updateJob(editingJob.id, payload)
@@ -122,7 +125,7 @@ export function RecruiterJobsPage() {
             setTimeout(() => setSuccessMsg(null), 4000)
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Thao tác không thành công.'
-            setErrorMsg(msg)
+            setSubmitError(msg)
         } finally {
             setIsSubmitting(false)
         }
@@ -170,6 +173,7 @@ export function RecruiterJobsPage() {
                         type="button"
                         onClick={() => {
                             setEditingJob(null)
+                            setSubmitError(null)
                             setIsModalOpen(true)
                         }}
                         className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
@@ -252,6 +256,7 @@ export function RecruiterJobsPage() {
                         type="button"
                         onClick={() => {
                             setEditingJob(null)
+                            setSubmitError(null)
                             setIsModalOpen(true)
                         }}
                         className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white hover:bg-blue-800 transition shadow-sm"
@@ -369,10 +374,13 @@ export function RecruiterJobsPage() {
                 onClose={() => {
                     setIsModalOpen(false)
                     setEditingJob(null)
+                    setSubmitError(null)
                 }}
                 onSubmit={handleFormSubmit}
                 initialData={editingJob}
                 isSubmitting={isSubmitting}
+                submitError={submitError}
+                onClearSubmitError={() => setSubmitError(null)}
             />
 
             {/* Confirm Close Dialog */}

@@ -5,6 +5,7 @@ import {
     getRefreshToken,
     saveAuthTokens,
 } from './tokenStorage'
+import { fetchWithTimeout } from '../../app/fetchWithTimeout'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 const REFRESH_TIMEOUT_MS = 8_000
@@ -34,16 +35,12 @@ async function refreshSession(): Promise<boolean> {
         return false
     }
 
-    const controller = new AbortController()
-    const timeoutId = window.setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS)
-
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/auth/refresh-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify({ refreshToken }),
-            signal: controller.signal,
-        })
+        }, REFRESH_TIMEOUT_MS)
 
         if (response.ok) {
             const body = await response.json() as ApiResponse<AuthResponse>
@@ -64,8 +61,6 @@ async function refreshSession(): Promise<boolean> {
         return false
     } catch {
         return false
-    } finally {
-        window.clearTimeout(timeoutId)
     }
 }
 

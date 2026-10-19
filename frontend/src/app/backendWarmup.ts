@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './fetchWithTimeout'
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 
 let warmupRequest: Promise<void> | undefined
@@ -6,7 +8,7 @@ let warmupRequest: Promise<void> | undefined
 export function warmUpBackend(): Promise<void> {
     if (warmupRequest) return warmupRequest
 
-    warmupRequest = fetch(`${API_BASE_URL}/health`, {
+    warmupRequest = fetchWithTimeout(`${API_BASE_URL}/health`, {
         headers: { Accept: 'application/json' },
         cache: 'no-store',
     })

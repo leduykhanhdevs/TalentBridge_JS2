@@ -10,7 +10,7 @@ Tài liệu này mô tả cấu hình hiện tại của TalentBridge: React/Vit
 | Backend | Render Web Service | Spring Boot 3, Docker, Java 21 |
 | Database | Amazon RDS for MySQL | Singapore (ap-southeast-1), TLS VERIFY_IDENTITY |
 
-Tên các dịch vụ Render trong Blueprint là talentbridge-frontend và talentbridge-backend. Blueprint hiện đặt autoDeploy: false; phát hành production được kích hoạt qua GitHub Actions khi có push vào main.
+Tên các dịch vụ Render trong Blueprint là talentbridge-frontend và talentbridge-backend. Blueprint đặt `autoDeployTrigger: checksPass` cho cả backend và frontend, nên Render có thể tự triển khai sau khi các kiểm tra của commit trên nhánh theo dõi đều đạt. GitHub Actions cũng kích hoạt Deploy Hook và xác minh commit đang chạy; chỉ coi phát hành hoàn tất khi cả hai dịch vụ và production smoke checks đều pass.
 
 ## Biến môi trường backend
 

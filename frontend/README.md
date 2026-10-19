@@ -154,7 +154,7 @@ Vite dev server đã được cấu hình proxy tự động chuyển tiếp cá
 ./scripts/run-e2e.ps1
 ```
 
-Script đóng gói backend hiện tại, khởi chạy profile `e2e` với H2 trong bộ nhớ tại cổng `18080`, chạy API flow và đăng nhập lần lượt bằng ba tài khoản mẫu. Trên máy mới, cài browser một lần bằng `pnpm exec playwright install chromium`. Playwright mở giao diện tại cổng `5174`, kiểm tra Candidate `/candidate/profile`, Recruiter `/recruiter/jobs` và Admin `/admin/jobs` ở độ rộng `360`, `555`, `1280` px. Backend tạm được dừng khi hoàn tất; ảnh được lưu tại `artifacts/roleplay-qa/`.
+Script đóng gói backend hiện tại, khởi chạy profile `e2e` với H2 trong bộ nhớ tại cổng `18080`, chạy API flow và đăng nhập lần lượt bằng ba tài khoản mẫu. Trên máy mới, cài browser một lần bằng `pnpm exec playwright install chromium`. Playwright mở giao diện tại cổng `5174`, kiểm tra các route công khai, candidate, recruiter, admin và trợ lý; ba vai trò được rà tại độ rộng `360`, `390`, `555`, `1280`, `1440` px. Backend tạm được dừng khi hoàn tất; ảnh được lưu tại `artifacts/roleplay-qa/`.
 
 Các bước frontend độc lập vẫn chạy từ thư mục `frontend/`:
 

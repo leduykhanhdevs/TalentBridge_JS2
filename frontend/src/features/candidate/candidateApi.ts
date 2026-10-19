@@ -16,6 +16,7 @@ import type {
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 import { authenticatedFetch } from '../auth/authenticatedFetch'
+import { fetchWithTimeout } from '../../app/fetchWithTimeout'
 
 export class CandidateApiError extends Error {
     readonly status: number
@@ -232,7 +233,7 @@ export async function deleteCandidateSkill(id: number): Promise<void> {
 // ==========================================
 
 export async function getAllMasterSkills(): Promise<SkillItem[]> {
-    const res = await fetch(`${API_BASE_URL}/skills`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/skills`, {
         method: 'GET',
     })
 
@@ -422,7 +423,7 @@ export async function applyJob(payload: ApplyJobPayload): Promise<CandidateAppli
 // ==========================================
 
 export async function getCvTemplates(): Promise<CvTemplate[]> {
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/templates`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/candidates/resumes/templates`, {
         method: 'GET',
     })
 

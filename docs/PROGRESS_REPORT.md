@@ -608,3 +608,8 @@
   - Sửa request dashboard metrics dùng `authenticatedFetch` để khi access token hết hạn, phiên hợp lệ được refresh và thử lại như các API admin khác. Kiểm tra helper xác thực 3/3 test và frontend production build đạt.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Servlet filter, `ConcurrentHashMap`, `LongAdder`/`LongAccumulator`, allowlist HTTP method, route template, bucket 5 phút, Spring Security `ROLE_ADMIN`, React/TypeScript và Vitest.
 - **Mục đích chức năng / việc đã làm**: Cho quản trị viên theo dõi lưu lượng, độ trễ và lỗi API theo endpoint mà không ghi dữ liệu nhạy cảm hoặc truy vấn DB trong luồng xử lý request.
+
+## UAT TOÀN WEBSITE, SỬA LỖI VÀ KIỂM THỬ HỒI QUY — 20/10/2026
+- **Đã làm được gì**: Rà các route public, ứng viên, nhà tuyển dụng, quản trị và trợ lý trên 360/390/555/1280/1440 px; ghi 5 lỗi UAT và sửa trong nhánh riêng. Kiểm tra backend mvnw verify 324/324, frontend Vitest 100/100, ESLint, production build, API E2E H2 28/28, Playwright 11/11; lưu 125 ảnh cùng log tại docs/qa/full-site-uat-2026-10-20/. Production smoke chỉ đọc xác nhận bản nền SHA 474b749...; các sửa UAT còn chờ PR/review/CD.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, AbortController và ReadableStream để giới hạn thời gian cả response body; TanStack Query cho trạng thái lỗi/thử lại; Vitest, ESLint, TypeScript/Vite, Playwright Chromium; Spring Boot/Maven với H2 cô lập; GET/OPTIONS smoke trên Render.
+- **Mục đích chức năng / việc đã làm**: Giúp người dùng luôn thấy lỗi tạo tin ngay trong form, thoát trạng thái tải vô hạn, đăng xuất có giới hạn thời gian, và nhận thông báo đúng khi response đăng nhập bị timeout; xác nhận responsive và quyền cơ bản mà không ghi dữ liệu production.
