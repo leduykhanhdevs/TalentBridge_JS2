@@ -1,0 +1,80 @@
+
+> frontend@0.0.0 build C:\Users\leduy\.codex\worktrees\hrpm-59-api-metrics\TalentBridge_JS2\frontend
+> tsc -b && vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 2122 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                       0.99 kB │ gzip:   0.51 kB
+dist/assets/index-CCCkFVt0.css                       95.10 kB │ gzip:  16.26 kB
+dist/assets/check-DxBTLVQX.js                         0.16 kB │ gzip:   0.16 kB
+dist/assets/chevron-down-Zc4HQGIu.js                  0.16 kB │ gzip:   0.16 kB
+dist/assets/plus-DONxxC1f.js                          0.19 kB │ gzip:   0.17 kB
+dist/assets/arrow-right-DWW0TjnF.js                   0.20 kB │ gzip:   0.18 kB
+dist/assets/clock-3-BPDn6Bzc.js                       0.20 kB │ gzip:   0.19 kB
+dist/assets/clock-D1YPpw4d.js                         0.20 kB │ gzip:   0.19 kB
+dist/assets/circle-check-BiMWI25o.js                  0.25 kB │ gzip:   0.21 kB
+dist/assets/mail-C6Uc6_VT.js                          0.25 kB │ gzip:   0.22 kB
+dist/assets/briefcase-Dv2NM4WP.js                     0.26 kB │ gzip:   0.22 kB
+dist/assets/circle-x-DED0frta.js                      0.26 kB │ gzip:   0.21 kB
+dist/assets/circle-plus-C6YKiPqf.js                   0.27 kB │ gzip:   0.21 kB
+dist/assets/download-C54ilRFA.js                      0.27 kB │ gzip:   0.22 kB
+dist/assets/globe-DVhQjAP0.js                         0.28 kB │ gzip:   0.22 kB
+dist/assets/video-BzHwxXZi.js                         0.28 kB │ gzip:   0.24 kB
+dist/assets/external-link-DUu7A5LO.js                 0.29 kB │ gzip:   0.22 kB
+dist/assets/calendar-6AVI4eNV.js                      0.29 kB │ gzip:   0.23 kB
+dist/assets/lock-keyhole-BeBoucUt.js                  0.29 kB │ gzip:   0.24 kB
+dist/assets/map-pin-B2M1kWj8.js                       0.29 kB │ gzip:   0.25 kB
+dist/assets/rotate-ccw-clock-BBEVCdTn.js              0.30 kB │ gzip:   0.24 kB
+dist/assets/circle-alert-cbkZbAtK.js                  0.31 kB │ gzip:   0.22 kB
+dist/assets/funnel-BowRdebk.js                        0.31 kB │ gzip:   0.25 kB
+dist/assets/cloud-upload-gnS3nv-N.js                  0.31 kB │ gzip:   0.24 kB
+dist/assets/triangle-alert-DeOlXVCJ.js                0.33 kB │ gzip:   0.25 kB
+dist/assets/pen-line-ZC_J-UJC.js                      0.33 kB │ gzip:   0.26 kB
+dist/assets/refresh-cw-C2GS8BUh.js                    0.36 kB │ gzip:   0.25 kB
+dist/assets/phone-D_-lUqAi.js                         0.36 kB │ gzip:   0.25 kB
+dist/assets/save-BKr3ZK9i.js                          0.36 kB │ gzip:   0.25 kB
+dist/assets/trash-CNk4zGQI.js                         0.38 kB │ gzip:   0.25 kB
+dist/assets/lock-open-B1D_gRnJ.js                     0.46 kB │ gzip:   0.31 kB
+dist/assets/star-BWS1ZnWP.js                          0.51 kB │ gzip:   0.32 kB
+dist/assets/share-2-A4nxUAXP.js                       0.59 kB │ gzip:   0.34 kB
+dist/assets/statisticsApi-C1Z9jPoU.js                 0.83 kB │ gzip:   0.52 kB
+dist/assets/tokenStorage-CU3tXtDl.js                  1.16 kB │ gzip:   0.50 kB
+dist/assets/recruiterJobApi-Cr54mJCV.js               1.39 kB │ gzip:   0.72 kB
+dist/assets/fetchWithTimeout-CHQK0IzR.js              1.48 kB │ gzip:   0.82 kB
+dist/assets/jobSearchFormatters-BA5OPlQ1.js           1.82 kB │ gzip:   1.01 kB
+dist/assets/NotFoundPage-DdE1lhp9.js                  2.11 kB │ gzip:   0.92 kB
+dist/assets/useMutation-DgApnzvd.js                   2.33 kB │ gzip:   0.97 kB
+dist/assets/recruiterApi-DPJOYYnf.js                  2.55 kB │ gzip:   0.96 kB
+dist/assets/AssistantPage-CXkfShep.js                 3.27 kB │ gzip:   1.27 kB
+dist/assets/adminApi-CHDqPOkT.js                      3.47 kB │ gzip:   1.03 kB
+dist/assets/ForgotPasswordPage-C5ywMQ84.js            4.78 kB │ gzip:   1.91 kB
+dist/assets/candidateApi-BQqQx4f0.js                  6.59 kB │ gzip:   1.45 kB
+dist/assets/LoginPage-CZah9IIQ.js                     6.74 kB │ gzip:   2.54 kB
+dist/assets/ResetPasswordPage-Ce0WkI9M.js             7.22 kB │ gzip:   2.23 kB
+dist/assets/useQuery-B-2B_VfT.js                      7.97 kB │ gzip:   2.94 kB
+dist/assets/HomePage-CqCPUfV5.js                      8.38 kB │ gzip:   2.72 kB
+dist/assets/RecruiterStatisticsPage-CP_ezNXR.js       8.54 kB │ gzip:   2.82 kB
+dist/assets/AdminApiMetricsPage-GqkPp8zI.js           8.72 kB │ gzip:   3.07 kB
+dist/assets/AdminJobsPage-BK_Xu6x7.js                 9.59 kB │ gzip:   2.95 kB
+dist/assets/createLucideIcon-C-bNdaTa.js             11.80 kB │ gzip:   4.63 kB
+dist/assets/RecruiterProfilePage-BN3112xE.js         12.63 kB │ gzip:   3.52 kB
+dist/assets/RegisterPage-ZFVAJcRn.js                 12.94 kB │ gzip:   4.15 kB
+dist/assets/RecruiterPeerApprovalPage-BxiMWROT.js    13.93 kB │ gzip:   3.90 kB
+dist/assets/illustrations-B2sON6nv.js                16.11 kB │ gzip:   3.15 kB
+dist/assets/JobSearchPage-BR-L5hU_.js                16.92 kB │ gzip:   5.23 kB
+dist/assets/RecruiterJoinCompanyPage-tzZoP8Ra.js     17.18 kB │ gzip:   4.70 kB
+dist/assets/JobDetailPage-DiS4iUpT.js                20.64 kB │ gzip:   6.34 kB
+dist/assets/RecruiterCompanyPage-CZiz1kHm.js         20.78 kB │ gzip:   5.09 kB
+dist/assets/CandidateApplicationsPage-BtU8eldD.js    21.86 kB │ gzip:   5.79 kB
+dist/assets/AdminRecruitersPage-B4X5HbKF.js          25.54 kB │ gzip:   5.63 kB
+dist/assets/AdminCandidatesPage-DpEhCJ23.js          27.16 kB │ gzip:   6.15 kB
+dist/assets/RecruiterJobsPage-CDc4nyH0.js            28.86 kB │ gzip:   7.31 kB
+dist/assets/AdminCompaniesPage-D-MM5kvi.js           30.26 kB │ gzip:   6.52 kB
+dist/assets/RecruiterJobApplicantsPage-CE3_ekWs.js   52.11 kB │ gzip:  12.16 kB
+dist/assets/CandidateProfilePage-BHjcE7AR.js         86.55 kB │ gzip:  17.77 kB
+dist/assets/index-D575pEid.js                       331.49 kB │ gzip: 101.45 kB
+
+✓ built in 1.55s

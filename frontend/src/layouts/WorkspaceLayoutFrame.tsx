@@ -31,8 +31,8 @@ export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigation
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
     const displayName = user.fullName?.replace(/\s*\((?:Admin|Recruiter|Candidate)\)\s*$/i, '') ?? ''
 
-    async function handleLogout() {
-        await logoutUser()
+    function handleLogout() {
+        void logoutUser()
         navigate('/login')
     }
 

@@ -3,6 +3,111 @@ import { join } from 'node:path'
 
 const screenshotDirectory = process.env.TALENTBRIDGE_E2E_SCREENSHOT_DIR!
 
+test('floating assistant stays off narrow mobile screens so it cannot cover page controls', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 })
+
+    for (const path of ['/login', '/register', '/forgot-password', '/reset-password']) {
+        await page.goto(path)
+        await expect(page.getByRole('button', { name: 'Mở nhanh Trợ lý TalentBridge' })).toHaveCount(0)
+    }
+
+    await page.addInitScript(() => {
+        localStorage.setItem('talentbridge_access_token', 'qa-mobile-candidate-token')
+        localStorage.setItem('talentbridge_auth_user', JSON.stringify({
+            id: 905,
+            email: 'qa.mobile@example.invalid',
+            fullName: 'QA Mobile Candidate',
+            status: 'ACTIVE',
+            roles: ['ROLE_CANDIDATE'],
+        }))
+    })
+    await page.goto('/candidate/applications')
+    await expect(page.getByRole('button', { name: 'Mở nhanh Trợ lý TalentBridge' })).toHaveCount(0)
+})
+
+test('assistant launcher stays hidden on auth and assistant routes with trailing slashes', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+
+    for (const path of ['/login/', '/register/', '/forgot-password/', '/reset-password/', '/assistant/']) {
+        await page.goto(path)
+        await expect(page.getByRole('button', { name: 'Mở nhanh Trợ lý TalentBridge' })).toHaveCount(0)
+    }
+})
+
+test('logout in another tab waits for an active refresh and revokes the rotated pair', async ({ browser }) => {
+    test.setTimeout(15_000)
+    const context = await browser.newContext()
+    await context.addInitScript(() => {
+        localStorage.setItem('talentbridge_access_token', 'qa-cross-tab-access')
+        localStorage.setItem('talentbridge_refresh_token', 'qa-cross-tab-refresh')
+        localStorage.setItem('talentbridge_auth_user', JSON.stringify({
+            id: 906,
+            email: 'qa.cross-tab@example.invalid',
+            fullName: 'QA Cross Tab Candidate',
+            status: 'ACTIVE',
+            roles: ['ROLE_CANDIDATE'],
+        }))
+    })
+
+    const refreshPage = await context.newPage()
+    const logoutPage = await context.newPage()
+    let releaseRefresh!: () => void
+    let markRefreshStarted!: () => void
+    let markLogoutSent!: () => void
+    let logoutHeaders: Record<string, string> | undefined
+    let logoutBody: string | undefined
+    const refreshStarted = new Promise<void>((resolve) => { markRefreshStarted = resolve })
+    const logoutSent = new Promise<void>((resolve) => { markLogoutSent = resolve })
+
+    await refreshPage.route('**/api/v1/candidates/profile', async (route) => {
+        await route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"expired"}' })
+    })
+    await refreshPage.route('**/api/v1/auth/refresh-token', async (route) => {
+        markRefreshStarted()
+        await new Promise<void>((resolve) => { releaseRefresh = resolve })
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                statusCode: 200,
+                message: 'ok',
+                data: {
+                    accessToken: 'qa-cross-tab-access-rotated',
+                    refreshToken: 'qa-cross-tab-refresh-rotated',
+                    tokenType: 'Bearer',
+                    expiresInMs: 60_000,
+                    user: { id: 906, email: 'qa.cross-tab@example.invalid', fullName: 'QA Cross Tab Candidate', status: 'ACTIVE', roles: ['ROLE_CANDIDATE'] },
+                },
+            }),
+        })
+    })
+    await logoutPage.route('**/api/v1/auth/logout', async (route) => {
+        logoutHeaders = await route.request().allHeaders()
+        logoutBody = route.request().postData() ?? undefined
+        markLogoutSent()
+        await route.fulfill({ status: 204 })
+    })
+
+    try {
+        await refreshPage.goto('/candidate/profile')
+        await refreshStarted
+        await logoutPage.goto('/')
+        await logoutPage.getByRole('button', { name: 'Đăng xuất' }).click()
+        await expect(logoutPage).toHaveURL(/\/login$/)
+        expect(logoutBody).toBeUndefined()
+
+        releaseRefresh()
+        await logoutSent
+        expect(JSON.parse(logoutBody ?? 'null')).toEqual({ refreshToken: 'qa-cross-tab-refresh-rotated' })
+        expect(logoutHeaders?.authorization).toBe('Bearer qa-cross-tab-access-rotated')
+        await expect.poll(() => logoutPage.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
+        await expect.poll(() => refreshPage.evaluate(() => localStorage.getItem('talentbridge_refresh_token'))).toBeNull()
+    } finally {
+        releaseRefresh?.()
+        await context.close()
+    }
+})
+
 test('failed recruiter job creation keeps the form open and shows the API error inside it', async ({ page }) => {
     await page.addInitScript(() => {
         localStorage.setItem('talentbridge_access_token', 'qa-recruiter-access-token')
@@ -163,4 +268,37 @@ test('a stalled server logout still clears the local session and returns to logi
     await expect(page).toHaveURL(/\/login$/, { timeout: 5_000 })
     expect(await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
     releaseRequest?.()
+})
+
+test('expired-token logout returns to login without starting another refresh', async ({ page }) => {
+    test.setTimeout(5_000)
+    await page.addInitScript(() => {
+        localStorage.setItem('talentbridge_access_token', 'qa-expired-access-token')
+        localStorage.setItem('talentbridge_refresh_token', 'qa-refresh-token')
+        localStorage.setItem('talentbridge_auth_user', JSON.stringify({
+            id: 904,
+            email: 'qa.expired@example.invalid',
+            fullName: 'QA Expired Candidate',
+            status: 'ACTIVE',
+            roles: ['ROLE_CANDIDATE'],
+        }))
+    })
+
+    let logoutCalls = 0
+    let refreshCalls = 0
+    await page.route('**/api/v1/auth/logout', async (route) => {
+        logoutCalls += 1
+        await route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"expired"}' })
+    })
+    await page.route('**/api/v1/auth/refresh-token', async (route) => {
+        refreshCalls += 1
+        await route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"expired"}' })
+    })
+
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Đăng xuất' }).click()
+    await expect(page).toHaveURL(/\/login$/, { timeout: 1_500 })
+    expect(await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
+    expect(logoutCalls).toBe(1)
+    expect(refreshCalls).toBe(0)
 })

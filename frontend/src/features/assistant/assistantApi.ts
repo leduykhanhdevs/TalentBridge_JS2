@@ -1,5 +1,6 @@
 import { getAccessToken } from '../auth/tokenStorage'
 import { authenticatedFetch } from '../auth/authenticatedFetch'
+import { FetchTimeoutError } from '../../app/fetchWithTimeout'
 import type { AssistantApiEnvelope, AssistantReply, AssistantTurn } from './assistantTypes'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
@@ -19,8 +20,6 @@ export async function askTalentBridge(message: string, history: AssistantTurn[])
     const token = getAccessToken()
     if (!token) throw new AssistantApiError('Đăng nhập để trò chuyện với Trợ lý TalentBridge.', 401)
 
-    const controller = new AbortController()
-    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
     let response: Response
     try {
         response = await authenticatedFetch(`${API_BASE_URL}/assistant/chat`, {
@@ -30,21 +29,21 @@ export async function askTalentBridge(message: string, history: AssistantTurn[])
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ message, history: history.slice(-8) }),
-            signal: controller.signal,
-        })
-    } catch {
-        if (controller.signal.aborted) {
+        }, REQUEST_TIMEOUT_MS)
+    } catch (error) {
+        if (error instanceof FetchTimeoutError) {
             throw new AssistantApiError('Trợ lý phản hồi quá chậm. Vui lòng thử lại sau một lát.', 408)
         }
         throw new AssistantApiError('Không thể kết nối Trợ lý TalentBridge. Vui lòng thử lại.', 0)
-    } finally {
-        window.clearTimeout(timeoutId)
     }
 
     let body: AssistantApiEnvelope<AssistantReply> | undefined
     try {
         body = await response.json() as AssistantApiEnvelope<AssistantReply>
-    } catch {
+    } catch (error) {
+        if (error instanceof FetchTimeoutError) {
+            throw new AssistantApiError('Trợ lý phản hồi quá chậm. Vui lòng thử lại sau một lát.', 408)
+        }
         body = undefined
     }
     if (!response.ok) {

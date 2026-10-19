@@ -1,10 +1,36 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthApiError, loginUser, logoutUser, LOGOUT_TIMEOUT_MS, registerCandidate } from '../authApi'
+import { refreshAuthSession } from '../sessionRefresh'
+import { getAccessToken, saveAuthTokens } from '../tokenStorage'
+import { AUTH_SESSION_LOCK_NAME } from '../authSessionLock'
 import { API_REQUEST_TIMEOUT_MESSAGE, API_REQUEST_TIMEOUT_MS } from '../../../app/fetchWithTimeout'
 
 afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
+})
+
+function createSerializedLockManager(): LockManager {
+    let previousRequest = Promise.resolve()
+
+    return {
+        request: vi.fn((_name, _options, callback) => {
+            const previous = previousRequest
+            let release!: () => void
+            previousRequest = new Promise<void>((resolve) => { release = resolve })
+            return previous.then(() => callback({} as Lock)).finally(release)
+        }),
+    } as unknown as LockManager
+}
+
+function createImmediateLockManager(): LockManager {
+    return {
+        request: vi.fn((_name, _options, callback) => Promise.resolve(callback({} as Lock))),
+    } as unknown as LockManager
+}
+
+beforeEach(() => {
+    vi.stubGlobal('navigator', { locks: createImmediateLockManager() })
 })
 
 describe('auth API fallback errors', () => {
@@ -122,7 +148,7 @@ describe('auth API fallback errors', () => {
         expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization')).toBe('Bearer qa-logout-token')
     })
 
-    it('refreshes an expired access token before revoking the server session on logout', async () => {
+    it('sends both captured tokens to revoke the session without refreshing after logout', async () => {
         const storage = new Map<string, string>([
             ['talentbridge_access_token', 'qa-expired-access-token'],
             ['talentbridge_refresh_token', 'qa-refresh-token'],
@@ -138,29 +164,201 @@ describe('auth API fallback errors', () => {
         vi.stubGlobal('window', { dispatchEvent: () => true })
 
         const fetchMock = vi.spyOn(globalThis, 'fetch')
-            .mockResolvedValueOnce(new Response('expired', { status: 401 }))
-            .mockResolvedValueOnce(new Response(JSON.stringify({
-                statusCode: 200,
-                message: 'ok',
-                data: {
-                    accessToken: 'qa-fresh-access-token',
-                    refreshToken: 'qa-rotated-refresh-token',
-                    tokenType: 'Bearer',
-                    expiresInMs: 60_000,
-                    user: { id: 1, email: 'qa@example.invalid', fullName: 'QA', status: 'ACTIVE', roles: ['ROLE_CANDIDATE'] },
-                },
-            }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
             .mockResolvedValueOnce(new Response(null, { status: 204 }))
 
         await expect(logoutUser()).resolves.toBeUndefined()
 
-        expect(fetchMock).toHaveBeenCalledTimes(3)
+        expect(fetchMock).toHaveBeenCalledTimes(1)
         expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/auth/logout')
-        expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/v1/auth/refresh-token')
-        expect(fetchMock.mock.calls[2]?.[0]).toBe('/api/v1/auth/logout')
-        expect(new Headers(fetchMock.mock.calls[2]?.[1]?.headers).get('Authorization'))
-            .toBe('Bearer qa-fresh-access-token')
+        expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({ refreshToken: 'qa-refresh-token' })
+        expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization'))
+            .toBe('Bearer qa-expired-access-token')
         expect(storage.get('talentbridge_access_token')).toBeUndefined()
         expect(storage.get('talentbridge_refresh_token')).toBeUndefined()
+    })
+
+    it('clears local auth immediately and bounds an expired-token logout by one deadline', async () => {
+        vi.useFakeTimers()
+        const storage = new Map<string, string>([
+            ['talentbridge_access_token', 'qa-expired-access-token'],
+            ['talentbridge_refresh_token', 'qa-refresh-token'],
+        ])
+        vi.stubGlobal('localStorage', {
+            getItem: (key: string) => storage.get(key) ?? null,
+            setItem: (key: string, value: string) => storage.set(key, value),
+            removeItem: (key: string) => storage.delete(key),
+            clear: () => storage.clear(),
+            key: () => null,
+            get length() { return storage.size },
+        } as Storage)
+        vi.stubGlobal('window', { dispatchEvent: () => true })
+        const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+            if (input === '/api/v1/auth/logout') {
+                return Promise.resolve(new Response('expired', { status: 401 }))
+            }
+            return new Promise<Response>((_resolve, reject) => {
+                init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true })
+            })
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        const logout = logoutUser()
+        expect(storage.get('talentbridge_access_token')).toBeUndefined()
+        expect(storage.get('talentbridge_refresh_token')).toBeUndefined()
+
+        const assertion = expect(logout).resolves.toBeUndefined()
+        await vi.advanceTimersByTimeAsync(LOGOUT_TIMEOUT_MS)
+        await assertion
+
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+        expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/auth/logout')
+        expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({ refreshToken: 'qa-refresh-token' })
+        expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization'))
+            .toBe('Bearer qa-expired-access-token')
+    })
+
+    it('revokes the stored session when acquiring the cross-tab logout lock rejects', async () => {
+        const storage = new Map<string, string>([
+            ['talentbridge_access_token', 'qa-lock-failure-access-token'],
+            ['talentbridge_refresh_token', 'qa-lock-failure-refresh-token'],
+        ])
+        vi.stubGlobal('localStorage', {
+            getItem: (key: string) => storage.get(key) ?? null,
+            setItem: (key: string, value: string) => storage.set(key, value),
+            removeItem: (key: string) => storage.delete(key),
+            clear: () => storage.clear(),
+            key: () => null,
+            get length() { return storage.size },
+        } as Storage)
+        vi.stubGlobal('window', { dispatchEvent: () => true })
+        vi.stubGlobal('navigator', {
+            locks: { request: vi.fn().mockRejectedValue(new DOMException('Lock unavailable', 'AbortError')) },
+        })
+        const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+        vi.stubGlobal('fetch', fetchMock)
+
+        await expect(logoutUser()).resolves.toBeUndefined()
+
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+        expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/auth/logout')
+        expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization'))
+            .toBe('Bearer qa-lock-failure-access-token')
+        expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+            refreshToken: 'qa-lock-failure-refresh-token',
+        })
+        expect(storage.has('talentbridge_access_token')).toBe(false)
+        expect(storage.has('talentbridge_refresh_token')).toBe(false)
+    })
+
+    it('bounds lock-acquisition timeout and still attempts server revocation', async () => {
+        vi.useFakeTimers()
+        const storage = new Map<string, string>([
+            ['talentbridge_access_token', 'qa-lock-timeout-access-token'],
+            ['talentbridge_refresh_token', 'qa-lock-timeout-refresh-token'],
+        ])
+        vi.stubGlobal('localStorage', {
+            getItem: (key: string) => storage.get(key) ?? null,
+            setItem: (key: string, value: string) => storage.set(key, value),
+            removeItem: (key: string) => storage.delete(key),
+            clear: () => storage.clear(),
+            key: () => null,
+            get length() { return storage.size },
+        } as Storage)
+        vi.stubGlobal('window', { dispatchEvent: () => true })
+        const lockManager = {
+            request: vi.fn((_name, options) => new Promise((_resolve, reject) => {
+                const signal = (options as { signal?: AbortSignal }).signal
+                signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
+            })),
+        }
+        vi.stubGlobal('navigator', { locks: lockManager })
+        const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+        vi.stubGlobal('fetch', fetchMock)
+
+        const logout = logoutUser()
+        const assertion = expect(logout).resolves.toBeUndefined()
+        await vi.advanceTimersByTimeAsync(LOGOUT_TIMEOUT_MS + 8_000)
+        await assertion
+
+        expect(lockManager.request).toHaveBeenCalledTimes(1)
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+        expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/auth/logout')
+        expect(new Headers(fetchMock.mock.calls[0]?.[1]?.headers).get('Authorization'))
+            .toBe('Bearer qa-lock-timeout-access-token')
+        expect(storage.has('talentbridge_access_token')).toBe(false)
+        expect(storage.has('talentbridge_refresh_token')).toBe(false)
+    })
+
+    it('serializes refresh and logout before revoking the rotated shared session pair', async () => {
+        const storage = new Map<string, string>()
+        vi.stubGlobal('localStorage', {
+            getItem: (key: string) => storage.get(key) ?? null,
+            setItem: (key: string, value: string) => storage.set(key, value),
+            removeItem: (key: string) => storage.delete(key),
+            clear: () => storage.clear(),
+            key: () => null,
+            get length() { return storage.size },
+        } as Storage)
+        vi.stubGlobal('window', { dispatchEvent: () => true })
+        const lockManager = createSerializedLockManager()
+        vi.stubGlobal('navigator', { locks: lockManager })
+        saveAuthTokens({
+            accessToken: 'qa-old-access-token',
+            refreshToken: 'qa-old-refresh-token',
+            tokenType: 'Bearer',
+            expiresInMs: 60_000,
+            user: { id: 1, email: 'qa@example.invalid', fullName: 'QA', status: 'ACTIVE', roles: ['ROLE_CANDIDATE'] },
+        })
+
+        let resolveRefresh!: (response: Response) => void
+        let logoutCalls = 0
+        const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+            void init
+            if (input === '/api/v1/auth/refresh-token') {
+                return new Promise<Response>((resolve) => { resolveRefresh = resolve })
+            }
+            if (input === '/api/v1/auth/logout') {
+                logoutCalls += 1
+                return Promise.resolve(new Response(null, { status: 204 }))
+            }
+            return Promise.reject(new Error('Unexpected request'))
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        const refresh = refreshAuthSession()
+        await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+        const logout = logoutUser()
+        expect(getAccessToken()).toBeNull()
+        expect(storage.get('talentbridge_access_token')).toBe('qa-old-access-token')
+        expect(storage.get('talentbridge_refresh_token')).toBe('qa-old-refresh-token')
+        expect(logoutCalls).toBe(0)
+
+        resolveRefresh(new Response(JSON.stringify({
+            statusCode: 200,
+            message: 'ok',
+            data: {
+                accessToken: 'qa-new-access-token',
+                refreshToken: 'qa-new-refresh-token',
+                tokenType: 'Bearer',
+                expiresInMs: 60_000,
+                user: { id: 1, email: 'qa@example.invalid', fullName: 'QA', status: 'ACTIVE', roles: ['ROLE_CANDIDATE'] },
+            },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+
+        await expect(refresh).resolves.toBe(false)
+        await expect(logout).resolves.toBeUndefined()
+
+        const logoutRequests = fetchMock.mock.calls.filter(([input]) => input === '/api/v1/auth/logout')
+        expect(logoutRequests).toHaveLength(1)
+        expect(new Headers(logoutRequests[0]?.[1]?.headers).get('Authorization')).toBe('Bearer qa-new-access-token')
+        expect(JSON.parse(String(logoutRequests[0]?.[1]?.body))).toEqual({ refreshToken: 'qa-new-refresh-token' })
+        expect(storage.get('talentbridge_access_token')).toBeUndefined()
+        expect(storage.get('talentbridge_refresh_token')).toBeUndefined()
+        expect(storage.get('talentbridge_logout_intent')).toBeUndefined()
+        expect(lockManager.request).toHaveBeenCalledWith(
+            AUTH_SESSION_LOCK_NAME,
+            expect.objectContaining({ mode: 'exclusive' }),
+            expect.any(Function),
+        )
     })
 })

@@ -3,9 +3,11 @@ import { AlertCircle, LoaderCircle, LockKeyhole, LogIn, Mail } from 'lucide-reac
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useMutation } from '@tanstack/react-query'
 import { HeroTalentIllustration } from '../components/illustrations'
-import { AuthApiError, loginUser } from '../features/auth/authApi'
+import { AuthApiError, loginUser, LOGOUT_TIMEOUT_MS } from '../features/auth/authApi'
 import { getCandidatePostLoginPath } from '../features/auth/loginRedirect'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
+import { REFRESH_TIMEOUT_MS } from '../features/auth/sessionRefresh'
+import { withAuthSessionLock } from '../features/auth/authSessionLock'
 
 type FormField = 'email' | 'password'
 type FieldErrors = Partial<Record<FormField, string>>
@@ -19,8 +21,8 @@ export function LoginPage() {
 
     const loginMutation = useMutation({
         mutationFn: loginUser,
-        onSuccess: (data) => {
-            saveAuthTokens(data)
+        onSuccess: async (data) => {
+            await withAuthSessionLock(() => saveAuthTokens(data), LOGOUT_TIMEOUT_MS + REFRESH_TIMEOUT_MS)
             const roles = data.user.roles ?? []
             if (roles.includes('ROLE_ADMIN')) {
                 navigate('/admin/candidates')

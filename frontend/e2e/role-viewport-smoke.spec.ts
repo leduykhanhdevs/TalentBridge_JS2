@@ -68,6 +68,15 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             await expect(page.getByRole('button', { name: 'Duyệt' }).first()).toBeVisible()
         }
 
+        if (actor.name === 'recruiter' || actor.name === 'admin') {
+            await page.setViewportSize({ width: 360, height: 900 })
+            await page.getByRole('button', { name: 'Mở điều hướng' }).click()
+            await page.getByRole('link', { name: 'Trợ lý', exact: true }).click()
+            await expect(page).toHaveURL(/\/assistant$/)
+            await expect(page.getByRole('heading', { name: 'Trợ lý TalentBridge', level: 1 })).toBeVisible()
+            await page.goto(`${baseURL}${actor.route}`)
+        }
+
         for (const width of [360, 390, 555, 1280, 1440]) {
             await page.setViewportSize({ width, height: 900 })
             await expect(page.getByRole('heading', { name: actor.heading, exact: false }).first()).toBeVisible()

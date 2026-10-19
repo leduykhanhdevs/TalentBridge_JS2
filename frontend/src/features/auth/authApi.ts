@@ -8,8 +8,17 @@ import type {
     LoginRequest,
     ResetPasswordRequest,
 } from './authTypes'
-import { getAccessToken, getRefreshToken, clearAuthTokens } from './tokenStorage'
+import {
+    beginLogoutIntent,
+    clearAuthTokens,
+    getAccessToken,
+    getLogoutIntentId,
+    getStoredAccessToken,
+    getStoredRefreshToken,
+} from './tokenStorage'
 import { authenticatedFetch } from './authenticatedFetch'
+import { REFRESH_TIMEOUT_MS } from './sessionRefresh'
+import { withAuthSessionLock } from './authSessionLock'
 import { fetchWithTimeout, FetchTimeoutError } from '../../app/fetchWithTimeout'
 
 export class AuthApiError extends Error {
@@ -74,6 +83,12 @@ async function readAuthResponseBody<T>(response: Response): Promise<T | undefine
             throw new AuthApiError(0, error.message)
         }
         return undefined
+    }
+}
+
+function discardResponseBody(response: Response | undefined): void {
+    if (response?.body) {
+        void response.body.cancel().catch(() => undefined)
     }
 }
 
@@ -187,18 +202,61 @@ export async function loginUser(
 }
 
 export async function logoutUser(): Promise<void> {
-    const token = getAccessToken()
+    const logoutIntentId = beginLogoutIntent()
+    const deadline = Date.now() + LOGOUT_TIMEOUT_MS + REFRESH_TIMEOUT_MS
+    let revocationTokens: { accessToken: string | null; refreshToken: string | null } | null = null
+
+    const remainingMs = () => Math.min(LOGOUT_TIMEOUT_MS, Math.max(0, deadline - Date.now()))
+    const revoke = (
+        token: string | null,
+        sessionRefreshToken: string | null,
+        timeoutMs = remainingMs(),
+    ) => fetchWithTimeout(
+        `${API_BASE_URL}/auth/logout`,
+        {
+            method: 'POST',
+            headers: {
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...(sessionRefreshToken ? { 'Content-Type': 'application/json; charset=UTF-8' } : {}),
+            },
+            ...(sessionRefreshToken ? { body: JSON.stringify({ refreshToken: sessionRefreshToken }) } : {}),
+            keepalive: true,
+        },
+        timeoutMs,
+    )
+
     try {
-        if (token || getRefreshToken()) {
-            await authenticatedFetch(`${API_BASE_URL}/auth/logout`, {
-                method: 'POST',
-                keepalive: true,
-            }, LOGOUT_TIMEOUT_MS)
-        }
+        await withAuthSessionLock(async () => {
+            if (getLogoutIntentId() !== logoutIntentId) return
+
+            // The shared lock waits for a refresh in any same-origin tab to finish,
+            // so read and revoke the latest rotated pair before clearing storage.
+            const accessToken = getStoredAccessToken()
+            const refreshToken = getStoredRefreshToken()
+            if (!clearAuthTokens(logoutIntentId)) return
+            revocationTokens = { accessToken, refreshToken }
+            if ((!accessToken && !refreshToken) || remainingMs() <= 0) return
+
+            const response = await revoke(accessToken, refreshToken)
+            discardResponseBody(response)
+        }, LOGOUT_TIMEOUT_MS + REFRESH_TIMEOUT_MS)
     } catch {
-        // Silently ignore network failure on logout
-    } finally {
-        clearAuthTokens()
+        // If acquiring the lock fails before the callback, revoke the best
+        // available session pair. Local logout stays final and bounded.
+        if (revocationTokens) return
+        let tokens: { accessToken: string | null; refreshToken: string | null } | null = null
+        if (getLogoutIntentId() === logoutIntentId) {
+            tokens = { accessToken: getStoredAccessToken(), refreshToken: getStoredRefreshToken() }
+            if (!clearAuthTokens(logoutIntentId)) tokens = null
+        } else clearAuthTokens(logoutIntentId)
+
+        if (!tokens || (!tokens.accessToken && !tokens.refreshToken)) return
+        try {
+            const response = await revoke(tokens.accessToken, tokens.refreshToken, LOGOUT_TIMEOUT_MS)
+            discardResponseBody(response)
+        } catch {
+            // Server revocation is best-effort; local sign-out must not be undone.
+        }
     }
 }
 

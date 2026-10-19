@@ -7,10 +7,17 @@ import { AssistantChatPanel } from './AssistantChatPanel'
 export function TalentBridgeAssistantWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const { pathname } = useLocation()
-    if (pathname === '/assistant') return null
+    const normalizedPathname = pathname.replace(/\/+$/, '') || '/'
+    const isAuthenticationPage = [
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/reset-password',
+    ].includes(normalizedPathname)
+    if (normalizedPathname === '/assistant' || isAuthenticationPage) return null
 
     return (
-        <div className="fixed bottom-5 right-5 z-[45] sm:bottom-7 sm:right-7">
+        <div className="hidden sm:fixed sm:bottom-7 sm:right-7 sm:z-[45] sm:block">
             {isOpen && (
                 <div className="mb-3 h-[min(78dvh,43.5rem)] min-h-[28rem] w-[min(92vw,29.75rem)] rounded-xl shadow-[0_12px_32px_rgb(23_32_51_/_14%)]">
                     <ErrorBoundary fallback={(

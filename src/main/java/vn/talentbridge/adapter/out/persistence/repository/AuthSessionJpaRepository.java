@@ -66,6 +66,25 @@ public interface AuthSessionJpaRepository
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
+            update AuthSessionJpaEntity s
+            set s.revokedAt = :now,
+                s.updatedAt = :now
+            where s.sessionId = :sessionId
+              and s.user.id = :userId
+              and s.refreshTokenHash = :expectedRefreshTokenHash
+              and s.revokedAt is null
+              and s.expiresAt > :now
+            """)
+    int revokeActiveSessionByRefreshTokenHash(
+            @Param("sessionId") String sessionId,
+            @Param("userId") Long userId,
+            @Param("expectedRefreshTokenHash") String expectedRefreshTokenHash,
+            @Param("now") LocalDateTime now
+    );
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
         update AuthSessionJpaEntity s
         set s.revokedAt = :now,
             s.updatedAt = :now

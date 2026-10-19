@@ -32,6 +32,13 @@ public interface AuthSessionRepositoryPort {
             LocalDateTime now
     );
 
+    boolean revokeActiveSessionByRefreshTokenHash(
+            String sessionId,
+            Long userId,
+            String expectedRefreshTokenHash,
+            LocalDateTime now
+    );
+
     int revokeAllActiveSessions(
             Long userId,
             LocalDateTime now

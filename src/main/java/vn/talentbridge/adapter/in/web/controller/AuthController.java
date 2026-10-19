@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
 import vn.talentbridge.adapter.in.web.dto.request.ChangePasswordRequest;
 import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
+import vn.talentbridge.adapter.in.web.dto.request.LogoutRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RefreshTokenRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
 import vn.talentbridge.adapter.in.web.dto.response.AuthResponse;
@@ -104,10 +105,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @SecurityRequirement(name = "BearerAuth")
     @Operation(
             summary = "Đăng xuất",
-            description = "Thu hồi phiên đăng nhập tương ứng với Access Token hiện tại"
+            description = "Thu hồi phiên hiện tại bằng Access Token hợp lệ hoặc Refresh Token hiện hành của phiên",
+            security = {}
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -123,14 +124,18 @@ public class AuthController {
             @RequestHeader(
                     value = "Authorization",
                     required = false
-            ) String authorizationHeader
+            ) String authorizationHeader,
+            @RequestBody(required = false) LogoutRequest request
     ) {
         String accessToken = authorizationHeader != null
                 && authorizationHeader.startsWith("Bearer ")
                 ? authorizationHeader.substring(7)
                 : null;
 
-        logoutUseCase.logout(accessToken);
+        logoutUseCase.logout(
+                accessToken,
+                request == null ? null : request.getRefreshToken()
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>success(

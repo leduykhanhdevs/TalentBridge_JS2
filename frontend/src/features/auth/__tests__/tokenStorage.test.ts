@@ -6,6 +6,7 @@ import {
     getStoredUser,
     clearAuthTokens,
     isAuthenticated,
+    beginLogoutIntent,
 } from '../tokenStorage'
 import type { AuthResponse } from '../authTypes'
 
@@ -84,5 +85,19 @@ describe('tokenStorage utility', () => {
         expect(getRefreshToken()).toBeNull()
         expect(getStoredUser()).toBeNull()
         expect(isAuthenticated()).toBe(false)
+    })
+
+    it('masks shared auth state while a cross-tab logout waits for an in-flight refresh', () => {
+        saveAuthTokens(mockAuthResponse)
+        beginLogoutIntent()
+
+        expect(getAccessToken()).toBeNull()
+        expect(getRefreshToken()).toBeNull()
+        expect(getStoredUser()).toBeNull()
+        expect(isAuthenticated()).toBe(false)
+        expect(storageMap.get('talentbridge_access_token')).toBe(mockAuthResponse.accessToken)
+
+        clearAuthTokens()
+        expect(storageMap.size).toBe(0)
     })
 })
