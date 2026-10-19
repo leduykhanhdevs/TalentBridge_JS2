@@ -242,7 +242,7 @@ export async function updateAdminJobStatus(
 
 export async function getAdminApiMetrics(hours = 24): Promise<AdminApiMetricsResponse> {
     const query = new URLSearchParams({ hours: String(hours) })
-    const response = await fetch(`${API_BASE_URL}/admin/metrics/api?${query.toString()}`, {
+    const response = await authenticatedFetch(`${API_BASE_URL}/admin/metrics/api?${query.toString()}`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })

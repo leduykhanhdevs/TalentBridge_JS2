@@ -604,6 +604,7 @@
   - Ghi request count, latency trung bình/cao nhất và số/tỷ lệ lỗi 4xx/5xx theo route template; hiển thị xu hướng bucket 5 phút trong trang `/admin/metrics`.
   - Bảo vệ API metrics bằng quyền `ROLE_ADMIN`; loại URL query, body, token, tài khoản và ID động khỏi dữ liệu thu thập. Dọn bucket sau 24 giờ; ghi rõ số liệu nằm trong bộ nhớ từng tiến trình và sẽ mất khi restart.
   - Kiểm thử nhánh từ `origin/main`: backend Maven `verify` đạt 323/323; frontend Vitest 92/92, ESLint và Vite build đều đạt. Thêm test bảo đảm HTTP method tùy ý được gom thành `OTHER` để giới hạn cardinality của metrics.
-  - Cấu hình hai dịch vụ Render tự deploy sau khi CI checks pass bằng `autoDeployTrigger: checksPass`, theo yêu cầu bật auto-deploy. PR #46 đã có CI 3/3 trước commit hardening; commit mới cần chạy CI lại và Render chưa được xác minh.
+  - Cấu hình hai dịch vụ Render tự deploy sau khi CI checks pass bằng `autoDeployTrigger: checksPass`, theo yêu cầu bật auto-deploy. Render hiện phục vụ backend health `UP`, build `90a56e3`; phiên bản metrics mới chỉ được xác nhận sau merge/deploy.
+  - Sửa request dashboard metrics dùng `authenticatedFetch` để khi access token hết hạn, phiên hợp lệ được refresh và thử lại như các API admin khác. Kiểm tra helper xác thực 3/3 test và frontend production build đạt.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Servlet filter, `ConcurrentHashMap`, `LongAdder`/`LongAccumulator`, allowlist HTTP method, route template, bucket 5 phút, Spring Security `ROLE_ADMIN`, React/TypeScript và Vitest.
 - **Mục đích chức năng / việc đã làm**: Cho quản trị viên theo dõi lưu lượng, độ trễ và lỗi API theo endpoint mà không ghi dữ liệu nhạy cảm hoặc truy vấn DB trong luồng xử lý request.
