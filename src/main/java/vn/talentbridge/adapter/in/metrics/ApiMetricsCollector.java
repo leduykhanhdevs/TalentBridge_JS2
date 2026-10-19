@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,6 +30,8 @@ public class ApiMetricsCollector {
     private static final long BUCKET_SECONDS = BUCKET_MINUTES * 60L;
     private static final long RETENTION_SECONDS = RETENTION_HOURS * 60L * 60L;
     private static final long CLEANUP_INTERVAL_SECONDS = 60L;
+    private static final Set<String> STANDARD_HTTP_METHODS = Set.of(
+            "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE", "CONNECT");
 
     private final Clock clock;
     private final Instant collectedSince;
@@ -49,7 +52,8 @@ public class ApiMetricsCollector {
         long nowEpochSecond = now.getEpochSecond();
         cleanupExpiredBuckets(nowEpochSecond);
 
-        String safeMethod = method == null || method.isBlank() ? "UNKNOWN" : method.toUpperCase(Locale.ROOT);
+        String normalizedMethod = method == null ? "" : method.toUpperCase(Locale.ROOT);
+        String safeMethod = STANDARD_HTTP_METHODS.contains(normalizedMethod) ? normalizedMethod : "OTHER";
         String safeRoute = routePattern == null || routePattern.isBlank() ? "/_unmatched-api-route" : routePattern;
         if (safeRoute.length() > 200) safeRoute = "/_unmatched-api-route";
         String endpoint = safeMethod + " " + safeRoute;

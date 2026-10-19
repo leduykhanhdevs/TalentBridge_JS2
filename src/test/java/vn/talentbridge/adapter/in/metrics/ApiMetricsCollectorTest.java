@@ -57,6 +57,21 @@ class ApiMetricsCollectorTest {
         assertThat(collector.snapshot(24).endpoints()).isEmpty();
     }
 
+    @Test
+    @DisplayName("Gom method HTTP không chuẩn để giới hạn số nhóm metrics")
+    void groupsNonStandardMethodsIntoBoundedSeries() {
+        ApiMetricsCollector collector = new ApiMetricsCollector(
+                Clock.fixed(Instant.parse("2026-10-19T10:02:00Z"), ZoneOffset.UTC));
+
+        collector.record("CUSTOM-VERB-1", "/api/v1/jobs", 200, 1_000_000L);
+        collector.record("CUSTOM-VERB-2", "/api/v1/jobs", 200, 1_000_000L);
+
+        assertThat(collector.snapshot(1).endpoints()).singleElement().satisfies(endpoint -> {
+            assertThat(endpoint.endpoint()).isEqualTo("OTHER /api/v1/jobs");
+            assertThat(endpoint.requestCount()).isEqualTo(2);
+        });
+    }
+
     private static final class MutableClock extends Clock {
         private final AtomicReference<Instant> instant;
 
