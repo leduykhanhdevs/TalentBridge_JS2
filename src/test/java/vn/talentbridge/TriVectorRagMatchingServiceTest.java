@@ -61,7 +61,7 @@ class TriVectorRagMatchingServiceTest {
         CandidateJobMatchResult result = matchingService.matchLocally(
                 jobId, candidateId, "Built REST APIs using Java Spring Boot and MySQL");
 
-        assertThat(result.matchPercentage()).isBetween(0.0, 100.0);
+        assertThat(result.matchPercentage()).isBetween(0.0, 100.0).isGreaterThan(1.0);
         assertThat(result.directKeywordScore()).isBetween(0.0, 1.0).isGreaterThan(0.0);
         assertThat(result.contextualSimilarityScore()).isBetween(0.0, 1.0).isGreaterThan(0.0);
         assertThat(result.inferredCapabilityScore()).isBetween(0.0, 1.0).isGreaterThan(0.0);

@@ -142,9 +142,9 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
         double directScore = hybridSimilarity(requirementVector, explicitEvidenceVector);
         double contextualScore = hybridSimilarity(jobContextVector, candidateContextVector);
         double inferredScore = hybridSimilarity(requirementVector, inferredCapabilityVector);
-        double matchPercentage = round((DIRECT_WEIGHT * directScore
+        double matchPercentage = roundPercentage((DIRECT_WEIGHT * directScore
                 + CONTEXT_WEIGHT * contextualScore
-                + INFERRED_WEIGHT * inferredScore) * 100.0, 1);
+                + INFERRED_WEIGHT * inferredScore) * 100.0);
 
         List<String> inferredCapabilities = matchingCapabilityLabels(
                 requirementVector.keySet(), explicitTerms);
@@ -303,6 +303,11 @@ public class TriVectorRagMatchingService implements CandidateJobMatchingPort {
     private static double round(double value, int decimalPlaces) {
         double scale = Math.pow(10, decimalPlaces);
         return Math.round(clamp(value) * scale) / scale;
+    }
+
+    private static double roundPercentage(double value) {
+        double boundedPercentage = Math.max(0.0, Math.min(100.0, value));
+        return Math.round(boundedPercentage * 10.0) / 10.0;
     }
 
     private record CapabilityRule(String label, Set<String> evidenceTerms, Set<String> capabilityTerms) {

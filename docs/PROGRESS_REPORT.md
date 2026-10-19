@@ -591,3 +591,11 @@
   - Chưa đưa dữ liệu lên production: migration sẽ chạy khi bản thay đổi được trưởng nhóm review/merge và Render deploy.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Flyway SQL V3; MySQL/H2 tương thích; Spring Boot, JPA, DTO REST, use case hexagonal; React/TypeScript, Vitest, ESLint, Vite và Maven/JDK 21.
 - **Mục đích chức năng / việc đã làm**: Có dữ liệu để xem thử luồng tìm kiếm và ATS trên website mà không mạo nhận tuyển dụng thật, nhận hồ sơ ứng viên hoặc xác thực doanh nghiệp hư cấu.
+
+## ĐỐI CHIẾU MCP VÀ SỬA CHUẨN HÓA ĐIỂM TRI-VECTOR — 19/10/2026
+- **Đã làm được gì**:
+  - So sánh kết quả matching trực tiếp với use case mà tool MCP gọi trên cùng tin và hai hồ sơ tổng hợp; cả 500 cặp cho kết quả DTO giống nhau, hồ sơ phù hợp đạt 77.1% và hồ sơ không liên quan 0.0%. Phép đo trong JVM dao động giữa 229.41/285.50 µs và 245.42/343.98 µs; không đại diện độ trễ HTTP hoặc dữ liệu thực tế.
+  - Phát hiện hàm làm tròn chặn `matchPercentage` ở 1.0 do tái sử dụng clamp của điểm thành phần 0–1. Tách làm tròn phần trăm theo thang 0–100 và thêm assertion hồi quy.
+  - `mvnw -B verify` đạt 316/316, gồm HexagonalArchitecture 11/11 và MCP Streamable HTTP integration 4/4. Ghi rõ trong tài liệu rằng benchmark không đo RAG matcher độc lập; HRPM-58 còn chờ đồng thuận nhóm.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, Tri-Vector lexical coverage/cosine, use case MCP có kiểm tra công ty và đơn ứng tuyển, JUnit/Mockito, Maven Wrapper; tài liệu so sánh chi phí/latency/chất lượng/bảo trì.
+- **Mục đích chức năng / việc đã làm**: Sửa thang điểm tổng để UI và API nhận đúng phần trăm, ngăn regression và cung cấp bằng chứng đo lường trung thực cho quyết định dùng Tri-Vector, MCP và RAG.
