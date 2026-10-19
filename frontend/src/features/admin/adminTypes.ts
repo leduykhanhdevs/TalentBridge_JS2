@@ -149,3 +149,40 @@ export type JobFilterParams = {
     size?: number
     status?: AdminJobStatus
 }
+
+export type ApiMetricsBucketResponse = {
+    startsAt: string
+    requestCount: number
+    clientErrorCount: number
+    serverErrorCount: number
+    averageLatencyMs: number
+    maxLatencyMs: number
+}
+
+export type ApiMetricsEndpointResponse = {
+    endpoint: string
+    requestCount: number
+    clientErrorCount: number
+    serverErrorCount: number
+    errorRatePercent: number
+    averageLatencyMs: number
+    maxLatencyMs: number
+    buckets: ApiMetricsBucketResponse[]
+}
+
+export type AdminApiMetricsResponse = {
+    generatedAt: string
+    collectedSince: string
+    from: string
+    to: string
+    bucketMinutes: number
+    retentionHours: number
+    resetsOnRestart: boolean
+    requestCount: number
+    clientErrorCount: number
+    serverErrorCount: number
+    errorRatePercent: number
+    averageLatencyMs: number
+    maxLatencyMs: number
+    endpoints: ApiMetricsEndpointResponse[]
+}

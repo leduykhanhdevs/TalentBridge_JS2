@@ -599,3 +599,12 @@
   - `mvnw -B verify` đạt 316/316, gồm HexagonalArchitecture 11/11 và MCP Streamable HTTP integration 4/4. Ghi rõ trong tài liệu rằng benchmark không đo RAG matcher độc lập; HRPM-58 còn chờ đồng thuận nhóm.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, Tri-Vector lexical coverage/cosine, use case MCP có kiểm tra công ty và đơn ứng tuyển, JUnit/Mockito, Maven Wrapper; tài liệu so sánh chi phí/latency/chất lượng/bảo trì.
 - **Mục đích chức năng / việc đã làm**: Sửa thang điểm tổng để UI và API nhận đúng phần trăm, ngăn regression và cung cấp bằng chứng đo lường trung thực cho quyết định dùng Tri-Vector, MCP và RAG.
+## TRIỂN KHAI THỐNG KÊ API QUẢN TRỊ — HRPM-59 — 19/10/2026
+- **Đã làm được gì**:
+  - Ghi request count, latency trung bình/cao nhất và số/tỷ lệ lỗi 4xx/5xx theo route template; hiển thị xu hướng bucket 5 phút trong trang `/admin/metrics`.
+  - Bảo vệ API metrics bằng quyền `ROLE_ADMIN`; loại URL query, body, token, tài khoản và ID động khỏi dữ liệu thu thập. Dọn bucket sau 24 giờ; ghi rõ số liệu nằm trong bộ nhớ từng tiến trình và sẽ mất khi restart.
+  - Kiểm thử nhánh từ `origin/main`: backend Maven `verify` đạt 323/323; frontend Vitest 92/92, ESLint và Vite build đều đạt. Thêm test bảo đảm HTTP method tùy ý được gom thành `OTHER` để giới hạn cardinality của metrics.
+  - Cấu hình hai dịch vụ Render tự deploy sau khi CI checks pass bằng `autoDeployTrigger: checksPass`, theo yêu cầu bật auto-deploy. Render hiện phục vụ backend health `UP`, build `90a56e3`; phiên bản metrics mới chỉ được xác nhận sau merge/deploy.
+  - Sửa request dashboard metrics dùng `authenticatedFetch` để khi access token hết hạn, phiên hợp lệ được refresh và thử lại như các API admin khác. Kiểm tra helper xác thực 3/3 test và frontend production build đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Servlet filter, `ConcurrentHashMap`, `LongAdder`/`LongAccumulator`, allowlist HTTP method, route template, bucket 5 phút, Spring Security `ROLE_ADMIN`, React/TypeScript và Vitest.
+- **Mục đích chức năng / việc đã làm**: Cho quản trị viên theo dõi lưu lượng, độ trễ và lỗi API theo endpoint mà không ghi dữ liệu nhạy cảm hoặc truy vấn DB trong luồng xử lý request.

@@ -14,6 +14,7 @@ import type {
     JobFilterParams,
     JobStatusHistoryResponse,
     AdminJobStatus,
+    AdminApiMetricsResponse,
 } from './adminTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 import { authenticatedFetch } from '../auth/authenticatedFetch'
@@ -237,4 +238,13 @@ export async function updateAdminJobStatus(
         body: JSON.stringify({ status, reason }),
     })
     return handleResponse<AdminJobResponse>(response, 'Không thể cập nhật trạng thái tin tuyển dụng.')
+}
+
+export async function getAdminApiMetrics(hours = 24): Promise<AdminApiMetricsResponse> {
+    const query = new URLSearchParams({ hours: String(hours) })
+    const response = await authenticatedFetch(`${API_BASE_URL}/admin/metrics/api?${query.toString()}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+    return handleResponse<AdminApiMetricsResponse>(response, 'Không thể tải thống kê API.')
 }
