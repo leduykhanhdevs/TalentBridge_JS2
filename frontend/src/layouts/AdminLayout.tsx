@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BriefcaseBusiness, Building2, ShieldAlert, UserCheck, Users } from 'lucide-react'
+import { Activity, BriefcaseBusiness, Building2, ShieldAlert, UserCheck, Users } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import type { UserResponse } from '../features/auth/authTypes'
@@ -44,6 +44,7 @@ export function AdminLayout() {
         { to: '/admin/recruiters', label: 'Nhà tuyển dụng', icon: UserCheck },
         { to: '/admin/companies', label: 'Doanh nghiệp', icon: Building2 },
         { to: '/admin/jobs', label: 'Tin tuyển dụng', icon: BriefcaseBusiness },
+        { to: '/admin/metrics', label: 'Thống kê API', icon: Activity },
     ]
 
     return <WorkspaceLayoutFrame sectionLabel="Quản trị" roleLabel="Quản trị viên" user={user} navigationItems={navigationItems} />
