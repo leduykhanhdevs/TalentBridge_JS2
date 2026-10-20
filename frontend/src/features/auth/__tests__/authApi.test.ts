@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthApiError, loginUser, logoutUser, LOGOUT_TIMEOUT_MS, registerCandidate } from '../authApi'
+import { AuthApiError, loginUser, logoutUser, LOGOUT_TIMEOUT_MS, registerCandidate, requestForgotPassword, resetPassword, verifyPasswordResetOtp } from '../authApi'
 import { refreshAuthSession } from '../sessionRefresh'
 import { getAccessToken, saveAuthTokens } from '../tokenStorage'
 import { AUTH_SESSION_LOCK_NAME } from '../authSessionLock'
@@ -34,6 +34,78 @@ beforeEach(() => {
 })
 
 describe('auth API fallback errors', () => {
+    it('verifies a six-digit reset OTP and returns the short-lived grant', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+            statusCode: 200,
+            message: 'OTP verified',
+            data: { resetToken: 'one-time-reset-grant' },
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        }))
+        vi.stubGlobal('fetch', fetchMock)
+
+        await expect(verifyPasswordResetOtp({ email: 'candidate@example.invalid', otp: '123456' }))
+            .resolves.toEqual({ resetToken: 'one-time-reset-grant' })
+
+        expect(fetchMock).toHaveBeenCalledWith('/api/v1/auth/verify-reset-otp', expect.objectContaining({
+            method: 'POST',
+            body: JSON.stringify({ email: 'candidate@example.invalid', otp: '123456' }),
+        }))
+    })
+
+    it('keeps an incorrect OTP retryable and does not expose a reset grant', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+            statusCode: 40005,
+            message: 'Mã OTP không chính xác hoặc đã hết hạn. Bạn có thể nhập lại hoặc yêu cầu mã mới.',
+        }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        })))
+
+        await expect(verifyPasswordResetOtp({ email: 'candidate@example.invalid', otp: '000000' }))
+            .rejects.toMatchObject({
+                name: 'AuthApiError',
+                status: 400,
+                message: expect.stringContaining('nhập lại'),
+            })
+    })
+
+    it('only sends the verified grant when setting a new password', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ statusCode: 200, message: 'ok' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        }))
+        vi.stubGlobal('fetch', fetchMock)
+
+        await expect(resetPassword({ token: 'one-time-reset-grant', newPassword: 'NewPass123' })).resolves.toBeUndefined()
+
+        expect(fetchMock).toHaveBeenCalledWith('/api/v1/auth/reset-password', expect.objectContaining({
+            method: 'POST',
+            body: JSON.stringify({ token: 'one-time-reset-grant', newPassword: 'NewPass123' }),
+        }))
+    })
+
+    it('explains when password-reset email delivery is not configured', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue(
+                new Response(JSON.stringify({ statusCode: 50301 }), {
+                    status: 503,
+                    headers: { 'Content-Type': 'application/json' },
+                }),
+            ),
+        )
+
+        await expect(
+            requestForgotPassword({ email: 'local-diagnostic@example.invalid' }),
+        ).rejects.toMatchObject({
+            name: 'AuthApiError',
+            status: 503,
+            message: 'Dịch vụ gửi email khôi phục mật khẩu chưa được cấu hình. Vui lòng liên hệ quản trị viên.',
+        })
+    })
+
     it('shows the HTTP status when registration receives a non-JSON gateway error', async () => {
         vi.stubGlobal(
             'fetch',

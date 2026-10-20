@@ -8,6 +8,7 @@ import vn.talentbridge.adapter.out.persistence.repository.PasswordResetTokenJpaR
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
 import vn.talentbridge.core.application.port.out.PasswordResetTokenRepositoryPort;
 import vn.talentbridge.core.domain.model.PasswordResetToken;
+import vn.talentbridge.core.domain.model.PasswordResetToken.Purpose;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -55,6 +56,8 @@ public class PasswordResetTokenRepositoryAdapter
         entity.setTokenHash(token.getTokenHash());
         entity.setExpiresAt(token.getExpiresAt());
         entity.setUsedAt(token.getUsedAt());
+        entity.setPurpose(token.getPurpose());
+        entity.setFailedAttempts(token.getFailedAttempts());
 
         return toDomain(tokenJpaRepository.save(entity));
     }
@@ -63,6 +66,22 @@ public class PasswordResetTokenRepositoryAdapter
     @Transactional(readOnly = true)
     public Optional<PasswordResetToken> findByTokenHash(String tokenHash) {
         return tokenJpaRepository.findByTokenHash(tokenHash)
+                .map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PasswordResetToken> findLatestActiveByUserIdAndPurpose(
+            Long userId,
+            Purpose purpose,
+            LocalDateTime now
+    ) {
+        return tokenJpaRepository
+                .findFirstByUser_IdAndPurposeAndUsedAtIsNullAndExpiresAtAfterOrderByCreatedAtDesc(
+                        userId,
+                        purpose,
+                        now
+                )
                 .map(this::toDomain);
     }
 
@@ -80,12 +99,40 @@ public class PasswordResetTokenRepositoryAdapter
     @Override
     public boolean markUsedIfUsable(
             String tokenHash,
+            Purpose purpose,
             LocalDateTime usedAt
     ) {
         return tokenJpaRepository.markUsedIfUsable(
                 tokenHash,
+                purpose,
                 usedAt
         ) == 1;
+    }
+
+    @Override
+    public boolean incrementFailedAttempts(
+            Long tokenId,
+            LocalDateTime attemptedAt,
+            int attemptLimit
+    ) {
+        return tokenJpaRepository.incrementFailedAttempts(
+                tokenId,
+                attemptedAt,
+                attemptLimit
+        ) == 1;
+    }
+
+    @Override
+    public void markUsedIfAttemptLimitReached(
+            Long tokenId,
+            LocalDateTime usedAt,
+            int attemptLimit
+    ) {
+        tokenJpaRepository.markUsedIfAttemptLimitReached(
+                tokenId,
+                usedAt,
+                attemptLimit
+        );
     }
 
     private PasswordResetToken toDomain(
@@ -97,7 +144,9 @@ public class PasswordResetTokenRepositoryAdapter
                 entity.getTokenHash(),
                 entity.getCreatedAt(),
                 entity.getExpiresAt(),
-                entity.getUsedAt()
+                entity.getUsedAt(),
+                entity.getPurpose(),
+                entity.getFailedAttempts()
         );
     }
 }

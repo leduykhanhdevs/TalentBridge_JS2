@@ -75,6 +75,8 @@ CREATE TABLE `password_reset_tokens` (
                                          `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
                                          `user_id` BIGINT NOT NULL,
                                          `token_hash` VARCHAR(64) NOT NULL,
+    `purpose` VARCHAR(24) NOT NULL DEFAULT 'LEGACY',
+    `failed_attempts` INT NOT NULL DEFAULT 0,
                                          `expires_at` DATETIME(6) NOT NULL,
                                          `used_at` DATETIME(6) NULL,
                                          `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),

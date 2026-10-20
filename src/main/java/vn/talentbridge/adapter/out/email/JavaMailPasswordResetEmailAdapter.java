@@ -6,9 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import vn.talentbridge.core.application.port.out.PasswordResetEmailPort;
+import vn.talentbridge.core.domain.exception.PasswordResetMailUnavailableException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -42,18 +42,13 @@ public class JavaMailPasswordResetEmailAdapter
     }
 
     @Override
-    @Async
-    public void sendPasswordResetEmail(
+    public void sendPasswordResetOtp(
             String recipientEmail,
-            String resetLink,
+            String otp,
             LocalDateTime expiresAt
     ) {
         if (!mailEnabled) {
-            log.info(
-                    "Password reset email delivery is disabled for {}",
-                    recipientEmail
-            );
-            return;
+            throw new PasswordResetMailUnavailableException();
         }
 
         try {
@@ -69,18 +64,18 @@ public class JavaMailPasswordResetEmailAdapter
             helper.setSubject("TalentBridge - Yêu cầu đặt lại mật khẩu");
 
             String formattedExpire = expiresAt.format(DATE_TIME_FORMATTER);
-            String htmlContent = buildHtmlContent(resetLink, formattedExpire);
+            String htmlContent = buildHtmlContent(otp, formattedExpire);
 
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-            log.info("Password reset email sent successfully to {}", recipientEmail);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {}", recipientEmail, e);
+            log.error("Failed to send password reset OTP email", e);
+            throw new PasswordResetMailUnavailableException();
         }
     }
 
-    private String buildHtmlContent(String resetLink, String formattedExpire) {
+    private String buildHtmlContent(String otp, String formattedExpire) {
         return "<!DOCTYPE html>"
                 + "<html lang=\"vi\">"
                 + "<head><meta charset=\"UTF-8\"><title>Đặt lại mật khẩu TalentBridge</title></head>"
@@ -90,13 +85,12 @@ public class JavaMailPasswordResetEmailAdapter
                 + "<h1 style=\"margin:0;color:#ffffff;font-size:24px;font-weight:700;\">TalentBridge ATS</h1>"
                 + "</td></tr>"
                 + "<tr><td style=\"padding:32px 32px 24px 32px;\">"
-                + "<h2 style=\"margin:0 0 16px;color:#0f172a;font-size:20px;\">Yêu cầu đặt lại mật khẩu</h2>"
-                + "<p style=\"margin:0 0 20px;color:#475569;line-height:1.6;font-size:15px;\">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản TalentBridge của bạn. Vui lòng nhấn vào nút bên dưới để tiến hành thiết lập mật khẩu mới:</p>"
-                + "<div style=\"text-align:center;margin:28px 0;\">"
-                + "<a href=\"" + resetLink + "\" style=\"display:inline-block;background:#4f46e5;color:#ffffff;padding:14px 28px;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;\">Đặt lại mật khẩu</a>"
+                + "<h2 style=\"margin:0 0 16px;color:#0f172a;font-size:20px;\">Mã OTP đặt lại mật khẩu</h2>"
+                + "<p style=\"margin:0 0 20px;color:#475569;line-height:1.6;font-size:15px;\">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản TalentBridge của bạn. Nhập mã xác minh này trong ứng dụng để tiếp tục:</p>"
+                + "<div style=\"text-align:center;margin:28px 0;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;\">"
+                + "<span style=\"display:inline-block;color:#1d4ed8;font-size:32px;font-weight:700;letter-spacing:10px;\">" + otp + "</span>"
                 + "</div>"
-                + "<p style=\"margin:0 0 12px;color:#64748b;font-size:14px;line-height:1.5;\">Hoặc sao chép đường dẫn sau vào trình duyệt:<br><a href=\"" + resetLink + "\" style=\"color:#4f46e5;word-break:break-all;\">" + resetLink + "</a></p>"
-                + "<p style=\"margin:20px 0 0;padding:12px;background:#f8fafc;border-left:4px solid #4f46e5;color:#64748b;font-size:13px;border-radius:4px;\">⏰ Liên kết này có hiệu lực đến <strong>" + formattedExpire + "</strong> (15 phút). Nếu bạn không yêu cầu hành động này, vui lòng bỏ qua email.</p>"
+                + "<p style=\"margin:20px 0 0;padding:12px;background:#f8fafc;border-left:4px solid #4f46e5;color:#64748b;font-size:13px;border-radius:4px;\">Mã có hiệu lực đến <strong>" + formattedExpire + "</strong> (15 phút). Không chia sẻ mã này với bất kỳ ai. Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>"
                 + "</td></tr>"
                 + "<tr><td style=\"background:#f8fafc;padding:20px 32px;text-align:center;color:#94a3b8;font-size:12px;\">"
                 + "© 2026 TalentBridge ATS. Hệ thống Quản trị Tuyển dụng Chuyên nghiệp."

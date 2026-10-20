@@ -53,7 +53,8 @@ public class ResetPasswordUseCaseImpl
                         InvalidPasswordResetTokenException::new
                 );
 
-        if (!resetToken.isUsableAt(now)) {
+        if (resetToken.getPurpose() != PasswordResetToken.Purpose.RESET_GRANT
+                || !resetToken.isUsableAt(now)) {
             throw new InvalidPasswordResetTokenException();
         }
 
@@ -65,6 +66,7 @@ public class ResetPasswordUseCaseImpl
 
         boolean markedUsed = tokenRepository.markUsedIfUsable(
                 tokenHash,
+                PasswordResetToken.Purpose.RESET_GRANT,
                 now
         );
 

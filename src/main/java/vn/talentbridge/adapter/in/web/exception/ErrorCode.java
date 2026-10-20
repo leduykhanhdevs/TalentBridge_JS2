@@ -38,6 +38,13 @@ public enum ErrorCode {
     // 429 Too Many Requests
     TOO_MANY_REQUESTS(42901, "Quá nhiều yêu cầu. Vui lòng thử lại sau.", HttpStatus.TOO_MANY_REQUESTS),
 
+    // 503 Service Unavailable
+    PASSWORD_RESET_MAIL_UNAVAILABLE(
+            50301,
+            "Dịch vụ gửi email khôi phục mật khẩu chưa được cấu hình. Vui lòng liên hệ quản trị viên.",
+            HttpStatus.SERVICE_UNAVAILABLE
+    ),
+
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(50001, "Lỗi máy chủ nội bộ. Vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR);
 

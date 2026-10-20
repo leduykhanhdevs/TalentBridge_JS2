@@ -217,18 +217,19 @@ Theo đúng chỉ đạo của Giảng viên hướng dẫn:
   - **Mô tả chi tiết**:
     - Giao diện 3 bước mượt mà:
       1. Bước 1: Nhập Email yêu cầu khôi phục, validate định dạng email, nút gửi kèm bộ đếm ngược 60s trước khi gửi lại.
-      2. Bước 2: Nhập mã OTP gồm 6 ô số tự động focus, có đếm ngược thời hạn hiệu lực 15 phút.
-      3. Bước 3: Nhập Mật khẩu mới và Xác nhận mật khẩu mới (kiểm tra độ mạnh mật khẩu).
-    - Bắt lỗi khi mã OTP hết hạn hoặc sai mã (hiển thị alert thông báo rõ ràng).
-    - Tích hợp gọi API POST /api/v1/auth/forgot-password và POST /api/v1/auth/reset-password.
+      2. Bước 2: Nhập OTP 6 chữ số, có đếm ngược 60 giây để gửi lại và thông báo thời hạn OTP 15 phút.
+      3. Bước 3 chỉ mở sau khi OTP chính xác; nhập mật khẩu mới và xác nhận.
+    - Khi sai OTP, giữ nguyên bước để người dùng sửa và nhập lại; mã bị khóa sau 5 lần sai.
+    - Tích hợp POST /api/v1/auth/forgot-password, POST /api/v1/auth/verify-reset-otp và POST /api/v1/auth/reset-password.
 - **Sub-task 2 [BE]** (2 pts) – *Assignee: Phan Thị Ánh Tuyền*
   - **Tên**: [BE] API Quên mật khẩu: Sinh mã OTP, gửi email và mã hóa mật khẩu mới BCrypt
   - **Mô tả chi tiết**:
     - Inbound Controller: ForgotPasswordController.
-    - UseCase: SendResetPasswordOtpUseCase, ResetPasswordUseCase.
-    - Nghiệp vụ: Kiểm tra email có tồn tại không. Sinh mã OTP ngẫu nhiên 6 chữ số an toàn mã hóa, lưu token kèm hạn 15 phút.
-    - Sử dụng PasswordEncoder (BCrypt) để mã hóa mật khẩu mới và lưu vào bảng users. Hủy/xóa token OTP sau khi sử dụng thành công.
-    - Xử lý mã lỗi chuẩn: 400 Bad Request nếu OTP sai/hết hạn, 404 nếu email không tồn tại.
+    - UseCase: ForgotPasswordUseCase, VerifyPasswordResetOtpUseCase, ResetPasswordUseCase.
+    - Nghiệp vụ: Sinh OTP SecureRandom 6 chữ số, lưu HMAC-SHA-256 kèm hạn 15 phút; phản hồi không tiết lộ email có tồn tại không.
+    - OTP sai trả 400 để tiếp tục nhập lại; sau 5 lần phải xin mã mới. OTP đúng cấp reset grant dùng một lần trong 5 phút.
+    - Sử dụng PasswordEncoder (BCrypt), hủy mã đã dùng và thu hồi phiên đăng nhập sau khi đổi mật khẩu.
+    - Giới hạn xác minh OTP theo IP và kiểm tra lỗi sai/hết hạn mà không tiết lộ email.
     - Viết Unit test nghiệp vụ sinh OTP và đổi mật khẩu.
 
 #### 🔹 Task 11: [Tuyền] Thiết kế HTML Template Email thông báo đặt lại mật khẩu (2 pts)
@@ -237,12 +238,12 @@ Theo đúng chỉ đạo của Giảng viên hướng dẫn:
   - **Mô tả chi tiết**:
     - Thiết kế file template HTML email chuẩn nhận diện thương hiệu TalentBridge.
     - Áp dụng cấu trúc Responsive bằng CSS inline (table layout) đảm bảo hiển thị hoàn hảo trên Gmail, Microsoft Outlook, Apple Mail trên cả Desktop và Điện thoại.
-    - Bố cục gồm: Logo TalentBridge, Lời chào cá nhân hóa, Khung hiển thị mã OTP 6 số cỡ lớn nổi bật, Nút kêu gọi hành động (CTA) "Đặt lại mật khẩu", Chú thích bảo mật "Mã hết hạn sau 15 phút và không chia sẻ cho bất kỳ ai".
+    - Bố cục gồm: Logo TalentBridge, Khung hiển thị mã OTP 6 số cỡ lớn và chú thích bảo mật "Mã hết hạn sau 15 phút và không chia sẻ cho bất kỳ ai".
 - **Sub-task 2 [BE]** (1 pt) – *Assignee: Phan Thị Ánh Tuyền*
-  - **Tên**: [BE] Tích hợp Spring Mail & Thymeleaf Engine render biến động email bất đồng bộ
+  - **Tên**: [BE] Tích hợp Spring Mail gửi mã OTP và phản hồi đúng trạng thái gửi
   - **Mô tả chi tiết**:
     - Cấu hình Spring Boot Starter Mail (JavaMailSender) kết nối máy chủ SMTP.
-    - Tích hợp Thymeleaf SpringTemplateEngine để parse file password-reset-email.html và truyền các biến động: ${recipientName}, ${otpCode}, ${expireMinutes}.
+    - Gửi OTP 6 số trong email HTML; chỉ phản hồi sau khi SMTP gửi xong và trả HTTP 503 nếu SMTP lỗi.
     - Cấu hình phương thức gửi mail bất đồng bộ với @Async (TaskExecutor) để API phản hồi ngay lập tức cho client mà không bị chờ độ trễ mạng của SMTP.
     - Bắt ngoại lệ MailException ghi log chi tiết.
 

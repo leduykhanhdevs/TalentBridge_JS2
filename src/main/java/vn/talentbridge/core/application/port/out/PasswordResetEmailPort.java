@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 
 public interface PasswordResetEmailPort {
 
-    void sendPasswordResetEmail(
+    void sendPasswordResetOtp(
             String recipientEmail,
-            String resetLink,
+            String otp,
             LocalDateTime expiresAt
     );
 }

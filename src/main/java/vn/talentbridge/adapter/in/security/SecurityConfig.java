@@ -39,7 +39,7 @@ public class SecurityConfig {
     private final AuthRateLimitFilter authRateLimitFilter;
     private final Environment environment;
 
-    @Value("${talentbridge.cors.allowed-origins:http://localhost:5173}")
+    @Value("${talentbridge.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}")
     private String allowedOriginsConfig;
 
     private static final String[] PUBLIC_URLS = {
@@ -48,6 +48,7 @@ public class SecurityConfig {
             "/api/v1/auth/refresh-token",
             "/api/v1/auth/logout",
             "/api/v1/auth/forgot-password",
+            "/api/v1/auth/verify-reset-otp",
             "/api/v1/auth/reset-password",
             "/api/v1/skills",
             "/api/v1/candidates/resumes/templates",
