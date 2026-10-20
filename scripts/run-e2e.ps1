@@ -1,14 +1,28 @@
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $frontendRoot = Join-Path $repositoryRoot 'frontend'
-$logRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("talentbridge-e2e-" + [guid]::NewGuid().ToString('N'))
-$screenshotRoot = Join-Path $repositoryRoot 'artifacts\roleplay-qa'
+$runId = Get-Date -Format 'yyyy-MM-dd-HHmmss'
+$runRoot = Join-Path $repositoryRoot (Join-Path 'docs\qa\full-site-uat-2026-10-20\runs' $runId)
+$logRoot = $runRoot
+$screenshotRoot = Join-Path $runRoot 'screenshots'
 New-Item -ItemType Directory -Path $logRoot, $screenshotRoot -Force | Out-Null
+$backendPackageLog = Join-Path $logRoot 'backend-package.log'
+$apiE2eLog = Join-Path $logRoot 'api-e2e.log'
+$uiE2eLog = Join-Path $logRoot 'playwright-e2e.log'
 $stdoutPath = Join-Path $logRoot 'backend.stdout.log'
 $stderrPath = Join-Path $logRoot 'backend.stderr.log'
 $mavenWrapper = Join-Path $repositoryRoot 'mvnw.cmd'
 $jarPath = Join-Path $repositoryRoot 'target\talentbridge-0.0.1-SNAPSHOT.jar'
-$javaHome = 'C:\Program Files\Java\jdk-21'
+$javaHome = $env:JAVA_HOME
+if ([string]::IsNullOrWhiteSpace($javaHome)) {
+    $javacCommand = Get-Command javac.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($javacCommand) {
+        $javaHome = Split-Path (Split-Path $javacCommand.Source -Parent) -Parent
+    }
+}
+if ([string]::IsNullOrWhiteSpace($javaHome)) {
+    throw 'JDK 21 chưa được tìm thấy. Hãy đặt JAVA_HOME trỏ tới JDK 21.'
+}
 $javaExecutable = Join-Path $javaHome 'bin\java.exe'
 $oldJavaHome = $env:JAVA_HOME
 $oldPath = $env:Path
@@ -26,6 +40,10 @@ try {
     if (-not (Test-Path $javaExecutable)) {
         throw "JDK 21 chưa được tìm thấy tại $javaHome"
     }
+    $javaVersion = (& $javaExecutable -version 2>&1 | Out-String)
+    if ($javaVersion -notmatch 'version "21(?:\.|")|openjdk 21') {
+        throw "E2E yêu cầu JDK 21; runtime hiện tại tại $javaHome không phải Java 21."
+    }
     if (Get-NetTCPConnection -LocalPort 18080, 5174 -State Listen -ErrorAction SilentlyContinue) {
         throw 'Cổng 18080 hoặc 5174 đang có dịch vụ lắng nghe. Dừng để không dùng nhầm backend/UI khác.'
     }
@@ -39,7 +57,7 @@ try {
 
     Push-Location $repositoryRoot
     try {
-        & $mavenWrapper '-DskipTests' 'package'
+        & $mavenWrapper '-DskipTests' 'package' 2>&1 | Tee-Object -FilePath $backendPackageLog
         if ($LASTEXITCODE -ne 0) { throw "Maven package thất bại với exit code $LASTEXITCODE" }
     } finally {
         Pop-Location
@@ -76,9 +94,9 @@ try {
 
     Push-Location $frontendRoot
     try {
-        npm run test:e2e
+        npm run test:e2e 2>&1 | Tee-Object -FilePath $apiE2eLog
         if ($LASTEXITCODE -ne 0) { throw "API E2E thất bại với exit code $LASTEXITCODE" }
-        npm run test:e2e:ui
+        npm run test:e2e:ui 2>&1 | Tee-Object -FilePath $uiE2eLog
         if ($LASTEXITCODE -ne 0) { throw "UI E2E thất bại với exit code $LASTEXITCODE" }
     } finally {
         Pop-Location
@@ -100,4 +118,4 @@ try {
     $env:SPRING_DATASOURCE_PASSWORD = $oldDatasourcePassword
 }
 
-Write-Host "E2E hoàn tất trên H2 tạm thời. Ảnh QA: $screenshotRoot. Log backend: $logRoot"
+Write-Host "E2E hoàn tất trên H2 tạm thời. Ảnh QA: $screenshotRoot. API/Playwright/Maven logs: $logRoot"

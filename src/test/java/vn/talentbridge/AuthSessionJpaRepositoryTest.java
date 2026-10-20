@@ -209,6 +209,39 @@ class AuthSessionJpaRepositoryTest {
     }
 
     @Test
+    void currentRefreshHashCanRevokeSessionAtomically() {
+        int revoked = repository.revokeActiveSessionByRefreshTokenHash(
+                "test-session", user.getId(), "old-hash", now
+        );
+
+        assertEquals(1, revoked);
+        assertEquals(now, loadSession().getRevokedAt());
+    }
+
+    @Test
+    void rotatedOutRefreshHashCannotRevokeSession() {
+        int rotated = repository.rotateRefreshTokenIfActive(
+                "test-session", user.getId(), "old-hash", "new-hash", now
+        );
+
+        int staleRevocation = repository.revokeActiveSessionByRefreshTokenHash(
+                "test-session", user.getId(), "old-hash", now.plusSeconds(1)
+        );
+
+        assertEquals(1, rotated);
+        assertEquals(0, staleRevocation);
+        assertNull(loadSession().getRevokedAt());
+        assertEquals("new-hash", loadSession().getRefreshTokenHash());
+
+        int currentRevocation = repository.revokeActiveSessionByRefreshTokenHash(
+                "test-session", user.getId(), "new-hash", now.plusSeconds(2)
+        );
+
+        assertEquals(1, currentRevocation);
+        assertEquals(now.plusSeconds(2), loadSession().getRevokedAt());
+    }
+
+    @Test
     void differentUserCannotRevokeSession() {
         int revoked = repository.revokeActiveSession(
                 "test-session", user.getId() + 1, now

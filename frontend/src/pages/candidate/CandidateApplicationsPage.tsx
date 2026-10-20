@@ -93,6 +93,7 @@ export function CandidateApplicationsPage() {
     } = useQuery({
         queryKey: ['candidate-my-applications'],
         queryFn: getMyApplications,
+        retry: false,
     })
 
     const withdrawMutation = useMutation({

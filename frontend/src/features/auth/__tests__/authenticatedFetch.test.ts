@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { authenticatedFetch } from '../authenticatedFetch'
 import { getAccessToken, getRefreshToken, saveAuthTokens } from '../tokenStorage'
 import type { AuthResponse } from '../authTypes'
+import { FetchTimeoutError } from '../../../app/fetchWithTimeout'
 
 const storage = new Map<string, string>()
 
@@ -29,6 +30,11 @@ function apiResponse(data: AuthResponse): Response {
 }
 
 describe('authenticatedFetch', () => {
+    afterEach(() => {
+        vi.useRealTimers()
+        vi.unstubAllGlobals()
+    })
+
     beforeEach(() => {
         storage.clear()
         globalThis.localStorage = {
@@ -44,6 +50,9 @@ describe('authenticatedFetch', () => {
             setTimeout,
             clearTimeout,
         } as unknown as Window & typeof globalThis
+        vi.stubGlobal('navigator', {
+            locks: { request: (_name: string, _options: LockOptions, callback: (lock: Lock) => unknown) => Promise.resolve(callback({} as Lock)) },
+        })
         vi.restoreAllMocks()
     })
 
@@ -94,5 +103,32 @@ describe('authenticatedFetch', () => {
 
         expect(response.status).toBe(200)
         expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('applies one deadline across the initial request, refresh, and retry', async () => {
+        vi.useFakeTimers()
+        saveAuthTokens(authResponse('expired-access', 'current-refresh'))
+        const fetchMock = vi.spyOn(globalThis, 'fetch')
+            .mockImplementationOnce(() => new Promise<Response>((resolve) => {
+                globalThis.setTimeout(() => resolve(new Response(null, { status: 401 })), 10)
+            }))
+            .mockImplementationOnce(() => new Promise<Response>((resolve) => {
+                globalThis.setTimeout(() => resolve(apiResponse(authResponse('fresh-access', 'rotated-refresh'))), 25)
+            }))
+            .mockImplementationOnce((_input, init) => new Promise<Response>((_resolve, reject) => {
+                init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true })
+            }))
+
+        const request = authenticatedFetch('/api/v1/assistant/chat', {}, 40)
+        const assertion = expect(request).rejects.toBeInstanceOf(FetchTimeoutError)
+
+        await vi.advanceTimersByTimeAsync(10)
+        expect(fetchMock).toHaveBeenCalledTimes(2)
+        await vi.advanceTimersByTimeAsync(25)
+        expect(fetchMock).toHaveBeenCalledTimes(3)
+        await vi.advanceTimersByTimeAsync(4)
+        await vi.advanceTimersByTimeAsync(1)
+
+        await assertion
     })
 })

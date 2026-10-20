@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, BriefcaseBusiness, Building2, CheckSquare, Search, ShieldAlert, UserCircle } from 'lucide-react'
+import { BarChart3, BriefcaseBusiness, Building2, CheckSquare, MessageCircle, Search, ShieldAlert, UserCircle } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import type { UserResponse } from '../features/auth/authTypes'
@@ -46,6 +46,7 @@ export function RecruiterLayout() {
         { to: '/recruiter/company', label: 'Doanh nghiệp', icon: Building2 },
         { to: '/recruiter/join-company', label: 'Tìm & gia nhập', icon: Search },
         { to: '/recruiter/peer-approval', label: 'Duyệt thành viên', icon: CheckSquare },
+        { to: '/assistant', label: 'Trợ lý', icon: MessageCircle },
     ]
 
     return <WorkspaceLayoutFrame sectionLabel="Tuyển dụng" roleLabel="Nhà tuyển dụng" user={user} navigationItems={navigationItems} />

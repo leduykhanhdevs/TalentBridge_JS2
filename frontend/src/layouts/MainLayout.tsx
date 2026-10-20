@@ -52,8 +52,8 @@ export function MainLayout() {
         }
     }, [])
 
-    async function handleLogout() {
-        await logoutUser()
+    function handleLogout() {
+        void logoutUser()
         setIsMobileNavOpen(false)
         navigate('/login')
     }

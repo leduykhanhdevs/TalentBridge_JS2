@@ -15,8 +15,10 @@ import {
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { HeroTalentIllustration } from '../components/illustrations'
-import { AuthApiError, registerCandidate } from '../features/auth/authApi'
+import { AuthApiError, registerCandidate, LOGOUT_TIMEOUT_MS } from '../features/auth/authApi'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
+import { REFRESH_TIMEOUT_MS } from '../features/auth/sessionRefresh'
+import { withAuthSessionLock } from '../features/auth/authSessionLock'
 
 type RegisterRole = 'ROLE_CANDIDATE' | 'ROLE_RECRUITER'
 type RegisterFormValues = {
@@ -73,8 +75,8 @@ export function RegisterPage() {
 
     const registerMutation = useMutation({
         mutationFn: registerCandidate,
-        onSuccess: (authResponse) => {
-            saveAuthTokens(authResponse)
+        onSuccess: async (authResponse) => {
+            await withAuthSessionLock(() => saveAuthTokens(authResponse), LOGOUT_TIMEOUT_MS + REFRESH_TIMEOUT_MS)
             setFieldErrors({})
             setServerError('')
             setSuccessMessage(`Đăng ký thành công. Đang chuyển hướng... Chào mừng ${authResponse.user.fullName}!`)

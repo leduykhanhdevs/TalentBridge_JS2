@@ -27,11 +27,11 @@ const actors = [
         password: 'AdminPassword123!',
         route: '/admin/jobs',
         heading: 'Kiểm duyệt tin tuyển dụng',
-        routes: ['/admin/candidates', '/admin/recruiters', '/admin/companies', '/admin/jobs'],
+        routes: ['/admin/candidates', '/admin/recruiters', '/admin/companies', '/admin/jobs', '/admin/metrics'],
     },
 ] as const
 
-test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang tại 360/555/1280px', async ({ browser, baseURL }) => {
+test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang tại 360/390/555/1280/1440px', async ({ browser, baseURL }) => {
     await mkdir(screenshotDirectory, { recursive: true })
 
     for (const actor of actors) {
@@ -68,7 +68,16 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             await expect(page.getByRole('button', { name: 'Duyệt' }).first()).toBeVisible()
         }
 
-        for (const width of [360, 555, 1280]) {
+        if (actor.name === 'recruiter' || actor.name === 'admin') {
+            await page.setViewportSize({ width: 360, height: 900 })
+            await page.getByRole('button', { name: 'Mở điều hướng' }).click()
+            await page.getByRole('link', { name: 'Trợ lý', exact: true }).click()
+            await expect(page).toHaveURL(/\/assistant$/)
+            await expect(page.getByRole('heading', { name: 'Trợ lý TalentBridge', level: 1 })).toBeVisible()
+            await page.goto(`${baseURL}${actor.route}`)
+        }
+
+        for (const width of [360, 390, 555, 1280, 1440]) {
             await page.setViewportSize({ width, height: 900 })
             await expect(page.getByRole('heading', { name: actor.heading, exact: false }).first()).toBeVisible()
             await page.screenshot({
@@ -122,7 +131,7 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             expect(contentLength, `${actor.name} route ${route} không được trắng`).toBeGreaterThan(40)
 
             const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
-            for (const width of [360, 1280]) {
+            for (const width of [360, 390, 1280, 1440]) {
                 await page.setViewportSize({ width, height: 900 })
                 if (actor.name === 'admin' && route === '/admin/candidates' && width === 1280) {
                     await expect(page.getByRole('button', { name: 'Khóa', exact: true }).first()).toBeInViewport()
@@ -196,7 +205,7 @@ test('các route công khai và route 404 có nội dung, không render màn hì
         const contentLength = await main.evaluate((element) => element.textContent?.trim().length ?? 0)
         expect(contentLength, `Route ${route} không được trắng`).toBeGreaterThan(30)
         const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
-        for (const width of [360, 1280]) {
+        for (const width of [360, 390, 1280, 1440]) {
             await page.setViewportSize({ width, height: 900 })
             await expect(main).toBeVisible()
             const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth)

@@ -1,0 +1,15 @@
+
+> frontend@0.0.0 test C:\Users\leduy\.codex\worktrees\hrpm-59-api-metrics\TalentBridge_JS2\frontend
+> vitest run
+
+
+ RUN  v5.0.5 C:/Users/leduy/.codex/worktrees/hrpm-59-api-metrics/TalentBridge_JS2/frontend
+
+
+ Test Files  16 passed (16)
+      Tests  104 passed (104)
+   Start at  01:53:48
+   Duration  3.11s (transform 47%, import 28%, tests 18%, worker 7%)
+
+    Isolate  16 workers spawned · ~1.14s startup each (spawn + environment, per file)
+             at least ~516ms faster with isolate: false — reuses workers across files instead of one per file

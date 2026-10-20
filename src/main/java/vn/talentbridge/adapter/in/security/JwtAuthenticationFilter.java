@@ -31,6 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AuthSessionRepositoryPort authSessionRepository;
 
     @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        // Logout validates the supplied access/refresh credentials itself so
+        // an expired access token cannot prevent refresh-token revocation.
+        return "POST".equalsIgnoreCase(request.getMethod())
+                && "/api/v1/auth/logout".equals(request.getServletPath());
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,

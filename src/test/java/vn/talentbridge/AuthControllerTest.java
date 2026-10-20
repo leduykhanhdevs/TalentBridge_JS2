@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import vn.talentbridge.adapter.in.web.dto.request.LoginRequest;
+import vn.talentbridge.adapter.in.web.dto.request.LogoutRequest;
 import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
 import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.CompanyJpaRepository;
@@ -275,6 +276,70 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 refreshRequest
                         )))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/logout - Refresh token đã xoay không thể tự thu hồi phiên")
+    void testRotatedOutRefreshTokenCannotRevokeSessionByItself() throws Exception {
+        TokenPair originalTokens = registerAndGetTokens("logout-refresh-race@test.com");
+        RefreshTokenRequest refreshRequest = RefreshTokenRequest.builder()
+                .refreshToken(originalTokens.refreshToken())
+                .build();
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/v1/auth/refresh-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(refreshRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+        TokenPair rotatedTokens = readTokens(refreshResult);
+
+        LogoutRequest logoutRequest = LogoutRequest.builder()
+                .refreshToken(originalTokens.refreshToken())
+                .build();
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutRequest)))
+                .andExpect(status().isUnauthorized());
+
+        // Token truy cập còn hợp lệ vẫn cho phép chủ phiên đăng xuất bình thường.
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + rotatedTokens.accessToken()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header("Authorization", "Bearer " + rotatedTokens.accessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutRequest)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + rotatedTokens.accessToken()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/auth/refresh-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                RefreshTokenRequest.builder()
+                                        .refreshToken(rotatedTokens.refreshToken())
+                                        .build())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/logout - Refresh token hiện hành thu hồi đúng phiên")
+    void testLogoutWithCurrentRefreshTokenOnly() throws Exception {
+        TokenPair tokens = registerAndGetTokens("logout-current-refresh@test.com");
+        LogoutRequest logoutRequest = LogoutRequest.builder()
+                .refreshToken(tokens.refreshToken())
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutRequest)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + tokens.accessToken()))
                 .andExpect(status().isUnauthorized());
     }
 
