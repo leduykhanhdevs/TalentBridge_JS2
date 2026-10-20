@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Yêu cầu gửi liên kết đặt lại mật khẩu")
+@Schema(description = "Yêu cầu gửi mã OTP đặt lại mật khẩu")
 public class ForgotPasswordRequest {
 
     @NotBlank(message = "Email không được để trống")

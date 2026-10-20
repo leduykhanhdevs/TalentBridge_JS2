@@ -76,6 +76,7 @@ class ResetPasswordUseCaseImplTest {
                 .thenReturn(Optional.of(token));
         when(tokenRepository.markUsedIfUsable(
                 eq("hashed-token"),
+                eq(PasswordResetToken.Purpose.RESET_GRANT),
                 any(LocalDateTime.class)
         )).thenReturn(true);
         when(userRepository.findById(10L))
@@ -128,7 +129,7 @@ class ResetPasswordUseCaseImplTest {
         );
 
         verify(tokenRepository, never())
-                .markUsedIfUsable(anyString(), any());
+                .markUsedIfUsable(anyString(), any(), any());
         verifyNoInteractions(
                 userRepository,
                 passwordEncoder,

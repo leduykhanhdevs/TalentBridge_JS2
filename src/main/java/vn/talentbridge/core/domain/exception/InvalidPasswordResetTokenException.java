@@ -6,7 +6,7 @@ public class InvalidPasswordResetTokenException
     public InvalidPasswordResetTokenException() {
         super(
                 40005,
-                "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn"
+                "Mã xác minh không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới."
         );
     }
 }

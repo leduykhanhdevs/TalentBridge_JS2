@@ -47,7 +47,7 @@ class ForgotPasswordUseCaseImplTest {
                 tokenGenerator,
                 emailPort,
                 15L,
-                "http://localhost:3000/reset-password"
+                true
         );
     }
 
@@ -59,9 +59,18 @@ class ForgotPasswordUseCaseImplTest {
         lenient().when(user.getEmail()).thenReturn("user@test.com");
         when(userRepository.findByEmail("user@test.com"))
                 .thenReturn(Optional.of(user));
-        when(tokenGenerator.generateToken()).thenReturn("raw-token");
-        when(tokenGenerator.hashToken("raw-token"))
-                .thenReturn("hashed-token");
+        when(tokenGenerator.generateOtp()).thenReturn("123456");
+        when(tokenGenerator.generateToken()).thenReturn("temporary-token");
+        when(tokenGenerator.hashToken("temporary-token"))
+                .thenReturn("temporary-hash");
+        when(tokenGenerator.hashToken("password-reset-otp:1:77:123456"))
+                .thenReturn("otp-hash");
+        when(tokenRepository.save(any(PasswordResetToken.class)))
+                .thenAnswer(invocation -> {
+                    PasswordResetToken saved = invocation.getArgument(0);
+                    saved.setId(77L);
+                    return saved;
+                });
 
         useCase.requestPasswordReset("user@test.com");
 
@@ -72,12 +81,14 @@ class ForgotPasswordUseCaseImplTest {
                 eq(1L),
                 any(LocalDateTime.class)
         );
-        verify(tokenRepository).save(captor.capture());
+        verify(tokenRepository, times(2)).save(captor.capture());
 
-        PasswordResetToken savedToken = captor.getValue();
+        PasswordResetToken savedToken = captor.getAllValues().get(1);
 
         assertEquals(1L, savedToken.getUserId());
-        assertEquals("hashed-token", savedToken.getTokenHash());
+        assertEquals("otp-hash", savedToken.getTokenHash());
+        assertEquals(PasswordResetToken.Purpose.OTP, savedToken.getPurpose());
+        assertEquals(0, savedToken.getFailedAttempts());
         assertNull(savedToken.getUsedAt());
         assertEquals(
                 15,
@@ -87,9 +98,9 @@ class ForgotPasswordUseCaseImplTest {
                 ).toMinutes()
         );
 
-        verify(emailPort).sendPasswordResetEmail(
+        verify(emailPort).sendPasswordResetOtp(
                 eq("user@test.com"),
-                eq("http://localhost:3000/reset-password?token=raw-token"),
+                eq("123456"),
                 eq(savedToken.getExpiresAt())
         );
     }
@@ -104,6 +115,31 @@ class ForgotPasswordUseCaseImplTest {
         );
 
         verifyNoInteractions(
+                tokenRepository,
+                tokenGenerator,
+                emailPort
+        );
+    }
+
+    @Test
+    void disabledMailDeliveryFailsBeforeLookingUpAccount() {
+        ForgotPasswordUseCaseImpl mailDisabledUseCase =
+                new ForgotPasswordUseCaseImpl(
+                        userRepository,
+                        tokenRepository,
+                        tokenGenerator,
+                        emailPort,
+                        15L,
+                        false
+                );
+
+        assertThrows(
+                vn.talentbridge.core.domain.exception.PasswordResetMailUnavailableException.class,
+                () -> mailDisabledUseCase.requestPasswordReset("user@test.com")
+        );
+
+        verifyNoInteractions(
+                userRepository,
                 tokenRepository,
                 tokenGenerator,
                 emailPort

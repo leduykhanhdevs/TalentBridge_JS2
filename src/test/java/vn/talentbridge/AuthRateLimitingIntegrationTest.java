@@ -21,7 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "talentbridge.rate-limit.enabled=true",
         "talentbridge.rate-limit.auth-limit=5",
-        "talentbridge.rate-limit.window-seconds=60"
+        "talentbridge.rate-limit.window-seconds=60",
+        "talentbridge.password-reset.mail-enabled=false"
 })
 class AuthRateLimitingIntegrationTest {
 
@@ -102,13 +103,35 @@ class AuthRateLimitingIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Forwarded-For", "192.168.2.50")
                             .content(forgotJson))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.statusCode").value(50301));
         }
 
         mockMvc.perform(post("/api/v1/auth/forgot-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Forwarded-For", "192.168.2.50")
                         .content(forgotJson))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.statusCode").value(42901));
+    }
+
+    @Test
+    @DisplayName("OTP verification should be rate limited by client IP")
+    void testOtpVerificationRateLimiting() throws Exception {
+        String verifyJson = "{\"email\":\"unknown-rate@talentbridge.vn\",\"otp\":\"123456\"}";
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/v1/auth/verify-reset-otp")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Forwarded-For", "192.168.2.51")
+                            .content(verifyJson))
+                    .andExpect(status().isBadRequest());
+        }
+
+        mockMvc.perform(post("/api/v1/auth/verify-reset-otp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Forwarded-For", "192.168.2.51")
+                        .content(verifyJson))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.statusCode").value(42901));
     }

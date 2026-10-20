@@ -10,7 +10,6 @@ const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({
 const NotFoundPage = lazy(() => import('../../pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const RegisterPage = lazy(() => import('../../pages/RegisterPage').then((module) => ({ default: module.RegisterPage })))
 const ForgotPasswordPage = lazy(() => import('../../pages/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })))
-const ResetPasswordPage = lazy(() => import('../../pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
 const AdminCandidatesPage = lazy(() => import('../../pages/admin/AdminCandidatesPage').then((module) => ({ default: module.AdminCandidatesPage })))
 const AdminRecruitersPage = lazy(() => import('../../pages/admin/AdminRecruitersPage').then((module) => ({ default: module.AdminRecruitersPage })))
 const AdminCompaniesPage = lazy(() => import('../../pages/admin/AdminCompaniesPage').then((module) => ({ default: module.AdminCompaniesPage })))
@@ -59,7 +58,7 @@ export function AppRouter() {
                 <Route element={<LoginPage />} path="login" />
                 <Route element={<RegisterPage />} path="register" />
                 <Route element={<ForgotPasswordPage />} path="forgot-password" />
-                <Route element={<ResetPasswordPage />} path="reset-password" />
+                <Route element={<Navigate replace to="/forgot-password" />} path="reset-password" />
                 <Route element={<JobSearchPage />} path="jobs" />
                 <Route element={<JobDetailPage />} path="jobs/:jobId" />
                 <Route element={<AssistantPage />} path="assistant" />

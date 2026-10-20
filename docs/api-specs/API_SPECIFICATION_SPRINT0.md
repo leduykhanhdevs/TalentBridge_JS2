@@ -136,8 +136,8 @@ Tất cả các API lấy danh sách (`/admin/candidates`, `/admin/recruiters`, 
 
 ### 🟡 MODULE 2: FORGOT & RESET PASSWORD (`HRPM-11`, `HRPM-12`)
 
-#### 5. Yêu cầu gửi OTP quên mật khẩu (`POST /api/v1/auth/forgot-password`)
-* **Mô tả**: Sinh mã OTP 6 chữ số ngẫu nhiên (hết hạn sau 15 phút) và gửi qua Spring Mail.
+#### 5. Gửi OTP quên mật khẩu (`POST /api/v1/auth/forgot-password`)
+* **Mô tả**: Sinh OTP 6 chữ số bằng `SecureRandom`, lưu HMAC-SHA-256, hết hạn sau 15 phút và gửi qua Spring Mail. Phản hồi chung không tiết lộ email có tài khoản hay không.
 * **Request Body**:
   ```json
   {
@@ -145,18 +145,19 @@ Tất cả các API lấy danh sách (`/admin/candidates`, `/admin/recruiters`, 
   }
   ```
 * **Response Status**: `200 OK`
-* **Mock Response**: `{"statusCode": 200, "message": "Mã OTP đặt lại mật khẩu đã được gửi về email của bạn"}`
+* **Mock Response**: `{"statusCode": 200, "message": "Nếu email tồn tại trong hệ thống, mã OTP sẽ được gửi"}`
 
-#### 6. Xác nhận OTP & Đặt lại mật khẩu (`POST /api/v1/auth/reset-password`)
+#### 6. Xác minh OTP và đặt mật khẩu
 * **Request Body**:
   ```json
   {
     "email": "candidate@talentbridge.vn",
-    "otp": "123456",
-    "newPassword": "NewPassword@123"
+    "otp": "123456"
   }
   ```
-* **Response Status**: `200 OK` (hoặc `400 Bad Request` nếu OTP sai hoặc hết hạn).
+* **Xác minh**: `POST /api/v1/auth/verify-reset-otp`. OTP đúng trả `resetToken` dùng một lần, hạn 5 phút. OTP sai/hết hạn trả `400`; người dùng có thể nhập lại. Sau 5 lần sai, phải yêu cầu mã mới.
+
+* **Đặt mật khẩu**: `POST /api/v1/auth/reset-password` với `{"token":"<resetToken>","newPassword":"NewPassword@123"}`. Trả `200` khi thành công, `400` nếu mã tạm thời sai, đã dùng hoặc hết hạn. Không thể dùng OTP trực tiếp để đặt mật khẩu.
 
 ---
 

@@ -29,7 +29,7 @@ class FlywaySchemaValidationTest {
         assertThat(flyway).isNotNull();
         MigrationInfo current = flyway.info().current();
         assertThat(current).isNotNull();
-        assertThat(current.getVersion().getVersion()).isEqualTo("3");
-        assertThat(current.getDescription()).isEqualTo("seed demo catalog");
+        assertThat(current.getVersion().getVersion()).isEqualTo("4");
+        assertThat(current.getDescription()).isEqualTo("password reset otp verification");
     }
 }

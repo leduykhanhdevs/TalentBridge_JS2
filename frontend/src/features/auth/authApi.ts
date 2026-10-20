@@ -7,6 +7,8 @@ import type {
     ForgotPasswordRequest,
     LoginRequest,
     ResetPasswordRequest,
+    PasswordResetVerificationResponse,
+    VerifyPasswordResetOtpRequest,
 } from './authTypes'
 import {
     beginLogoutIntent,
@@ -290,10 +292,57 @@ export async function requestForgotPassword(
 
         throw new AuthApiError(
             response.status,
-            body?.message || 'Không thể gửi yêu cầu đặt lại mật khẩu.',
+            body?.message || (
+                response.status === 503
+                    ? 'Dịch vụ gửi email khôi phục mật khẩu chưa được cấu hình. Vui lòng liên hệ quản trị viên.'
+                    : 'Không thể gửi yêu cầu đặt lại mật khẩu.'
+            ),
             fieldErrors,
         )
     }
+}
+
+export async function verifyPasswordResetOtp(
+    request: VerifyPasswordResetOtpRequest,
+): Promise<PasswordResetVerificationResponse> {
+    let response: Response
+
+    try {
+        response = await fetchWithTimeout(`${API_BASE_URL}/auth/verify-reset-otp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify(request),
+        })
+    } catch (error) {
+        throw new AuthApiError(0, connectionErrorMessage(error))
+    }
+
+    const body = await readAuthResponseBody<ApiResponse<PasswordResetVerificationResponse | ApiValidationErrors>>(response)
+
+    if (!response.ok) {
+        const fieldErrors = response.status === 400 && isValidationErrors(body?.data)
+            ? body.data
+            : undefined
+        throw new AuthApiError(
+            response.status,
+            body?.message || 'Mã OTP không chính xác hoặc đã hết hạn. Bạn có thể nhập lại hoặc yêu cầu mã mới.',
+            fieldErrors,
+        )
+    }
+
+    if (
+        typeof body?.data !== 'object' ||
+        body.data === null ||
+        !('resetToken' in body.data) ||
+        typeof body.data.resetToken !== 'string' ||
+        !body.data.resetToken
+    ) {
+        throw new AuthApiError(500, 'Phản hồi xác minh OTP từ máy chủ không hợp lệ.')
+    }
+
+    return body.data as PasswordResetVerificationResponse
 }
 
 export async function resetPassword(

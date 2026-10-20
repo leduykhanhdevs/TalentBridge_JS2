@@ -41,7 +41,8 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final Set<String> RATE_LIMITED_PATHS = Set.of(
             "/api/v1/auth/login",
             "/api/v1/auth/register",
-            "/api/v1/auth/forgot-password"
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/verify-reset-otp"
     );
 
     private final ConcurrentHashMap<String, Deque<Long>> clientRequestMap = new ConcurrentHashMap<>();

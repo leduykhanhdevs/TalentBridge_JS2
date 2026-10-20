@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import vn.talentbridge.core.domain.model.PasswordResetToken;
 
 import java.time.LocalDateTime;
 
@@ -62,4 +63,11 @@ public class PasswordResetTokenJpaEntity extends BaseJpaEntity {
 
     @Column(name = "used_at")
     private LocalDateTime usedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "purpose", nullable = false, length = 24)
+    private PasswordResetToken.Purpose purpose;
+
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts;
 }

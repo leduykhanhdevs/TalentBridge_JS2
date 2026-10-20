@@ -127,6 +127,8 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 - `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS pipeline.
 - `interviews`, `notifications`: Lịch phỏng vấn và thông báo hệ thống.
 
+Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua email, xác minh OTP, rồi dùng mã đặt lại một lần có hiệu lực 5 phút để lưu mật khẩu mới. OTP có hạn 15 phút, được HMAC-SHA-256 bằng khóa máy chủ trước khi lưu DB và bị khóa sau 5 lần nhập sai; việc gửi thư cần cấu hình SMTP và `PASSWORD_RESET_MAIL_ENABLED=true`.
+
 > 📖 **Xem chi tiết tài liệu CSDL**: [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)  
 > 💾 **File script DDL MySQL**: [database/schema.sql](database/schema.sql)
 
@@ -159,6 +161,7 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 | `DB_POOL_MAX_SIZE` | Không | `5` | Số kết nối tối đa trong pool ở profile production. |
 | `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
+| `PASSWORD_RESET_MAIL_ENABLED` | Không | `false` | Bật gửi email khôi phục (`true`) sau khi cấu hình SMTP. Khi tắt, API trả HTTP 503 và không giả báo đã gửi. |
 | `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
 | `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
 | `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |

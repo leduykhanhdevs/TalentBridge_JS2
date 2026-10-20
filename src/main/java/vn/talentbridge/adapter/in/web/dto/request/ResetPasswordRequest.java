@@ -12,10 +12,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Yêu cầu đặt lại mật khẩu")
+@Schema(description = "Yêu cầu đặt mật khẩu mới bằng mã cấp sau khi xác minh OTP")
 public class ResetPasswordRequest {
 
-    @NotBlank(message = "Token đặt lại mật khẩu không được để trống")
+    @NotBlank(message = "Mã xác minh đặt lại mật khẩu không được để trống")
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private String token;
 

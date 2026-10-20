@@ -91,13 +91,15 @@ Quản lý vòng đời phiên đăng nhập và refresh token của người d�
 | `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Thời gian khởi tạo phiên |
 
 #### Bảng `password_reset_tokens`
-Quản lý mã OTP / token đặt lại mật khẩu với cơ chế băm bảo mật SHA-256.
+Quản lý OTP / mã tạm đặt lại mật khẩu với HMAC-SHA-256 dùng khóa phía máy chủ.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Mô Tả |
 | :--- | :--- | :--- | :--- |
 | `id` | BIGINT | PK, AUTO_INCREMENT | Mã bản ghi token |
 | `user_id` | BIGINT | NOT NULL, FK `users(id)`, INDEX | Khóa ngoại người dùng yêu cầu reset |
-| `token_hash` | VARCHAR(64) | UNIQUE, NOT NULL, INDEX | Mã băm SHA-256 của token/OTP |
+| `token_hash` | VARCHAR(64) | UNIQUE, NOT NULL, INDEX | HMAC-SHA-256 của token/OTP, tránh dò OTP ngoại tuyến từ DB |
+| `purpose` | VARCHAR(24) | NOT NULL | Phân biệt OTP, mã cấp quyền đặt lại và bản ghi legacy |
+| `failed_attempts` | INT | NOT NULL, DEFAULT 0 | Số lần nhập OTP sai; khóa OTP sau 5 lần |
 | `expires_at` | TIMESTAMP | NOT NULL | Thời hạn hiệu lực của mã OTP/token |
 | `used_at` | TIMESTAMP | NULL | Thời điểm mã được sử dụng |
 | `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Thời điểm tạo yêu cầu reset |

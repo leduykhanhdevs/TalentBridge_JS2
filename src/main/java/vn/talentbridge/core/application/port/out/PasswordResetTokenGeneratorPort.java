@@ -4,5 +4,7 @@ public interface PasswordResetTokenGeneratorPort {
 
     String generateToken();
 
+    String generateOtp();
+
     String hashToken(String rawToken);
 }
