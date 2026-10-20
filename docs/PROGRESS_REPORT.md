@@ -650,6 +650,6 @@
 - **Mục đích chức năng / việc đã làm**: Giúp người dùng kiểm tra chính xác mật khẩu mới và nội dung xác nhận trước khi lưu, đồng thời giữ nội dung che mặc định.
 
 ## BẬT CỜ GỬI OTP TRÊN LOCAL — 21/10/2026
-- **Đã làm được gì**: Lưu và xác minh biến môi trường Windows cấp user `PASSWORD_RESET_MAIL_ENABLED=true`. Backend đang chạy được khởi động trước khi đổi biến nên cần restart để nhận cờ; không tự restart vì chưa xác minh được các biến kết nối DB cần thiết cho tiến trình mới. Chưa thay đổi cấu hình Render/production.
+- **Đã làm được gì**: Lưu biến môi trường Windows cấp user `PASSWORD_RESET_MAIL_ENABLED=true` và khởi động lại BE local cổng 8080 bằng JDK 21, profile `local`. Giữ nguyên file H2 hiện có; Flyway xác thực 4 migration và áp dụng V4 thành công. Smoke test trang `/forgot-password` trên FE 5180 trả HTTP 200; POST yêu cầu OTP không có email trả HTTP 400 như validation mong đợi. Không thay đổi Render/production.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Windows User environment kết hợp với Spring Boot externalized configuration trong `application.yml`.
-- **Mục đích chức năng / việc đã làm**: Cho phép bật gửi OTP ở lần chạy backend local tiếp theo. Các biến SMTP `MAIL_USERNAME` và `MAIL_PASSWORD` chưa được lưu trong Windows User environment, vì vậy cần cấu hình SMTP an toàn trước khi email thực có thể gửi được.
+- **Mục đích chức năng / việc đã làm**: Cho phép backend local nhận cờ gửi OTP mới và chạy schema OTP V4; email thực vẫn cần SMTP credentials `MAIL_USERNAME` và `MAIL_PASSWORD`, hiện chưa có trong Windows User environment.
