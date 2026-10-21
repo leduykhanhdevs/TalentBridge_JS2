@@ -663,3 +663,8 @@
 - **Đã làm được gì**: Sửa mục Trợ lý ở thanh điều hướng chung để tài khoản ROLE_ADMIN mở `/admin/assistant` và hiển thị nhãn “Trợ lý quản trị”; thêm điều hướng dự phòng để admin truy cập trực tiếp `/assistant` cũng được chuyển sang trang riêng. Đã chạy kiểm tra lint, test và build frontend.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `Navigate`, kiểm tra role `ROLE_ADMIN` từ phiên đăng nhập đang lưu, điều hướng theo vai trò trong React.
 - **Mục đích chức năng / việc đã làm**: Không để quản trị viên vô tình vào trợ lý user khi chọn mục Trợ lý ở header hoặc mở URL `/assistant` trực tiếp.
+
+## ẨN THAO TÁC TÀI KHOẢN TRONG KHU VỰC QUẢN TRỊ — 21/10/2026
+- **Đã làm được gì**: Ẩn hai nút đổi mật khẩu và đăng xuất ở khu vực tài khoản của layout Admin; các layout dùng chung khác vẫn giữ nút và hộp thoại đổi mật khẩu. Đã xác minh bằng lint, test và build frontend.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript; thuộc tính tùy chọn `showAccountActions` trên `WorkspaceLayoutFrame`, được bật mặc định và tắt riêng từ `AdminLayout`.
+- **Mục đích chức năng / việc đã làm**: Gọn khu vực tài khoản trong trang quản trị theo yêu cầu mà không thay đổi thao tác ở recruiter hoặc layout khác.
