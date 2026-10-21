@@ -4,6 +4,7 @@ import { MainLayout } from '../../layouts/MainLayout'
 import { AdminLayout } from '../../layouts/AdminLayout'
 import { RecruiterLayout } from '../../layouts/RecruiterLayout'
 import { TalentBridgeAssistantWidget } from '../../features/assistant/components/TalentBridgeAssistantWidget'
+import { getStoredUser, isAuthenticated } from '../../features/auth/tokenStorage'
 
 const HomePage = lazy(() => import('../../pages/HomePage').then((module) => ({ default: module.HomePage })))
 const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({ default: module.LoginPage })))
@@ -47,6 +48,14 @@ function ScrollToTop() {
     return null
 }
 
+function AssistantRoute() {
+    const user = getStoredUser()
+    if (isAuthenticated() && user?.roles?.includes('ROLE_ADMIN')) {
+        return <Navigate replace to="/admin/assistant" />
+    }
+    return <AssistantPage />
+}
+
 export function AppRouter() {
     return (
         <>
@@ -62,7 +71,7 @@ export function AppRouter() {
                 <Route element={<Navigate replace to="/forgot-password" />} path="reset-password" />
                 <Route element={<JobSearchPage />} path="jobs" />
                 <Route element={<JobDetailPage />} path="jobs/:jobId" />
-                <Route element={<AssistantPage />} path="assistant" />
+                <Route element={<AssistantRoute />} path="assistant" />
                 <Route element={<CandidateProfilePage />} path="candidate/profile" />
                 <Route element={<CandidateApplicationsPage />} path="candidate/applications" />
                 <Route element={<NotFoundPage />} path="*" />

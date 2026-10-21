@@ -71,7 +71,7 @@ export function MainLayout() {
     const navigationLinks = [
         { to: '/', label: 'Trang chủ', icon: Home, end: true },
         { to: '/jobs', label: 'Việc làm', icon: Search },
-        { to: '/assistant', label: 'Trợ lý', icon: MessageCircle },
+        { to: isAdmin ? '/admin/assistant' : '/assistant', label: isAdmin ? 'Trợ lý quản trị' : 'Trợ lý', icon: MessageCircle },
         ...(isCandidate ? [
             { to: '/candidate/profile', label: 'Hồ sơ TopCV', icon: User },
             { to: '/candidate/applications', label: 'Đơn ứng tuyển', icon: FileText },
