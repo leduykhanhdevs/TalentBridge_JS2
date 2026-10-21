@@ -103,7 +103,7 @@ export function AdminAssistantPage() {
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Trợ lý dành cho quản trị</p>
                     <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Trợ lý quản trị</h1>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                        Theo dõi số liệu hệ thống, xác định việc cần xử lý và hỏi trợ lý về quy trình quản trị TalentBridge.
+                        Hỏi về số liệu, nhận hướng dẫn quản trị và tạo báo cáo PNG, Excel hoặc Word từ dữ liệu API hiện tại.
                     </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
@@ -145,17 +145,19 @@ export function AdminAssistantPage() {
                 })}
             </section>
 
-            <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.9fr)]">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+            <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
+                <div className="min-w-0">
+                    <AssistantChatPanel adminMode adminStats={stats} adminMetrics={metrics} />
+                </div>
+                <aside aria-label="Lối tắt quản lý" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                     <div className="mb-4">
                         <h2 className="text-base font-bold text-slate-950">Lối tắt quản lý</h2>
-                        <p className="mt-1 text-sm text-slate-600">Mở khu vực cần xem hoặc xử lý.</p>
+                        <p className="mt-1 text-sm text-slate-600">Mở nhanh khu vực cần xử lý.</p>
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2">
                         {managementLinks.map((item) => {
                             const Icon = item.icon
-                            return (
-                                <Link key={item.to} to={item.to} className="group flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 p-3 transition hover:border-blue-200 hover:bg-blue-50/50">
+                            return <Link key={item.to} to={item.to} className="group flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-blue-200 hover:bg-blue-50/50">
                                     <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-700 group-hover:bg-white group-hover:text-blue-700"><Icon aria-hidden="true" size={17} /></span>
                                     <span className="min-w-0 flex-1">
                                         <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -166,12 +168,9 @@ export function AdminAssistantPage() {
                                     </span>
                                     <ArrowRight aria-hidden="true" className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-700" size={15} />
                                 </Link>
-                            )
                         })}
                     </div>
-                </div>
-
-                <AssistantChatPanel adminMode adminStats={stats} adminMetrics={metrics} />
+                </aside>
             </section>
         </div>
     )

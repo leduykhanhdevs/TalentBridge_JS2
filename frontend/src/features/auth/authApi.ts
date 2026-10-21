@@ -294,7 +294,7 @@ export async function requestForgotPassword(
             response.status,
             body?.message || (
                 response.status === 503
-                    ? 'Dịch vụ gửi email khôi phục mật khẩu chưa được cấu hình. Vui lòng liên hệ quản trị viên.'
+                    ? 'Dịch vụ gửi email khôi phục mật khẩu hiện không khả dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên.'
                     : 'Không thể gửi yêu cầu đặt lại mật khẩu.'
             ),
             fieldErrors,

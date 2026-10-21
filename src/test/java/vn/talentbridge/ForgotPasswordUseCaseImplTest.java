@@ -11,6 +11,7 @@ import vn.talentbridge.core.application.port.out.PasswordResetTokenGeneratorPort
 import vn.talentbridge.core.application.port.out.PasswordResetTokenRepositoryPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
 import vn.talentbridge.core.application.usecase.ForgotPasswordUseCaseImpl;
+import vn.talentbridge.core.domain.exception.PasswordResetMailUnavailableException;
 import vn.talentbridge.core.domain.model.PasswordResetToken;
 import vn.talentbridge.core.domain.model.User;
 
@@ -119,6 +120,35 @@ class ForgotPasswordUseCaseImplTest {
                 tokenGenerator,
                 emailPort
         );
+    }
+
+    @Test
+    void emailDeliveryFailurePropagatesToTheTransactionalDispatcher() {
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(2L);
+        when(user.getEmail()).thenReturn("user@test.com");
+        when(userRepository.findByEmail("user@test.com"))
+                .thenReturn(Optional.of(user));
+        when(tokenGenerator.generateOtp()).thenReturn("123456");
+        when(tokenGenerator.generateToken()).thenReturn("temporary-token");
+        when(tokenGenerator.hashToken(anyString())).thenReturn("token-hash");
+        when(tokenRepository.save(any(PasswordResetToken.class)))
+                .thenAnswer(invocation -> {
+                    PasswordResetToken saved = invocation.getArgument(0);
+                    saved.setId(78L);
+                    return saved;
+                });
+        doThrow(new PasswordResetMailUnavailableException())
+                .when(emailPort)
+                .sendPasswordResetOtp(eq("user@test.com"), anyString(), any());
+
+        assertThrows(
+                PasswordResetMailUnavailableException.class,
+                () -> useCase.requestPasswordReset("user@test.com")
+        );
+
+        verify(tokenRepository).invalidateUnusedByUserId(eq(2L), any());
+        verify(emailPort).sendPasswordResetOtp(eq("user@test.com"), eq("123456"), any());
     }
 
     @Test

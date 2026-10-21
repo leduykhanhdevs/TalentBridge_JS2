@@ -86,7 +86,7 @@ describe('auth API fallback errors', () => {
         }))
     })
 
-    it('explains when password-reset email delivery is not configured', async () => {
+    it('explains when password-reset email delivery is unavailable', async () => {
         vi.stubGlobal(
             'fetch',
             vi.fn().mockResolvedValue(
@@ -102,7 +102,7 @@ describe('auth API fallback errors', () => {
         ).rejects.toMatchObject({
             name: 'AuthApiError',
             status: 503,
-            message: 'Dịch vụ gửi email khôi phục mật khẩu chưa được cấu hình. Vui lòng liên hệ quản trị viên.',
+            message: 'Dịch vụ gửi email khôi phục mật khẩu hiện không khả dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên.',
         })
     })
 

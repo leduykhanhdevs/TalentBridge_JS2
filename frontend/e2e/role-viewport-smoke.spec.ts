@@ -66,14 +66,19 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         }
         if (actor.name === 'admin') {
             await expect(page.getByRole('button', { name: 'Duyệt' }).first()).toBeVisible()
+            await expect(page.getByText('Phiên làm việc an toàn')).toHaveCount(0)
+            await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
+            await expect(page.getByRole('menuitem', { name: 'Đổi mật khẩu' })).toBeVisible()
+            await expect(page.getByRole('menuitem', { name: 'Đăng xuất' })).toBeVisible()
+            await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
         }
 
         if (actor.name === 'recruiter' || actor.name === 'admin') {
             await page.setViewportSize({ width: 360, height: 900 })
-            await page.getByRole('button', { name: 'Mở điều hướng' }).click()
             const assistantLabel = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý'
             const assistantPath = actor.name === 'admin' ? '/admin/assistant' : '/assistant'
             const assistantHeading = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'
+            if (actor.name === 'recruiter') await page.getByRole('button', { name: 'Mở điều hướng' }).click()
             await page.getByRole('link', { name: assistantLabel, exact: true }).click()
             await expect(page).toHaveURL(new RegExp(`${assistantPath.replaceAll('/', '\\/')}$`))
             await expect(page.getByRole('heading', { name: assistantHeading, level: 1 })).toBeVisible()
@@ -207,6 +212,10 @@ test('các route công khai và route 404 có nội dung, không render màn hì
         await expect(main, `Route ${route} cần hiển thị nội dung chính`).toBeVisible()
         const contentLength = await main.evaluate((element) => element.textContent?.trim().length ?? 0)
         expect(contentLength, `Route ${route} không được trắng`).toBeGreaterThan(30)
+        if (['/login', '/register', '/forgot-password', '/reset-password'].includes(route)) {
+            await expect(page.getByRole('navigation', { name: 'Điều hướng chính' })).toHaveCount(0)
+            await expect(page.getByRole('button', { name: /^(Mở|Đóng) menu$/ })).toHaveCount(0)
+        }
         const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
         for (const width of [360, 390, 1280, 1440]) {
             await page.setViewportSize({ width, height: 900 })
