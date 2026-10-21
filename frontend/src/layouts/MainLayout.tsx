@@ -31,8 +31,10 @@ function initialsFor(name: string) {
 export function MainLayout() {
     const navigate = useNavigate()
     const pathname = useLocation().pathname
-    const isLoginPage = pathname === '/login'
-    const isRegisterPage = pathname === '/register'
+    const normalizedPathname = pathname.replace(/\/+$/, '') || '/'
+    const isLoginPage = normalizedPathname === '/login'
+    const isRegisterPage = normalizedPathname === '/register'
+    const showBrowsingNavigation = !['/login', '/register', '/forgot-password', '/reset-password'].includes(normalizedPathname)
     const [user, setUser] = useState<UserResponse | null>(() => getStoredUser())
     const [authenticated, setAuthenticated] = useState<boolean>(() => isAuthenticated())
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
@@ -96,7 +98,7 @@ export function MainLayout() {
                         <span className="text-base font-bold tracking-tight text-slate-900">TalentBridge</span>
                     </NavLink>
 
-                    {!isRegisterPage && <nav aria-label="Điều hướng chính" className="hidden min-w-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 xl:flex">
+                    {showBrowsingNavigation && <nav aria-label="Điều hướng chính" className="hidden min-w-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 xl:flex">
                         {navigationLinks.map(({ to, label, icon: Icon, end }) => (
                             <NavLink
                                 aria-label={label}
@@ -148,7 +150,7 @@ export function MainLayout() {
                         </div>
                     )}
 
-                    {!isRegisterPage && <button
+                    {showBrowsingNavigation && <button
                         aria-controls="mobile-navigation"
                         aria-expanded={isMobileNavOpen}
                         aria-label={isMobileNavOpen ? 'Đóng menu' : 'Mở menu'}
@@ -160,7 +162,7 @@ export function MainLayout() {
                     </button>}
                 </div>
 
-                {isMobileNavOpen && (
+                {showBrowsingNavigation && isMobileNavOpen && (
                     <div id="mobile-navigation" className="border-t border-slate-200 bg-white px-4 py-3 shadow-lg sm:px-6 xl:hidden">
                         <nav aria-label="Điều hướng di động" className="grid gap-1">
                             {navigationLinks.map(({ to, label, icon: Icon, end }) => (

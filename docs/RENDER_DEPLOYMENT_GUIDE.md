@@ -25,6 +25,12 @@ Lưu các giá trị sau trong **Render → talentbridge-backend → Environment
 - GEMINI_API_KEY: tùy chọn nếu bật gọi Gemini; chatbot nội bộ vẫn có tri thức dự phòng khi nhà cung cấp AI không khả dụng.
 - RATE_LIMIT_ENABLED=true.
 
+### Gửi OTP đặt lại mật khẩu
+
+Backend SMTP hiện dùng `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` và `MAIL_FROM`; bật gửi bằng `PASSWORD_RESET_MAIL_ENABLED=true`. Với Gmail, dùng email tài khoản gửi và App Password được tạo trong Google Account, không dùng mật khẩu đăng nhập thông thường.
+
+> **Giới hạn gói Render Free:** Render chặn kết nối outbound SMTP trên cổng 25, 465 và 587. Vì vậy, log timeout khi kết nối `smtp.gmail.com:587` trên Web Service Free là giới hạn gói dịch vụ; thay App Password sẽ không giải quyết được. Để gửi mail thật, cần nâng backend sang gói Render cho phép SMTP hoặc bổ sung adapter dùng HTTPS API của dịch vụ email. [Tài liệu giới hạn Free của Render](https://render.com/docs/free).
+
 Mẫu URL JDBC có cấu trúc:
 
 jdbc:mysql://<RDS-endpoint>:3306/<database>?sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreUrl=file:/app/rds-ca-truststore.p12&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStorePassword=changeit&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8

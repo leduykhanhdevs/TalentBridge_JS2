@@ -3,6 +3,7 @@ import { Bot, Download, FileSpreadsheet, FileText, Image, LoaderCircle, Send, Sp
 import { Link } from 'react-router'
 import { askTalentBridge } from '../assistantApi'
 import type { AssistantTurn } from '../assistantTypes'
+import { getAdminReportFormat } from '../adminReportIntent'
 import { getAccessToken } from '../../auth/tokenStorage'
 import type { AdminApiMetricsResponse, AdminDashboardStatsResponse, AdminReportFormat } from '../../admin/adminTypes'
 
@@ -100,11 +101,7 @@ export function AssistantChatPanel({
             const pendingIntent = ['cho duyet', 'can duyet', 'cho xu ly', 'can xu ly', 'chua duyet']
                 .some((term) => normalizedQuestion.includes(term))
             const apiIntent = ['api', 'do tre', 'latency', 'loi'].some((term) => normalizedQuestion.includes(term))
-            const reportFormat: AdminReportFormat | null = !adminMode ? null
-                : ['excel', 'xlsx', 'bang tinh'].some((term) => normalizedQuestion.includes(term)) ? 'xlsx'
-                : ['word', 'docx', 'van ban', 'tai lieu'].some((term) => normalizedQuestion.includes(term)) ? 'docx'
-                : ['anh', 'png', 'bieu do', 'chart'].some((term) => normalizedQuestion.includes(term)) ? 'png'
-                : null
+            const reportFormat = getAdminReportFormat(question, adminMode)
             let adminAnswer: string | null = null
 
             if (adminMode && reportFormat) {
@@ -130,18 +127,18 @@ export function AssistantChatPanel({
                 return
             }
 
-            if (adminMode && overviewIntent) {
-                adminAnswer = adminStats
-                    ? `Tổng quan hệ thống theo số liệu vừa tải:\n• ${adminStats.totalUsers.toLocaleString('vi-VN')} tài khoản\n• ${adminStats.totalCompanies.toLocaleString('vi-VN')} doanh nghiệp, ${adminStats.pendingCompanies.toLocaleString('vi-VN')} đang chờ duyệt\n• ${adminStats.totalJobs.toLocaleString('vi-VN')} tin tuyển dụng, ${adminStats.activeJobs.toLocaleString('vi-VN')} đang hoạt động và ${adminStats.pendingJobs.toLocaleString('vi-VN')} chờ kiểm duyệt.\n\nBạn có thể mở mục Doanh nghiệp hoặc Tin tuyển dụng để xử lý hàng chờ.`
-                    : 'Chưa tải được số liệu quản trị. Hãy dùng nút “Cập nhật số liệu” phía trên rồi hỏi lại.'
+            if (adminMode && apiIntent) {
+                adminAnswer = adminMetrics
+                    ? `Thống kê API trong ${adminMetrics.retentionHours} giờ dữ liệu đang lưu:\n• ${adminMetrics.requestCount.toLocaleString('vi-VN')} yêu cầu\n• ${(adminMetrics.clientErrorCount + adminMetrics.serverErrorCount).toLocaleString('vi-VN')} lỗi (${adminMetrics.errorRatePercent.toLocaleString('vi-VN')}%)\n• Độ trễ trung bình ${adminMetrics.averageLatencyMs.toLocaleString('vi-VN')} ms; cao nhất ${adminMetrics.maxLatencyMs.toLocaleString('vi-VN')} ms.\n\nMở “Thống kê API” để xem từng endpoint. ${adminMetrics.resetsOnRestart ? 'Bộ đếm có thể được đặt lại khi máy chủ khởi động lại.' : ''}`
+                    : 'Chưa tải được thống kê API. Hãy dùng nút “Cập nhật số liệu” phía trên rồi hỏi lại.'
             } else if (adminMode && pendingIntent) {
                 adminAnswer = adminStats
                     ? `Hàng chờ hiện tại:\n• ${adminStats.pendingCompanies.toLocaleString('vi-VN')} doanh nghiệp chờ duyệt.\n• ${adminStats.pendingJobs.toLocaleString('vi-VN')} tin tuyển dụng chờ kiểm duyệt.\n\nMở “Doanh nghiệp” hoặc “Tin tuyển dụng” để xem danh sách và quyết định.`
                     : 'Chưa tải được số liệu hàng chờ. Hãy dùng nút “Cập nhật số liệu” phía trên rồi hỏi lại.'
-            } else if (adminMode && apiIntent) {
-                adminAnswer = adminMetrics
-                    ? `Thống kê API trong ${adminMetrics.retentionHours} giờ dữ liệu đang lưu:\n• ${adminMetrics.requestCount.toLocaleString('vi-VN')} yêu cầu\n• ${(adminMetrics.clientErrorCount + adminMetrics.serverErrorCount).toLocaleString('vi-VN')} lỗi (${adminMetrics.errorRatePercent.toLocaleString('vi-VN')}%)\n• Độ trễ trung bình ${adminMetrics.averageLatencyMs.toLocaleString('vi-VN')} ms; cao nhất ${adminMetrics.maxLatencyMs.toLocaleString('vi-VN')} ms.\n\nMở “Thống kê API” để xem từng endpoint. ${adminMetrics.resetsOnRestart ? 'Bộ đếm có thể được đặt lại khi máy chủ khởi động lại.' : ''}`
-                    : 'Chưa tải được thống kê API. Hãy dùng nút “Cập nhật số liệu” phía trên rồi hỏi lại.'
+            } else if (adminMode && overviewIntent) {
+                adminAnswer = adminStats
+                    ? `Tổng quan hệ thống theo số liệu vừa tải:\n• ${adminStats.totalUsers.toLocaleString('vi-VN')} tài khoản\n• ${adminStats.totalCompanies.toLocaleString('vi-VN')} doanh nghiệp, ${adminStats.pendingCompanies.toLocaleString('vi-VN')} đang chờ duyệt\n• ${adminStats.totalJobs.toLocaleString('vi-VN')} tin tuyển dụng, ${adminStats.activeJobs.toLocaleString('vi-VN')} đang hoạt động và ${adminStats.pendingJobs.toLocaleString('vi-VN')} chờ kiểm duyệt.\n\nBạn có thể mở mục Doanh nghiệp hoặc Tin tuyển dụng để xử lý hàng chờ.`
+                    : 'Chưa tải được số liệu quản trị. Hãy dùng nút “Cập nhật số liệu” phía trên rồi hỏi lại.'
             }
 
             if (adminAnswer !== null) {

@@ -212,6 +212,10 @@ test('các route công khai và route 404 có nội dung, không render màn hì
         await expect(main, `Route ${route} cần hiển thị nội dung chính`).toBeVisible()
         const contentLength = await main.evaluate((element) => element.textContent?.trim().length ?? 0)
         expect(contentLength, `Route ${route} không được trắng`).toBeGreaterThan(30)
+        if (['/login', '/register', '/forgot-password', '/reset-password'].includes(route)) {
+            await expect(page.getByRole('navigation', { name: 'Điều hướng chính' })).toHaveCount(0)
+            await expect(page.getByRole('button', { name: /^(Mở|Đóng) menu$/ })).toHaveCount(0)
+        }
         const routeSlug = route.slice(1).replaceAll('/', '-') || 'home'
         for (const width of [360, 390, 1280, 1440]) {
             await page.setViewportSize({ width, height: 900 })

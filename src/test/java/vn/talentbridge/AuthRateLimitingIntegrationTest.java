@@ -104,7 +104,11 @@ class AuthRateLimitingIntegrationTest {
                             .header("X-Forwarded-For", "192.168.2.50")
                             .content(forgotJson))
                     .andExpect(status().isServiceUnavailable())
-                    .andExpect(jsonPath("$.statusCode").value(50301));
+                    .andExpect(jsonPath("$.statusCode").value(50301))
+                    .andExpect(jsonPath("$.message").value(
+                            "Dịch vụ gửi email khôi phục mật khẩu hiện không khả dụng. "
+                                    + "Vui lòng thử lại sau hoặc liên hệ quản trị viên."
+                    ));
         }
 
         mockMvc.perform(post("/api/v1/auth/forgot-password")

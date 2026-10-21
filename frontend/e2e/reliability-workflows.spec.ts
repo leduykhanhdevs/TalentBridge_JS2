@@ -3,6 +3,45 @@ import { join } from 'node:path'
 
 const screenshotDirectory = process.env.TALENTBRIDGE_E2E_SCREENSHOT_DIR!
 
+test('password reset email failure stays on the email step and shows the server error', async ({ page }) => {
+    await page.route('**/api/v1/auth/forgot-password', async (route) => {
+        await route.fulfill({
+            status: 503,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                statusCode: 50301,
+                message: 'Dịch vụ gửi email khôi phục mật khẩu hiện không khả dụng. Vui lòng thử lại sau hoặc liên hệ quản trị viên.',
+            }),
+        })
+    })
+
+    await page.goto('/forgot-password')
+    await page.getByLabel('Địa chỉ email').fill('qa.password-reset@example.invalid')
+    await page.getByRole('button', { name: 'Gửi mã OTP' }).click()
+
+    await expect(page.getByRole('alert')).toContainText('Dịch vụ gửi email khôi phục mật khẩu hiện không khả dụng.')
+    await expect(page.getByRole('heading', { name: 'Quên mật khẩu?' })).toBeVisible()
+    await expect(page.getByLabel('Mã OTP')).toHaveCount(0)
+})
+
+test('password reset confirmation does not claim an email was sent', async ({ page }) => {
+    await page.route('**/api/v1/auth/forgot-password', async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ statusCode: 200, message: 'ok', data: null }),
+        })
+    })
+
+    await page.goto('/forgot-password')
+    await page.getByLabel('Địa chỉ email').fill('qa.password-reset@example.invalid')
+    await page.getByRole('button', { name: 'Gửi mã OTP' }).click()
+
+    await expect(page.getByLabel('Mã OTP')).toBeVisible()
+    await expect(page.getByRole('status')).toContainText('Nếu email tồn tại trong hệ thống, mã OTP sẽ được gửi.')
+    await expect(page.getByRole('status')).not.toContainText('đã được gửi')
+})
+
 test('floating assistant stays off narrow mobile screens so it cannot cover page controls', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 })
 

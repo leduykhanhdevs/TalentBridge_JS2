@@ -28,6 +28,15 @@ test('admin header stays horizontal and assistant exports real PNG, Excel and Wo
             endpoints: [{ endpoint: 'GET /api/v1/jobs/{id}', requestCount: 12, clientErrorCount: 1, serverErrorCount: 0, errorRatePercent: 8.33, averageLatencyMs: 42.5, maxLatencyMs: 110, buckets: [{ startsAt: '2026-10-22T07:55:00Z', requestCount: 3, clientErrorCount: 1, serverErrorCount: 0, averageLatencyMs: 42.5, maxLatencyMs: 110 }] }],
         } }),
     }))
+    const assistantMessages: string[] = []
+    await page.route('**/api/v1/assistant/chat', (route) => {
+        assistantMessages.push(route.request().postDataJSON().message)
+        return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ statusCode: 200, message: 'ok', data: { answer: 'Đây là câu trả lời thử nghiệm từ trợ lý.', source: 'KNOWLEDGE_BASE', references: [] } }),
+        })
+    })
 
     await page.goto('/admin/assistant')
     await expect(page.getByRole('heading', { name: 'Trợ lý quản trị', level: 1 })).toBeVisible()
@@ -65,6 +74,14 @@ test('admin header stays horizontal and assistant exports real PNG, Excel and Wo
         const artifact = new Uint8Array(await readFile((await download.path())!))
         expect(Array.from(artifact.slice(0, report.signature.length))).toEqual(report.signature)
     }
+
+    const question = 'Anh hãy thống kê lỗi API'
+    const pngReportsBeforeQuestion = await assistant.getByRole('link', { name: 'Tải báo cáo PNG' }).count()
+    await assistant.getByRole('textbox', { name: 'Câu hỏi về TalentBridge' }).fill(question)
+    await assistant.getByRole('button', { name: 'Gửi câu hỏi' }).click()
+    await expect(assistant.getByText(/Thống kê API trong/)).toBeVisible()
+    await expect(assistant.getByRole('link', { name: 'Tải báo cáo PNG' })).toHaveCount(pngReportsBeforeQuestion)
+    expect(assistantMessages).toEqual([])
 
     expect(pageErrors).toEqual([])
 })

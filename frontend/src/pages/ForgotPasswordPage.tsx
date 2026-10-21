@@ -51,7 +51,7 @@ export function ForgotPasswordPage() {
             setOtpError(null)
             setServerError(null)
             setSuccessMessage(
-                'Nếu email tồn tại trong hệ thống, mã OTP đã được gửi. Mã có hiệu lực trong 15 phút; vui lòng kiểm tra cả thư mục Spam.',
+                'Nếu email tồn tại trong hệ thống, mã OTP sẽ được gửi. Vui lòng kiểm tra hộp thư và Spam; nếu chưa nhận sau vài phút, hãy kiểm tra lại địa chỉ email hoặc liên hệ quản trị viên.',
             )
             setResendSeconds(OTP_RESEND_SECONDS)
         },
@@ -169,7 +169,7 @@ export function ForgotPasswordPage() {
 
     const description = {
         email: 'Nhập địa chỉ email đã đăng ký để nhận mã OTP đặt lại mật khẩu.',
-        otp: `Nhập mã OTP 6 chữ số được gửi đến ${email}.`,
+        otp: `Nhập mã OTP 6 chữ số nếu bạn nhận được email tại ${email}.`,
         password: 'Mã OTP đã được xác minh. Hãy chọn mật khẩu mới cho tài khoản của bạn.',
         done: 'Mật khẩu của bạn đã được thay đổi an toàn.',
     }[step]
