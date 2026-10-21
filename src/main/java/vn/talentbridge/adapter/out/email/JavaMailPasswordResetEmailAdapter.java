@@ -4,9 +4,13 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import vn.talentbridge.core.application.port.out.PasswordResetEmailPort;
 import vn.talentbridge.core.domain.exception.PasswordResetMailUnavailableException;
 
@@ -26,17 +30,20 @@ public class JavaMailPasswordResetEmailAdapter
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final JavaMailSender mailSender;
+    private final ApplicationEventPublisher eventPublisher;
     private final String mailFrom;
     private final boolean mailEnabled;
 
     public JavaMailPasswordResetEmailAdapter(
             JavaMailSender mailSender,
+            ApplicationEventPublisher eventPublisher,
             @Value("${talentbridge.password-reset.mail-from:no-reply@talentbridge.vn}")
             String mailFrom,
             @Value("${talentbridge.password-reset.mail-enabled:false}")
             boolean mailEnabled
     ) {
         this.mailSender = mailSender;
+        this.eventPublisher = eventPublisher;
         this.mailFrom = mailFrom;
         this.mailEnabled = mailEnabled;
     }
@@ -46,6 +53,18 @@ public class JavaMailPasswordResetEmailAdapter
             String recipientEmail,
             String otp,
             LocalDateTime expiresAt
+    ) {
+        eventPublisher.publishEvent(new PasswordResetOtpMailRequestedEvent(
+                recipientEmail,
+                otp,
+                expiresAt
+        ));
+    }
+
+    @Async("passwordResetMailExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendPasswordResetOtpAfterCommit(
+            PasswordResetOtpMailRequestedEvent event
     ) {
         if (!mailEnabled) {
             throw new PasswordResetMailUnavailableException();
@@ -60,11 +79,11 @@ public class JavaMailPasswordResetEmailAdapter
             );
 
             helper.setFrom(mailFrom);
-            helper.setTo(recipientEmail);
+            helper.setTo(event.recipientEmail());
             helper.setSubject("TalentBridge - Yêu cầu đặt lại mật khẩu");
 
-            String formattedExpire = expiresAt.format(DATE_TIME_FORMATTER);
-            String htmlContent = buildHtmlContent(otp, formattedExpire);
+            String formattedExpire = event.expiresAt().format(DATE_TIME_FORMATTER);
+            String htmlContent = buildHtmlContent(event.otp(), formattedExpire);
 
             helper.setText(htmlContent, true);
 

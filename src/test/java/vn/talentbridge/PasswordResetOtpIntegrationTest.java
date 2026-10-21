@@ -15,11 +15,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import vn.talentbridge.adapter.out.persistence.repository.PasswordResetTokenJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
 import vn.talentbridge.core.application.port.out.PasswordResetEmailPort;
+import vn.talentbridge.core.domain.exception.PasswordResetMailUnavailableException;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,6 +53,52 @@ class PasswordResetOtpIntegrationTest {
     private PasswordResetEmailPort emailPort;
 
     @Test
+    void forgotPasswordResponseDoesNotRevealWhetherEmailDeliveryFailed() throws Exception {
+        String registeredEmail = "enumeration-" + UUID.randomUUID() + "@example.test";
+        String unknownEmail = "missing-" + UUID.randomUUID() + "@example.test";
+        String password = "OriginalPass123";
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("CF-Connecting-IP", "192.0.2.41")
+                        .content(objectMapper.writeValueAsString(new RegisterBody(
+                                registeredEmail,
+                                password,
+                                "Enumeration Test",
+                                "ROLE_CANDIDATE"
+                        ))))
+                .andExpect(status().isCreated());
+
+        doThrow(new PasswordResetMailUnavailableException())
+                .when(emailPort)
+                .sendPasswordResetOtp(eq(registeredEmail), anyString(), any());
+
+        String failedDeliveryResponse = mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("CF-Connecting-IP", "192.0.2.41")
+                        .content(objectMapper.writeValueAsString(new EmailBody(registeredEmail))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Nếu email tồn tại")))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        verify(emailPort, timeout(5_000))
+                .sendPasswordResetOtp(eq(registeredEmail), anyString(), any());
+
+        String unknownEmailResponse = mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("CF-Connecting-IP", "192.0.2.41")
+                        .content(objectMapper.writeValueAsString(new EmailBody(unknownEmail))))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(objectMapper.readTree(failedDeliveryResponse).path("message").asText())
+                .isEqualTo(objectMapper.readTree(unknownEmailResponse).path("message").asText());
+    }
+
+    @Test
     void emailOtpMustBeVerifiedBeforePasswordCanBeChanged() throws Exception {
         String email = "otp-" + UUID.randomUUID() + "@example.test";
         String firstPassword = "OriginalPass123";
@@ -57,7 +106,7 @@ class PasswordResetOtpIntegrationTest {
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new RegisterBody(
                                 email,
                                 firstPassword,
@@ -68,19 +117,20 @@ class PasswordResetOtpIntegrationTest {
 
         mockMvc.perform(post("/api/v1/auth/forgot-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new EmailBody(email))))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<String> otpCaptor = ArgumentCaptor.forClass(String.class);
-        verify(emailPort).sendPasswordResetOtp(eq(email), otpCaptor.capture(), any());
+        verify(emailPort, timeout(5_000))
+                .sendPasswordResetOtp(eq(email), otpCaptor.capture(), any());
         String otp = otpCaptor.getValue();
         assertThat(otp).matches("[0-9]{6}");
         String wrongOtp = otp.equals("000000") ? "000001" : "000000";
 
         mockMvc.perform(post("/api/v1/auth/verify-reset-otp")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new VerifyOtpBody(email, wrongOtp))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("nhập lại")));
@@ -95,13 +145,13 @@ class PasswordResetOtpIntegrationTest {
 
         mockMvc.perform(post("/api/v1/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new ResetBody(otp, newPassword))))
                 .andExpect(status().isBadRequest());
 
         String verifyResponse = mockMvc.perform(post("/api/v1/auth/verify-reset-otp")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new VerifyOtpBody(email, otp))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.resetToken").isNotEmpty())
@@ -113,19 +163,19 @@ class PasswordResetOtpIntegrationTest {
 
         mockMvc.perform(post("/api/v1/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new ResetBody(resetGrant, newPassword))))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new LoginBody(email, newPassword))))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.0.2.40")
+                        .header("CF-Connecting-IP", "192.0.2.40")
                         .content(objectMapper.writeValueAsString(new LoginBody(email, firstPassword))))
                 .andExpect(status().isUnauthorized());
     }

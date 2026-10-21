@@ -19,6 +19,10 @@ describe('getAdminReportFormat', () => {
         expect(getAdminReportFormat('Tạo báo cáo Word', true)).toBe('docx')
     })
 
+    it('does not treat the word inside password as a Word export request', () => {
+        expect(getAdminReportFormat('Hướng dẫn đặt lại password cho tài khoản TalentBridge', true)).toBeNull()
+    })
+
     it('does not activate admin exports in the regular assistant', () => {
         expect(getAdminReportFormat('Tạo ảnh thống kê', false)).toBeNull()
     })

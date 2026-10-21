@@ -53,7 +53,7 @@ class AuthRateLimitingIntegrationTest {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("X-Forwarded-For", "192.168.1.100")
+                            .header("CF-Connecting-IP", "192.168.1.100")
                             .content(json))
                     .andExpect(status().isUnauthorized());
         }
@@ -61,7 +61,7 @@ class AuthRateLimitingIntegrationTest {
         // 6th request from the same IP should be blocked by rate limiter with 429
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.168.1.100")
+                        .header("CF-Connecting-IP", "192.168.1.100")
                         .content(json))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.statusCode").value(42901));
@@ -80,7 +80,7 @@ class AuthRateLimitingIntegrationTest {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("X-Forwarded-For", "10.0.0.1")
+                            .header("CF-Connecting-IP", "10.0.0.1")
                             .content(json))
                     .andExpect(status().isUnauthorized());
         }
@@ -88,7 +88,7 @@ class AuthRateLimitingIntegrationTest {
         // Another IP 10.0.0.2 should still succeed / reach controller
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "10.0.0.2")
+                        .header("CF-Connecting-IP", "10.0.0.2")
                         .content(json))
                 .andExpect(status().isUnauthorized());
     }
@@ -101,19 +101,17 @@ class AuthRateLimitingIntegrationTest {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/api/v1/auth/forgot-password")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("X-Forwarded-For", "192.168.2.50")
+                            .header("CF-Connecting-IP", "192.168.2.50")
                             .content(forgotJson))
-                    .andExpect(status().isServiceUnavailable())
-                    .andExpect(jsonPath("$.statusCode").value(50301))
+                    .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value(
-                            "Dịch vụ gửi email khôi phục mật khẩu hiện không khả dụng. "
-                                    + "Vui lòng thử lại sau hoặc liên hệ quản trị viên."
+                            org.hamcrest.Matchers.containsString("Nếu email tồn tại")
                     ));
         }
 
         mockMvc.perform(post("/api/v1/auth/forgot-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.168.2.50")
+                        .header("CF-Connecting-IP", "192.168.2.50")
                         .content(forgotJson))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.statusCode").value(42901));
@@ -127,16 +125,47 @@ class AuthRateLimitingIntegrationTest {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(post("/api/v1/auth/verify-reset-otp")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .header("X-Forwarded-For", "192.168.2.51")
+                            .header("CF-Connecting-IP", "192.168.2.51")
                             .content(verifyJson))
                     .andExpect(status().isBadRequest());
         }
 
         mockMvc.perform(post("/api/v1/auth/verify-reset-otp")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Forwarded-For", "192.168.2.51")
+                        .header("CF-Connecting-IP", "192.168.2.51")
                         .content(verifyJson))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.statusCode").value(42901));
+    }
+
+    @Test
+    @DisplayName("Caller-controlled X-Forwarded-For cannot bypass the auth rate limit")
+    void testForwardedForCannotBypassRateLimit() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("spoofed-header@talentbridge.vn");
+        request.setPassword("InvalidPassword123!");
+        String json = objectMapper.writeValueAsString(request);
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Forwarded-For", "198.51.100." + (i + 1))
+                            .with(servletRequest -> {
+                                servletRequest.setRemoteAddr("203.0.113.10");
+                                return servletRequest;
+                            })
+                            .content(json))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Forwarded-For", "198.51.100.99")
+                        .with(servletRequest -> {
+                            servletRequest.setRemoteAddr("203.0.113.10");
+                            return servletRequest;
+                        })
+                        .content(json))
+                .andExpect(status().isTooManyRequests());
     }
 }

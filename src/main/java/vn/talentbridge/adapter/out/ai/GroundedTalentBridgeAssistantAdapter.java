@@ -34,7 +34,9 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
             "(?<![A-Za-z0-9])(?:\\+?84|0)(?:[ .()-]*\\d){8,10}(?!\\d)");
     private static final Pattern CREDENTIAL_PATTERN = Pattern.compile(
             "\\b(?:AIza[0-9A-Za-z_-]{20,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{16,})\\b|"
-                    + "\\beyJ[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b");
+                    + "\\beyJ[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b|"
+                    // Password-reset grants are 32 random bytes encoded as 43 URL-safe Base64 characters.
+                    + "(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])");
     private static final Pattern SECRET_ASSIGNMENT_PATTERN = Pattern.compile(
             "\\b(?:password|passwd|mat\\s*khau|otp|ma\\s*xac\\s*minh|api\\s*key)\\s*(?:[:=]|\\b(?:la|is)\\b)\\s*\\S{4,}");
     private static final Pattern OTP_PATTERN = Pattern.compile(

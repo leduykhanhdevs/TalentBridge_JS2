@@ -73,3 +73,18 @@ Mọi request ghi dữ liệu và xác thực theo vai trò đều dùng fixture
 - Full regression cuối: Maven `verify` **341/341**; Vitest **20 files / 127 tests**; API E2E H2 **28/28**; Playwright Chromium **20/20**; ESLint và Vite production build exit 0; `pnpm audit --prod` không phát hiện lỗ hổng. Log final nằm ở `runs/2026-10-22-otp-nav-followup/` và `runs/2026-10-22-010855/`; các lần thử trước có lỗi assertion của test harness được giữ lại trong cùng thư mục để không xóa lịch sử chạy.
 - Playwright kiểm tra lỗi gửi OTP, copy không tuyên bố email đã gửi, navbar ẩn trên route auth, trang theo vai trò/viewports và thống kê API không xuất nhầm ảnh. Ảnh viewport nằm trong `runs/2026-10-22-010855/screenshots/`.
 - Chưa gửi OTP thật đến hộp thư cá nhân, không thay secret Render, không ghi dữ liệu production. PR #54 còn mở và `DIRTY` so với `dev`; chưa xác nhận CI/CD hoặc marker SHA mới. Chỉ sau khi đồng bộ conflict, PR được merge và Render deploy xong mới chạy production smoke chỉ đọc. Cần dịch vụ paid cho SMTP hoặc adapter HTTPS cùng API key do chủ dự án tự nhập.
+
+## Final review fixes and regression — 2026-10-22
+
+- Bugbot final review nêu hai P2: `password` bị nhận nhầm là từ khóa xuất Word do substring; và email có thể đổi trước khi request OTP hoàn thành. Security Review nêu P2: reset-grant 32 byte Base64URL có thể lọt qua privacy guard và được chuyển tới Gemini.
+- Đã sửa ba finding: từ khóa xuất báo cáo dùng biên nguyên từ/cụm từ; OTP khóa input trong khi request chờ và callback giữ email đúng từ mutation variables; privacy guard chặn token Base64URL dài 43 ký tự trước khi gọi Gemini. Thêm regression Vitest, backend JUnit và Playwright.
+- Full regression: Maven `verify` **341/341**; Vitest **20 files / 128 tests**; API E2E H2 **28/28**; Playwright Chromium **21/21**; ESLint và Vite production build đạt. Playwright xác nhận navbar vắng trên `/forgot-password` và OTP verification gửi đúng email đã dùng request.
+- Log và screenshot phiên này: `runs/2026-10-22-012713/` (bao gồm API, Playwright, Vitest, lint, build và backend verify logs). Production chưa đổi; không gửi email thật, không gọi Gemini thật và không ghi dữ liệu production.
+- PR #54 có CI xanh trên SHA `498f237`, nhưng các sửa đổi cuối cần push và kiểm tra lại. GitHub CD repo chỉ khởi chạy theo push lên `main`; SMTP Gmail vẫn bị Render Free chặn và cần đổi gói hoặc tích hợp nhà cung cấp HTTPS.
+
+## Xác nhận lại regression và lỗi tài nguyên Playwright — 2026-10-22
+
+- Lần chạy `runs/2026-10-22-015109/` ghi nhận 20/21 Playwright; test nhà tuyển dụng không thấy nhãn Email vì Chromium báo `ERR_NO_BUFFER_SPACE` khi tải `/src/main.tsx`, khiến trang chỉ còn khung HTML. Trace xác nhận đây là lỗi tải tài nguyên của trình duyệt trong lượt chạy đó; markup đăng nhập vẫn có label liên kết đúng với input.
+- Chạy lại toàn bộ `scripts/run-e2e.ps1` trên H2 tạm: Maven package thành công, API E2E **28/28**, Playwright Chromium **21/21**. Test gửi yêu cầu tạo công ty vượt qua kiểm tra website/logo không hợp lệ, xác nhận không gửi payload sai, rồi gửi payload URL hợp lệ.
+- Log xác nhận cuối và ảnh QA: `runs/2026-10-22-015549/` (Maven package, backend stdout/stderr, API E2E, Playwright và screenshots). Maven `verify` đầy đủ **347/347** nằm tại `runs/2026-10-22-015000/backend-maven-verify.log`; Vitest **20 files / 128 tests**, ESLint và Vite build đã đạt trên cùng source diff. `git diff --check` đạt.
+- Không gửi OTP thật, không ghi dữ liệu production. PR #54 cần được cập nhật với commit đã kiểm thử và CI mới trước khi merge vào `dev`; deploy chỉ xác nhận sau release PR, CD xanh và đối chiếu đúng marker SHA FE/BE.

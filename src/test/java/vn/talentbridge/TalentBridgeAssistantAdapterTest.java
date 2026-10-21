@@ -124,7 +124,8 @@ class TalentBridgeAssistantAdapterTest {
                 "Số điện thoại 0912345678 của tôi nằm trong hồ sơ ứng tuyển",
                 "Mã OTP 123456 dùng cho tài khoản TalentBridge",
                 "Mật khẩu là demo-secret-1234, tôi cần cập nhật tài khoản TalentBridge",
-                "API key: AIzaSyDUMMY_KEY_VALUE_12345678901234567890, dùng cho TalentBridge")) {
+                "API key: AIzaSyDUMMY_KEY_VALUE_12345678901234567890, dùng cho TalentBridge",
+                "Tôi cần hướng dẫn reset password, reset token: " + "A".repeat(43))) {
             var result = guardedAdapter.answer(message, List.of());
 
             assertThat(result.source()).isEqualTo("KNOWLEDGE_BASE");

@@ -42,6 +42,60 @@ test('password reset confirmation does not claim an email was sent', async ({ pa
     await expect(page.getByRole('status')).not.toContainText('đã được gửi')
 })
 
+test('password reset keeps OTP verification bound to the email used by the pending request', async ({ page }) => {
+    let releaseRequest!: () => void
+    let releaseVerification!: () => void
+    let markRequestStarted!: () => void
+    let markVerificationStarted!: () => void
+    let verifiedEmail: string | undefined
+    const requestStarted = new Promise<void>((resolve) => { markRequestStarted = resolve })
+    const requestGate = new Promise<void>((resolve) => { releaseRequest = resolve })
+    const verificationStarted = new Promise<void>((resolve) => { markVerificationStarted = resolve })
+    const verificationGate = new Promise<void>((resolve) => { releaseVerification = resolve })
+
+    await page.route('**/api/v1/auth/forgot-password', async (route) => {
+        expect(route.request().postDataJSON()).toEqual({ email: 'qa.original@example.invalid' })
+        markRequestStarted()
+        await requestGate
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ statusCode: 200, message: 'ok', data: null }),
+        })
+    })
+    await page.route('**/api/v1/auth/verify-reset-otp', async (route) => {
+        verifiedEmail = route.request().postDataJSON().email
+        markVerificationStarted()
+        await verificationGate
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ statusCode: 200, message: 'ok', data: { resetToken: 'qa-reset-grant' } }),
+        })
+    })
+
+    await page.goto('/forgot-password')
+    await expect(page.getByRole('navigation', { name: 'Điều hướng chính' })).toHaveCount(0)
+    await page.getByLabel('Địa chỉ email').fill('qa.original@example.invalid')
+    await page.getByRole('button', { name: 'Gửi mã OTP' }).click()
+    await requestStarted
+
+    await expect(page.getByLabel('Địa chỉ email')).toBeDisabled()
+    await expect(page.getByLabel('Địa chỉ email')).toHaveValue('qa.original@example.invalid')
+    releaseRequest()
+
+    await expect(page.getByLabel('Mã OTP')).toBeVisible()
+    await page.getByLabel('Mã OTP').fill('123456')
+    await page.getByRole('button', { name: 'Xác minh OTP' }).click()
+    await verificationStarted
+    await expect(page.getByRole('button', { name: 'Sửa email' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /Gửi lại sau/ })).toBeDisabled()
+    await expect(page.getByLabel('Mã OTP')).toBeDisabled()
+    releaseVerification()
+    await expect(page.getByRole('heading', { name: 'Tạo mật khẩu mới' })).toBeVisible()
+    expect(verifiedEmail).toBe('qa.original@example.invalid')
+})
+
 test('floating assistant stays off narrow mobile screens so it cannot cover page controls', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 })
 

@@ -45,7 +45,9 @@ export function ForgotPasswordPage() {
 
     const forgotMutation = useMutation({
         mutationFn: requestForgotPassword,
-        onSuccess: () => {
+        onSuccess: (_data, variables) => {
+            // Keep OTP verification bound to the exact address used by this request.
+            setEmail(variables.email)
             setStep('otp')
             setOtp('')
             setOtpError(null)
@@ -209,6 +211,7 @@ export function ForgotPasswordPage() {
                                     placeholder="ban@example.com"
                                     type="email"
                                     value={email}
+                                    disabled={forgotMutation.isPending}
                                     onChange={(event) => {
                                         setEmail(event.target.value)
                                         setEmailError(null)
@@ -239,6 +242,7 @@ export function ForgotPasswordPage() {
                                 name="otp"
                                 placeholder="••••••"
                                 value={otp}
+                                disabled={verifyMutation.isPending}
                                 onChange={(event) => {
                                     setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))
                                     setOtpError(null)
@@ -253,7 +257,7 @@ export function ForgotPasswordPage() {
                             <span>{verifyMutation.isPending ? 'Đang xác minh...' : 'Xác minh OTP'}</span>
                         </button>
                         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                            <button className="font-semibold text-slate-600 hover:text-blue-700" onClick={() => {
+                            <button className="font-semibold text-slate-600 hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400" disabled={forgotMutation.isPending || verifyMutation.isPending} onClick={() => {
                                 setStep('email')
                                 setServerError(null)
                                 setSuccessMessage(null)
@@ -262,7 +266,7 @@ export function ForgotPasswordPage() {
                             </button>
                             <button
                                 className="inline-flex items-center gap-2 font-semibold text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
-                                disabled={resendSeconds > 0 || forgotMutation.isPending}
+                                disabled={resendSeconds > 0 || forgotMutation.isPending || verifyMutation.isPending}
                                 onClick={sendOtp}
                                 type="button"
                             >

@@ -44,6 +44,11 @@ public enum ErrorCode {
             "Dịch vụ gửi email khôi phục mật khẩu chưa được cấu hình. Vui lòng liên hệ quản trị viên.",
             HttpStatus.SERVICE_UNAVAILABLE
     ),
+    TEMPORARY_SERVICE_UNAVAILABLE(
+            50302,
+            "Yêu cầu chưa được xử lý do hệ thống đang bận. Vui lòng thử lại sau.",
+            HttpStatus.SERVICE_UNAVAILABLE
+    ),
 
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(50001, "Lỗi máy chủ nội bộ. Vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR);
