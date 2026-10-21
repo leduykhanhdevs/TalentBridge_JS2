@@ -15,6 +15,7 @@ const AdminRecruitersPage = lazy(() => import('../../pages/admin/AdminRecruiters
 const AdminCompaniesPage = lazy(() => import('../../pages/admin/AdminCompaniesPage').then((module) => ({ default: module.AdminCompaniesPage })))
 const AdminJobsPage = lazy(() => import('../../pages/admin/AdminJobsPage').then((module) => ({ default: module.AdminJobsPage })))
 const AdminApiMetricsPage = lazy(() => import('../../pages/admin/AdminApiMetricsPage').then((module) => ({ default: module.AdminApiMetricsPage })))
+const AdminAssistantPage = lazy(() => import('../../pages/admin/AdminAssistantPage').then((module) => ({ default: module.AdminAssistantPage })))
 const RecruiterProfilePage = lazy(() => import('../../pages/recruiter/RecruiterProfilePage').then((module) => ({ default: module.RecruiterProfilePage })))
 const RecruiterCompanyPage = lazy(() => import('../../pages/recruiter/RecruiterCompanyPage').then((module) => ({ default: module.RecruiterCompanyPage })))
 const RecruiterJoinCompanyPage = lazy(() => import('../../pages/recruiter/RecruiterJoinCompanyPage').then((module) => ({ default: module.RecruiterJoinCompanyPage })))
@@ -87,6 +88,7 @@ export function AppRouter() {
                 <Route element={<AdminCompaniesPage />} path="companies" />
                 <Route element={<AdminJobsPage />} path="jobs" />
                 <Route element={<AdminApiMetricsPage />} path="metrics" />
+                <Route element={<AdminAssistantPage />} path="assistant" />
             </Route>
             </Routes>
             </Suspense>

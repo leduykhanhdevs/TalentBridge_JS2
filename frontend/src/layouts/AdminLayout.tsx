@@ -45,8 +45,18 @@ export function AdminLayout() {
         { to: '/admin/companies', label: 'Doanh nghiệp', icon: Building2 },
         { to: '/admin/jobs', label: 'Tin tuyển dụng', icon: BriefcaseBusiness },
         { to: '/admin/metrics', label: 'Thống kê API', icon: Activity },
-        { to: '/assistant', label: 'Trợ lý', icon: MessageCircle },
+        { to: '/admin/assistant', label: 'Trợ lý quản trị', icon: MessageCircle },
     ]
 
-    return <WorkspaceLayoutFrame sectionLabel="Quản trị" roleLabel="Quản trị viên" user={user} navigationItems={navigationItems} />
+    return (
+        <WorkspaceLayoutFrame
+            sectionLabel="Quản trị"
+            roleLabel="Quản trị viên"
+            user={user}
+            navigationItems={navigationItems}
+            showWorkspaceLabel={false}
+            showRoleBadge={false}
+            showRoleCaption={false}
+        />
+    )
 }

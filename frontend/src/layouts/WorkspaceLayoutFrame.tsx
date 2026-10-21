@@ -16,6 +16,9 @@ interface WorkspaceLayoutFrameProps {
     roleLabel: string
     user: UserResponse
     navigationItems: WorkspaceNavigationItem[]
+    showWorkspaceLabel?: boolean
+    showRoleBadge?: boolean
+    showRoleCaption?: boolean
 }
 
 function initialsFor(name: string) {
@@ -25,7 +28,15 @@ function initialsFor(name: string) {
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
 }
 
-export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigationItems }: WorkspaceLayoutFrameProps) {
+export function WorkspaceLayoutFrame({
+    sectionLabel,
+    roleLabel,
+    user,
+    navigationItems,
+    showWorkspaceLabel = true,
+    showRoleBadge = true,
+    showRoleCaption = true,
+}: WorkspaceLayoutFrameProps) {
     const navigate = useNavigate()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
@@ -47,12 +58,10 @@ export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigation
                         <span className="text-base font-bold tracking-tight text-[#172033]">TalentBridge</span>
                     </NavLink>
 
-                    <p className="hidden text-sm font-semibold text-slate-700 sm:block">Không gian làm việc</p>
+                    {showWorkspaceLabel && <p className="hidden text-sm font-semibold text-slate-700 sm:block">Không gian làm việc</p>}
 
                     <div className="flex justify-end">
-                        <span className="hidden items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 sm:inline-flex">
-                            {roleLabel}
-                        </span>
+                        {showRoleBadge && <span className="hidden items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 sm:inline-flex">{roleLabel}</span>}
                         <button
                             aria-controls="workspace-navigation"
                             aria-expanded={isMenuOpen}
@@ -96,7 +105,7 @@ export function WorkspaceLayoutFrame({ sectionLabel, roleLabel, user, navigation
                             <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#EFF4FF] text-[11px] font-bold text-[#1D4ED8]">{initialsFor(displayName)}</span>
                             <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold text-slate-800" title={displayName}>{displayName}</p>
-                                <p className="mt-0.5 text-[11px] text-slate-500">{roleLabel}</p>
+                                {showRoleCaption && <p className="mt-0.5 text-[11px] text-slate-500">{roleLabel}</p>}
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
