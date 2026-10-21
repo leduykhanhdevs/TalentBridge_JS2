@@ -41,7 +41,8 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final Set<String> RATE_LIMITED_PATHS = Set.of(
             "/api/v1/auth/login",
             "/api/v1/auth/register",
-            "/api/v1/auth/forgot-password"
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/verify-reset-otp"
     );
 
     private final ConcurrentHashMap<String, Deque<Long>> clientRequestMap = new ConcurrentHashMap<>();
@@ -105,15 +106,37 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
     }
 
     private String extractClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isBlank()) {
-            return xRealIp.trim();
+        // Render routes public web-service traffic through Cloudflare, which overwrites
+        // CF-Connecting-IP with the actual client address. X-Forwarded-For is appended
+        // by the edge and its leftmost value can be supplied by the caller.
+        String cloudflareClientIp = request.getHeader("CF-Connecting-IP");
+        if (cloudflareClientIp != null && isIpLiteral(cloudflareClientIp.trim())) {
+            return cloudflareClientIp.trim();
         }
         return request.getRemoteAddr();
+    }
+
+    private boolean isIpLiteral(String candidate) {
+        if (candidate == null || candidate.isBlank()) {
+            return false;
+        }
+
+        try {
+            if (candidate.indexOf(':') >= 0) {
+                return java.net.InetAddress.getByName(candidate) instanceof java.net.Inet6Address;
+            }
+            if (!candidate.matches("\\d{1,3}(?:\\.\\d{1,3}){3}")) {
+                return false;
+            }
+            for (String octet : candidate.split("\\.")) {
+                if (Integer.parseInt(octet) > 255) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (java.net.UnknownHostException | NumberFormatException exception) {
+            return false;
+        }
     }
 
     private void sendRateLimitResponse(HttpServletResponse response, long retryAfterSeconds) throws IOException {

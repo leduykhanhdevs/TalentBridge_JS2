@@ -393,7 +393,7 @@ Nếu bạn muốn có một bản vẽ đồ họa có màu sắc, kéo thả c
 - `users`: Bảng trung tâm xác thực cho cả 3 Actor (`ROLE_CANDIDATE`, `ROLE_RECRUITER`, `ROLE_ADMIN`).
 - `roles` & `user_roles`: Thiết kế N-N hỗ trợ người dùng sở hữu nhiều vai trò linh hoạt.
 - `auth_sessions`: Quản lý phiên đăng nhập, thiết bị, IP và refresh token hash.
-- `password_reset_tokens`: Lưu trữ token/OTP đặt lại mật khẩu với cơ chế băm SHA-256.
+- `password_reset_tokens`: Lưu OTP và mã cấp quyền đặt mật khẩu mới với HMAC-SHA-256 dùng khóa máy chủ, loại mã, hạn sử dụng và bộ đếm nhập sai.
 
 ### Cụm 2: Hồ sơ Ứng viên Chuẩn TopCV (TopCV Candidate Profile)
 - `candidates`: Bổ sung thông tin cá nhân mở rộng (`dob`, `gender`, `bio`, `personal_website`, `linkedin_url`, `github_url`).

@@ -49,13 +49,13 @@ const STAGE_LABELS: Record<ApplicationStage, { label: string; color: string; bg:
         border: 'border-amber-200',
     },
     SHORTLISTED: {
-        label: 'Vào danh sách rút gọn', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200',
+        label: 'Vào danh sách rút gọn', color: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-200',
     },
     INTERVIEW: {
         label: 'Mời phỏng vấn',
-        color: 'text-purple-700',
-        bg: 'bg-purple-50',
-        border: 'border-purple-200',
+        color: 'text-blue-800',
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
     },
     OFFERED: {
         label: 'Đề nghị nhận việc (Offer)',
@@ -93,6 +93,7 @@ export function CandidateApplicationsPage() {
     } = useQuery({
         queryKey: ['candidate-my-applications'],
         queryFn: getMyApplications,
+        retry: false,
     })
 
     const withdrawMutation = useMutation({
@@ -146,7 +147,7 @@ export function CandidateApplicationsPage() {
 
     return (
         <div className="min-h-[calc(100vh-4rem)] py-6 sm:py-8">
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 space-y-6">
             {/* Header section */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -159,7 +160,7 @@ export function CandidateApplicationsPage() {
                             Hồ sơ cá nhân
                         </Link>
                         <span className="text-slate-300">•</span>
-                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
                             HRPM-42 • ATS Candidate Tracking
                         </span>
                     </div>
@@ -235,10 +236,10 @@ export function CandidateApplicationsPage() {
                 </div>
 
                 <div className="bento-card p-4 sm:p-5">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">Mời phỏng vấn</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Mời phỏng vấn</span>
                     <div className="mt-2 flex items-baseline justify-between">
-                        <span className="text-2xl sm:text-3xl font-black text-purple-700">{interviewCount}</span>
-                        <Sparkles size={18} className="text-purple-500" />
+                        <span className="text-2xl sm:text-3xl font-black text-blue-800">{interviewCount}</span>
+                        <Sparkles size={18} className="text-blue-600" />
                     </div>
                 </div>
 
@@ -263,7 +264,7 @@ export function CandidateApplicationsPage() {
             <div className="bento-card p-4 sm:p-5 space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Stage tabs */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                    <div aria-label="Lọc theo trạng thái đơn ứng tuyển" className="flex flex-wrap items-center gap-1.5" role="group">
                         {[
                             { key: 'ALL', label: `Tất cả (${totalApps})` },
                             { key: 'APPLIED', label: 'Đã nộp' },
@@ -281,7 +282,7 @@ export function CandidateApplicationsPage() {
                                 onClick={() => setStageFilter(tab.key)}
                                 className={`rounded-xl px-3 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                                     stageFilter === tab.key
-                                        ? 'bg-indigo-600 text-white shadow-xs'
+                                        ? 'bg-blue-700 text-white shadow-xs'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
                                 }`}
                                 type="button"
@@ -299,7 +300,7 @@ export function CandidateApplicationsPage() {
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             placeholder="Tìm việc làm, công ty..."
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                         />
                     </div>
                 </div>
@@ -308,7 +309,7 @@ export function CandidateApplicationsPage() {
             {/* Loading state */}
             {isLoading && (
                 <div className="bento-card p-12 text-center">
-                    <RefreshCw size={24} className="mx-auto text-indigo-600 animate-spin" />
+                    <RefreshCw size={24} className="mx-auto text-blue-700 animate-spin" />
                     <p className="mt-3 text-xs font-bold text-slate-600">Đang tải lịch sử ứng tuyển của bạn...</p>
                 </div>
             )}
@@ -380,7 +381,7 @@ export function CandidateApplicationsPage() {
                                                 className="size-12 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs"
                                             />
                                         ) : (
-                                            <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-base shadow-2xs shrink-0">
+                                            <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-base shadow-2xs shrink-0">
                                                 {app.companyName ? app.companyName.charAt(0).toUpperCase() : 'C'}
                                             </div>
                                         )}
@@ -389,13 +390,13 @@ export function CandidateApplicationsPage() {
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <Link
                                                     to={`/jobs/${app.jobId}`}
-                                                    className="text-base sm:text-lg font-black text-slate-900 hover:text-indigo-600 transition truncate"
+                                                    className="text-base sm:text-lg font-black text-slate-900 hover:text-blue-700 transition truncate"
                                                 >
                                                     {app.jobTitle ? (isNaN(Number(app.jobTitle)) ? app.jobTitle : `Vị trí tuyển dụng #${app.jobTitle}`) : `Vị trí tuyển dụng #${app.jobId}`}
                                                 </Link>
                                                 {app.aiMatchScore && (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700">
-                                                        <Sparkles size={11} className="text-indigo-600" />
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200/80 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
+                                                        <Sparkles size={11} className="text-blue-700" />
                                                         Độ khớp CV: {Math.round(Number(app.aiMatchScore))}%
                                                     </span>
                                                 )}
@@ -454,13 +455,13 @@ export function CandidateApplicationsPage() {
                                     <div className="flex flex-wrap items-center gap-3">
                                         {app.resumeFileName && (
                                             <div className="inline-flex items-center gap-1.5 bg-slate-100/80 px-2.5 py-1 rounded-lg text-slate-700 font-medium">
-                                                <FileText size={13} className="text-indigo-600" />
+                                                <FileText size={13} className="text-blue-700" />
                                                 <span className="truncate max-w-[200px]">{app.resumeFileName}</span>
                                                 {app.resumeId && (
                                                     <button
                                                         type="button"
                                                         onClick={() => downloadResumeFile(app.resumeId!, app.resumeFileName!)}
-                                                        className="text-indigo-600 font-bold hover:underline ml-1"
+                                                        className="text-blue-700 font-bold hover:underline ml-1"
                                                     >
                                                         Tải CV
                                                     </button>

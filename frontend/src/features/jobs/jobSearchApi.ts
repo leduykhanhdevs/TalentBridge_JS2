@@ -4,6 +4,7 @@ import type {
     JobSummary,
     PageResponse,
 } from './jobSearchTypes'
+import { fetchWithTimeout, FetchTimeoutError } from '../../app/fetchWithTimeout'
 
 const API_BASE_URL = (
     import.meta.env.VITE_API_BASE_URL || '/api/v1'
@@ -38,7 +39,7 @@ export function buildJobSearchQuery(params: JobSearchParams = {}): string {
 export async function searchJobs(
     params: JobSearchParams = {},
 ): Promise<PageResponse<JobSummary>> {
-    const response = await fetch(`${API_BASE_URL}/jobs?${buildJobSearchQuery(params)}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/jobs?${buildJobSearchQuery(params)}`, {
         method: 'GET',
         headers: { Accept: 'application/json' },
     })
@@ -46,7 +47,8 @@ export async function searchJobs(
     let body: ApiResponse<PageResponse<JobSummary>> | undefined
     try {
         body = (await response.json()) as ApiResponse<PageResponse<JobSummary>>
-    } catch {
+    } catch (error) {
+        if (error instanceof FetchTimeoutError) throw error
         body = undefined
     }
 

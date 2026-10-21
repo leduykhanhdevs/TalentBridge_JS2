@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 class LogoutUseCaseImplTest {
 
     private static final String ACCESS_TOKEN = "test-access-token";
+    private static final String REFRESH_TOKEN = "test-refresh-token";
     private static final String SESSION_ID = "test-session";
     private static final Long USER_ID = 1L;
 
@@ -55,6 +56,64 @@ class LogoutUseCaseImplTest {
                 eq(USER_ID),
                 any(LocalDateTime.class)
         );
+    }
+
+    @Test
+    void logoutCanRevokeSessionUsingRefreshTokenWhenAccessTokenIsUnavailable() {
+        when(tokenProvider.validateToken(REFRESH_TOKEN)).thenReturn(true);
+        when(tokenProvider.getTokenTypeFromToken(REFRESH_TOKEN)).thenReturn("refresh");
+        when(tokenProvider.getSessionIdFromToken(REFRESH_TOKEN)).thenReturn(SESSION_ID);
+        when(tokenProvider.getUserIdFromToken(REFRESH_TOKEN)).thenReturn(USER_ID);
+        when(tokenProvider.hashRefreshToken(REFRESH_TOKEN)).thenReturn("current-hash");
+        when(authSessionRepository.revokeActiveSessionByRefreshTokenHash(
+                eq(SESSION_ID), eq(USER_ID), eq("current-hash"), any(LocalDateTime.class)
+        )).thenReturn(true);
+
+        assertDoesNotThrow(() -> useCase.logout(null, REFRESH_TOKEN));
+
+        verify(authSessionRepository).revokeActiveSessionByRefreshTokenHash(
+                eq(SESSION_ID), eq(USER_ID), eq("current-hash"), any(LocalDateTime.class)
+        );
+    }
+
+    @Test
+    void rejectsRotatedOutRefreshTokenWhenItIsTheOnlyCredential() {
+        when(tokenProvider.validateToken(REFRESH_TOKEN)).thenReturn(true);
+        when(tokenProvider.getTokenTypeFromToken(REFRESH_TOKEN)).thenReturn("refresh");
+        when(tokenProvider.getSessionIdFromToken(REFRESH_TOKEN)).thenReturn(SESSION_ID);
+        when(tokenProvider.getUserIdFromToken(REFRESH_TOKEN)).thenReturn(USER_ID);
+        when(tokenProvider.hashRefreshToken(REFRESH_TOKEN)).thenReturn("stale-hash");
+        when(authSessionRepository.revokeActiveSessionByRefreshTokenHash(
+                eq(SESSION_ID), eq(USER_ID), eq("stale-hash"), any(LocalDateTime.class)
+        )).thenReturn(false);
+
+        assertThrows(
+                InvalidSessionException.class,
+                () -> useCase.logout(null, REFRESH_TOKEN)
+        );
+
+        verify(authSessionRepository).revokeActiveSessionByRefreshTokenHash(
+                eq(SESSION_ID), eq(USER_ID), eq("stale-hash"), any(LocalDateTime.class)
+        );
+        verify(authSessionRepository, never()).revokeActiveSession(
+                anyString(), anyLong(), any(LocalDateTime.class)
+        );
+    }
+
+    @Test
+    void rejectsAccessAndRefreshTokensFromDifferentSessions() {
+        stubValidAccessToken();
+        when(tokenProvider.validateToken(REFRESH_TOKEN)).thenReturn(true);
+        when(tokenProvider.getTokenTypeFromToken(REFRESH_TOKEN)).thenReturn("refresh");
+        when(tokenProvider.getSessionIdFromToken(REFRESH_TOKEN)).thenReturn("another-session");
+        when(tokenProvider.getUserIdFromToken(REFRESH_TOKEN)).thenReturn(USER_ID);
+
+        assertThrows(
+                InvalidSessionException.class,
+                () -> useCase.logout(ACCESS_TOKEN, REFRESH_TOKEN)
+        );
+
+        verifyNoInteractions(authSessionRepository);
     }
 
     @Test

@@ -34,6 +34,18 @@ class CorsConfigurationIntegrationTest {
     }
 
     @Test
+    @DisplayName("CORS preflight: Allowed loopback IP origin http://127.0.0.1:5173 is accepted")
+    void corsLoopbackIpOriginAccepted() throws Exception {
+        mockMvc.perform(options("/api/v1/auth/login")
+                        .header(HttpHeaders.ORIGIN, "http://127.0.0.1:5173")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "Content-Type,Authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://127.0.0.1:5173"))
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"));
+    }
+
+    @Test
     @DisplayName("CORS preflight: Untrusted origin is rejected (no allow-origin header returned)")
     void corsUntrustedOriginRejected() throws Exception {
         mockMvc.perform(options("/api/v1/auth/login")

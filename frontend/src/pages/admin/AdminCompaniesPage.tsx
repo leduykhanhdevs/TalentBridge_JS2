@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FetchTimeoutError } from '../../app/fetchWithTimeout'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     AlertCircle,
@@ -9,15 +10,16 @@ import {
     Clock,
     ExternalLink,
     Filter,
+    LoaderCircle,
     MapPin,
     RefreshCw,
     Search,
     ShieldAlert,
-    Sparkles,
     X,
     XCircle,
 } from 'lucide-react'
 import {
+    AdminApiError,
     getAdminCompanies,
     getCompanyById,
     updateCompanyStatus,
@@ -28,7 +30,6 @@ import type {
     UpdateCompanyStatusRequest,
 } from '../../features/admin/adminTypes'
 import {
-    AdminControlCenterIllustration,
     EmptyStateIllustration,
     Soft3DActiveBadge,
     Soft3DBuildingBadge,
@@ -48,6 +49,7 @@ export function AdminCompaniesPage() {
     const [activeKeyword, setActiveKeyword] = useState('')
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
+    const [approvalError, setApprovalError] = useState<string | null>(null)
 
     // Status parameter for API
     const statusParam = activeTab === 'ALL' ? undefined : (activeTab as CompanyStatus)
@@ -88,6 +90,7 @@ export function AdminCompaniesPage() {
             request,
         }: {
             companyId: number
+            companyName: string
             request: UpdateCompanyStatusRequest
         }) => {
             return await updateCompanyStatus(companyId, request)
@@ -95,23 +98,57 @@ export function AdminCompaniesPage() {
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['admin-companies'] })
             if (variables.request.status === 'APPROVED') {
-                setSuccessMessage(`Doanh nghiệp "${approvingCompany?.name}" đã được phê duyệt thành công.`)
+                setSuccessMessage(`Doanh nghiệp "${variables.companyName}" đã được phê duyệt thành công.`)
+                setApprovalError(null)
                 setApprovingCompany(null)
             } else {
-                setSuccessMessage(`Đã từ chối doanh nghiệp "${rejectingCompany?.name}".`)
+                setSuccessMessage(`Đã từ chối doanh nghiệp "${variables.companyName}".`)
                 setRejectingCompany(null)
                 setRejectReason('')
                 setRejectInputError(null)
             }
             setTimeout(() => setSuccessMessage(null), 4000)
         },
-        onError: (err: unknown) => {
+        onError: async (err: unknown, variables) => {
             const msg = err instanceof Error ? err.message : 'Thao tác không thành công'
-            if (rejectingCompany) {
-                setRejectInputError(msg)
-            } else {
-                setActionError(msg)
+            const outcomeMayBeUnknown = err instanceof FetchTimeoutError
+                || !(err instanceof AdminApiError)
+                || err.status >= 500
+
+            // A browser timeout or a server error can happen after the database commit.
+            // Read the authoritative state before telling the admin to retry.
+            if (outcomeMayBeUnknown) {
+                try {
+                    const currentCompany = await getCompanyById(variables.companyId)
+                    if (currentCompany.status === variables.request.status) {
+                        void queryClient.invalidateQueries({ queryKey: ['admin-companies'] })
+                        if (variables.request.status === 'APPROVED') {
+                            setApprovingCompany(null)
+                            setApprovalError(null)
+                            setSuccessMessage(`Đã xác nhận doanh nghiệp "${variables.companyName}" được phê duyệt.`)
+                        } else {
+                            setRejectingCompany(null)
+                            setRejectReason('')
+                            setRejectInputError(null)
+                            setSuccessMessage(`Đã xác nhận doanh nghiệp "${variables.companyName}" bị từ chối.`)
+                        }
+                        setTimeout(() => setSuccessMessage(null), 4000)
+                        return
+                    }
+                } catch {
+                    // Keep the original failure and tell the admin the outcome needs checking.
+                }
             }
+
+            if (variables.request.status === 'APPROVED') {
+                setApprovalError(err instanceof FetchTimeoutError
+                    ? 'Máy chủ chưa xác nhận trong 90 giây; trạng thái có thể chưa rõ. Hãy đóng hộp thoại, làm mới danh sách và kiểm tra trước khi gửi lần nữa.'
+                    : msg)
+                return
+            }
+            setRejectInputError(err instanceof FetchTimeoutError
+                ? 'Máy chủ chưa xác nhận trong 90 giây. Hãy đóng hộp thoại, làm mới danh sách và kiểm tra trạng thái trước khi gửi lần nữa.'
+                : msg)
         },
     })
 
@@ -145,8 +182,10 @@ export function AdminCompaniesPage() {
 
     function handleConfirmApprove() {
         if (!approvingCompany) return
+        setApprovalError(null)
         statusMutation.mutate({
             companyId: approvingCompany.id,
+            companyName: approvingCompany.name,
             request: { status: 'APPROVED' },
         })
     }
@@ -160,6 +199,7 @@ export function AdminCompaniesPage() {
 
         statusMutation.mutate({
             companyId: rejectingCompany.id,
+            companyName: rejectingCompany.name,
             request: {
                 status: 'REJECTED',
                 reason: rejectReason.trim(),
@@ -177,50 +217,16 @@ export function AdminCompaniesPage() {
 
     return (
         <div className="space-y-6 sm:space-y-8 pb-12">
-            {/* 1. Bento Hero Command Banner */}
-            <div className="bento-card relative overflow-hidden border border-slate-200/90 bg-gradient-to-br from-white via-indigo-50/25 to-violet-50/35 p-6 sm:p-8 shadow-sm">
-                <div className="pointer-events-none absolute -right-12 -top-12 size-64 rounded-full bg-indigo-200/30 blur-2xl" />
-                <div className="pointer-events-none absolute bottom-0 right-1/4 size-48 rounded-full bg-amber-200/20 blur-2xl" />
-
-                <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="max-w-2xl space-y-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-50/90 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-700 shadow-2xs">
-                            <Sparkles className="size-3.5 text-amber-500 animate-pulse" />
-                            <span>Kiểm Duyệt & Bảo Chứng Pháp Nhân</span>
-                            <span className="h-2 w-px bg-indigo-300" />
-                            <span className="text-indigo-600 font-extrabold">TalentBridge Enterprise</span>
-                        </div>
-
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-                            Thẩm định & phê duyệt doanh nghiệp
-                        </h1>
-
-                        <p className="text-sm sm:text-base font-medium text-slate-600 leading-relaxed">
-                            Tra cứu mã số thuế (MST), kiểm định giấy tờ thành lập doanh nghiệp, bảo chứng uy tín thương hiệu tuyển dụng và phê chuẩn quyền truy cập cổng HR.
-                        </p>
-
-                        <div className="pt-1 flex flex-wrap items-center gap-3">
-                            <button
-                                className="btn-bento-secondary inline-flex items-center gap-2 text-xs sm:text-sm font-bold shadow-xs hover:border-indigo-300 hover:text-indigo-600 transition"
-                                disabled={isFetching}
-                                onClick={() => refetch()}
-                                type="button"
-                            >
-                                <RefreshCw className={isFetching ? 'animate-spin text-indigo-600' : 'text-slate-500'} size={16} />
-                                <span>{isFetching ? 'Đang cập nhật...' : 'Làm mới dữ liệu'}</span>
-                            </button>
-
-                            <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 bg-white/80 border border-slate-200 rounded-xl px-3 py-2">
-                                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>Quy trình thẩm định: Tuân thủ 100% tiêu chuẩn pháp nhân</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="hidden lg:flex items-center justify-end shrink-0">
-                        <AdminControlCenterIllustration className="w-80 h-auto drop-shadow-md" />
-                    </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="max-w-2xl">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Quản trị hệ thống</p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">Duyệt doanh nghiệp</h1>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Xem thông tin doanh nghiệp đã gửi và ghi nhận quyết định phê duyệt hoặc từ chối.</p>
                 </div>
+                <button className="btn-bento-secondary shrink-0 text-sm" disabled={isFetching} onClick={() => refetch()} type="button">
+                    <RefreshCw aria-hidden="true" className={isFetching ? 'animate-spin text-blue-700' : 'text-slate-500'} size={15} />
+                    {isFetching ? 'Đang cập nhật...' : 'Làm mới'}
+                </button>
             </div>
 
             {/* Notification Messages */}
@@ -238,7 +244,7 @@ export function AdminCompaniesPage() {
             )}
 
             {/* 2. Bento Stat Cards Grid (4 Thẻ Chỉ Số Bento với Soft 3D Badges) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div aria-hidden="true" className="hidden">
                 {/* Bento Stat Card 1: Chờ Phê Duyệt */}
                 <div
                     className={`bento-card group p-5 sm:p-6 border transition-all duration-300 shadow-sm cursor-pointer ${
@@ -322,7 +328,7 @@ export function AdminCompaniesPage() {
                 <div
                     className={`bento-card group p-5 sm:p-6 border transition-all duration-300 shadow-sm cursor-pointer ${
                         activeTab === 'ALL'
-                            ? 'border-indigo-400/90 bg-indigo-50/20 ring-2 ring-indigo-400/30'
+                            ? 'border-blue-400/90 bg-blue-50/20 ring-2 ring-blue-400/30'
                             : 'border-slate-200/90 bg-white hover:border-sky-300/80'
                     }`}
                     onClick={() => handleTabChange('ALL')}
@@ -398,7 +404,7 @@ export function AdminCompaniesPage() {
                     <button
                         className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
                             activeTab === 'ALL'
-                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-900/30 font-black'
+                                ? 'bg-blue-700 text-white shadow-sm shadow-blue-950/30 font-black'
                                 : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
                         }`}
                         onClick={() => handleTabChange('ALL')}
@@ -414,7 +420,7 @@ export function AdminCompaniesPage() {
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
-                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-3 pl-12 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-3 pl-12 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
                             onChange={(e) => setKeywordInput(e.target.value)}
                             placeholder="Tìm kiếm theo tên doanh nghiệp, mã số thuế (MST), địa chỉ trụ sở..."
                             type="text"
@@ -455,10 +461,10 @@ export function AdminCompaniesPage() {
                 {activeKeyword && (
                     <div className="flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
                         <span className="font-bold text-slate-500">Từ khóa tìm kiếm:</span>
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 font-bold text-indigo-700">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 font-bold text-blue-800">
                             "{activeKeyword}"
                             <X
-                                className="cursor-pointer hover:text-indigo-900"
+                                className="cursor-pointer hover:text-blue-950"
                                 onClick={() => {
                                     setActiveKeyword('')
                                     setKeywordInput('')
@@ -480,7 +486,7 @@ export function AdminCompaniesPage() {
                             {activeTab === 'REJECTED' && 'Danh sách hồ sơ doanh nghiệp bị từ chối'}
                             {activeTab === 'ALL' && 'Toàn bộ danh sách doanh nghiệp'}
                         </h2>
-                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-extrabold text-indigo-700">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-extrabold text-blue-800">
                             {totalCompanies} kết quả
                         </span>
                     </div>
@@ -493,7 +499,7 @@ export function AdminCompaniesPage() {
                 {isLoading ? (
                     <div className="flex h-72 items-center justify-center">
                         <div className="flex flex-col items-center gap-3 text-slate-500">
-                            <RefreshCw className="animate-spin text-indigo-600" size={28} />
+                            <RefreshCw className="animate-spin text-blue-700" size={28} />
                             <span className="text-sm font-bold text-slate-700">Đang tải dữ liệu thẩm định doanh nghiệp...</span>
                         </div>
                     </div>
@@ -508,8 +514,8 @@ export function AdminCompaniesPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-600">
+                    <div aria-label="Bảng danh sách doanh nghiệp" className="overflow-x-auto" role="region" tabIndex={0}>
+                        <table className="w-full min-w-[1320px] table-auto text-left text-sm text-slate-600">
                             <thead className="border-b border-slate-200 bg-slate-100/90 text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                                 <tr>
                                     <th className="px-6 py-4" scope="col">Doanh nghiệp</th>
@@ -522,10 +528,10 @@ export function AdminCompaniesPage() {
                             <tbody className="divide-y divide-slate-200/90">
                                 {companiesPage?.content.map((company) => (
                                     <tr
-                                        className="group hover:bg-indigo-50/20 transition-colors duration-150"
+                                        className="group hover:bg-blue-50/20 transition-colors duration-150"
                                         key={company.id}
                                     >
-                                        <td className="px-6 py-4 sm:py-5">
+                                        <td className="min-w-[280px] px-6 py-4 sm:py-5">
                                             <div className="flex items-center gap-3.5">
                                                 {company.logoUrl ? (
                                                     <img
@@ -534,17 +540,22 @@ export function AdminCompaniesPage() {
                                                         src={company.logoUrl}
                                                     />
                                                 ) : (
-                                                    <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-base shadow-2xs">
+                                                    <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-base shadow-2xs">
                                                         {company.name.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <div className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                    <div className="max-w-[300px] truncate text-base font-black text-slate-900 transition-colors group-hover:text-blue-700" title={company.name}>
                                                         {company.name}
                                                     </div>
+                                                    {company.isDemo && (
+                                                        <span className="mt-1 inline-flex w-fit whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                                                            HỒ SƠ MÔ PHỎNG · KHÔNG XÁC MINH
+                                                        </span>
+                                                    )}
                                                     {company.website ? (
                                                         <a
-                                                            className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:underline mt-0.5"
+                                                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline mt-0.5"
                                                             href={company.website}
                                                             rel="noreferrer"
                                                             target="_blank"
@@ -559,13 +570,13 @@ export function AdminCompaniesPage() {
                                             </div>
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5">
-                                            <span className="font-mono text-xs sm:text-sm font-black text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
+                                        <td className="min-w-[170px] px-6 py-4 sm:py-5">
+                                            <span className="inline-flex whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold text-slate-800 sm:text-sm">
                                                 {company.taxCode || 'Chưa cập nhật'}
                                             </span>
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5">
+                                        <td className="min-w-[250px] px-6 py-4 sm:py-5">
                                             <div className="flex flex-col gap-1 text-xs sm:text-sm">
                                                 <div className="flex items-center gap-1.5 font-bold text-slate-800">
                                                     <MapPin size={14} className="text-rose-500 shrink-0" />
@@ -577,43 +588,56 @@ export function AdminCompaniesPage() {
                                             </div>
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5">
-                                            {company.status === 'APPROVED' && (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 border border-emerald-200 shadow-2xs">
-                                                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <td className="min-w-[220px] px-6 py-4 sm:py-5">
+                                            {company.isDemo && (
+                                                <span className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 sm:text-sm">
+                                                    Mô phỏng · Không xác thực
+                                                </span>
+                                            )}
+                                            {!company.isDemo && company.status === 'APPROVED' && (
+                                                <span className="inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 sm:text-sm">
+                                                    <span className="size-2 rounded-full bg-emerald-500" />
                                                     Đã xác thực
                                                 </span>
                                             )}
-                                            {company.status === 'PENDING' && (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-amber-800 border border-amber-300 shadow-2xs">
-                                                    <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                                            {!company.isDemo && company.status === 'PENDING' && (
+                                                <span className="inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 sm:text-sm">
+                                                    <span className="size-2 rounded-full bg-amber-500" />
                                                     Chờ phê duyệt
                                                 </span>
                                             )}
-                                            {company.status === 'REJECTED' && (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200 shadow-2xs">
+                                            {!company.isDemo && company.status === 'REJECTED' && (
+                                                <span className="inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 sm:text-sm">
                                                     <span className="size-2 rounded-full bg-rose-500" />
                                                     Bị từ chối
                                                 </span>
                                             )}
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5 text-right">
-                                            <div className="inline-flex items-center gap-2">
+                                        <td className="min-w-[390px] whitespace-nowrap px-6 py-4 text-right sm:py-5">
+                                            <div className="inline-flex items-center justify-end gap-2">
                                                 <button
-                                                    className="btn-bento-secondary px-3 py-1.5 text-xs sm:text-sm font-bold shadow-2xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300"
+                                                    className="inline-flex h-9 min-w-[88px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm"
                                                     onClick={() => handleViewDetail(company.id)}
                                                     type="button"
                                                 >
                                                     Chi tiết
                                                 </button>
 
-                                                {company.status === 'PENDING' && (
+                                                {company.isDemo && (
+                                                    <span className="text-xs font-semibold text-amber-900">Không duyệt hồ sơ mô phỏng</span>
+                                                )}
+
+                                                {!company.isDemo && company.status === 'PENDING' && (
                                                     <>
                                                         <button
-                                                            className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-600 px-3 py-1.5 text-xs sm:text-sm font-black text-white shadow-2xs hover:bg-emerald-700 transition"
+                                                            className="inline-flex h-9 min-w-[92px] items-center justify-center gap-1.5 rounded-lg border border-emerald-700 bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:border-emerald-800 hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-sm"
                                                             disabled={statusMutation.isPending}
-                                                            onClick={() => setApprovingCompany(company)}
+                                                            onClick={() => {
+                                                                setActionError(null)
+                                                                setApprovalError(null)
+                                                                setApprovingCompany(company)
+                                                            }}
                                                             title="Phê duyệt doanh nghiệp"
                                                             type="button"
                                                         >
@@ -621,7 +645,7 @@ export function AdminCompaniesPage() {
                                                             <span>Duyệt</span>
                                                         </button>
                                                         <button
-                                                            className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 transition hover:bg-rose-100 shadow-2xs"
+                                                            className="inline-flex h-9 min-w-[96px] items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 sm:text-sm"
                                                             disabled={statusMutation.isPending}
                                                             onClick={() => {
                                                                 setRejectingCompany(company)
@@ -637,9 +661,9 @@ export function AdminCompaniesPage() {
                                                     </>
                                                 )}
 
-                                                {company.status === 'APPROVED' && (
+                                                {!company.isDemo && company.status === 'APPROVED' && (
                                                     <button
-                                                        className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 transition hover:bg-rose-100 shadow-2xs"
+                                                        className="inline-flex h-9 min-w-[96px] items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 sm:text-sm"
                                                         disabled={statusMutation.isPending}
                                                         onClick={() => {
                                                             setRejectingCompany(company)
@@ -653,11 +677,15 @@ export function AdminCompaniesPage() {
                                                     </button>
                                                 )}
 
-                                                {company.status === 'REJECTED' && (
+                                                {!company.isDemo && company.status === 'REJECTED' && (
                                                     <button
-                                                        className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 shadow-2xs"
+                                                        className="inline-flex h-9 min-w-[96px] items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-sm"
                                                         disabled={statusMutation.isPending}
-                                                        onClick={() => setApprovingCompany(company)}
+                                                        onClick={() => {
+                                                            setActionError(null)
+                                                            setApprovalError(null)
+                                                            setApprovingCompany(company)
+                                                        }}
                                                         title="Phê duyệt lại hồ sơ"
                                                         type="button"
                                                     >
@@ -689,7 +717,7 @@ export function AdminCompaniesPage() {
                             >
                                 Trang trước
                             </button>
-                            <span className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-extrabold text-xs sm:text-sm shadow-2xs">
+                            <span className="px-3 py-1.5 rounded-lg bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-2xs">
                                 {companiesPage.pageNumber}
                             </span>
                             <button
@@ -725,7 +753,7 @@ export function AdminCompaniesPage() {
                                     src={selectedCompany.logoUrl}
                                 />
                             ) : (
-                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm">
+                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-700 text-white font-black text-2xl shadow-sm">
                                     {selectedCompany.name.charAt(0).toUpperCase()}
                                 </div>
                             )}
@@ -767,7 +795,7 @@ export function AdminCompaniesPage() {
                                     <span className="font-semibold text-slate-500">Website:</span>{' '}
                                     {selectedCompany.website ? (
                                         <a
-                                            className="text-indigo-600 font-bold hover:underline inline-flex items-center gap-1"
+                                            className="text-blue-700 font-bold hover:underline inline-flex items-center gap-1"
                                             href={selectedCompany.website}
                                             rel="noreferrer"
                                             target="_blank"
@@ -802,8 +830,8 @@ export function AdminCompaniesPage() {
                         </div>
 
                         {selectedCompany.description && (
-                            <div className="mt-4 rounded-xl bg-indigo-50/40 p-4 text-sm border border-indigo-100">
-                                <div className="font-black text-indigo-900 mb-1">Mô tả doanh nghiệp & Lĩnh vực hoạt động:</div>
+                            <div className="mt-4 rounded-xl bg-blue-50/40 p-4 text-sm border border-blue-100">
+                                <div className="font-black text-blue-950 mb-1">Mô tả doanh nghiệp & Lĩnh vực hoạt động:</div>
                                 <p className="leading-relaxed whitespace-pre-wrap font-medium text-slate-700">{selectedCompany.description}</p>
                             </div>
                         )}
@@ -823,14 +851,14 @@ export function AdminCompaniesPage() {
 
             {/* 7. Bento Approve Confirmation Modal */}
             {approvingCompany && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bento-card w-full max-w-md border border-slate-200/90 bg-white p-6 sm:p-7 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in" role="presentation">
+                    <div aria-labelledby="approve-company-dialog-title" aria-modal="true" className="bento-card w-full max-w-md border border-slate-200/90 bg-white p-6 sm:p-7 shadow-2xl" role="dialog">
                         <div className="flex items-center gap-3.5">
                             <div className="grid size-12 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
                                 <Check size={24} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-slate-900">Xác nhận phê duyệt pháp nhân</h3>
+                                <h3 className="text-lg font-black text-slate-900" id="approve-company-dialog-title">Xác nhận phê duyệt pháp nhân</h3>
                                 <p className="text-xs font-semibold text-slate-500">{approvingCompany.name}</p>
                             </div>
                         </div>
@@ -839,6 +867,23 @@ export function AdminCompaniesPage() {
                             Khi hoàn tất phê duyệt, doanh nghiệp sẽ được cấp trạng thái <strong>APPROVED</strong>.
                             Các chuyên viên nhân sự của công ty sẽ chính thức được kích hoạt quyền đăng tin tuyển dụng và tìm kiếm hồ sơ ứng viên TopCV trên toàn hệ thống TalentBridge.
                         </p>
+
+                        {statusMutation.isPending && (
+                            <p aria-live="polite" className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-sm font-medium text-blue-900" role="status">
+                                Đang chờ máy chủ xác nhận. Nếu dịch vụ vừa khởi động sau thời gian không hoạt động, thao tác có thể mất thêm thời gian.
+                            </p>
+                        )}
+
+                        {approvalError && (
+                            <div aria-live="assertive" className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50 px-3.5 py-3 text-sm text-rose-800" role="alert">
+                                <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-rose-600" />
+                                <div className="space-y-1">
+                                    <p className="font-bold">Không thể phê duyệt doanh nghiệp</p>
+                                    <p className="font-medium leading-relaxed">{approvalError}</p>
+                                    <p className="text-xs font-semibold text-rose-700">Kiểm tra thông tin và thử lại.</p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mt-6 flex justify-end gap-3">
                             <button
@@ -850,12 +895,15 @@ export function AdminCompaniesPage() {
                                 Hủy bỏ
                             </button>
                             <button
+                                aria-busy={statusMutation.isPending}
                                 className="rounded-xl bg-emerald-600 px-5 py-2 text-xs sm:text-sm font-black text-white shadow-sm hover:bg-emerald-700 transition"
                                 disabled={statusMutation.isPending}
                                 onClick={handleConfirmApprove}
                                 type="button"
                             >
-                                {statusMutation.isPending ? 'Đang xử lý...' : 'Xác nhận phê duyệt'}
+                                {statusMutation.isPending ? (
+                                    <span className="inline-flex items-center gap-2"><LoaderCircle aria-hidden="true" className="animate-spin" size={15} />Đang xử lý...</span>
+                                ) : 'Xác nhận phê duyệt'}
                             </button>
                         </div>
                     </div>
@@ -902,6 +950,12 @@ export function AdminCompaniesPage() {
                                 </p>
                             )}
                         </div>
+
+                        {statusMutation.isPending && (
+                            <p aria-live="polite" className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-sm font-medium text-blue-900" role="status">
+                                Đang chờ máy chủ xác nhận. Nếu dịch vụ vừa khởi động sau thời gian không hoạt động, thao tác có thể mất thêm thời gian.
+                            </p>
+                        )}
 
                         <div className="mt-6 flex justify-end gap-3">
                             <button

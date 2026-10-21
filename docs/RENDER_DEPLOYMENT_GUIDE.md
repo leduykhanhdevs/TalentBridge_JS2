@@ -10,7 +10,7 @@ Tài liệu này mô tả cấu hình hiện tại của TalentBridge: React/Vit
 | Backend | Render Web Service | Spring Boot 3, Docker, Java 21 |
 | Database | Amazon RDS for MySQL | Singapore (ap-southeast-1), TLS VERIFY_IDENTITY |
 
-Tên các dịch vụ Render trong Blueprint là talentbridge-frontend và talentbridge-backend. Blueprint hiện đặt autoDeploy: false; phát hành production được kích hoạt qua GitHub Actions khi có push vào main.
+Tên các dịch vụ Render trong Blueprint là talentbridge-frontend và talentbridge-backend. Blueprint đặt `autoDeployTrigger: checksPass` cho cả backend và frontend, nên Render có thể tự triển khai sau khi các kiểm tra của commit trên nhánh theo dõi đều đạt. GitHub Actions cũng kích hoạt Deploy Hook và xác minh commit đang chạy; chỉ coi phát hành hoàn tất khi cả hai dịch vụ và production smoke checks đều pass.
 
 ## Biến môi trường backend
 
@@ -24,6 +24,12 @@ Lưu các giá trị sau trong **Render → talentbridge-backend → Environment
 - CORS_ALLOWED_ORIGINS: URL origin chính xác của frontend, không thêm đường dẫn API và không dùng * trong production.
 - GEMINI_API_KEY: tùy chọn nếu bật gọi Gemini; chatbot nội bộ vẫn có tri thức dự phòng khi nhà cung cấp AI không khả dụng.
 - RATE_LIMIT_ENABLED=true.
+
+### Gửi OTP đặt lại mật khẩu
+
+Backend SMTP hiện dùng `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` và `MAIL_FROM`; bật gửi bằng `PASSWORD_RESET_MAIL_ENABLED=true`. Với Gmail, dùng email tài khoản gửi và App Password được tạo trong Google Account, không dùng mật khẩu đăng nhập thông thường.
+
+> **Giới hạn gói Render Free:** Render chặn kết nối outbound SMTP trên cổng 25, 465 và 587. Vì vậy, log timeout khi kết nối `smtp.gmail.com:587` trên Web Service Free là giới hạn gói dịch vụ; thay App Password sẽ không giải quyết được. Để gửi mail thật, cần nâng backend sang gói Render cho phép SMTP hoặc bổ sung adapter dùng HTTPS API của dịch vụ email. [Tài liệu giới hạn Free của Render](https://render.com/docs/free).
 
 Mẫu URL JDBC có cấu trúc:
 

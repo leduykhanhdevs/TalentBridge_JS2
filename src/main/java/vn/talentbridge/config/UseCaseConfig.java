@@ -113,10 +113,9 @@ public class UseCaseConfig {
             long tokenExpirationMinutes,
             @Value(
                     "${talentbridge.password-reset."
-                            + "reset-password-url:"
-                            + "http://localhost:5173/reset-password}"
+                            + "mail-enabled:false}"
             )
-            String resetPasswordUrl
+            boolean mailEnabled
     ) {
         return new ForgotPasswordUseCaseImpl(
                 userRepository,
@@ -124,7 +123,20 @@ public class UseCaseConfig {
                 tokenGenerator,
                 emailPort,
                 tokenExpirationMinutes,
-                resetPasswordUrl
+                mailEnabled
+        );
+    }
+
+    @Bean
+    public VerifyPasswordResetOtpUseCase verifyPasswordResetOtpUseCase(
+            UserRepositoryPort userRepository,
+            PasswordResetTokenRepositoryPort tokenRepository,
+            PasswordResetTokenGeneratorPort tokenGenerator
+    ) {
+        return new VerifyPasswordResetOtpUseCaseImpl(
+                userRepository,
+                tokenRepository,
+                tokenGenerator
         );
     }
 
@@ -387,6 +399,12 @@ public class UseCaseConfig {
     public AskTalentBridgeAssistantUseCase askTalentBridgeAssistantUseCase(
             TalentBridgeAssistantPort assistantPort) {
         return new AskTalentBridgeAssistantUseCaseImpl(assistantPort);
+    }
+
+    @Bean
+    public SearchTalentBridgeKnowledgeUseCase searchTalentBridgeKnowledgeUseCase(
+            TalentBridgeKnowledgePort knowledgePort) {
+        return new SearchTalentBridgeKnowledgeUseCaseImpl(knowledgePort);
     }
 
     @Bean

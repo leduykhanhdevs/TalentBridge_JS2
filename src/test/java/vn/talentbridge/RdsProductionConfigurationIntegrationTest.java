@@ -38,6 +38,6 @@ class RdsProductionConfigurationIntegrationTest {
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
         assertThat(environment.getProperty("spring.flyway.baseline-on-migrate", Boolean.class)).isFalse();
         assertThat(environment.getProperty("spring.flyway.user")).isEqualTo("sa");
-        assertThat(flyway.info().applied()).hasSize(2);
+        assertThat(flyway.info().applied()).hasSize(4);
     }
 }

@@ -15,6 +15,8 @@ import type {
     CandidateInterviewItem,
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
+import { authenticatedFetch } from '../auth/authenticatedFetch'
+import { fetchWithTimeout } from '../../app/fetchWithTimeout'
 
 export class CandidateApiError extends Error {
     readonly status: number
@@ -50,7 +52,7 @@ function getAuthHeaders(): HeadersInit {
 }
 
 export async function getCandidateProfile(): Promise<CandidateProfileResponse> {
-    const res = await fetch(`${API_BASE_URL}/candidates/profile`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/profile`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -70,7 +72,7 @@ export async function getCandidateProfile(): Promise<CandidateProfileResponse> {
 export async function updateCandidateProfile(
     request: UpdateCandidateProfileRequest,
 ): Promise<CandidateProfileResponse> {
-    const res = await fetch(`${API_BASE_URL}/candidates/profile`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/profile`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -93,7 +95,7 @@ export async function updateCandidateProfile(
 // ==========================================
 
 export async function getWorkExperiences(): Promise<WorkExperience[]> {
-    const res = await fetch(`${API_BASE_URL}/candidates/work-experiences`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/work-experiences`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -113,7 +115,7 @@ export async function getWorkExperiences(): Promise<WorkExperience[]> {
 export async function addWorkExperience(
     request: WorkExperienceRequest,
 ): Promise<WorkExperience> {
-    const res = await fetch(`${API_BASE_URL}/candidates/work-experiences`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/work-experiences`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -135,7 +137,7 @@ export async function updateWorkExperience(
     id: number,
     request: WorkExperienceRequest,
 ): Promise<WorkExperience> {
-    const res = await fetch(`${API_BASE_URL}/candidates/work-experiences/${id}`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/work-experiences/${id}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -154,7 +156,7 @@ export async function updateWorkExperience(
 }
 
 export async function deleteWorkExperience(id: number): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/candidates/work-experiences/${id}`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/work-experiences/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
     })
@@ -173,7 +175,7 @@ export async function deleteWorkExperience(id: number): Promise<void> {
 // ==========================================
 
 export async function getCandidateSkills(): Promise<CandidateSkill[]> {
-    const res = await fetch(`${API_BASE_URL}/candidates/skills`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/skills`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -193,7 +195,7 @@ export async function getCandidateSkills(): Promise<CandidateSkill[]> {
 export async function addCandidateSkill(
     request: CandidateSkillRequest,
 ): Promise<CandidateSkill> {
-    const res = await fetch(`${API_BASE_URL}/candidates/skills`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/skills`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
@@ -212,7 +214,7 @@ export async function addCandidateSkill(
 }
 
 export async function deleteCandidateSkill(id: number): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/candidates/skills/${id}`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/skills/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
     })
@@ -231,7 +233,7 @@ export async function deleteCandidateSkill(id: number): Promise<void> {
 // ==========================================
 
 export async function getAllMasterSkills(): Promise<SkillItem[]> {
-    const res = await fetch(`${API_BASE_URL}/skills`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/skills`, {
         method: 'GET',
     })
 
@@ -248,7 +250,7 @@ export async function getAllMasterSkills(): Promise<SkillItem[]> {
 // ==========================================
 
 export async function getCandidateResumes(): Promise<ResumeItem[]> {
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/resumes`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -277,7 +279,7 @@ export async function uploadResume(file: File, title?: string): Promise<ResumeIt
         formData.append('title', title.trim())
     }
 
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/upload`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/resumes/upload`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -298,7 +300,7 @@ export async function uploadResume(file: File, title?: string): Promise<ResumeIt
 }
 
 export async function deleteResume(id: number): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/${id}`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/resumes/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
     })
@@ -313,7 +315,7 @@ export async function deleteResume(id: number): Promise<void> {
 }
 
 export async function setDefaultResume(id: number): Promise<ResumeItem> {
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/${id}/default`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/resumes/${id}/default`, {
         method: 'PUT',
         headers: getAuthHeaders(),
     })
@@ -336,7 +338,7 @@ export async function downloadResumeFile(id: number, fileName: string): Promise<
         throw new CandidateApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
     }
 
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/${id}/download`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/resumes/${id}/download`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -359,7 +361,7 @@ export async function downloadResumeFile(id: number, fileName: string): Promise<
 }
 
 export async function getMyApplications(): Promise<CandidateApplicationItem[]> {
-    const res = await fetch(`${API_BASE_URL}/candidates/applications`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/applications`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })
@@ -377,7 +379,7 @@ export async function getMyApplications(): Promise<CandidateApplicationItem[]> {
 }
 
 export async function withdrawApplication(applicationId: number): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/candidates/applications/${applicationId}/withdraw`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/applications/${applicationId}/withdraw`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
     })
@@ -398,7 +400,7 @@ export interface ApplyJobPayload {
 }
 
 export async function applyJob(payload: ApplyJobPayload): Promise<CandidateApplicationItem> {
-    const res = await fetch(`${API_BASE_URL}/candidates/applications`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/applications`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -421,7 +423,7 @@ export async function applyJob(payload: ApplyJobPayload): Promise<CandidateAppli
 // ==========================================
 
 export async function getCvTemplates(): Promise<CvTemplate[]> {
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/templates`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/candidates/resumes/templates`, {
         method: 'GET',
     })
 
@@ -435,7 +437,7 @@ export async function getCvTemplates(): Promise<CvTemplate[]> {
 }
 
 export async function generateResume(payload: GenerateResumePayload): Promise<ResumeItem> {
-    const res = await fetch(`${API_BASE_URL}/candidates/resumes/generate`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/resumes/generate`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -463,7 +465,7 @@ export async function parseCv(file: File): Promise<ParsedCvResult> {
     const formData = new FormData()
     formData.append('file', file)
 
-    const res = await fetch(`${API_BASE_URL}/candidates/profile/parse-cv`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/profile/parse-cv`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -481,7 +483,7 @@ export async function parseCv(file: File): Promise<ParsedCvResult> {
 }
 
 export async function applyParsedCv(payload: ApplyParsedCvPayload): Promise<CandidateProfileResponse> {
-    const res = await fetch(`${API_BASE_URL}/candidates/profile/apply-parsed-cv`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/profile/apply-parsed-cv`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -501,7 +503,7 @@ export async function applyParsedCv(payload: ApplyParsedCvPayload): Promise<Cand
 // ==========================================
 
 export async function getCandidateInterview(applicationId: number): Promise<CandidateInterviewItem | null> {
-    const res = await fetch(`${API_BASE_URL}/candidates/applications/${applicationId}/interview`, {
+    const res = await authenticatedFetch(`${API_BASE_URL}/candidates/applications/${applicationId}/interview`, {
         method: 'GET',
         headers: getAuthHeaders(),
     })

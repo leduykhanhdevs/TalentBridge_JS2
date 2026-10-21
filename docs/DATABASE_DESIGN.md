@@ -91,13 +91,15 @@ Quản lý vòng đời phiên đăng nhập và refresh token của người d�
 | `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Thời gian khởi tạo phiên |
 
 #### Bảng `password_reset_tokens`
-Quản lý mã OTP / token đặt lại mật khẩu với cơ chế băm bảo mật SHA-256.
+Quản lý OTP / mã tạm đặt lại mật khẩu với HMAC-SHA-256 dùng khóa phía máy chủ.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Mô Tả |
 | :--- | :--- | :--- | :--- |
 | `id` | BIGINT | PK, AUTO_INCREMENT | Mã bản ghi token |
 | `user_id` | BIGINT | NOT NULL, FK `users(id)`, INDEX | Khóa ngoại người dùng yêu cầu reset |
-| `token_hash` | VARCHAR(64) | UNIQUE, NOT NULL, INDEX | Mã băm SHA-256 của token/OTP |
+| `token_hash` | VARCHAR(64) | UNIQUE, NOT NULL, INDEX | HMAC-SHA-256 của token/OTP, tránh dò OTP ngoại tuyến từ DB |
+| `purpose` | VARCHAR(24) | NOT NULL | Phân biệt OTP, mã cấp quyền đặt lại và bản ghi legacy |
+| `failed_attempts` | INT | NOT NULL, DEFAULT 0 | Số lần nhập OTP sai; khóa OTP sau 5 lần |
 | `expires_at` | TIMESTAMP | NOT NULL | Thời hạn hiệu lực của mã OTP/token |
 | `used_at` | TIMESTAMP | NULL | Thời điểm mã được sử dụng |
 | `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Thời điểm tạo yêu cầu reset |
@@ -231,7 +233,7 @@ Quản lý cả CV tải lên từ máy tính (`UPLOADED`) và CV tạo tự đ�
 ---
 
 ### 2.4. Nhóm Doanh nghiệp & Nhà tuyển dụng (Companies & Recruiters)
-- `companies`: Hồ sơ doanh nghiệp tuyển dụng (`id`, `name`, `logo_url`, `banner_url`, `website`, `company_size`, `address`, `city`, `status`).
+- `companies`: Hồ sơ doanh nghiệp tuyển dụng (`id`, `name`, `logo_url`, `banner_url`, `website`, `company_size`, `address`, `city`, `status`, `is_demo`). `is_demo = TRUE` đánh dấu hồ sơ hư cấu; không được hiểu là doanh nghiệp đã xác minh.
 - `recruiters`: Nhân viên tuyển dụng thuộc một doanh nghiệp cụ thể (quan hệ 1-1 với `users`, N-1 với `companies`).
 - `company_join_requests`: Quản lý yêu cầu xin gia nhập doanh nghiệp của HR Recruiter (`id`, `company_id`, `recruiter_id`, `status` [PENDING, APPROVED, REJECTED], `request_note`, `response_note`, `reviewed_by`, `created_at`, `updated_at`).
 
@@ -239,7 +241,7 @@ Quản lý cả CV tải lên từ máy tính (`UPLOADED`) và CV tạo tự đ�
 
 ### 2.5. Nhóm Việc làm & Tìm kiếm (Jobs & Search Engine)
 - `categories`: Nhóm ngành nghề tuyển dụng (slug URL thân thiện SEO).
-- `jobs`: Tin tuyển dụng do nhà tuyển dụng đăng tải (`salary_min`, `salary_max`, `job_type`, `experience_level`, `deadline`, `status`).
+- `jobs`: Tin tuyển dụng do nhà tuyển dụng đăng tải (`salary_min`, `salary_max`, `job_type`, `experience_level`, `deadline`, `status`, `is_demo`). `is_demo = TRUE` là tin mô phỏng để xem giao diện; backend chặn nộp hồ sơ.
 - `job_skills`: Bảng trung gian N-N giữa Jobs và Skills.
 - `saved_jobs`: Ứng viên lưu việc làm quan tâm (ràng buộc `UNIQUE(candidate_id, job_id)`).
 

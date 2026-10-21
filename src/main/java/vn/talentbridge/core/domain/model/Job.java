@@ -28,6 +28,7 @@ public class Job {
     private java.util.List<String> skills = new java.util.ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean demo;
 
     public Job() {
         this.status = JobStatus.ACTIVE;
@@ -128,4 +129,7 @@ public class Job {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public boolean isDemo() { return demo; }
+    public void setDemo(boolean demo) { this.demo = demo; }
 }

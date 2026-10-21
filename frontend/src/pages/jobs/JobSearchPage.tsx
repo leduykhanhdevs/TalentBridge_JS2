@@ -10,7 +10,6 @@ import {
     Filter,
     MapPin,
     RefreshCw,
-    Search,
     SlidersHorizontal,
     TriangleAlert,
 } from 'lucide-react'
@@ -61,7 +60,7 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
     { value: '50', label: '50 việc làm / trang' },
 ]
 
-const inputClassName = 'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 hover:border-slate-300'
+const inputClassName = 'mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-3 focus:ring-blue-100 hover:border-slate-300'
 
 export function JobSearchPage() {
     const [formValues, setFormValues] = useState<JobFilterFormValues>(EMPTY_JOB_FILTERS)
@@ -121,26 +120,19 @@ export function JobSearchPage() {
     const jobs = jobsQuery.data?.content ?? []
 
     return (
-        <main className="min-h-[calc(100vh-4rem)] bg-slate-50">
-            <section className="border-b border-slate-200 bg-gradient-to-br from-indigo-50 via-white to-violet-50">
-                <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-                    <div className="flex items-start gap-4">
-                        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-600 text-white shadow-sm">
-                            <Search aria-hidden="true" size={23} />
-                        </span>
-                        <div>
-                            <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">TalentBridge Jobs</p>
-                            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Tìm việc làm phù hợp</h1>
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                                Lọc cơ hội theo từ khóa, địa điểm, hình thức, kinh nghiệm và mức lương mong muốn.
-                            </p>
-                        </div>
-                    </div>
+        <main className="min-h-[calc(100vh-5.5rem)] bg-[#F5F7FB]">
+            <section>
+                <div className="mx-auto max-w-[1200px] px-4 pb-1 pt-7 sm:px-6 lg:px-8 lg:pt-8">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#1D4ED8]">Cơ hội nghề nghiệp</p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#172033] sm:text-[28px]">Tìm việc làm phù hợp</h1>
+                    <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                        Lọc cơ hội theo từ khóa, địa điểm, hình thức, kinh nghiệm và mức lương mong muốn.
+                    </p>
                 </div>
             </section>
 
-            <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[300px_1fr] lg:px-8">
-                <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-xs lg:sticky lg:top-24">
+            <div className="mx-auto grid min-w-0 max-w-[1200px] grid-cols-1 gap-6 px-4 pb-8 pt-5 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
+                <aside className="h-fit min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
                     <div className="flex items-center gap-2 text-slate-900">
                         <SlidersHorizontal aria-hidden="true" size={18} />
                         <h2 className="font-bold">Bộ lọc việc làm</h2>
@@ -222,7 +214,7 @@ export function JobSearchPage() {
                         )}
 
                         <button
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={jobsQuery.isFetching}
                             type="submit"
                         >
@@ -240,13 +232,18 @@ export function JobSearchPage() {
                     </form>
                 </aside>
 
-                <section aria-live="polite">
+                <section aria-live="polite" className="min-w-0">
+                    {jobsQuery.isSuccess && jobs.some((job) => job.isDemo) && (
+                        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="note">
+                            Danh sách có tin tuyển dụng mô phỏng để xem thử giao diện. Tin được gắn nhãn “Mô phỏng” không đại diện vị trí thật và không nhận hồ sơ.
+                        </p>
+                    )}
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 className="text-xl font-bold text-slate-950">Cơ hội đang tuyển</h2>
+                            <h2 className="text-xl font-bold text-slate-950">Danh sách việc làm</h2>
                             {jobsQuery.data && (
                                 <p className="mt-1 text-sm text-slate-500">
-                                    Tìm thấy <span className="font-semibold text-indigo-600">{jobsQuery.data.totalElements}</span> việc làm
+                                    Tìm thấy <span className="font-semibold text-blue-700">{jobsQuery.data.totalElements}</span> việc làm
                                     {jobsQuery.data.totalPages > 1 && ` (Trang ${jobsQuery.data.pageNumber}/${jobsQuery.data.totalPages})`}
                                 </p>
                             )}
@@ -262,7 +259,7 @@ export function JobSearchPage() {
                                     value={sortBy}
                                 />
                             </div>
-                            {jobsQuery.isFetching && <span className="text-xs font-medium text-indigo-600 animate-pulse ml-2">Đang tải...</span>}
+                            {jobsQuery.isFetching && <span className="text-xs font-medium text-blue-700 animate-pulse ml-2">Đang tải...</span>}
                         </div>
                     </div>
 
@@ -298,28 +295,33 @@ export function JobSearchPage() {
                     {jobsQuery.isSuccess && jobs.length > 0 && (
                         <div className="space-y-4">
                             {jobs.map((job) => (
-                                <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-sm sm:p-6" key={job.id}>
+                                <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:p-6" key={job.id}>
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div>
                                             <Link className="group" to={`/jobs/${job.id}`}>
-                                                <h3 className="text-lg font-bold text-slate-950 transition group-hover:text-indigo-600">
+                                                <h3 className="text-lg font-bold text-slate-950 transition group-hover:text-blue-700">
                                                     {job.title}
                                                 </h3>
                                             </Link>
-                                            <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-indigo-700">
+                                            {job.isDemo && (
+                                                <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900">
+                                                    DEMO · Không nhận hồ sơ
+                                                </span>
+                                            )}
+                                            <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-blue-800">
                                                 <Building2 aria-hidden="true" size={15} />
                                                 {job.companyName}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                                                Đang tuyển
+                                            <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${job.isDemo ? 'bg-amber-50 text-amber-900' : 'bg-emerald-50 text-emerald-700'}`}>
+                                                {job.isDemo ? 'Tin mô phỏng' : 'Đang tuyển'}
                                             </span>
                                             <Link
-                                                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700 transition hover:bg-indigo-600 hover:text-white"
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-1 text-xs font-bold text-blue-800 transition hover:bg-blue-700 hover:text-white"
                                                 to={`/jobs/${job.id}`}
                                             >
-                                                <span>Ứng tuyển</span>
+                                                <span>{job.isDemo ? 'Xem mẫu' : 'Ứng tuyển'}</span>
                                                 <ExternalLink size={13} />
                                             </Link>
                                         </div>
@@ -344,7 +346,7 @@ export function JobSearchPage() {
                                     {job.skills && job.skills.length > 0 && (
                                         <div className="mt-4 flex flex-wrap gap-2">
                                             {job.skills.slice(0, 5).map((skill) => (
-                                                <span className="rounded-md border border-indigo-100 bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700" key={skill}>{skill}</span>
+                                                <span className="rounded-md border border-blue-100 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800" key={skill}>{skill}</span>
                                             ))}
                                         </div>
                                     )}
@@ -392,7 +394,7 @@ export function JobSearchPage() {
                                                         <button
                                                             className={`h-8 min-w-[32px] rounded-lg px-2 text-xs font-semibold transition ${
                                                                 isActive
-                                                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                                                    ? 'bg-blue-700 text-white shadow-xs'
                                                                     : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                                                             }`}
                                                             disabled={jobsQuery.isFetching}

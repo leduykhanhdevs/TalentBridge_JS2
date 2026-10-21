@@ -1,5 +1,16 @@
 # Kế hoạch chuyển TalentBridge sang Amazon RDS for MySQL
 
+## Trạng thái xác minh mới nhất - 15/10/2026
+
+Các nội dung preflight bên dưới là lịch sử. Dùng phần này làm trạng thái hiện hành:
+
+- TiDB Cloud Resource View không liệt kê resource nào; Project View của JS2 cũng báo 0 instance. Không có TiDB resource hiện thấy để xóa. Trang inventory không xác nhận audit log xóa hoặc việc dữ liệu cũ đã được migrate.
+- RDS `talentbridge-mysql` tại Singapore đang Available, MySQL 8.4.9. AWS Console cho thấy storage được mã hóa, deletion protection bật, Single-AZ, 20 GiB gp2; autoscaling tối đa 1000 GiB; automated backup retention 1 ngày và 3 snapshot tự động Available.
+- Render log của production commit `ede188fc9b95e14725b7b25c56b75faf68dcbfb6` cho thấy Flyway schema `talentbridge_db` đã up-to-date và Hikari mở kết nối MySQL. RDS DatabaseConnections có hoạt động gần cùng thời điểm. Đây là bằng chứng mạnh cho thấy BE đang dùng MySQL/RDS, nhưng URL datasource bị che nên chưa so sánh được hostname trực tiếp; RDS Configuration hiển thị DB name ban đầu `test`, trong khi Flyway log ghi schema `talentbridge_db`.
+- Live health và jobs API đều HTTP 200, nhưng jobs trả `totalElements=0`; chưa có kiểm thử ghi/đọc nghiệp vụ hoặc đối soát dữ liệu người dùng. Tab TalentBridge hiện đăng nhập vai trò Ứng viên nên cần phiên Recruiter/Admin để nạp tin ở trạng thái chờ duyệt.
+- Cold start theo log Render gần nhất là 200.699 giây. Bản đang chạy ghi Hikari cảnh báo `idleTimeout` lớn hơn `maxLifetime` và bị vô hiệu hóa; source local đã chỉnh `idle-timeout=240000` với `max-lifetime=300000`, `mvnw verify` đạt 300/300, nhưng chưa merge/deploy. Cold start vẫn là vấn đề chưa giải quyết. Render Free không cung cấp metric CPU/RAM để xác định nguyên nhân. Warm request `/api/v1/jobs` gần nhất là 281 ms, chỉ là một phép đo đơn lẻ. Không kết luận hiệu năng ổn định chỉ từ số đo này.
+- CI gần nhất trên PR pass 3/3 job; CD thành công cho production commit `ede188fc`. Do TiDB hiện không có instance và chưa có bằng chứng dump/import/reconciliation, không tuyên bố đã bảo toàn dữ liệu TiDB cũ.
+
 ## Phạm vi và trạng thái đã xác minh
 
 Backend đã dùng MySQL Connector/J và profile `prod` nhận URL, username, password qua biến môi trường. TiDB Cloud là DB nguồn cần giữ nguyên trong suốt quá trình chuyển. Theo lần kiểm tra AWS Console gần nhất ngày 12/10/2026, RDS `talentbridge-mysql` ở Singapore đã ở trạng thái `Available`, endpoint `talentbridge-mysql.c9g0sug2exjs.ap-southeast-1.rds.amazonaws.com`, database ban đầu `test`. Security group chỉ cho TCP 3306 từ hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`; `Publicly accessible` được bật. Đây chỉ là cấu hình mạng, chưa phải bằng chứng Render đã kết nối hoặc xác thực DB thành công. Người dùng xác nhận RDS hiện còn trống, chưa import dữ liệu. Workspace không có AWS/Render API credentials để thao tác cloud bằng API; không đọc secret đã che trong dashboard.

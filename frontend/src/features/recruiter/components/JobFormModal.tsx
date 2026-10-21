@@ -13,6 +13,8 @@ interface JobFormModalProps {
     onSubmit: (payload: CreateJobPayload) => Promise<void>
     initialData?: RecruiterJobItem | null
     isSubmitting: boolean
+    submitError: string | null
+    onClearSubmitError: () => void
 }
 
 export function JobFormModal({
@@ -21,6 +23,8 @@ export function JobFormModal({
     onSubmit,
     initialData,
     isSubmitting,
+    submitError,
+    onClearSubmitError,
 }: JobFormModalProps) {
     const isEdit = Boolean(initialData)
 
@@ -131,15 +135,15 @@ export function JobFormModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
-            <div className="relative w-full max-w-3xl my-8 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
+            <div aria-labelledby="job-form-title" aria-modal="true" className="relative w-full max-w-3xl my-8 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl" role="dialog">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div className="flex items-center gap-3">
-                        <div className="grid size-10 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                        <div className="grid size-10 place-items-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100">
                             <Briefcase size={20} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                            <h2 className="text-xl font-bold tracking-tight text-slate-900" id="job-form-title">
                                 {isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng mới'}
                             </h2>
                             <p className="text-xs text-slate-500 mt-0.5">
@@ -159,18 +163,24 @@ export function JobFormModal({
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="mt-6 space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+                <form onChangeCapture={onClearSubmitError} onSubmit={handleSubmit} className="mt-6 space-y-6 max-h-[70vh] overflow-y-auto pr-1">
+                    {submitError && (
+                        <div aria-live="assertive" className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800" role="alert">
+                            <span>{submitError}</span>
+                        </div>
+                    )}
                     {/* Tiêu đề công việc */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-title">
                             Tiêu đề công việc <span className="text-rose-500">*</span>
                         </label>
                         <input
+                            id="job-title"
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Ví dụ: Senior Java Spring Boot Developer..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                         {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title}</p>}
                     </div>
@@ -178,13 +188,14 @@ export function JobFormModal({
                     {/* Hình thức & Kinh nghiệm */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-type">
                                 Hình thức làm việc <span className="text-rose-500">*</span>
                             </label>
                             <select
+                                id="job-type"
                                 value={jobType}
                                 onChange={(e) => setJobType(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             >
                                 {Object.entries(JOB_TYPE_LABELS).map(([val, label]) => (
                                     <option key={val} value={val}>
@@ -195,13 +206,14 @@ export function JobFormModal({
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-experience">
                                 Cấp bậc / Kinh nghiệm <span className="text-rose-500">*</span>
                             </label>
                             <select
+                                id="job-experience"
                                 value={experienceLevel}
                                 onChange={(e) => setExperienceLevel(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             >
                                 {Object.entries(EXPERIENCE_LABELS).map(([val, label]) => (
                                     <option key={val} value={val}>
@@ -215,42 +227,45 @@ export function JobFormModal({
                     {/* Địa điểm & Thành phố */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-city">
                                 Thành phố <span className="text-rose-500">*</span>
                             </label>
                             <input
+                                id="job-city"
                                 type="text"
                                 value={city}
                                 onChange={(e) => setCity(e.target.value)}
                                 placeholder="Hồ Chí Minh, Hà Nội..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             />
                             {errors.city && <p className="mt-1 text-xs text-rose-500">{errors.city}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-location">
                                 Hình thức địa điểm
                             </label>
                             <input
+                                id="job-location"
                                 type="text"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                                 placeholder="Tại văn phòng, Hybrid..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-address">
                                 Địa chỉ cụ thể
                             </label>
                             <input
+                                id="job-address"
                                 type="text"
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 placeholder="Tòa nhà, số đường..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                             />
                         </div>
                     </div>
@@ -266,7 +281,7 @@ export function JobFormModal({
                                     type="checkbox"
                                     checked={isNegotiable}
                                     onChange={(e) => setIsNegotiable(e.target.checked)}
-                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="rounded border-slate-300 text-blue-700 focus:ring-blue-600"
                                 />
                                 Lương thỏa thuận
                             </label>
@@ -276,25 +291,27 @@ export function JobFormModal({
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <input
+                                        aria-label="Lương tối thiểu (VNĐ)"
                                         type="number"
                                         min="0"
                                         step="500000"
                                         value={minSalary}
                                         onChange={(e) => setMinSalary(e.target.value)}
                                         placeholder="Lương tối thiểu (ví dụ: 15000000)"
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                     />
                                     {errors.minSalary && <p className="mt-1 text-xs text-rose-500">{errors.minSalary}</p>}
                                 </div>
                                 <div>
                                     <input
+                                        aria-label="Lương tối đa (VNĐ)"
                                         type="number"
                                         min="0"
                                         step="500000"
                                         value={maxSalary}
                                         onChange={(e) => setMaxSalary(e.target.value)}
                                         placeholder="Lương tối đa (ví dụ: 30000000)"
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                     />
                                     {errors.maxSalary && <p className="mt-1 text-xs text-rose-500">{errors.maxSalary}</p>}
                                 </div>
@@ -304,25 +321,27 @@ export function JobFormModal({
 
                     {/* Hạn nộp hồ sơ */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5">
-                            <Calendar size={14} className="text-indigo-600" /> Hạn nộp hồ sơ <span className="text-rose-500">*</span>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="job-deadline">
+                            <Calendar size={14} className="text-blue-700" /> Hạn nộp hồ sơ <span className="text-rose-500">*</span>
                         </label>
                         <input
+                            id="job-deadline"
                             type="date"
                             value={deadline}
                             onChange={(e) => setDeadline(e.target.value)}
-                            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                         {errors.deadline && <p className="mt-1 text-xs text-rose-500">{errors.deadline}</p>}
                     </div>
 
                     {/* Kỹ năng yêu cầu */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="job-skill-input">
                             <Sparkles size={14} className="text-amber-500" /> Kỹ năng yêu cầu
                         </label>
                         <div className="flex gap-2 mb-2">
                             <input
+                                id="job-skill-input"
                                 type="text"
                                 value={skillInput}
                                 onChange={(e) => setSkillInput(e.target.value)}
@@ -333,7 +352,7 @@ export function JobFormModal({
                                     }
                                 }}
                                 placeholder="Nhập tên kỹ năng (ví dụ: Docker, Redis) rồi bấm Thêm..."
-                                className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
                             />
                             <button
                                 type="button"
@@ -348,13 +367,13 @@ export function JobFormModal({
                                 {skills.map((skill) => (
                                     <span
                                         key={skill}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800"
                                     >
                                         {skill}
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveSkill(skill)}
-                                            className="text-indigo-400 hover:text-indigo-900"
+                                            className="text-blue-400 hover:text-blue-950"
                                         >
                                             <X size={12} />
                                         </button>
@@ -366,44 +385,47 @@ export function JobFormModal({
 
                     {/* Mô tả công việc */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-description">
                             Mô tả công việc <span className="text-rose-500">*</span>
                         </label>
                         <textarea
+                            id="job-description"
                             rows={4}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Mô tả trách nhiệm, công việc hàng ngày của vị trí này..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                         {errors.description && <p className="mt-1 text-xs text-rose-500">{errors.description}</p>}
                     </div>
 
                     {/* Yêu cầu ứng viên */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-requirements">
                             Yêu cầu ứng viên
                         </label>
                         <textarea
+                            id="job-requirements"
                             rows={3}
                             value={requirements}
                             onChange={(e) => setRequirements(e.target.value)}
                             placeholder="- Tối thiểu 2 năm kinh nghiệm với Java...&#10;- Khả năng giải quyết vấn đề tốt..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                     </div>
 
                     {/* Quyền lợi */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-benefits">
                             Quyền lợi được hưởng
                         </label>
                         <textarea
+                            id="job-benefits"
                             rows={3}
                             value={benefits}
                             onChange={(e) => setBenefits(e.target.value)}
                             placeholder="- Lương tháng 13 + thưởng KPI...&#10;- Gói bảo hiểm sức khỏe cao cấp..."
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
                         />
                     </div>
 
@@ -419,7 +441,7 @@ export function JobFormModal({
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition disabled:opacity-50 shadow-md shadow-indigo-600/20"
+                            className="rounded-xl bg-blue-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-blue-800 transition disabled:opacity-50 shadow-md shadow-blue-700/20"
                         >
                             {isSubmitting
                                 ? 'Đang lưu...'

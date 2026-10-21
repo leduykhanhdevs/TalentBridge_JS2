@@ -92,6 +92,19 @@ class ApplyJobUseCaseImplTest {
     }
 
     @Test
+    void demoJobCannotReceiveApplications() {
+        Job job = activeJob(LocalDate.now().plusDays(1));
+        job.setDemo(true);
+        stubCandidateAndJob(job);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> useCase.apply(10L, 5L, 30L, null));
+
+        assertTrue(error.getMessage().contains("Tin mô phỏng"));
+        verifyNoInteractions(resumeRepository, applicationRepository);
+    }
+
+    @Test
     void expiredDeadlineIsRejected() {
         stubCandidateAndJob(activeJob(LocalDate.now().minusDays(1)));
 

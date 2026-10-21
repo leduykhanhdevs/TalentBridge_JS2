@@ -1,0 +1,12 @@
+
+> frontend@0.0.0 test C:\Users\leduy\.codex\worktrees\hrpm-59-api-metrics\TalentBridge_JS2\frontend
+> vitest run
+
+
+ RUN  v5.0.5 C:/Users/leduy/.codex/worktrees/hrpm-59-api-metrics/TalentBridge_JS2/frontend
+
+
+ Test Files  17 passed (17)
+      Tests  111 passed (111)
+   Start at  02:48:42
+   Duration  1.08s (transform 42%, import 27%, tests 24%, worker 7%)

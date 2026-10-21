@@ -11,7 +11,7 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     region: singapore
-    autoDeploy: false
+    autoDeployTrigger: checksPass
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -40,7 +40,7 @@ services:
   - type: web
     name: talentbridge-frontend
     runtime: static
-    autoDeploy: false
+    autoDeployTrigger: checksPass
     buildCommand: cd frontend && npm install && VITE_RENDER_GIT_COMMIT="${RENDER_GIT_COMMIT:-unknown}" npm run build
     staticPublishPath: frontend/dist
     routes:

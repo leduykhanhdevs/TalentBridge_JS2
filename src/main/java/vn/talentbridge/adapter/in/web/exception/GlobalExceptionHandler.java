@@ -61,6 +61,8 @@ public class GlobalExceptionHandler {
             status = HttpStatus.UNAUTHORIZED;
         } else if (statusGroup == 403) {
             status = HttpStatus.FORBIDDEN;
+        } else if (statusGroup == 503) {
+            status = HttpStatus.SERVICE_UNAVAILABLE;
         }
         ApiResponse<Object> response = ApiResponse.error(ex.getCode(), ex.getMessage());
         return new ResponseEntity<>(response, status);

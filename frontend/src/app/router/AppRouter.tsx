@@ -4,17 +4,19 @@ import { MainLayout } from '../../layouts/MainLayout'
 import { AdminLayout } from '../../layouts/AdminLayout'
 import { RecruiterLayout } from '../../layouts/RecruiterLayout'
 import { TalentBridgeAssistantWidget } from '../../features/assistant/components/TalentBridgeAssistantWidget'
+import { getStoredUser, isAuthenticated } from '../../features/auth/tokenStorage'
 
 const HomePage = lazy(() => import('../../pages/HomePage').then((module) => ({ default: module.HomePage })))
 const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({ default: module.LoginPage })))
 const NotFoundPage = lazy(() => import('../../pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const RegisterPage = lazy(() => import('../../pages/RegisterPage').then((module) => ({ default: module.RegisterPage })))
 const ForgotPasswordPage = lazy(() => import('../../pages/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })))
-const ResetPasswordPage = lazy(() => import('../../pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
 const AdminCandidatesPage = lazy(() => import('../../pages/admin/AdminCandidatesPage').then((module) => ({ default: module.AdminCandidatesPage })))
 const AdminRecruitersPage = lazy(() => import('../../pages/admin/AdminRecruitersPage').then((module) => ({ default: module.AdminRecruitersPage })))
 const AdminCompaniesPage = lazy(() => import('../../pages/admin/AdminCompaniesPage').then((module) => ({ default: module.AdminCompaniesPage })))
 const AdminJobsPage = lazy(() => import('../../pages/admin/AdminJobsPage').then((module) => ({ default: module.AdminJobsPage })))
+const AdminApiMetricsPage = lazy(() => import('../../pages/admin/AdminApiMetricsPage').then((module) => ({ default: module.AdminApiMetricsPage })))
+const AdminAssistantPage = lazy(() => import('../../pages/admin/AdminAssistantPage').then((module) => ({ default: module.AdminAssistantPage })))
 const RecruiterProfilePage = lazy(() => import('../../pages/recruiter/RecruiterProfilePage').then((module) => ({ default: module.RecruiterProfilePage })))
 const RecruiterCompanyPage = lazy(() => import('../../pages/recruiter/RecruiterCompanyPage').then((module) => ({ default: module.RecruiterCompanyPage })))
 const RecruiterJoinCompanyPage = lazy(() => import('../../pages/recruiter/RecruiterJoinCompanyPage').then((module) => ({ default: module.RecruiterJoinCompanyPage })))
@@ -46,6 +48,14 @@ function ScrollToTop() {
     return null
 }
 
+function AssistantRoute() {
+    const user = getStoredUser()
+    if (isAuthenticated() && user?.roles?.includes('ROLE_ADMIN')) {
+        return <Navigate replace to="/admin/assistant" />
+    }
+    return <AssistantPage />
+}
+
 export function AppRouter() {
     return (
         <>
@@ -58,10 +68,10 @@ export function AppRouter() {
                 <Route element={<LoginPage />} path="login" />
                 <Route element={<RegisterPage />} path="register" />
                 <Route element={<ForgotPasswordPage />} path="forgot-password" />
-                <Route element={<ResetPasswordPage />} path="reset-password" />
+                <Route element={<Navigate replace to="/forgot-password" />} path="reset-password" />
                 <Route element={<JobSearchPage />} path="jobs" />
                 <Route element={<JobDetailPage />} path="jobs/:jobId" />
-                <Route element={<AssistantPage />} path="assistant" />
+                <Route element={<AssistantRoute />} path="assistant" />
                 <Route element={<CandidateProfilePage />} path="candidate/profile" />
                 <Route element={<CandidateApplicationsPage />} path="candidate/applications" />
                 <Route element={<NotFoundPage />} path="*" />
@@ -86,6 +96,8 @@ export function AppRouter() {
                 <Route element={<AdminRecruitersPage />} path="recruiters" />
                 <Route element={<AdminCompaniesPage />} path="companies" />
                 <Route element={<AdminJobsPage />} path="jobs" />
+                <Route element={<AdminApiMetricsPage />} path="metrics" />
+                <Route element={<AdminAssistantPage />} path="assistant" />
             </Route>
             </Routes>
             </Suspense>

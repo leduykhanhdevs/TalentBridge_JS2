@@ -44,6 +44,15 @@ export type ForgotPasswordRequest = {
     email: string
 }
 
+export type VerifyPasswordResetOtpRequest = {
+    email: string
+    otp: string
+}
+
+export type PasswordResetVerificationResponse = {
+    resetToken: string
+}
+
 export type ResetPasswordRequest = {
     token: string
     newPassword: string

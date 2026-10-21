@@ -55,7 +55,7 @@ export function CustomSelect({
                 onClick={() => setIsOpen((prev) => !prev)}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
-                className="mt-1.5 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-sm text-slate-800 shadow-2xs transition hover:border-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-3 focus:ring-indigo-100"
+                className="mt-1.5 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-sm text-slate-800 shadow-2xs transition hover:border-slate-300 focus:border-blue-600 focus:outline-none focus:ring-3 focus:ring-blue-100"
             >
                 <span className={selectedOption ? 'font-medium text-slate-900' : 'text-slate-500'}>
                     {selectedOption ? selectedOption.label : placeholder}
@@ -63,7 +63,7 @@ export function CustomSelect({
                 <ChevronDown
                     aria-hidden="true"
                     className={`size-4 text-slate-400 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-indigo-600' : ''
+                        isOpen ? 'rotate-180 text-blue-700' : ''
                     }`}
                 />
             </button>
@@ -86,8 +86,8 @@ export function CustomSelect({
                                         }}
                                         className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                                             isSelected
-                                                ? 'bg-indigo-600 text-white shadow-xs'
-                                                : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-900'
+                                                ? 'bg-blue-700 text-white shadow-xs'
+                                                : 'text-slate-700 hover:bg-blue-50 hover:text-blue-950'
                                         }`}
                                     >
                                         <span>{option.label}</span>

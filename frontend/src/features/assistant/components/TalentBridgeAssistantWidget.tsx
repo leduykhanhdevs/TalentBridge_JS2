@@ -7,16 +7,24 @@ import { AssistantChatPanel } from './AssistantChatPanel'
 export function TalentBridgeAssistantWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const { pathname } = useLocation()
-    if (pathname === '/assistant') return null
+    const normalizedPathname = pathname.replace(/\/+$/, '') || '/'
+    const isAdminPage = normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')
+    const isAuthenticationPage = [
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/reset-password',
+    ].includes(normalizedPathname)
+    if (normalizedPathname === '/assistant' || isAuthenticationPage || isAdminPage) return null
 
     return (
-        <div className="fixed bottom-5 right-5 z-[60] sm:bottom-7 sm:right-7">
+        <div className="hidden sm:fixed sm:bottom-7 sm:right-7 sm:z-[45] sm:block">
             {isOpen && (
-                <div className="mb-3 h-[min(72vh,38rem)] w-[min(92vw,25rem)] drop-shadow-2xl">
+                <div className="mb-3 h-[min(78dvh,43.5rem)] min-h-[28rem] w-[min(92vw,29.75rem)] rounded-xl shadow-[0_12px_32px_rgb(23_32_51_/_14%)]">
                     <ErrorBoundary fallback={(
-                        <section className="rounded-2xl border border-rose-200 bg-white p-5 text-sm text-slate-700 shadow-xl" role="alert">
+                        <section className="rounded-xl border border-rose-200 bg-white p-5 text-sm text-slate-700 shadow-xl" role="alert">
                             <p>Trợ lý tạm thời gặp lỗi hiển thị.</p>
-                            <button className="mt-3 font-semibold text-indigo-700 underline" onClick={() => setIsOpen(false)} type="button">
+                            <button className="mt-3 font-semibold text-blue-700 underline" onClick={() => setIsOpen(false)} type="button">
                                 Đóng trợ lý
                             </button>
                         </section>
@@ -28,7 +36,7 @@ export function TalentBridgeAssistantWidget() {
             <button
                 aria-expanded={isOpen}
                 aria-label={isOpen ? 'Đóng Trợ lý TalentBridge' : 'Mở nhanh Trợ lý TalentBridge'}
-                className="ml-auto grid size-14 place-items-center rounded-full border-4 border-white bg-indigo-600 text-white shadow-xl transition hover:scale-105 hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+                className="ml-auto grid size-12 place-items-center rounded-full border-2 border-white bg-blue-700 text-white shadow-[0_8px_22px_rgb(23_32_51_/_22%)] transition hover:-translate-y-0.5 hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:size-[52px]"
                 onClick={() => setIsOpen((open) => !open)}
                 type="button"
             >

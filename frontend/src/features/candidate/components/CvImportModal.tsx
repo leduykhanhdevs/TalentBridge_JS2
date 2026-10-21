@@ -354,7 +354,7 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                                        <Code2 className="h-3.5 w-3.5 text-indigo-600" />
+                                        <Code2 className="h-3.5 w-3.5 text-blue-700" />
                                         2. Kỹ năng nhận diện được ({formPayload.skills?.length || 0})
                                     </h3>
                                     <span className="text-[11px] text-slate-400">Bấm &times; để loại bỏ kỹ năng không khớp</span>
@@ -365,13 +365,13 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                                         {formPayload.skills.map((skill) => (
                                             <span
                                                 key={skill}
-                                                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-2xs"
+                                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-800 shadow-2xs"
                                             >
                                                 {skill}
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveSkill(skill)}
-                                                    className="rounded-full hover:bg-indigo-200 p-0.5 text-indigo-500 hover:text-indigo-800 transition"
+                                                    className="rounded-full hover:bg-blue-200 p-0.5 text-blue-600 hover:text-blue-900 transition"
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>

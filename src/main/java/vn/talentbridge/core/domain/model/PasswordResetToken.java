@@ -4,12 +4,20 @@ import java.time.LocalDateTime;
 
 public class PasswordResetToken {
 
+    public enum Purpose {
+        OTP,
+        RESET_GRANT,
+        LEGACY
+    }
+
     private Long id;
     private Long userId;
     private String tokenHash;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private LocalDateTime usedAt;
+    private Purpose purpose;
+    private int failedAttempts;
 
     public PasswordResetToken() {
     }
@@ -22,12 +30,27 @@ public class PasswordResetToken {
             LocalDateTime expiresAt,
             LocalDateTime usedAt
     ) {
+        this(id, userId, tokenHash, createdAt, expiresAt, usedAt, Purpose.RESET_GRANT, 0);
+    }
+
+    public PasswordResetToken(
+            Long id,
+            Long userId,
+            String tokenHash,
+            LocalDateTime createdAt,
+            LocalDateTime expiresAt,
+            LocalDateTime usedAt,
+            Purpose purpose,
+            int failedAttempts
+    ) {
         this.id = id;
         this.userId = userId;
         this.tokenHash = tokenHash;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
         this.usedAt = usedAt;
+        this.purpose = purpose;
+        this.failedAttempts = failedAttempts;
     }
 
     public boolean isUsableAt(LocalDateTime time) {
@@ -88,5 +111,21 @@ public class PasswordResetToken {
 
     public void setUsedAt(LocalDateTime usedAt) {
         this.usedAt = usedAt;
+    }
+
+    public Purpose getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(Purpose purpose) {
+        this.purpose = purpose;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
     }
 }

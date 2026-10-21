@@ -237,6 +237,31 @@ class SubmitJoinCompanyRequestUseCaseImplTest {
     }
 
     @Test
+    @DisplayName("Không thể gửi yêu cầu gia nhập doanh nghiệp mô phỏng")
+    void throwsDomainExceptionWhenCompanyIsDemo() {
+        Long userId = 100L;
+        Long companyId = 200L;
+        Recruiter recruiter = new Recruiter();
+        recruiter.setId(10L);
+        recruiter.setCompany(null);
+        Company company = new Company();
+        company.setId(companyId);
+        company.setStatus(CompanyStatus.APPROVED);
+        company.setDemo(true);
+
+        when(recruiterRepository.findByUserId(userId)).thenReturn(Optional.of(recruiter));
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+
+        DomainException error = assertThrows(DomainException.class,
+                () -> useCase.submitJoinRequest(userId, companyId,
+                        new SubmitJoinCompanyRequestCommand("Recruiter", "")));
+
+        assertEquals(40001, error.getCode());
+        assertTrue(error.getMessage().contains("doanh nghiệp mô phỏng"));
+        verifyNoInteractions(companyJoinRequestRepository);
+    }
+
+    @Test
     @DisplayName("Ném ngoại lệ DomainException(40901) nếu Recruiter đang có yêu cầu PENDING chờ xét duyệt")
     void throwsDomainExceptionWhenPendingRequestExists() {
         Long userId = 100L;

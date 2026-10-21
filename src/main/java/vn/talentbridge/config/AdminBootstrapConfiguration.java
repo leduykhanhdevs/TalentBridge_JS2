@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import vn.talentbridge.core.application.port.in.AdminBootstrapResult;
 import vn.talentbridge.core.application.port.in.BootstrapAdminAccountUseCase;
 
 @Slf4j
@@ -24,19 +25,24 @@ public class AdminBootstrapConfiguration {
             BootstrapAdminAccountUseCase useCase,
             @Value("${talentbridge.admin-bootstrap.email:}") String email,
             @Value("${talentbridge.admin-bootstrap.password:}") String password,
-            @Value("${talentbridge.admin-bootstrap.full-name:TalentBridge Administrator}") String fullName
+            @Value("${talentbridge.admin-bootstrap.full-name:TalentBridge Administrator}") String fullName,
+            @Value("${talentbridge.admin-bootstrap.promote-existing:false}") boolean promoteExistingAccount,
+            @Value("${talentbridge.admin-bootstrap.reactivate-locked-admin:false}") boolean reactivateLockedAdmin
     ) {
         return args -> {
-            if (email.isBlank() || password.isBlank()) {
+            if (email.isBlank()) {
                 throw new IllegalStateException(
-                        "Admin bootstrap is enabled but ADMIN_BOOTSTRAP_EMAIL or ADMIN_BOOTSTRAP_PASSWORD is missing."
+                        "Admin bootstrap is enabled but ADMIN_BOOTSTRAP_EMAIL is missing."
                 );
             }
-            boolean created = useCase.execute(email, password, fullName);
-            if (created) {
-                log.info("Initial production administrator was created from operator-provided credentials.");
-            } else {
-                log.info("Initial production administrator already exists; credentials were left unchanged.");
+            AdminBootstrapResult result = useCase.execute(
+                    email, password, fullName, promoteExistingAccount, reactivateLockedAdmin
+            );
+            switch (result) {
+                case CREATED -> log.info("Initial production administrator was created from operator-provided credentials.");
+                case PROMOTED_EXISTING -> log.info("Existing active production account was granted ROLE_ADMIN by explicit operator opt-in.");
+                case REACTIVATED_EXISTING_ADMIN -> log.info("Existing locked production administrator was reactivated by explicit operator opt-in; credentials were left unchanged.");
+                case ALREADY_ADMIN -> log.info("Initial production administrator already exists; credentials were left unchanged.");
             }
         };
     }

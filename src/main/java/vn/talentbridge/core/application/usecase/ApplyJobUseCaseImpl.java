@@ -53,6 +53,10 @@ public class ApplyJobUseCaseImpl implements ApplyJobUseCase {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng", jobId));
 
+        if (job.isDemo()) {
+            throw new IllegalArgumentException("Tin mô phỏng chỉ dùng để xem thử, không nhận hồ sơ ứng tuyển.");
+        }
+
         if (job.getStatus() != JobStatus.ACTIVE
                 || (job.getDeadline() != null && job.getDeadline().isBefore(LocalDate.now()))) {
             throw new IllegalArgumentException("Tin tuyển dụng không còn nhận hồ sơ.");

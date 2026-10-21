@@ -4,37 +4,54 @@ import {
     Archive,
     BarChart3,
     Briefcase,
-    Calendar,
     CheckCircle2,
-    Clock,
-    DollarSign,
     Edit3,
     ExternalLink,
-    MapPin,
+    MoreHorizontal,
     Plus,
     Search,
-    Users,
 } from 'lucide-react'
 import { Link } from 'react-router'
 import {
     closeJob,
     createJob,
-    getMyJobStats,
     getMyJobs,
     updateJob,
 } from '../../features/recruiter/recruiterJobApi'
 import type {
     CreateJobPayload,
     JobStatus,
-    MyJobStats,
     RecruiterJobItem,
 } from '../../features/recruiter/recruiterJobTypes'
 import {
-    EXPERIENCE_LABELS,
-    JOB_TYPE_LABELS,
     formatJobSalary,
 } from '../../features/recruiter/recruiterJobValidation'
 import { JobFormModal } from '../../features/recruiter/components/JobFormModal'
+
+const JOB_STATUS_TABS: Array<{ label: string; value: JobStatus | '' }> = [
+    { label: 'Tất cả', value: '' },
+    { label: 'Đang mở', value: 'ACTIVE' },
+    { label: 'Chờ duyệt', value: 'PENDING' },
+    { label: 'Bản nháp', value: 'DRAFT' },
+]
+
+const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+    DRAFT: 'Bản nháp',
+    PENDING: 'Chờ quản trị duyệt',
+    ACTIVE: 'Đang nhận hồ sơ',
+    EXPIRED: 'Đã hết hạn',
+    CLOSED: 'Đã đóng',
+    REJECTED: 'Bị từ chối',
+}
+
+const JOB_STATUS_STYLES: Record<JobStatus, string> = {
+    DRAFT: 'bg-slate-100 text-slate-700',
+    PENDING: 'bg-amber-50 text-amber-800',
+    ACTIVE: 'bg-emerald-50 text-emerald-800',
+    EXPIRED: 'bg-slate-100 text-slate-700',
+    CLOSED: 'bg-slate-100 text-slate-700',
+    REJECTED: 'bg-rose-50 text-rose-800',
+}
 
 export function RecruiterJobsPage() {
     const [jobs, setJobs] = useState<RecruiterJobItem[]>([])
@@ -42,21 +59,19 @@ export function RecruiterJobsPage() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-    // Filter states
     const [statusFilter, setStatusFilter] = useState<JobStatus | ''>('')
     const [searchTerm, setSearchTerm] = useState('')
+    const [isSearchOpen, setIsSearchOpen] = useState(false)
     const [page, setPage] = useState(1)
     const [pageSize] = useState(10)
     const [totalPages, setTotalPages] = useState(1)
     const [totalJobs, setTotalJobs] = useState(0)
-    const [jobStats, setJobStats] = useState<MyJobStats>({
-        total: 0, draft: 0, pending: 0, active: 0, rejected: 0, expired: 0, closed: 0,
-    })
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingJob, setEditingJob] = useState<RecruiterJobItem | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [submitError, setSubmitError] = useState<string | null>(null)
 
     // Confirm close modal
     const [confirmCloseId, setConfirmCloseId] = useState<number | null>(null)
@@ -65,14 +80,10 @@ export function RecruiterJobsPage() {
         setIsLoading(true)
         setErrorMsg(null)
         try {
-            const [res, stats] = await Promise.all([
-                getMyJobs({ page, size: pageSize, status: statusFilter }),
-                getMyJobStats(),
-            ])
+            const res = await getMyJobs({ page, size: pageSize, status: statusFilter })
             setJobs(res.content || [])
             setTotalPages(res.totalPages || 1)
             setTotalJobs(res.totalElements || 0)
-            setJobStats(stats)
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Không thể tải danh sách tin tuyển dụng.'
             setErrorMsg(msg)
@@ -96,11 +107,10 @@ export function RecruiterJobsPage() {
         )
     })
 
-    const publishedCount = jobStats.active
-    const closedCount = jobStats.closed + jobStats.expired
-
     async function handleFormSubmit(payload: CreateJobPayload) {
         setIsSubmitting(true)
+        setSubmitError(null)
+        setErrorMsg(null)
         try {
             if (editingJob) {
                 await updateJob(editingJob.id, payload)
@@ -115,7 +125,7 @@ export function RecruiterJobsPage() {
             setTimeout(() => setSuccessMsg(null), 4000)
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Thao tác không thành công.'
-            setErrorMsg(msg)
+            setSubmitError(msg)
         } finally {
             setIsSubmitting(false)
         }
@@ -135,35 +145,43 @@ export function RecruiterJobsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header Title & CTA */}
+        <div className="space-y-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <div className="flex items-center gap-2">
-                        <span className="bento-badge border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px]">
-                            JOB_MANAGEMENT
-                        </span>
-                        <span className="text-xs font-semibold text-slate-500">• My Jobs Dashboard</span>
-                    </div>
-                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
-                        Quản lý tin tuyển dụng
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#1D4ED8]">
+                        Không gian nhà tuyển dụng
+                    </p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#172033] sm:text-[28px]">
+                        Tin tuyển dụng của doanh nghiệp
                     </h1>
-                    <p className="mt-1 text-xs text-slate-500">
-                        Đăng tuyển, theo dõi trạng thái và quản trị các cơ hội việc làm của doanh nghiệp
+                    <p className="mt-1 text-sm text-slate-600">
+                        Tập trung vào chất lượng thông tin và trạng thái nhận hồ sơ.
                     </p>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => {
-                        setEditingJob(null)
-                        setIsModalOpen(true)
-                    }}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition"
-                >
-                    <Plus size={16} />
-                    <span>Đăng tin tuyển dụng mới</span>
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                    <button
+                        aria-expanded={isSearchOpen}
+                        aria-label={isSearchOpen ? 'Đóng tìm kiếm tin tuyển dụng' : 'Tìm tin tuyển dụng'}
+                        className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]"
+                        onClick={() => setIsSearchOpen((open) => !open)}
+                        type="button"
+                    >
+                        <Search aria-hidden="true" size={17} />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setEditingJob(null)
+                            setSubmitError(null)
+                            setIsModalOpen(true)
+                        }}
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                    >
+                        <Plus aria-hidden="true" size={16} />
+                        <span>Tạo tin tuyển dụng</span>
+                    </button>
+                </div>
             </div>
 
             {/* Notifications */}
@@ -181,95 +199,53 @@ export function RecruiterJobsPage() {
                 </div>
             )}
 
-            {/* Top Stat Cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="bento-card p-5">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Tổng tin tuyển dụng
-                        </span>
-                        <div className="grid size-8 place-items-center rounded-xl bg-slate-100 text-slate-700">
-                            <Briefcase size={16} />
-                        </div>
-                    </div>
-                    <p className="mt-2 text-2xl font-black text-slate-900">{jobStats.total}</p>
-                    <span className="text-[11px] text-slate-500">Tất cả bài đăng của công ty</span>
+            <div className="border-b border-slate-200 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <nav aria-label="Lọc tin theo trạng thái" className="flex min-w-0 flex-wrap gap-1.5">
+                        {JOB_STATUS_TABS.map(({ label, value }) => (
+                            <button
+                                aria-pressed={statusFilter === value}
+                                className={`min-h-9 rounded-lg px-3 text-xs font-semibold transition-colors ${statusFilter === value ? 'bg-[#EFF4FF] text-[#1D4ED8]' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                                key={label}
+                                onClick={() => {
+                                    setStatusFilter(value)
+                                    setPage(1)
+                                }}
+                                type="button"
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </nav>
+                    <p className="text-xs text-slate-500" aria-live="polite">
+                        {isLoading ? 'Đang tải tin tuyển dụng…' : `${totalJobs} tin tuyển dụng`}
+                    </p>
                 </div>
-
-                <div className="bento-card p-5">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
-                            Đang tuyển dụng
-                        </span>
-                        <div className="grid size-8 place-items-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                            <Clock size={16} />
-                        </div>
-                    </div>
-                    <p className="mt-2 text-2xl font-black text-emerald-700">{publishedCount}</p>
-                    <span className="text-[11px] text-emerald-600">Đang hiển thị công khai</span>
-                </div>
-
-                <div className="bento-card p-5">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Đã đóng / Hết hạn
-                        </span>
-                        <div className="grid size-8 place-items-center rounded-xl bg-slate-100 text-slate-500 border border-slate-200">
-                            <Archive size={16} />
-                        </div>
-                    </div>
-                    <p className="mt-2 text-2xl font-black text-slate-600">{closedCount}</p>
-                    <span className="text-[11px] text-slate-500">Ngừng tiếp nhận hồ sơ</span>
-                </div>
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div className="bento-card p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    {/* Status Tabs */}
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                        Trạng thái
-                        <select
-                            value={statusFilter}
-                            onChange={(event) => {
-                                setStatusFilter(event.target.value as JobStatus | '')
-                                setPage(1)
-                            }}
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs"
-                        >
-                            <option value="">Tất cả ({jobStats.total})</option>
-                            <option value="DRAFT">Bản nháp ({jobStats.draft})</option>
-                            <option value="PENDING">Chờ duyệt ({jobStats.pending})</option>
-                            <option value="ACTIVE">Đang tuyển ({jobStats.active})</option>
-                            <option value="REJECTED">Bị từ chối ({jobStats.rejected})</option>
-                            <option value="EXPIRED">Hết hạn ({jobStats.expired})</option>
-                            <option value="CLOSED">Đã đóng ({jobStats.closed})</option>
-                        </select>
-                    </label>
-
-                    {/* Search Input */}
-                    <div className="relative w-full sm:w-72">
-                        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                {isSearchOpen && (
+                    <label className="relative mt-3 block w-full sm:max-w-sm">
+                        <span className="sr-only">Tìm theo tiêu đề, địa điểm hoặc kỹ năng</span>
+                        <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
                         <input
-                            type="text"
+                            autoFocus
+                            className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1D4ED8] focus:ring-2 focus:ring-blue-100"
+                            onChange={(event) => setSearchTerm(event.target.value)}
+                            placeholder="Tìm theo tiêu đề, địa điểm, kỹ năng"
+                            type="search"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Tìm theo tiêu đề, kỹ năng..."
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                         />
-                    </div>
-                </div>
+                    </label>
+                )}
             </div>
 
             {/* Job List Table / Cards */}
             {isLoading ? (
                 <div className="bento-card p-12 text-center">
-                    <div className="inline-block size-8 animate-spin rounded-full border-3 border-indigo-600 border-t-transparent" />
+                    <div className="inline-block size-8 animate-spin rounded-full border-3 border-blue-700 border-t-transparent" />
                     <p className="mt-3 text-xs font-semibold text-slate-500">Đang tải danh sách tin tuyển dụng...</p>
                 </div>
             ) : filteredJobs.length === 0 ? (
                 <div className="bento-card p-12 text-center">
-                    <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100">
                         <Briefcase size={24} />
                     </div>
                     <h3 className="mt-4 text-base font-bold text-slate-900">Chưa có tin tuyển dụng nào</h3>
@@ -280,9 +256,10 @@ export function RecruiterJobsPage() {
                         type="button"
                         onClick={() => {
                             setEditingJob(null)
+                            setSubmitError(null)
                             setIsModalOpen(true)
                         }}
-                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-sm"
+                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white hover:bg-blue-800 transition shadow-sm"
                     >
                         <Plus size={14} />
                         <span>Đăng tin tuyển dụng ngay</span>
@@ -291,132 +268,71 @@ export function RecruiterJobsPage() {
             ) : (
                 <div className="space-y-3">
                     {filteredJobs.map((job) => {
-                        const statusLabels: Record<JobStatus, string> = {
-                            DRAFT: 'BẢN NHÁP', PENDING: 'CHỜ KIỂM DUYỆT', ACTIVE: 'ĐANG TUYỂN DỤNG',
-                            EXPIRED: 'ĐÃ HẾT HẠN', CLOSED: 'ĐÃ ĐÓNG', REJECTED: 'BỊ TỪ CHỐI',
-                        }
                         const isPublished = job.status === 'ACTIVE'
 
                         return (
                             <div
                                 key={job.id}
-                                className="bento-card p-5 transition hover:border-indigo-200 hover:shadow-md"
+                                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 sm:p-5"
                             >
-                                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                                    {/* Left Info */}
-                                    <div className="space-y-2">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span
-                                                className={`bento-badge text-[10px] ${
-                                                    isPublished
-                                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                        : 'border-slate-200 bg-slate-100 text-slate-600'
-                                                }`}
-                                            >
-                                                {statusLabels[job.status] || job.status}
-                                            </span>
-                                            <span className="text-xs font-bold text-indigo-600">
-                                                {JOB_TYPE_LABELS[job.jobType] || job.jobType}
-                                            </span>
-                                            <span className="text-slate-300">•</span>
-                                            <span className="text-xs text-slate-600 font-medium">
-                                                {EXPERIENCE_LABELS[job.experienceLevel] || job.experienceLevel}
-                                            </span>
-                                        </div>
-
-                                        <h3 className="text-base font-bold text-slate-900 hover:text-indigo-600 transition">
-                                            <Link to={`/jobs/${job.id}`} target="_blank">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                        <h2 className="truncate text-base font-bold text-[#172033] sm:text-lg">
+                                            <Link className="transition-colors hover:text-[#1D4ED8]" to={`/jobs/${job.id}`}>
                                                 {job.title}
                                             </Link>
-                                        </h3>
-
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
-                                            <span className="flex items-center gap-1">
-                                                <MapPin size={13} className="text-slate-400" />
-                                                {job.city} {job.location ? `(${job.location})` : ''}
-                                            </span>
-                                            <span className="flex items-center gap-1 font-semibold text-emerald-700">
-                                                <DollarSign size={13} />
-                                                {formatJobSalary(job.minSalary, job.maxSalary, job.isNegotiable)}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Calendar size={13} className="text-slate-400" />
-                                                Hạn nộp:{' '}
-                                                {job.deadline
-                                                    ? new Date(job.deadline).toLocaleDateString('vi-VN')
-                                                    : 'Chưa đặt'}
-                                            </span>
-                                        </div>
-
-                                        {/* Skills Tag */}
-                                        {job.skills && job.skills.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5 pt-1">
-                                                {job.skills.map((skill) => (
-                                                    <span
-                                                        key={skill}
-                                                        className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
-                                                    >
-                                                        {skill}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                        </h2>
+                                        <p className="mt-1 text-sm text-slate-600">
+                                            {formatJobSalary(job.minSalary, job.maxSalary, job.isNegotiable)}
+                                            <span aria-hidden="true" className="px-2 text-slate-300">·</span>
+                                            Hạn {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'chưa đặt'}
+                                        </p>
+                                        <span className={`mt-2 inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${JOB_STATUS_STYLES[job.status]}`}>
+                                            {JOB_STATUS_LABELS[job.status]}
+                                        </span>
                                     </div>
 
-                                    {/* Right Actions */}
-                                    <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:shrink-0 lg:border-t-0 lg:pt-0">
-                                        <Link
-                                            to={`/recruiter/jobs/${job.id}/applicants`}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-600 bg-indigo-600 px-3.5 py-2 text-xs font-bold !text-white hover:bg-indigo-700 hover:!text-white shadow-sm transition"
-                                            title="Xem và sàng lọc hồ sơ ứng viên"
-                                        >
-                                            <Users size={13} className="!text-white shrink-0" />
-                                            <span className="!text-white font-bold">Xem ứng viên</span>
-                                        </Link>
-
-                                        <Link
-                                            to={`/recruiter/statistics?jobId=${job.id}`}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-100 transition"
-                                            title="Xem chất lượng tin và phân bố pipeline"
-                                        >
-                                            <BarChart3 size={13} />
-                                            <span>Thống kê</span>
-                                        </Link>
-
-                                        <Link
-                                            to={`/jobs/${job.id}`}
-                                            target="_blank"
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                                            title="Xem trang công khai"
-                                        >
-                                            <ExternalLink size={13} />
-                                            <span>Xem trang</span>
-                                        </Link>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setEditingJob(job)
-                                                setIsModalOpen(true)
-                                            }}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition"
-                                            title="Chỉnh sửa tin"
-                                        >
-                                            <Edit3 size={13} />
-                                            <span>Chỉnh sửa</span>
-                                        </button>
-
-                                        {isPublished && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmCloseId(job.id)}
-                                                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
-                                                title="Đóng tin tuyển dụng"
+                                    <div className="flex shrink-0 items-center gap-2 border-t border-slate-100 pt-3 sm:border-0 sm:pt-0">
+                                        {isPublished ? (
+                                            <Link
+                                                className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1D4ED8] px-4 text-xs font-semibold text-white transition hover:bg-blue-800"
+                                                to={`/recruiter/jobs/${job.id}/applicants`}
                                             >
-                                                <Archive size={13} />
-                                                <span>Đóng tin</span>
+                                                Xem ứng viên
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-800 transition hover:bg-slate-50"
+                                                onClick={() => {
+                                                    setEditingJob(job)
+                                                    setIsModalOpen(true)
+                                                }}
+                                                type="button"
+                                            >
+                                                Chỉnh sửa tin
                                             </button>
                                         )}
+                                        <details className="group relative">
+                                            <summary aria-label={`Thao tác khác cho ${job.title}`} className="grid size-9 cursor-pointer list-none place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8] [&::-webkit-details-marker]:hidden">
+                                                <MoreHorizontal aria-hidden="true" size={18} />
+                                            </summary>
+                                            <div className="absolute right-0 top-10 z-20 grid min-w-44 gap-1 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg">
+                                                <Link className="flex items-center gap-2 rounded-md px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50" to={`/jobs/${job.id}`} target="_blank">
+                                                    <ExternalLink aria-hidden="true" size={14} /> Xem trang công khai
+                                                </Link>
+                                                <Link className="flex items-center gap-2 rounded-md px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50" to={`/recruiter/statistics?jobId=${job.id}`}>
+                                                    <BarChart3 aria-hidden="true" size={14} /> Thống kê tin
+                                                </Link>
+                                                <button className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50" onClick={() => { setEditingJob(job); setIsModalOpen(true) }} type="button">
+                                                    <Edit3 aria-hidden="true" size={14} /> Chỉnh sửa tin
+                                                </button>
+                                                {isPublished && (
+                                                    <button className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-rose-700 hover:bg-rose-50" onClick={() => setConfirmCloseId(job.id)} type="button">
+                                                        <Archive aria-hidden="true" size={14} /> Đóng tin tuyển dụng
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </details>
                                     </div>
                                 </div>
                             </div>
@@ -458,10 +374,13 @@ export function RecruiterJobsPage() {
                 onClose={() => {
                     setIsModalOpen(false)
                     setEditingJob(null)
+                    setSubmitError(null)
                 }}
                 onSubmit={handleFormSubmit}
                 initialData={editingJob}
                 isSubmitting={isSubmitting}
+                submitError={submitError}
+                onClearSubmitError={() => setSubmitError(null)}
             />
 
             {/* Confirm Close Dialog */}

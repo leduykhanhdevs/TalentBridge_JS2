@@ -34,18 +34,21 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthRateLimitFilter authRateLimitFilter;
     private final Environment environment;
 
-    @Value("${talentbridge.cors.allowed-origins:http://localhost:5173}")
+    @Value("${talentbridge.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}")
     private String allowedOriginsConfig;
 
     private static final String[] PUBLIC_URLS = {
             "/api/v1/auth/register",
             "/api/v1/auth/login",
             "/api/v1/auth/refresh-token",
+            "/api/v1/auth/logout",
             "/api/v1/auth/forgot-password",
+            "/api/v1/auth/verify-reset-otp",
             "/api/v1/auth/reset-password",
             "/api/v1/skills",
             "/api/v1/candidates/resumes/templates",
@@ -81,12 +84,14 @@ public class SecurityConfig {
                 })
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(PUBLIC_URLS).permitAll();
+                    auth.requestMatchers("/api/v1/mcp", "/api/v1/mcp/**").hasRole("RECRUITER");
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/jobs", "/api/v1/jobs/{id:[0-9]+}").permitAll();
                     if (isLocal) {
                         auth.requestMatchers("/h2-console/**").permitAll();

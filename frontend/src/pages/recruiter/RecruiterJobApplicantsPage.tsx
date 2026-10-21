@@ -285,7 +285,7 @@ export function RecruiterJobApplicantsPage() {
             <div>
                 <Link
                     to="/recruiter/jobs"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition mb-3"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 transition mb-3"
                 >
                     <ArrowLeft size={14} />
                     <span>Quay lại Quản lý tin đăng</span>
@@ -297,7 +297,7 @@ export function RecruiterJobApplicantsPage() {
                             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                                 Sàng lọc ứng viên
                             </h1>
-                            <span className="bento-badge border-indigo-200 bg-indigo-50 text-indigo-700 text-xs">
+                            <span className="bento-badge border-blue-200 bg-blue-50 text-blue-800 text-xs">
                                 {applicants.length} ỨNG VIÊN
                             </span>
                         </div>
@@ -353,7 +353,7 @@ export function RecruiterJobApplicantsPage() {
             )}
 
             {/* Quick Stage Tabs / Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div aria-label="Lọc theo vòng tuyển dụng" className="flex flex-wrap items-center gap-2" role="group">
                 <button
                     type="button"
                     onClick={() => setStageFilter('')}
@@ -375,14 +375,14 @@ export function RecruiterJobApplicantsPage() {
                             onClick={() => setStageFilter(key)}
                             className={`rounded-xl px-3 py-1.5 text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
                                 isActive
-                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                    ? 'bg-blue-700 text-white shadow-xs'
                                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                             }`}
                         >
                             <span>{config.label}</span>
                             <span
                                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                                    isActive ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-700'
+                                    isActive ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-700'
                                 }`}
                             >
                                 {count}
@@ -414,7 +414,7 @@ export function RecruiterJobApplicantsPage() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Họ tên, email, số điện thoại..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                             />
                         </div>
                     </div>
@@ -428,7 +428,7 @@ export function RecruiterJobApplicantsPage() {
                             id={stageSelectId}
                             value={stageFilter}
                             onChange={(e) => setStageFilter(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                         >
                             <option value="">Tất cả các vòng</option>
                             {Object.entries(APPLICANT_STAGE_CONFIG).map(([val, conf]) => (
@@ -450,7 +450,7 @@ export function RecruiterJobApplicantsPage() {
                             onChange={(e) =>
                                 setMinExpFilter(e.target.value === '' ? '' : Number(e.target.value))
                             }
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                         >
                             <option value="">Tất cả kinh nghiệm</option>
                             <option value="1">1+ năm</option>
@@ -471,7 +471,7 @@ export function RecruiterJobApplicantsPage() {
                                 id={sortSelectId}
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
                             >
                                 <option value="appliedDate">Ngày nộp</option>
                                 <option value="score">Điểm AI Match</option>
@@ -496,13 +496,13 @@ export function RecruiterJobApplicantsPage() {
             {/* Applicant List View */}
             {isLoading ? (
                 <div className="bento-card flex flex-col items-center justify-center p-12 text-center">
-                    <RefreshCw size={28} className="animate-spin text-indigo-600 mb-3" />
+                    <RefreshCw size={28} className="animate-spin text-blue-700 mb-3" />
                     <p className="text-sm font-bold text-slate-800">Đang tải danh sách hồ sơ ứng viên...</p>
                     <p className="text-xs text-slate-500 mt-1">Hệ thống đang đồng bộ dữ liệu và tính toán điểm phù hợp</p>
                 </div>
             ) : applicants.length === 0 ? (
                 <div className="bento-card flex flex-col items-center justify-center p-12 text-center">
-                    <div className="grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600 mb-3">
+                    <div className="grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-700 mb-3">
                         <UserCheck size={24} />
                     </div>
                     <h3 className="text-base font-bold text-slate-900">Không tìm thấy ứng viên nào</h3>
@@ -540,13 +540,13 @@ export function RecruiterJobApplicantsPage() {
                         return (
                             <div
                                 key={app.id}
-                                className="bento-card p-5 transition hover:border-indigo-200 hover:shadow-md"
+                                className="bento-card p-5 transition hover:border-blue-200 hover:shadow-md"
                             >
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,0.9fr)_minmax(0,2.1fr)] lg:items-start">
                                     {/* Left: Candidate Info */}
-                                    <div className="flex items-start gap-4">
+                                    <div className="flex min-w-0 items-start gap-4">
                                         {/* Avatar */}
-                                        <div className="size-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-indigo-700 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                                        <div className="size-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-800 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                                             {app.candidateFullName
                                                 .trim()
                                                 .split(/\s+/)
@@ -556,7 +556,7 @@ export function RecruiterJobApplicantsPage() {
                                                 .toUpperCase() || 'CV'}
                                         </div>
 
-                                        <div className="space-y-1.5">
+                                        <div className="min-w-0 space-y-1.5">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <h3 className="text-base font-bold text-slate-900">
                                                     {app.candidateFullName}
@@ -576,7 +576,7 @@ export function RecruiterJobApplicantsPage() {
 
                                             {/* Candidate Title & Exp */}
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 font-medium">
-                                                <span className="text-indigo-600 font-bold">
+                                                <span className="text-blue-700 font-bold">
                                                     {app.candidateTitle || 'Chưa cập nhật chức danh'}
                                                 </span>
                                                 <span className="text-slate-300">•</span>
@@ -647,7 +647,7 @@ export function RecruiterJobApplicantsPage() {
                                                                 content: app.coverLetter || '',
                                                             })
                                                         }
-                                                        className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
+                                                        className="text-xs text-blue-700 hover:text-blue-900 underline font-medium"
                                                     >
                                                         Xem thư giới thiệu
                                                     </button>
@@ -657,12 +657,12 @@ export function RecruiterJobApplicantsPage() {
                                     </div>
 
                                     {/* Right: Actions */}
-                                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0 shrink-0">
+                                    <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 lg:justify-end lg:border-t-0 lg:pt-0">
                                         <button
                                             type="button"
                                             disabled={isAiMatching}
                                             onClick={() => void handleAiMatch(app)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-100 disabled:cursor-wait disabled:opacity-60 transition shadow-2xs"
+                                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60 transition shadow-2xs"
                                             title="Phân tích mức độ phù hợp giữa hồ sơ ứng viên và yêu cầu công việc"
                                         >
                                             <Sparkles size={13} />
@@ -702,7 +702,7 @@ export function RecruiterJobApplicantsPage() {
                                         {app.status !== 'WITHDRAWN' && !['HIRED', 'REJECTED', 'OFFERED'].includes(app.currentStage) && <button
                                             type="button"
                                             onClick={() => setInterviewModalApplicant(app)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-bold text-purple-700 hover:bg-purple-100 transition shadow-2xs"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 transition shadow-2xs"
                                             title="Lên lịch phỏng vấn và đồng bộ Google Calendar"
                                         >
                                             <CalendarCheck2 size={13} />
@@ -717,7 +717,7 @@ export function RecruiterJobApplicantsPage() {
                                                 setTargetStage(getNextStage(app.currentStage))
                                                 setStageNote('')
                                             }}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 transition shadow-2xs"
                                             title="Chuyển vòng tuyển dụng"
                                         >
                                             <RefreshCw size={13} />
@@ -734,7 +734,7 @@ export function RecruiterJobApplicantsPage() {
                                             <MessageSquare size={13} />
                                             <span>Đánh giá</span>
                                             {app.notesCount > 0 && (
-                                                <span className="ml-0.5 rounded-full bg-indigo-100 px-1.5 py-0.2 text-[10px] font-bold text-indigo-700">
+                                                <span className="ml-0.5 rounded-full bg-blue-100 px-1.5 py-0.2 text-[10px] font-bold text-blue-800">
                                                     {app.notesCount}
                                                 </span>
                                             )}
@@ -786,7 +786,7 @@ export function RecruiterJobApplicantsPage() {
                                                 onClick={() => setTargetStage(key)}
                                                 className={`text-left p-2.5 rounded-xl border transition ${
                                                     isSelected
-                                                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20'
+                                                        ? 'border-blue-700 bg-blue-50/70 ring-2 ring-blue-600/20'
                                                         : 'border-slate-200 bg-white hover:bg-slate-50'
                                                 }`}
                                             >
@@ -811,7 +811,7 @@ export function RecruiterJobApplicantsPage() {
                                     value={stageNote}
                                     onChange={(e) => setStageNote(e.target.value)}
                                     placeholder="Ví dụ: Đạt yêu cầu CV kỹ thuật, mời phỏng vấn vòng 1 ngày 05/10..."
-                                    className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                                    className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                                 />
                             </div>
 
@@ -856,7 +856,7 @@ export function RecruiterJobApplicantsPage() {
                         </label>
                         <div className="flex justify-end gap-2">
                             <button type="button" disabled={isReopening} onClick={() => setReopenApplicant(null)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold">Hủy</button>
-                            <button type="submit" disabled={isReopening || !reopenReason.trim()} className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{isReopening ? 'Đang mở lại…' : 'Xác nhận mở lại'}</button>
+                            <button type="submit" disabled={isReopening || !reopenReason.trim()} className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{isReopening ? 'Đang mở lại…' : 'Xác nhận mở lại'}</button>
                         </div>
                     </form>
                 </div>
@@ -892,7 +892,7 @@ export function RecruiterJobApplicantsPage() {
                                 onClick={() => setActiveTab('notes')}
                                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                                     activeTab === 'notes'
-                                        ? 'bg-indigo-600 text-white shadow-xs'
+                                        ? 'bg-blue-700 text-white shadow-xs'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
@@ -904,7 +904,7 @@ export function RecruiterJobApplicantsPage() {
                                 onClick={() => setActiveTab('history')}
                                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                                     activeTab === 'history'
-                                        ? 'bg-indigo-600 text-white shadow-xs'
+                                        ? 'bg-blue-700 text-white shadow-xs'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
@@ -927,9 +927,9 @@ export function RecruiterJobApplicantsPage() {
                                     {/* Add Note Form */}
                                     <form
                                         onSubmit={handleAddNoteSubmit}
-                                        className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3"
+                                        className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 space-y-3"
                                     >
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
                                             <Star size={13} className="text-amber-500 fill-amber-500" />
                                             <span>Thêm đánh giá & Ghi chú mới</span>
                                         </h4>
@@ -972,7 +972,7 @@ export function RecruiterJobApplicantsPage() {
                                                     onChange={(e) => setNewTag(e.target.value)}
                                                     placeholder="Nhãn tag (ví dụ: Senior, Tiềm năng)"
                                                     maxLength={50}
-                                                    className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                                                    className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                                                 />
                                             </div>
                                         </div>
@@ -984,7 +984,7 @@ export function RecruiterJobApplicantsPage() {
                                                 value={newComment}
                                                 onChange={(e) => setNewComment(e.target.value)}
                                                 placeholder="Ghi nhận xét buổi phỏng vấn, điểm mạnh, điểm yếu, deal lương... *"
-                                                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                                                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
                                                 required
                                             />
                                         </div>
@@ -1023,7 +1023,7 @@ export function RecruiterJobApplicantsPage() {
                                                                 {note.recruiterName || 'HR Nhà tuyển dụng'}
                                                             </strong>
                                                             {note.tag && (
-                                                                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-100">
+                                                                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 border border-blue-100">
                                                                     #{note.tag}
                                                                 </span>
                                                             )}
@@ -1070,7 +1070,7 @@ export function RecruiterJobApplicantsPage() {
                                                     }
                                                 return (
                                                     <div key={stg.id} className="relative pl-6">
-                                                        <div className="absolute -left-2 top-0.5 size-3.5 rounded-full border-2 border-white bg-indigo-600 shadow-xs" />
+                                                        <div className="absolute -left-2 top-0.5 size-3.5 rounded-full border-2 border-white bg-blue-700 shadow-xs" />
                                                         <div className="space-y-1">
                                                             <div className="flex items-center gap-2">
                                                                 <span
@@ -1165,35 +1165,55 @@ export function RecruiterJobApplicantsPage() {
 
                         {isAiMatching && (
                             <div className="grid min-h-48 place-items-center text-sm font-medium text-slate-600" role="status">
-                                <span className="inline-flex items-center gap-2"><Sparkles className="animate-pulse text-violet-600" size={18} /> Đang phân tích hồ sơ và yêu cầu công việc...</span>
+                                <span className="inline-flex items-center gap-2"><Sparkles className="animate-pulse text-blue-700" size={18} /> Đang phân tích hồ sơ và yêu cầu công việc...</span>
                             </div>
                         )}
                         {aiMatchError && <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">{aiMatchError}</p>}
                         {aiMatchResult && (
                             <div className="mt-5 space-y-5">
-                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-violet-50 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-blue-50 p-4">
                                     <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Điểm phù hợp</p>
-                                        <p className="mt-1 text-3xl font-bold text-violet-950">{aiMatchResult.matchPercentage.toFixed(1)}%</p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Điểm tương đồng tham khảo</p>
+                                        <p className="mt-1 text-3xl font-bold text-blue-950">{aiMatchResult.matchPercentage.toFixed(1)}%</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-bold text-slate-900">{aiMatchResult.recommendation}</p>
                                         <p className="mt-1 text-xs text-slate-600">
-                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini AI' : 'Đối sánh cục bộ'}
+                                            {aiMatchResult.matchingSource === 'GEMINI' ? 'Gemini' : 'Tri-Vector nội bộ'}
                                         </p>
                                     </div>
                                 </div>
                                 <p className="text-sm leading-6 text-slate-700">{aiMatchResult.analysisSummary}</p>
+                                <div className="grid gap-3 sm:grid-cols-3" aria-label="Ba thành phần điểm tương đồng">
+                                    {[
+                                        { label: 'Yêu cầu ↔ bằng chứng trực tiếp', score: aiMatchResult.directKeywordScore },
+                                        { label: 'Ngữ cảnh công việc ↔ hồ sơ', score: aiMatchResult.contextualSimilarityScore },
+                                        { label: 'Yêu cầu ↔ năng lực liên quan', score: aiMatchResult.inferredCapabilityScore },
+                                    ].map((item) => {
+                                        const percentage = Math.round(Math.max(0, Math.min(1, item.score)) * 100)
+                                        return (
+                                            <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-3">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <span className="text-xs font-semibold leading-5 text-slate-700">{item.label}</span>
+                                                    <span className="text-xs font-bold text-slate-900">{percentage}%</span>
+                                                </div>
+                                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                                                    <div className="h-full rounded-full bg-blue-600" style={{ width: percentage + '%' }} />
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">Điểm phù hợp</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">Bằng chứng khớp trực tiếp</h4>
                                         <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
                                             {aiMatchResult.matchingStrengths.map((item) => <li key={item}>{item}</li>)}
                                             {aiMatchResult.matchingStrengths.length === 0 && <li>Chưa có điểm nổi bật được xác định.</li>}
                                         </ul>
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">Kỹ năng còn thiếu</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">Chưa thấy bằng chứng trực tiếp</h4>
                                         <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
                                             {aiMatchResult.missingCriticalSkills.map((item) => <li key={item}>{item}</li>)}
                                             {aiMatchResult.missingCriticalSkills.length === 0 && <li>Không phát hiện kỹ năng thiếu rõ ràng.</li>}
@@ -1202,27 +1222,36 @@ export function RecruiterJobApplicantsPage() {
                                 </div>
                                 {aiMatchResult.inferredCapabilities.length > 0 && (
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">Năng lực suy luận</h4>
+                                        <h4 className="text-sm font-bold text-slate-900">Năng lực liên quan suy luận · cần xác minh</h4>
                                         <p className="mt-2 text-sm text-slate-600">{aiMatchResult.inferredCapabilities.join(' · ')}</p>
                                     </div>
                                 )}
+                                {aiMatchResult.verificationQuestions.length > 0 && (
+                                    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                                        <h4 className="text-sm font-bold text-slate-900">Câu hỏi gợi ý để xác minh</h4>
+                                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-700">
+                                            {aiMatchResult.verificationQuestions.map((question) => <li key={question}>{question}</li>)}
+                                        </ul>
+                                        <p className="mt-2 text-xs text-slate-600">Câu hỏi được tạo từ kỹ năng liên quan và bằng chứng còn thiếu trong tin; Recruiter cần xem xét và tự quyết định sử dụng.</p>
+                                    </div>
+                                )}
                                 {candidateAssessment && (
-                                    <section className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4" aria-label="Đánh giá tổng quan ứng viên">
+                                    <section className="rounded-xl border border-blue-100 bg-blue-50/70 p-4" aria-label="Đánh giá tổng quan ứng viên">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
-                                            <h4 className="text-sm font-bold text-indigo-950">Đánh giá tổng quan hồ sơ</h4>
-                                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-indigo-800">Độ hoàn thiện {candidateAssessment.profileCompletenessPercentage}%</span>
+                                            <h4 className="text-sm font-bold text-blue-950">Đánh giá tổng quan hồ sơ</h4>
+                                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-blue-800">Độ hoàn thiện {candidateAssessment.profileCompletenessPercentage}%</span>
                                         </div>
                                         <p className="mt-2 text-sm leading-6 text-slate-700">{candidateAssessment.candidateOverallAssessment}</p>
-                                        <p className="mt-2 text-xs leading-5 text-indigo-800">{getResumeAssessmentMessage(candidateAssessment.resumeAssessmentStatus)}</p>
+                                        <p className="mt-2 text-xs leading-5 text-blue-800">{getResumeAssessmentMessage(candidateAssessment.resumeAssessmentStatus)}</p>
                                         {candidateAssessment.missingProfileSections.length > 0 && (
                                             <p className="mt-2 text-xs leading-5 text-slate-600">Hồ sơ còn thiếu: {candidateAssessment.missingProfileSections.join(' · ')}</p>
                                         )}
-                                        <p className="mt-3 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-600">{candidateAssessment.advisoryNotice}</p>
+                                        <p className="mt-3 border-t border-blue-100 pt-3 text-[11px] leading-5 text-slate-600">{candidateAssessment.advisoryNotice}</p>
                                     </section>
                                 )}
                                 {aiMatchResult.matchingSource === 'DETERMINISTIC' && (
                                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                                        Điểm số được tạo bằng độ phủ từ khóa và quy tắc năng lực cục bộ, không dùng embedding hay cơ sở dữ liệu vector. Hãy HR kiểm tra hồ sơ gốc trước khi ra quyết định.
+                                        Đây là đối sánh từ khóa cục bộ theo ba thành phần có trọng số 60% / 25% / 15%, chưa được hiệu chuẩn bằng dữ liệu tuyển dụng có nhãn. Gợi ý suy luận cần HR xác minh; điểm không phải xác suất tuyển dụng hoặc quyết định tuyển chọn.
                                     </p>
                                 )}
                             </div>

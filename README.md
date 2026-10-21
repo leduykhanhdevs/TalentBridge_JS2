@@ -127,6 +127,8 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 - `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS pipeline.
 - `interviews`, `notifications`: Lịch phỏng vấn và thông báo hệ thống.
 
+Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua email, xác minh OTP, rồi dùng mã đặt lại một lần có hiệu lực 5 phút để lưu mật khẩu mới. OTP có hạn 15 phút, được HMAC-SHA-256 bằng khóa máy chủ trước khi lưu DB và bị khóa sau 5 lần nhập sai; việc gửi thư cần cấu hình SMTP và `PASSWORD_RESET_MAIL_ENABLED=true`.
+
 > 📖 **Xem chi tiết tài liệu CSDL**: [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)  
 > 💾 **File script DDL MySQL**: [database/schema.sql](database/schema.sql)
 
@@ -151,19 +153,20 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 | `SPRING_DATASOURCE_URL` | Khi `mysql` | `jdbc:mysql://localhost:3306/talentbridge_db` | URL kết nối MySQL khi chạy profile `mysql`. |
 | `SPRING_DATASOURCE_USERNAME`| Khi `mysql` | `root` | Tài khoản kết nối MySQL. |
 | `SPRING_DATASOURCE_PASSWORD`| Khi `mysql` | `password` | Mật khẩu tài khoản kết nối MySQL. |
-| `GEMINI_API_KEY` | Không | *(để trống)* | API key Gemini. Nếu chưa cấu hình hoặc nhà cung cấp lỗi, CV parser và matching dùng phương án dự phòng; key được gửi qua header HTTP. |
-| `GEMINI_MODEL` | Không | `gemini-3.5-flash-lite` | Mô hình Gemini ổn định, độ trễ thấp dùng cho phân tích CV và matching. |
+| `GEMINI_API_KEY` | Không | *(để trống)* | API key Gemini dùng cho chatbot RAG và phân tích CV. Key được gửi qua header HTTP; không dùng để chấm điểm matching CV–job. |
+| `GEMINI_MODEL` | Không | `gemini-3.5-flash-lite` | Mô hình Gemini dùng để sinh câu trả lời chatbot từ hướng dẫn TalentBridge đã truy xuất. |
 | `GEMINI_API_BASE_URL` | Không | `https://generativelanguage.googleapis.com/v1beta` | Endpoint Gemini; chủ yếu dùng để cấu hình môi trường và kiểm thử. |
 | `GEMINI_CONNECT_TIMEOUT_MS` | Không | `5000` | Timeout kết nối tới Gemini. |
 | `GEMINI_READ_TIMEOUT_MS` | Không | `20000` | Timeout chờ phản hồi Gemini; không tự retry để tránh kéo dài request lỗi. |
 | `DB_POOL_MAX_SIZE` | Không | `5` | Số kết nối tối đa trong pool ở profile production. |
 | `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
+| `PASSWORD_RESET_MAIL_ENABLED` | Không | `false` | Bật gửi email khôi phục (`true`) sau khi cấu hình SMTP. Khi tắt, API trả HTTP 503 và không giả báo đã gửi. |
 | `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
 | `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
 | `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |
 
-API nhập CV trả `processingSource` là `GEMINI` hoặc `RULE_BASED`; API matching trả `matchingSource` là `GEMINI` hoặc `DETERMINISTIC`, để giao diện không nhận nhầm kết quả dự phòng thành kết quả AI. Matching yêu cầu vai trò recruiter, xác minh công ty sở hữu tin và ứng viên đã nộp đơn; request không nhận nội dung CV thô từ trình duyệt.
+API nhập CV trả `processingSource` là `GEMINI` hoặc `RULE_BASED`. API matching trả `matchingSource=DETERMINISTIC` và ba điểm tham khảo: bằng chứng trực tiếp (60%), ngữ cảnh hồ sơ/nghề nghiệp (25%), và năng lực liên quan suy luận thận trọng (15%). Các thành phần dùng độ phủ từ khóa và cosine similarity trên từ vựng đã chuẩn hóa; kèm câu hỏi phỏng vấn ngược được suy ra từ năng lực liên quan/kỹ năng chưa có bằng chứng để Recruiter xác minh. Không dùng embedding, không phải xác suất trúng tuyển và không gán cho bài AI-KM. Matching yêu cầu Recruiter, xác minh công ty sở hữu tin và quan hệ ứng tuyển; phần đánh giá CV tải nội dung trong backend sau khi kiểm tra quyền, không nhận CV thô từ trình duyệt hay gửi CV sang Gemini.
 
 ### 3. Khởi Chạy Backend (Spring Boot 3)
 
@@ -237,7 +240,7 @@ Nếu thành viên sử dụng AI (ChatGPT, Gemini, Claude, Cursor, Copilot...) 
 
 Tài liệu tham khảo là *Version 5.4.18 – AI–KM: Knowledge enhancement with RAG and workflow*, Wen et al., SoftwareX 31 (2025), 102349, [DOI](https://doi.org/10.1016/j.softx.2025.102349). Abstract nhà xuất bản mô tả RAG dựa trên Ollama, xử lý/vector hóa Markdown, hỏi đáp knowledge base và workflow. Không gán cho bài báo các công thức Tri-Vector, tích hợp MCP hay số liệu chất lượng nếu chưa xác minh được trong toàn văn.
 
-Trong source TalentBridge, chatbot dùng truy xuất hướng dẫn nội bộ theo từ khóa/synonym rồi tùy chọn Gemini; matching CV–tin dùng Gemini hoặc fallback heuristic trên token và quy tắc năng lực. Endpoint Recruiter JSON-RPC cung cấp một số công cụ ATS nhưng chưa được xác minh là triển khai MCP đầy đủ. Điểm matching và đánh giá tin là thông tin tham khảo, không phải xác suất trúng tuyển hay bằng chứng độc lập về độ uy tín doanh nghiệp.
+Trong source TalentBridge, chatbot truy xuất tối đa ba mục hướng dẫn nội bộ bằng lexical hybrid retrieval rồi có thể dùng Gemini để sinh câu trả lời có căn cứ; khi thiếu key/lỗi provider, FAQ cục bộ vẫn trả lời. Lịch sử hội thoại không được chuyển cho Gemini và nội dung chứa email, điện thoại, OTP hoặc khóa phổ biến bị chặn trước provider. MCP dùng MCP Java SDK/Streamable HTTP và chỉ mở tool ATS cho Recruiter đã xác thực; use case kiểm tra quyền sở hữu, còn tool ghi yêu cầu `confirm=true`. Matching CV–tin dùng ba điểm lexical tham khảo nêu trên, không phải embedding hay xác suất tuyển dụng. Bài AI-KM hỗ trợ bối cảnh RAG/knowledge-base workflow, không phải nguồn của công thức matching hoặc giao thức MCP.
 
 > 📑 Chi tiết và giới hạn nguồn: [AI-KM research note](docs/research/AI_KM_RAG_WORKFLOW_ANALYSIS.md) · [RAG/MCP and source audit](docs/research/AI_MCP_VS_RAG_COMPREHENSIVE_ANALYSIS.md)
 

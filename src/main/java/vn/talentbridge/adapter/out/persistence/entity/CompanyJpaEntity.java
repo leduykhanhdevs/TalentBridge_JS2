@@ -48,4 +48,8 @@ public class CompanyJpaEntity extends BaseJpaEntity {
 
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
+
+    @Column(name = "is_demo", nullable = false)
+    @Builder.Default
+    private Boolean isDemo = false;
 }

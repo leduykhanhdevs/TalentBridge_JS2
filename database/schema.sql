@@ -75,6 +75,8 @@ CREATE TABLE `password_reset_tokens` (
                                          `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
                                          `user_id` BIGINT NOT NULL,
                                          `token_hash` VARCHAR(64) NOT NULL,
+    `purpose` VARCHAR(24) NOT NULL DEFAULT 'LEGACY',
+    `failed_attempts` INT NOT NULL DEFAULT 0,
                                          `expires_at` DATETIME(6) NOT NULL,
                                          `used_at` DATETIME(6) NULL,
                                          `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -282,6 +284,7 @@ CREATE TABLE `companies` (
     `description` TEXT NULL,
     `status` VARCHAR(20) DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
     `created_by_user_id` BIGINT NULL,
+    `is_demo` BOOLEAN NOT NULL DEFAULT FALSE, -- TRUE nếu hồ sơ mô phỏng, không phải doanh nghiệp thật
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX `idx_companies_name` (`name`),
@@ -355,6 +358,7 @@ CREATE TABLE `jobs` (
     `is_negotiable` BOOLEAN DEFAULT FALSE,
     `status` VARCHAR(20) DEFAULT 'ACTIVE', -- DRAFT, PENDING, ACTIVE, EXPIRED, CLOSED
     `deadline` DATE NULL,
+    `is_demo` BOOLEAN NOT NULL DEFAULT FALSE, -- TRUE nếu tin chỉ dùng để trình diễn, không nhận hồ sơ
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_jobs_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,

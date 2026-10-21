@@ -10,13 +10,10 @@ import {
     Globe,
     Lock,
     Mail,
-    MapPin,
-    Phone,
     RefreshCw,
     Search,
     Share2,
     ShieldAlert,
-    Sparkles,
     Unlock,
     UserCheck,
     Users,
@@ -32,7 +29,6 @@ import type {
     UserStatus,
 } from '../../features/admin/adminTypes'
 import {
-    AdminControlCenterIllustration,
     EmptyStateIllustration,
     Soft3DActiveBadge,
     Soft3DShieldBadge,
@@ -158,52 +154,16 @@ export function AdminCandidatesPage() {
 
     return (
         <div className="space-y-6 sm:space-y-8 pb-12">
-            {/* 1. Bento Hero Command Banner */}
-            <div className="bento-card relative overflow-hidden border border-slate-200/90 bg-gradient-to-br from-white via-indigo-50/25 to-violet-50/35 p-6 sm:p-8 shadow-sm">
-                {/* Ambient Decorative Accents */}
-                <div className="pointer-events-none absolute -right-12 -top-12 size-64 rounded-full bg-indigo-200/30 blur-2xl" />
-                <div className="pointer-events-none absolute bottom-0 right-1/4 size-48 rounded-full bg-amber-200/20 blur-2xl" />
-
-                <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="max-w-2xl space-y-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-50/90 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-700 shadow-2xs">
-                            <Sparkles className="size-3.5 text-amber-500 animate-pulse" />
-                            <span>Hệ Thống Quản Trị Nhân Tài ATS</span>
-                            <span className="h-2 w-px bg-indigo-300" />
-                            <span className="text-indigo-600 font-extrabold">TalentBridge 2026</span>
-                        </div>
-
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-                            Quản lý hồ sơ & quyền truy cập ứng viên
-                        </h1>
-
-                        <p className="text-sm sm:text-base font-medium text-slate-600 leading-relaxed">
-                            Tra cứu cơ sở dữ liệu nhân sự công nghệ số hóa, rà soát hồ sơ theo chuẩn TopCV, kiểm soát phân quyền tài khoản và đồng bộ an ninh hệ thống thời gian thực.
-                        </p>
-
-                        <div className="pt-1 flex flex-wrap items-center gap-3">
-                            <button
-                                className="btn-bento-secondary inline-flex items-center gap-2 text-xs sm:text-sm font-bold shadow-xs hover:border-indigo-300 hover:text-indigo-600 transition"
-                                disabled={isFetching}
-                                onClick={() => refetch()}
-                                type="button"
-                            >
-                                <RefreshCw className={isFetching ? 'animate-spin text-indigo-600' : 'text-slate-500'} size={16} />
-                                <span>{isFetching ? 'Đang cập nhật...' : 'Làm mới dữ liệu'}</span>
-                            </button>
-
-                            <div className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 bg-white/80 border border-slate-200 rounded-xl px-3 py-2">
-                                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>Cổng kết nối CSDL 3NF: Hoạt động bình thường</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Soft 3D Flat Vector Hero Graphic */}
-                    <div className="hidden lg:flex items-center justify-end shrink-0">
-                        <AdminControlCenterIllustration className="w-80 h-auto drop-shadow-md" />
-                    </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="max-w-2xl">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Kiểm duyệt &amp; quản lý</p>
+                    <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">Quản lý tài khoản ứng viên</h1>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Tra cứu tài khoản, xem trạng thái và xử lý có ghi nhận lý do.</p>
                 </div>
+                <button className="btn-bento-secondary shrink-0 text-sm" disabled={isFetching} onClick={() => refetch()} type="button">
+                    <RefreshCw aria-hidden="true" className={isFetching ? 'animate-spin text-blue-700' : 'text-slate-500'} size={15} />
+                    {isFetching ? 'Đang cập nhật...' : 'Làm mới'}
+                </button>
             </div>
 
             {/* Notification Alerts */}
@@ -221,9 +181,9 @@ export function AdminCandidatesPage() {
             )}
 
             {/* 2. Bento Stat Cards Grid (4 Thẻ Chỉ Số Bento với Soft 3D Badges) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div aria-hidden="true" className="hidden">
                 {/* Bento Stat Card 1: Tổng Ứng Viên */}
-                <div className="bento-card group p-5 sm:p-6 border border-slate-200/90 bg-white hover:border-indigo-300/80 transition-all duration-300 shadow-sm">
+                <div className="bento-card group p-5 sm:p-6 border border-slate-200/90 bg-white hover:border-blue-300/80 transition-all duration-300 shadow-sm">
                     <div className="flex items-start justify-between">
                         <div className="space-y-1">
                             <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">
@@ -236,7 +196,7 @@ export function AdminCandidatesPage() {
                         <Soft3DUserBadge className="size-12 shrink-0 group-hover:scale-105 transition-transform duration-300" />
                     </div>
                     <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500 border-t border-slate-100 pt-3">
-                        <Users size={14} className="text-indigo-600 shrink-0" />
+                        <Users size={14} className="text-blue-700 shrink-0" />
                         <span>Toàn bộ người tìm việc đã đăng ký</span>
                     </div>
                 </div>
@@ -308,9 +268,9 @@ export function AdminCandidatesPage() {
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
-                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-3 pl-12 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 py-3 pl-12 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
                             onChange={(e) => setKeywordInput(e.target.value)}
-                            placeholder="Tìm kiếm theo họ tên, email, chức danh công nghệ hoặc thành phố..."
+                            placeholder="Tên hoặc email..."
                             type="text"
                             value={keywordInput}
                         />
@@ -332,7 +292,7 @@ export function AdminCandidatesPage() {
                             <button
                                 className={`rounded-lg px-3.5 py-2 text-xs sm:text-sm font-bold transition-all ${
                                     statusFilter === ''
-                                        ? 'bg-white text-indigo-700 shadow-2xs font-extrabold'
+                                        ? 'bg-white text-blue-800 shadow-2xs font-extrabold'
                                         : 'text-slate-600 hover:text-slate-900'
                                 }`}
                                 onClick={() => {
@@ -401,10 +361,10 @@ export function AdminCandidatesPage() {
                     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
                         <span className="font-bold text-slate-500">Bộ lọc đang áp dụng:</span>
                         {activeKeyword && (
-                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 font-bold text-indigo-700">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1 font-bold text-blue-800">
                                 Từ khóa: "{activeKeyword}"
                                 <X
-                                    className="cursor-pointer hover:text-indigo-900"
+                                    className="cursor-pointer hover:text-blue-950"
                                     onClick={() => {
                                         setActiveKeyword('')
                                         setKeywordInput('')
@@ -430,12 +390,12 @@ export function AdminCandidatesPage() {
             {/* 4. Bento Data Surface Table */}
             <div className="bento-card overflow-hidden border border-slate-200/90 bg-white shadow-sm">
                 {/* Table Top Status Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 bg-slate-50/75 px-6 py-4">
+                <div className="hidden">
                     <div className="flex items-center gap-2.5">
                         <h2 className="text-base sm:text-lg font-black text-slate-900">
                             Danh sách hồ sơ ứng viên
                         </h2>
-                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-extrabold text-indigo-700">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-extrabold text-blue-800">
                             {totalCandidates} kết quả
                         </span>
                     </div>
@@ -448,7 +408,7 @@ export function AdminCandidatesPage() {
                 {isLoading ? (
                     <div className="flex h-72 items-center justify-center">
                         <div className="flex flex-col items-center gap-3 text-slate-500">
-                            <RefreshCw className="animate-spin text-indigo-600" size={28} />
+                            <RefreshCw className="animate-spin text-blue-700" size={28} />
                             <span className="text-sm font-bold text-slate-700">Đang tải danh sách ứng viên từ hệ thống...</span>
                         </div>
                     </div>
@@ -468,26 +428,25 @@ export function AdminCandidatesPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-600">
+                    <div aria-label="Bảng danh sách ứng viên" className="overflow-x-auto" role="region" tabIndex={0}>
+                        <table className="w-full min-w-[900px] table-fixed text-left text-sm text-slate-600">
                             <thead className="border-b border-slate-200 bg-slate-100/90 text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                                 <tr>
-                                    <th className="px-6 py-4" scope="col">Ứng viên</th>
-                                    <th className="px-6 py-4" scope="col">Thông tin liên hệ</th>
-                                    <th className="px-6 py-4" scope="col">Địa điểm & Kinh nghiệm</th>
-                                    <th className="px-6 py-4" scope="col">Trạng thái</th>
-                                    <th className="px-6 py-4 text-right" scope="col">Thao tác</th>
+                                    <th className="w-[27%] px-3 py-4" scope="col">Ứng viên</th>
+                                    <th className="w-[31%] px-3 py-4" scope="col">Email</th>
+                                    <th className="w-[19%] whitespace-nowrap px-3 py-4" scope="col">Trạng thái</th>
+                                    <th className="w-[23%] px-3 py-4 text-right" scope="col">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200/90">
                                 {candidatesPage?.content.map((candidate) => (
                                     <tr
-                                        className="group hover:bg-indigo-50/20 transition-colors duration-150"
+                                        className="group hover:bg-blue-50/20 transition-colors duration-150"
                                         key={candidate.id}
                                     >
                                         {/* Candidate Profile */}
                                         <td className="px-6 py-4 sm:py-5">
-                                            <div className="flex items-center gap-3.5">
+                                            <div className="flex min-w-0 items-center gap-3">
                                                 {candidate.avatarUrl ? (
                                                     <img
                                                         alt={candidate.fullName}
@@ -495,15 +454,15 @@ export function AdminCandidatesPage() {
                                                         src={candidate.avatarUrl}
                                                     />
                                                 ) : (
-                                                    <div className="grid size-11 place-items-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-sm shadow-2xs">
+                                                    <div className="grid size-11 place-items-center rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-sm shadow-2xs">
                                                         {candidate.fullName.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
-                                                <div>
-                                                    <div className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                <div className="min-w-0">
+                                                    <div className="truncate text-base font-black text-slate-900 group-hover:text-blue-700 transition-colors">
                                                         {candidate.fullName}
                                                     </div>
-                                                    <div className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                                                    <div className="mt-0.5 line-clamp-2 w-fit max-w-full rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
                                                         {candidate.title || 'Chưa cập nhật chức danh'}
                                                     </div>
                                                 </div>
@@ -512,46 +471,21 @@ export function AdminCandidatesPage() {
 
                                         {/* Contact Info */}
                                         <td className="px-6 py-4 sm:py-5">
-                                            <div className="flex flex-col gap-1 text-xs sm:text-sm">
-                                                <div className="flex items-center gap-2 font-medium text-slate-800">
-                                                    <Mail size={14} className="text-indigo-600 shrink-0" />
-                                                    <span className="truncate max-w-[200px]">{candidate.email}</span>
-                                                </div>
-                                                {candidate.phone && (
-                                                    <div className="flex items-center gap-2 font-medium text-slate-600">
-                                                        <Phone size={14} className="text-slate-400 shrink-0" />
-                                                        <span>{candidate.phone}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-
-                                        {/* Location & Experience */}
-                                        <td className="px-6 py-4 sm:py-5">
-                                            <div className="flex flex-col gap-1 text-xs sm:text-sm">
-                                                <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                                                    <MapPin size={14} className="text-rose-500 shrink-0" />
-                                                    <span>{candidate.city || 'Chưa cập nhật'}</span>
-                                                </div>
-                                                <div className="inline-flex items-center gap-1 font-semibold text-slate-600">
-                                                    <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-800">
-                                                        {candidate.experienceYears !== undefined && candidate.experienceYears !== null
-                                                            ? `${candidate.experienceYears} năm kinh nghiệm`
-                                                            : 'Mới tốt nghiệp / Chưa cập nhật'}
-                                                    </span>
-                                                </div>
+                                            <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-slate-700 sm:text-sm">
+                                                <Mail size={14} className="shrink-0 text-slate-400" />
+                                                <span className="truncate">{candidate.email}</span>
                                             </div>
                                         </td>
 
                                         {/* Status */}
                                         <td className="px-6 py-4 sm:py-5">
                                             {candidate.status === 'ACTIVE' ? (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 border border-emerald-200 shadow-2xs">
+                                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 border border-emerald-200 shadow-2xs">
                                                     <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                                                     Hoạt động
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200 shadow-2xs">
+                                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200 shadow-2xs">
                                                     <span className="size-2 rounded-full bg-rose-500" />
                                                     Bị khóa
                                                 </span>
@@ -562,7 +496,7 @@ export function AdminCandidatesPage() {
                                         <td className="px-6 py-4 sm:py-5 text-right">
                                             <div className="inline-flex items-center gap-2">
                                                 <button
-                                                    className="btn-bento-secondary px-3 py-1.5 text-xs sm:text-sm font-bold shadow-2xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300"
+                                                    className="btn-bento-secondary px-3 py-1.5 text-xs sm:text-sm font-bold shadow-2xs hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300"
                                                     onClick={() => handleViewDetail(candidate.id)}
                                                     type="button"
                                                 >
@@ -615,7 +549,7 @@ export function AdminCandidatesPage() {
                             >
                                 Trang trước
                             </button>
-                            <span className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-extrabold text-xs sm:text-sm shadow-2xs">
+                            <span className="px-3 py-1.5 rounded-lg bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-2xs">
                                 {candidatesPage.pageNumber}
                             </span>
                             <button
@@ -651,7 +585,7 @@ export function AdminCandidatesPage() {
                                     src={selectedCandidate.avatarUrl}
                                 />
                             ) : (
-                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-2xl shadow-sm shrink-0">
+                                <div className="grid size-16 sm:size-20 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-700 text-white font-black text-2xl shadow-sm shrink-0">
                                     {selectedCandidate.fullName.charAt(0).toUpperCase()}
                                 </div>
                             )}
@@ -659,7 +593,7 @@ export function AdminCandidatesPage() {
                                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 truncate">
                                     {selectedCandidate.fullName}
                                 </h3>
-                                <p className="text-sm sm:text-base font-bold text-indigo-600 mt-0.5 truncate">
+                                <p className="text-sm sm:text-base font-bold text-blue-700 mt-0.5 truncate">
                                     {selectedCandidate.title || 'Chưa thiết lập chức danh công việc'}
                                 </p>
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -733,8 +667,8 @@ export function AdminCandidatesPage() {
                         </div>
 
                         {selectedCandidate.summary && (
-                            <div className="mt-4 rounded-xl bg-indigo-50/40 p-4 text-sm border border-indigo-100 min-w-0">
-                                <div className="font-black text-indigo-900 mb-1">Giới thiệu bản thân & Mục tiêu nghề nghiệp:</div>
+                            <div className="mt-4 rounded-xl bg-blue-50/40 p-4 text-sm border border-blue-100 min-w-0">
+                                <div className="font-black text-blue-950 mb-1">Giới thiệu bản thân & Mục tiêu nghề nghiệp:</div>
                                 <p className="leading-relaxed whitespace-pre-wrap font-medium text-slate-700 break-words">{selectedCandidate.summary}</p>
                             </div>
                         )}
@@ -742,7 +676,7 @@ export function AdminCandidatesPage() {
                         <div className="mt-4 flex flex-wrap items-center gap-3 pt-2 text-xs sm:text-sm font-semibold">
                             {selectedCandidate.personalWebsite && (
                                 <a
-                                    className="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 bg-indigo-50 border border-indigo-200/80 rounded-lg px-3 py-1.5 transition"
+                                    className="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 bg-blue-50 border border-blue-200/80 rounded-lg px-3 py-1.5 transition"
                                     href={selectedCandidate.personalWebsite}
                                     rel="noreferrer"
                                     target="_blank"
@@ -766,7 +700,7 @@ export function AdminCandidatesPage() {
                             )}
                             {selectedCandidate.githubUrl && (
                                 <a
-                                    className="inline-flex items-center gap-1.5 text-slate-900 hover:text-indigo-700 bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 transition"
+                                    className="inline-flex items-center gap-1.5 text-slate-900 hover:text-blue-800 bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 transition"
                                     href={selectedCandidate.githubUrl}
                                     rel="noreferrer"
                                     target="_blank"

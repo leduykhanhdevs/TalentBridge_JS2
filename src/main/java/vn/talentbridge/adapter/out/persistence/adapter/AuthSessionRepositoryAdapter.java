@@ -119,6 +119,21 @@ public class AuthSessionRepositoryAdapter
     }
 
     @Override
+    public boolean revokeActiveSessionByRefreshTokenHash(
+            String sessionId,
+            Long userId,
+            String expectedRefreshTokenHash,
+            LocalDateTime now
+    ) {
+        return authSessionJpaRepository.revokeActiveSessionByRefreshTokenHash(
+                sessionId,
+                userId,
+                expectedRefreshTokenHash,
+                now
+        ) == 1;
+    }
+
+    @Override
     public int revokeAllActiveSessions(
             Long userId,
             LocalDateTime now

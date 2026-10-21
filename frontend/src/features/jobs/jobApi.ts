@@ -1,4 +1,5 @@
 import type { ApiResponse, JobDetail } from './jobTypes'
+import { fetchWithTimeout, FetchTimeoutError } from '../../app/fetchWithTimeout'
 
 const API_BASE_URL = (
     import.meta.env.VITE_API_BASE_URL || '/api/v1'
@@ -15,7 +16,7 @@ export class JobApiError extends Error {
 }
 
 export async function getJobDetail(jobId: number): Promise<JobDetail> {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/jobs/${jobId}`, {
         method: 'GET',
         headers: {
             Accept: 'application/json',
@@ -25,7 +26,8 @@ export async function getJobDetail(jobId: number): Promise<JobDetail> {
     let body: ApiResponse<JobDetail> | undefined
     try {
         body = (await response.json()) as ApiResponse<JobDetail>
-    } catch {
+    } catch (error) {
+        if (error instanceof FetchTimeoutError) throw error
         body = undefined
     }
 

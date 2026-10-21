@@ -86,4 +86,19 @@ class UpdateCompanyStatusUseCaseImplTest {
         verify(recruiterRepository, never()).save(any());
         verifyNoInteractions(joinRequestRepository);
     }
+
+    @Test
+    void adminCannotMarkDemoCompanyAsVerified() {
+        Company company = new Company();
+        company.setId(10L);
+        company.setDemo(true);
+        when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
+
+        assertThatThrownBy(() -> useCase.updateCompanyStatus(10L, CompanyStatus.APPROVED, null))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("doanh nghiệp mô phỏng");
+
+        verify(companyRepository, never()).save(any());
+        verifyNoInteractions(recruiterRepository, joinRequestRepository);
+    }
 }

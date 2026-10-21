@@ -32,6 +32,7 @@ export type CompanyResponse = {
     taxCode?: string
     description?: string
     status: 'PENDING' | 'APPROVED' | 'REJECTED'
+    isDemo?: boolean
     createdByUserId?: number
     createdAt?: string
 }

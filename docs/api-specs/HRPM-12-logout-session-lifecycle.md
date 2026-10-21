@@ -3,7 +3,7 @@
 - Người thực hiện: Phan Thị Ánh Tuyền.
 - Nguồn yêu cầu: Jira HRPM-12.
 - Trạng thái backend: Đã triển khai và kiểm thử.
-- Trạng thái frontend: Đã thống nhất contract; chưa tích hợp vì frontend đang ở HRPM-5.
+- Trạng thái frontend: Đã tích hợp logout/refresh có deadline và phối hợp giữa các tab; production rollout theo PR/CD.
 - HRPM-12 là đăng xuất và quản lý vòng đời phiên.
   HRPM-11 là quên và đặt lại mật khẩu.
 
@@ -18,14 +18,14 @@
 
 - Method: POST
 - Endpoint: /api/v1/auth/logout
-- Header bắt buộc: Authorization: Bearer <accessToken>
-- Request body: không có.
+- Header tùy chọn: `Authorization: Bearer <accessToken>` khi không có refresh token.
+- Request body tùy chọn: `{"refreshToken":"<refreshToken>"}`. Nếu không có access token hợp lệ, refresh token phải còn là token hiện hành trong session để thu hồi; token cũ đã bị xoay không thể tự thu hồi phiên và cũng không thể dùng để refresh.
+- Cần ít nhất một token hợp lệ; nếu gửi cả hai token hợp lệ thì chúng phải cùng session.
 - Path parameters và query parameters: không có.
 - Áp dụng cho mọi vai trò đã xác thực.
 
 Lựa chọn triển khai:
-Thu hồi phiên tương ứng với access token được gửi lên.
-Các phiên đăng nhập khác của cùng tài khoản vẫn hoạt động.
+Máy chủ xác minh chữ ký, thời hạn, loại token, session ID và user ID. Nếu cả access token và refresh token đều hợp lệ, chúng phải thuộc cùng một phiên. Access token hợp lệ có thể thu hồi phiên của chính nó. Refresh token chỉ được dùng để kết thúc phiên khi hash còn khớp với refresh token hiện hành; token cũ đã bị xoay không thể tự thu hồi và không cấp quyền refresh hay quyền nghiệp vụ. Frontend đặt logout intent dùng chung giữa các tab và che trạng thái đăng nhập ngay; sau đó lấy Web Lock `talentbridge-auth-session`, cùng khóa với thao tác refresh. Refresh đang giữ khóa được phép hoàn tất và lưu cặp token mới nhất; logout lấy khóa sau đó, đọc cặp hiện hành, xóa auth local và gửi revoke đúng một lần. Refresh đang chờ khóa sẽ dừng khi thấy logout intent. Các phiên đăng nhập khác của cùng tài khoản vẫn hoạt động.
 
 ### Thành công — HTTP 200
 
@@ -108,31 +108,25 @@ Làm mới token:
 
 ## 5. Contract tích hợp frontend
 
-Frontend hiện chưa triển khai login và auth store vì đang ở giai đoạn
-setup nền tảng HRPM-5. Hai bên đã thống nhất contract tích hợp sau:
-
-- Dùng Zustand auth store và persist vào localStorage.
-- Chỉ sử dụng một key là `talentbridge-auth`.
-- Key lưu access token, refresh token và thông tin user.
-- Không tạo các key access token hoặc refresh token riêng.
-- Logout gọi `POST /api/v1/auth/logout`.
-- Gửi access token trong header `Authorization: Bearer <accessToken>`.
-- Không gửi request body.
+Frontend hiện triển khai auth token trong localStorage và đồng bộ trạng thái đăng xuất
+giữa các tab bằng `talentbridge_logout_intent` cùng event `storage`.
 
 Sau khi logout:
 
-- HTTP 200: gọi `clearAuth()`, xóa state xác thực,
-  dữ liệu persist và cache riêng của người dùng;
-  sau đó chuyển đến `/login` bằng replace navigation.
-- HTTP 401: thử refresh tối đa một lần.
-- Refresh thành công: cập nhật cặp token mới
-  và gọi lại logout đúng một lần.
-- Refresh trả HTTP 401: xóa thông tin xác thực
-  và chuyển đến `/login`.
-- Lỗi mạng: không coi là máy chủ đã thu hồi phiên thành công;
-  giữ trạng thái hiện tại, thông báo lỗi và cho phép thử lại.
-- Frontend phải có cờ retry để tránh vòng lặp
-  refresh/logout hoặc gửi logout nhiều lần.
+- Khi người dùng chọn logout, đặt logout intent để các tab che thông tin tài khoản ngay;
+  điều hướng UI không chờ request mạng.
+- Refresh, logout và lưu phiên đăng nhập mới dùng chung Web Lock
+  `talentbridge-auth-session`. Logout chờ lock tối đa bằng thời hạn refresh, đọc cặp
+  token mới nhất, xóa token người dùng và giới hạn mỗi request revoke bằng timeout riêng.
+- Refresh mới thấy logout intent sẽ dừng trước khi gọi backend. Refresh đã bắt đầu trước
+  intent có thể hoàn tất dưới lock; logout sẽ thu hồi cặp token vừa xoay trước khi nhả lock.
+- Nếu lock acquisition từ chối hoặc timeout trước callback, frontend dùng cặp token đang
+  lưu khi logout intent còn hiệu lực, xóa auth local và gửi một request revoke dự phòng
+  có timeout hữu hạn. Nếu revoke trong callback đã được bắt đầu nhưng lỗi mạng/backend,
+  không gửi request trùng; local auth vẫn bị xóa và không được ghi nhận là server đã
+  thu hồi thành công.
+- Trình duyệt không hỗ trợ Web Locks sẽ không refresh token để tránh race liên tab; thao tác
+  logout vẫn xóa auth local và thử revoke phiên theo cơ chế best-effort có timeout.
 
 Việc chuyển sang refresh token bằng HttpOnly Secure SameSite Cookie
 được ghi nhận là cải tiến tương lai và không thuộc phạm vi HRPM-12.
@@ -151,5 +145,5 @@ Việc chuyển sang refresh token bằng HttpOnly Secure SameSite Cookie
 - [x] Trạng thái thu hồi được lưu trong cơ sở dữ liệu.
 - [x] Token mới không vượt quá thời hạn cố định của phiên.
 - [x] Toàn bộ 81 test backend đạt, không có failure hoặc error.
-- [ ] Giao diện xóa auth state và chuyển về `/login`.
-  Mục này chờ frontend triển khai authentication sau HRPM-5.
+- [x] Giao diện xóa auth state và điều hướng về `/login` ngay, không chờ phản hồi mạng.
+- [x] Lock reject/timeout vẫn xóa auth local và gửi một lần revoke dự phòng có timeout.

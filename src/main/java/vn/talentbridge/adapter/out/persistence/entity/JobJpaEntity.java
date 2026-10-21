@@ -73,6 +73,10 @@ public class JobJpaEntity extends BaseJpaEntity {
     @Column(name = "recruiter_user_id")
     private Long recruiterUserId;
 
+    @Column(name = "is_demo", nullable = false)
+    @Builder.Default
+    private Boolean isDemo = false;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "job_skills",

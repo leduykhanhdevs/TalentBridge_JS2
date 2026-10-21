@@ -1,10 +1,17 @@
 package vn.talentbridge.core.application.port.in;
 
-/** Provisions the initial production administrator from operator-supplied credentials. */
+/** Provisions or explicitly promotes a production administrator from operator-controlled configuration. */
 public interface BootstrapAdminAccountUseCase {
     /**
-     * Creates the administrator when the email is unused. Returns {@code false} when an
-     * administrator with that email already exists. Existing non-admin accounts are rejected.
+     * Creates an administrator for a new email, promotes an existing active account only when
+     * {@code promoteExistingAccount} is explicitly enabled, or reactivates a locked existing admin
+     * only when {@code reactivateLockedAdmin} is explicitly enabled. Existing credentials are preserved.
      */
-    boolean execute(String email, String rawPassword, String fullName);
+    AdminBootstrapResult execute(
+            String email,
+            String rawPassword,
+            String fullName,
+            boolean promoteExistingAccount,
+            boolean reactivateLockedAdmin
+    );
 }

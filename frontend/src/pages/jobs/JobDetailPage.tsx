@@ -1,18 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import {
     ArrowLeft,
-    BriefcaseBusiness,
     Building2,
-    CalendarDays,
     CheckCircle2,
-    CircleDollarSign,
-    Clock3,
     ExternalLink,
-    MapPin,
     RefreshCw,
     Send,
     TriangleAlert,
-    UserRoundCheck,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
@@ -34,9 +28,9 @@ interface DetailSectionProps {
 
 function DetailSection({ title, content }: DetailSectionProps) {
     return (
-        <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs sm:p-8">
-            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">{title}</h2>
-            <div className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-600 sm:text-base">
+        <section>
+            <h2 className="text-base font-bold text-slate-900 sm:text-lg">{title}</h2>
+            <div className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">
                 {content?.trim() || 'Thông tin đang được nhà tuyển dụng cập nhật.'}
             </div>
         </section>
@@ -65,7 +59,7 @@ function JobNotFoundState() {
 
 function JobDetailSkeleton() {
     return (
-        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-7xl animate-pulse px-4 py-8 sm:px-6 lg:px-8">
+        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-[1200px] animate-pulse px-4 py-8 sm:px-6 lg:px-8">
             <div className="h-5 w-40 rounded bg-slate-200" />
             <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-8">
                 <div className="h-7 w-2/3 rounded bg-slate-200" />
@@ -114,6 +108,17 @@ export function JobDetailPage() {
     const existingApplication = myApplicationsQuery.data?.find((app) => app.jobId === jobId)
 
     function renderApplyAction(extraClass = '') {
+        if (job.isDemo) {
+            return (
+                <div
+                    className={`rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950 ${extraClass}`}
+                    role="note"
+                >
+                    Tin mô phỏng chỉ để xem giao diện, không nhận hồ sơ ứng tuyển.
+                </div>
+            )
+        }
+
         if (!authenticated) {
             return (
                 <button
@@ -163,7 +168,7 @@ export function JobDetailPage() {
 
         return (
             <button
-                className={`btn-bento-primary inline-flex items-center justify-center gap-2 shadow-md hover:shadow-indigo-500/20 ${extraClass}`}
+                className={`btn-bento-primary inline-flex items-center justify-center gap-2 shadow-md hover:shadow-blue-600/20 ${extraClass}`}
                 onClick={() => setIsApplyModalOpen(true)}
                 type="button"
             >
@@ -213,120 +218,86 @@ export function JobDetailPage() {
 
     const job = jobQuery.data
 
+    const companyInitials = (job.companyName || 'TB')
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('')
+    const isActiveJob = job.status === 'ACTIVE'
+
     return (
-        <div className="bg-bento-canvas min-h-full py-8 sm:py-10">
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-                <Link
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-indigo-700"
-                    to="/"
-                >
-                    <ArrowLeft aria-hidden="true" size={17} />
-                    <span>Về trang chủ</span>
-                </Link>
+        <div className="min-h-full bg-[#F5F7FB] py-7 sm:py-9">
+            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+                <nav aria-label="Đường dẫn" className="text-xs text-slate-500 sm:text-sm">
+                    <Link className="transition-colors hover:text-[#1D4ED8]" to="/jobs">Việc làm</Link>
+                    <span aria-hidden="true" className="px-2">/</span>
+                    <span className="text-slate-700">{job.title}</span>
+                </nav>
 
-                <header className="relative mt-5 overflow-hidden rounded-3xl border border-indigo-100 bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-                    <div aria-hidden="true" className="absolute -top-24 -right-20 size-72 rounded-full bg-indigo-100/70 blur-3xl" />
-                    <div className="relative flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex min-w-0 gap-4 sm:gap-5">
-                            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md sm:size-16">
-                                <Building2 aria-hidden="true" size={28} />
-                            </span>
-                            <div className="min-w-0">
-                                <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                                    Đang tuyển
+                <header className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                    {job.isDemo && (
+                        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-amber-950" role="note">
+                            DỮ LIỆU MÔ PHỎNG — Doanh nghiệp và vị trí này không có thật; thông tin chỉ dùng để xem thử TalentBridge.
+                        </div>
+                    )}
+                    <div className="flex items-start gap-4">
+                        <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-lg bg-[#EFF4FF] text-sm font-bold text-[#1D4ED8]">
+                            {companyInitials || <Building2 size={20} />}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <h1 className="text-xl font-bold tracking-tight text-[#172033] sm:text-2xl">
+                                {job.title}
+                            </h1>
+                            <p className="mt-1 text-sm font-medium text-slate-600">
+                                {job.companyName || 'Doanh nghiệp chưa cập nhật'}
+                            </p>
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className={`inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${job.isDemo ? 'bg-amber-50 text-amber-900' : isActiveJob ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
+                                    {job.isDemo ? 'Tin mô phỏng' : isActiveJob ? 'Đang nhận hồ sơ' : 'Tin tuyển dụng'}
                                 </span>
-                                <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
-                                    {job.title}
-                                </h1>
-                                <p className="mt-3 flex items-center gap-2 text-base font-semibold text-slate-600 sm:text-lg">
-                                    <Building2 aria-hidden="true" size={18} />
-                                    <span>{job.companyName || 'Doanh nghiệp chưa cập nhật'}</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 lg:items-end">
-                            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-4 lg:min-w-64">
-                                <p className="text-xs font-bold tracking-wide text-indigo-700 uppercase">Mức lương</p>
-                                <p className="mt-2 text-xl font-extrabold text-indigo-950">
-                                    {formatSalaryRange(job.minSalary, job.maxSalary)}
-                                </p>
-                            </div>
-                            <div className="w-full lg:w-64">
-                                {renderApplyAction('w-full')}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                            <MapPin className="shrink-0 text-rose-500" aria-hidden="true" size={20} />
-                            <div className="min-w-0">
-                                <p className="text-xs font-medium text-slate-500">Địa điểm</p>
-                                <p className="mt-1 truncate text-sm font-bold text-slate-800">{job.location || 'Chưa cập nhật'}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                            <BriefcaseBusiness className="shrink-0 text-indigo-500" aria-hidden="true" size={20} />
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">Hình thức</p>
-                                <p className="mt-1 text-sm font-bold text-slate-800">{formatJobType(job.jobType)}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                            <UserRoundCheck className="shrink-0 text-violet-500" aria-hidden="true" size={20} />
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">Kinh nghiệm</p>
-                                <p className="mt-1 text-sm font-bold text-slate-800">{formatExperienceLevel(job.experienceLevel)}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                            <CalendarDays className="shrink-0 text-amber-500" aria-hidden="true" size={20} />
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">Hạn nộp hồ sơ</p>
-                                <p className="mt-1 text-sm font-bold text-slate-800">{formatDate(job.deadline)}</p>
+                                {!job.isDemo && <span className="text-xs text-slate-500">Thông tin tuyển dụng do doanh nghiệp cung cấp.</span>}
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
-                    <div className="space-y-6 lg:col-span-2">
+                <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.85fr)]">
+                    <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                         <DetailSection content={job.description} title="Mô tả công việc" />
-                        <DetailSection content={job.requirements} title="Yêu cầu ứng viên" />
-                        <DetailSection content={job.benefits} title="Quyền lợi" />
-                    </div>
+                        <div className="my-4 border-t border-slate-200" />
+                        <DetailSection content={job.requirements} title="Bạn sẽ phù hợp nếu" />
+                        <div className="my-4 border-t border-slate-200" />
+                        <DetailSection content={job.benefits} title="Quyền lợi & quy trình tuyển dụng" />
+                    </article>
 
-                    <aside className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs lg:sticky lg:top-24">
-                        <h2 className="text-lg font-bold text-slate-900">Thông tin chung</h2>
-                        <dl className="mt-5 space-y-5">
-                            <div className="flex gap-3">
-                                <CircleDollarSign className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" size={20} />
-                                <div>
-                                    <dt className="text-xs font-medium text-slate-500">Mức lương</dt>
-                                    <dd className="mt-1 text-sm font-bold text-slate-800">{formatSalaryRange(job.minSalary, job.maxSalary)}</dd>
-                                </div>
+                    <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
+                        <p className="text-lg font-bold text-[#1D4ED8] sm:text-xl">
+                            {formatSalaryRange(job.minSalary, job.maxSalary)}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">Mức lương trong tin tuyển dụng</p>
+                        <dl className="mt-4 space-y-1 border-t border-slate-200 pt-4 text-sm leading-6 text-slate-600">
+                            <div className="flex gap-1">
+                                <dt className="shrink-0">Địa điểm</dt>
+                                <dd className="min-w-0">{job.location || 'Chưa cập nhật'}</dd>
                             </div>
-                            <div className="flex gap-3">
-                                <Clock3 className="mt-0.5 shrink-0 text-indigo-600" aria-hidden="true" size={20} />
-                                <div>
-                                    <dt className="text-xs font-medium text-slate-500">Ngày đăng</dt>
-                                    <dd className="mt-1 text-sm font-bold text-slate-800">{formatDate(job.createdAt)}</dd>
-                                </div>
+                            <div className="flex gap-1">
+                                <dt className="shrink-0">Hình thức</dt>
+                                <dd>{formatJobType(job.jobType)}</dd>
                             </div>
-                            <div className="flex gap-3">
-                                <CalendarDays className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" size={20} />
-                                <div>
-                                    <dt className="text-xs font-medium text-slate-500">Hạn nộp</dt>
-                                    <dd className="mt-1 text-sm font-bold text-slate-800">{formatDate(job.deadline)}</dd>
-                                </div>
+                            <div className="flex gap-1">
+                                <dt className="shrink-0">Kinh nghiệm</dt>
+                                <dd>{formatExperienceLevel(job.experienceLevel)}</dd>
+                            </div>
+                            <div className="flex gap-1">
+                                <dt className="shrink-0">Hạn ứng tuyển</dt>
+                                <dd>{formatDate(job.deadline)}</dd>
                             </div>
                         </dl>
-
-                        <div className="mt-6 border-t border-slate-200 pt-5 space-y-4">
-                            {renderApplyAction('w-full py-3 text-base')}
-                            <p className="text-xs leading-5 text-slate-500 text-center">
-                                Mã tin tuyển dụng: <span className="font-mono font-semibold text-slate-700">#{job.id}</span>
+                        <div className="mt-4 space-y-2">
+                            {renderApplyAction('w-full py-3 text-sm')}
+                            <p className="text-center text-xs leading-5 text-slate-500">
+                                Chọn CV và xác nhận trước khi gửi.
                             </p>
                         </div>
                     </aside>
@@ -335,7 +306,7 @@ export function JobDetailPage() {
                 {/* Apply Modal */}
                 <ApplyJobModal
                     companyName={job.companyName || 'Doanh nghiệp'}
-                    isOpen={isApplyModalOpen}
+                    isOpen={isApplyModalOpen && !job.isDemo}
                     jobId={job.id}
                     jobTitle={job.title}
                     onApplySuccess={() => {

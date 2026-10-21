@@ -26,7 +26,7 @@ export const Soft3DUserBadge: React.FC<BadgeProps> = ({ className = 'size-12', s
                 <linearGradient id="uGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#818cf8" />
                     <stop offset="50%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#4338ca" />
+                    <stop offset="100%" stopColor="#173fae" />
                 </linearGradient>
                 <linearGradient id="uGloss" x1="12" y1="6" x2="36" y2="28" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />

@@ -5,6 +5,7 @@ import vn.talentbridge.core.application.port.out.PasswordResetEmailPort;
 import vn.talentbridge.core.application.port.out.PasswordResetTokenGeneratorPort;
 import vn.talentbridge.core.application.port.out.PasswordResetTokenRepositoryPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
+import vn.talentbridge.core.domain.exception.PasswordResetMailUnavailableException;
 import vn.talentbridge.core.domain.model.PasswordResetToken;
 import vn.talentbridge.core.domain.model.User;
 
@@ -18,7 +19,7 @@ public class ForgotPasswordUseCaseImpl
     private final PasswordResetTokenGeneratorPort tokenGenerator;
     private final PasswordResetEmailPort emailPort;
     private final long tokenExpirationMinutes;
-    private final String resetPasswordUrl;
+    private final boolean mailEnabled;
 
     public ForgotPasswordUseCaseImpl(
             UserRepositoryPort userRepository,
@@ -26,20 +27,24 @@ public class ForgotPasswordUseCaseImpl
             PasswordResetTokenGeneratorPort tokenGenerator,
             PasswordResetEmailPort emailPort,
             long tokenExpirationMinutes,
-            String resetPasswordUrl
+            boolean mailEnabled
     ) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.tokenGenerator = tokenGenerator;
         this.emailPort = emailPort;
         this.tokenExpirationMinutes = tokenExpirationMinutes;
-        this.resetPasswordUrl = resetPasswordUrl;
+        this.mailEnabled = mailEnabled;
     }
 
     @Override
     public void requestPasswordReset(String email) {
         if (email == null || email.isBlank()) {
             return;
+        }
+
+        if (!mailEnabled) {
+            throw new PasswordResetMailUnavailableException();
         }
 
         userRepository.findByEmail(email.trim())
@@ -57,27 +62,34 @@ public class ForgotPasswordUseCaseImpl
                 now
         );
 
-        String rawToken = tokenGenerator.generateToken();
-        String tokenHash = tokenGenerator.hashToken(rawToken);
+        String otp = tokenGenerator.generateOtp();
+        String temporaryToken = tokenGenerator.generateToken();
 
         PasswordResetToken resetToken = new PasswordResetToken(
                 null,
                 user.getId(),
-                tokenHash,
+                tokenGenerator.hashToken(temporaryToken),
                 now,
                 expiresAt,
-                null
+                null,
+                PasswordResetToken.Purpose.OTP,
+                0
         );
 
-        tokenRepository.save(resetToken);
+        PasswordResetToken savedToken = tokenRepository.save(resetToken);
+        savedToken.setTokenHash(tokenGenerator.hashToken(
+                "password-reset-otp:"
+                        + user.getId()
+                        + ":"
+                        + savedToken.getId()
+                        + ":"
+                        + otp
+        ));
+        tokenRepository.save(savedToken);
 
-        String resetLink = resetPasswordUrl
-                + "?token="
-                + rawToken;
-
-        emailPort.sendPasswordResetEmail(
+        emailPort.sendPasswordResetOtp(
                 user.getEmail(),
-                resetLink,
+                otp,
                 expiresAt
         );
     }

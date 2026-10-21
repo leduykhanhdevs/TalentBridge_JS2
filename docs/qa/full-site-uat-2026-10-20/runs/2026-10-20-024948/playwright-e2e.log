@@ -1,0 +1,30 @@
+
+> frontend@0.0.0 test:e2e:ui
+> playwright test --config playwright.config.ts
+
+[WebServer] (node:28800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:31340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 15 tests using 1 worker
+
+(node:30696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 e2e\assistant-widget.spec.ts:6:1 › assistant page and quick widget survive starter and typed prompts with non-void scroll behavior (2.8s)
+  ok  2 e2e\assistant-widget.spec.ts:75:1 › assistant stays visible when browser scrolling fails after sending a prompt (1.0s)
+  ok  3 e2e\recruiter-company-request.spec.ts:3:1 › company request rejects incompatible website and logo values before sending, then submits valid URLs (2.3s)
+  ok  4 e2e\reliability-workflows.spec.ts:6:1 › floating assistant stays off narrow mobile screens so it cannot cover page controls (1.8s)
+  ok  5 e2e\reliability-workflows.spec.ts:28:1 › assistant launcher stays hidden on auth and assistant routes with trailing slashes (1.9s)
+  ok  6 e2e\reliability-workflows.spec.ts:37:1 › logout in another tab waits for an active refresh and revokes the rotated pair (2.4s)
+  ok  7 e2e\reliability-workflows.spec.ts:111:1 › failed recruiter job creation keeps the form open and shows the API error inside it (1.3s)
+  ok  8 e2e\reliability-workflows.spec.ts:167:1 › stalled application history request stops loading and offers a retry (11.6s)
+  ok  9 e2e\reliability-workflows.spec.ts:206:1 › candidate can register, sign out and sign back in using the local H2 backend (2.6s)
+  ok 10 e2e\reliability-workflows.spec.ts:235:1 › a stalled server logout still clears the local session and returns to login (1.0s)
+  ok 11 e2e\reliability-workflows.spec.ts:273:1 › expired-token logout returns to login without starting another refresh (1.0s)
+  ok 12 e2e\role-viewport-smoke.spec.ts:34:1 › đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang tại 360/390/555/1280/1440px (30.0s)
+  ok 13 e2e\role-viewport-smoke.spec.ts:167:1 › trang chủ hiển thị việc làm từ API và không tràn ngang ở desktop/mobile (1.2s)
+  ok 14 e2e\role-viewport-smoke.spec.ts:187:1 › các route công khai và route 404 có nội dung, không render màn hình trắng (9.2s)
+  ok 15 e2e\role-viewport-smoke.spec.ts:223:1 › trang chủ có thông báo lỗi và trạng thái rỗng khi API không có việc làm (1.0s)
+
+  15 passed (1.2m)

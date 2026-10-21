@@ -334,3 +334,368 @@
   - Đã sửa một test Mockito có stubbing thừa; không thay đổi logic chỉ để làm test xanh.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, outbound ports `CvTextExtractionPort`/`FileStoragePort`, parser CV hiện có, kiểm tra quyền ở application use case, deterministic keyword/rule matching. Đây là đối sánh từ khóa/quy tắc; không dùng embedding hoặc vector database và không gọi Gemini cho CV riêng tư.
 - **Mục đích chức năng / việc đã làm**: Giúp recruiter xem mức độ đáp ứng của ứng viên dựa trên CV đã tải lên mà giảm việc gửi dữ liệu cá nhân cho nhà cung cấp AI bên ngoài, đồng thời giữ ranh giới Hexagonal giữa use case và adapter. Thay đổi hiện đã qua kiểm thử cục bộ; chưa được merge hoặc triển khai Render.
+
+---
+
+## TỰ GIA HẠN PHIÊN ĐĂNG NHẬP VÀ SỬA 401 TRÊN API ĐÃ XÁC THỰC - 15/10/2026
+- **Đã làm được gì**:
+  - Kiểm tra log Render xác định request từ giao diện vẫn dùng access token hết hạn ngày 10/10; dữ liệu tên/vai trò trong localStorage khiến giao diện trông như còn đăng nhập dù API đã trả 401.
+  - Thêm một client dùng chung: khi API được bảo vệ trả 401, client gọi `/auth/refresh-token`, lưu cặp token đã xoay và thử lại request đúng một lần. Các request đồng thời dùng chung một refresh operation; refresh token không hợp lệ thì xóa phiên cũ và phát sự kiện để UI cập nhật.
+  - Áp dụng cho API trợ lý, ứng viên, recruiter, admin, thống kê, đổi mật khẩu và đăng xuất; không thay đổi các API công khai.
+  - Backend JDK 21: `mvnw verify` đạt 297/297; frontend: 87/87 tests, ESLint và production build đạt; `git diff --check` đạt. Chưa merge hoặc redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/Vite TypeScript; `authenticatedFetch`; single-flight promise để tránh refresh trùng trong cùng tab; refresh-token rotation hiện có ở Spring Boot; Vitest, ESLint và Vite.
+- **Mục đích chức năng / việc đã làm**: Ngăn token hết hạn làm chatbot, bong bóng trợ lý và các màn có xác thực liên tục báo 401; tự gia hạn phiên hợp lệ an toàn, đồng thời bỏ trạng thái quyền cũ nếu phiên không thể khôi phục.
+
+---
+
+## MCP JAVA SDK VÀ TÁI SỬ DỤNG RAG KNOWLEDGE PORT - 15/10/2026
+- **Đã làm được gì**:
+  - Thay controller JSON-RPC tự viết bằng MCP Java SDK 2.0.1, Streamable HTTP Servlet tại `/api/v1/mcp`, protocol version `2025-11-25` và schema cho các tool ATS.
+  - Bổ sung `TalentBridgeKnowledgePort` cùng inbound search use case; chatbot FAQ và MCP tool `talentbridge_search_help` dùng chung nguồn hướng dẫn TalentBridge.
+  - Giữ MCP tools ở phạm vi use case hẹp; yêu cầu Recruiter ở route và handler, quyền sở hữu dữ liệu được giữ trong application use case. Không cấp truy cập JPA/SQL trực tiếp.
+  - Sửa phản hồi phân quyền: Candidate có token hợp lệ nhưng bị thiếu role Recruiter trước đây bị luồng `/error` đổi 403 thành 401; `JwtAccessDeniedHandler` hiện trả JSON 403 trực tiếp.
+  - Test HTTP tích hợp xác nhận initialize, `notifications/initialized`, `tools/list`, `tools/call`, anonymous 401 và Candidate 403. Backend `mvnw verify` đạt 298/298; `HexagonalArchitectureTest` đạt 11/11; `git diff --check` đạt.
+  - Chưa kiểm thử giao diện live vì desktop đang ở màn hình khóa Windows; thay đổi còn ở nhánh tính năng, chưa merge hoặc deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: MCP Java SDK, Streamable HTTP, Jackson 2, Spring Security, application ports/use cases, lexical retrieval gồm token chính xác + synonym expansion + character-trigram Dice similarity, JUnit/Spring Boot integration tests, H2 test profile.
+- **Mục đích chức năng / việc đã làm**: Chuẩn hóa tích hợp MCP cho ATS trong khi chatbot vẫn chỉ trả lời theo tài liệu TalentBridge; chia sẻ một cổng RAG có kiểm soát, bảo vệ dữ liệu Recruiter bằng quyền và ownership, đồng thời trả đúng 403 cho người đã đăng nhập nhưng không đủ vai trò. Retrieval lexical hiện tại không phải embedding/vector RAG và test chưa chứng minh độ chính xác hay interoperability với MCP client độc lập.
+
+---
+
+## XÁC MINH PHÁT HÀNH MCP/RAG TRÊN RENDER - 15/10/2026
+- **Đã làm được gì**:
+  - PR #34 đã merge vào `main` tại commit `ac11cce4257c9539beb91d885be9ce192f7b7e2b`; CI đạt 3/3 (backend verify, frontend test/lint/build, Dockerfile build).
+  - CD Render đã trigger cả frontend và backend, xác minh build marker của hai dịch vụ đúng commit trên, rồi smoke test health, API việc làm dùng DB, frontend và CORS đều đạt.
+  - Kiểm tra trực tiếp sau deploy: `/api/v1/health` trả build commit `ac11cce...`; `/api/v1/jobs` trả HTTP 200 nhưng `totalElements=0`; MCP từ chối truy cập ẩn danh bằng HTTP 401 như yêu cầu.
+  - Giao diện production và bong bóng Trợ lý hiển thị; phiên trình duyệt hiện chưa đăng nhập nên ô gửi câu hỏi bị khóa. Chưa có bằng chứng kiểm thử hội thoại hoặc gọi MCP tool bằng phiên Recruiter trên production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions CI/CD, Render deploy hooks, build markers, production smoke tests, MCP Streamable HTTP, RAG lexical hybrid.
+- **Mục đích chức năng / việc đã làm**: Phát hành và xác minh thay đổi MCP/RAG trên cả hai dịch vụ Render; ghi rõ giới hạn còn lại: cần phiên đăng nhập Recruiter để kiểm thử hội thoại/tool thật và cần nạp dữ liệu việc làm nghiệp vụ vì danh sách công khai hiện rỗng.
+
+---
+
+## SỬA FORM GỬI YÊU CẦU DOANH NGHIỆP - 15/10/2026
+- **Đã làm được gì**:
+  - Chuẩn hóa xác thực URL website và logo về HTTP(S); chặn email nhập nhầm vào website và logo dạng Data URI trước khi gửi API.
+  - Bỏ giao diện tải logo giả lập không tương thích với DTO backend; làm rõ logo URL công khai là tùy chọn, và thêm thông báo lỗi ngay tại trường nhập.
+  - Bổ sung giới hạn độ dài khớp backend, test unit, API integration và Playwright cho cả dữ liệu không hợp lệ lẫn gửi thành công.
+  - Sau khi cập nhật với main, CI trên head 90418a8 đã pass đủ 3/3: backend, frontend và Docker; kiểm thử cục bộ gần nhất đạt Maven 299/299, frontend 90/90, API E2E 28/28 và UI E2E 4/4.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, URL parser của trình duyệt, Spring Boot Bean Validation, Vitest, MockMvc/JUnit, Playwright, Maven Wrapper và GitHub Actions.
+- **Mục đích chức năng / việc đã làm**: Ngăn yêu cầu tạo doanh nghiệp thất bại do website/email hoặc logo sai hợp đồng; người dùng nhận chỉ dẫn chính xác trước khi request tới backend.
+
+---
+
+## XÁC MINH RELEASE FORM DOANH NGHIỆP VÀ TRẠNG THÁI LIVE - 15/10/2026
+- **Đã làm được gì**:
+  - PR #33 đã merge vào main tại 52d808e; CI hoàn tất 3/3 (backend verify, frontend test/lint/build, Docker build). GitHub Actions/CD Render run 38689713703 thành công và xác minh cả hai dịch vụ phục vụ đúng commit.
+  - Kiểm tra trực tiếp production: frontend marker `52d808e76a67816896b0871d69fa2b50cd833016`; `/api/v1/health` HTTP 200 trong 0,19 giây; `/api/v1/jobs` HTTP 200 trong 0,57 giây và `totalElements=0`. Smoke test CORS credentialed cũng đạt trong workflow.
+  - Mở trang `/assistant` và bong bóng trợ lý trên production: đều render, không trắng. Trạng thái khách thấy thông báo cần đăng nhập và không thể gửi prompt; tab TalentBridge tại thời điểm kiểm tra vẫn chưa có phiên được backend nhận.
+  - RDS `talentbridge-mysql` đã thấy ở trạng thái Available; security group chỉ cho MySQL từ hai CIDR Render `74.220.52.0/24` và `74.220.60.0/24`. Chưa xác minh được inventory TiDB trong tab hiện đăng xuất, chưa tạo job vì API công khai không có dữ liệu và chưa có phiên Recruiter đã xác thực cùng công ty được duyệt.
+  - Cấu hình RDS đang là `db.t4g.micro`, 20 GiB gp2, Single-AZ, autoscaling bật với mức tối đa 1000 GiB. Chưa xác minh Free Tier/credits trong Billing và chưa giới hạn storage autoscaling.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions, Render Deploy Hooks và exact-commit markers; HTTP health/jobs/CORS smoke tests; Computer Use để kiểm tra trang trợ lý và AWS RDS Console.
+- **Mục đích chức năng / việc đã làm**: Xác nhận fix form và release thực sự đang chạy trên production, phân biệt tốc độ request ấm với cold start, và ghi rõ các giới hạn còn lại ở đăng nhập, dữ liệu nghiệp vụ, TiDB và mức miễn phí AWS.
+
+---
+
+## KIỂM TRA RDS, CI/CD VÀ PHIÊN ĐĂNG NHẬP PRODUCTION - 15/10/2026
+- **Đã làm được gì**:
+  - Production đang phục vụ đúng build `ede188f`; workflow CD Render gần nhất thành công. `/api/v1/health` và `/api/v1/jobs` đều trả HTTP 200; API việc làm hiện trả danh sách rỗng (`totalElements=0`).
+  - Log khởi động xác nhận MySQL 8.4 trên RDS kết nối được, Flyway xác thực 2 migration và schema hiện ở version 2; Hikari tạo kết nối thành công. Một lần khởi động ghi nhận 200,699 giây, nên chưa thể kết luận khởi động lạnh nhanh/ổn định.
+  - Kiểm thử cục bộ: Maven verify 300/300, `HexagonalArchitectureTest` 11/11, frontend 90/90, lint/build đạt, API E2E 28/28 và Playwright UI E2E 4/4. E2E dùng H2 tạm, không ghi lên RDS production.
+  - Log xác nhận admin production đã tồn tại nên `ADMIN_BOOTSTRAP_PASSWORD` không đổi mật khẩu hiện hữu. Tab production sau lần đăng nhập lại vẫn hiển thị form đăng nhập; chưa kiểm thử chatbot có xác thực hoặc luồng ghi dữ liệu nghiệp vụ lên RDS.
+  - Không tạo/xóa dữ liệu production trong lượt kiểm tra này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot 3, Java 21, Amazon RDS MySQL 8.4, Flyway, HikariCP, GitHub Actions, Render build marker, Vitest, ESLint, Vite, H2 và Playwright.
+- **Mục đích chức năng / việc đã làm**: Phân biệt rõ health/read-path live với kiểm thử ghi đã xác thực; ghi nhận giới hạn đăng nhập hiện tại, dữ liệu việc làm trống và độ trễ khởi động trước khi kết luận hệ thống production hoàn tất.
+
+---
+
+## XÁC MINH LẠI PHIÊN LIVE, API VÀ CI/CD - 15/10/2026
+- **Đã làm được gì**:
+  - Sau khi người dùng báo đã đăng nhập lại, kiểm tra tab Edge production vẫn đang ở `/login`; không tự nhập thông tin đăng nhập. Tab AWS và TiDB Cloud hiện cũng đang ở trang sign-in, nên chưa xác minh mới được inventory/SG trong lần này.
+  - Backend live `/api/v1/health` và `/api/v1/jobs` trả HTTP 200; build marker vẫn là `ede188f`. Năm lượt GET jobs ấm có thời gian 208–527 ms (median 278 ms), kết quả 0 việc làm. Đây là đo request khi dịch vụ đang thức, không đo cold start.
+  - Route frontend `/assistant` trả HTTP 200 và SPA shell; chưa gửi prompt do chưa có phiên xác thực. Không ghi hoặc xóa dữ liệu production.
+  - CD Render run `38690585931` thành công cho commit `ede188f`; CI run mới nhất nhìn thấy là run PR `38690247959` thành công cho nhánh cập nhật báo cáo. CI branch đó không phải bằng chứng CI chạy trên chính `ede188f`.
+  - Đọc lại `HexagonalArchitectureTest` (11 luật phụ thuộc), luồng trợ lý, tạo/sửa/ứng tuyển việc, chấm chất lượng job và đánh giá CV. Các bài test trước đó vẫn xanh; kiểm toán logic toàn dự án chưa hoàn tất và health endpoint hiện chỉ báo trạng thái ứng dụng, không tự kiểm tra DB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot REST API, RDS/MySQL read path qua API việc làm, Render build marker, GitHub Actions, PowerShell Stopwatch cho độ trễ request ấm, ArchUnit cho ranh giới Hexagonal và rà soát use case.
+- **Mục đích chức năng / việc đã làm**: Phân biệt xác thực giao diện với phiên API thật, kiểm tra tốc độ có số đo, và ghi rõ giới hạn trước khi chạy chatbot, kiểm thử ghi RDS hoặc xóa resource cloud.
+
+---
+
+## KIỂM THỬ CHATBOT LIVE VÀ ĐỐI CHIẾU CI/CD - 15/10/2026
+- **Đã làm được gì**:
+  - Trên bản production `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`, trang `/assistant` và widget chatbot nổi ở `/jobs` đều render bình thường. Hai prompt thử nghiệm chỉ hỏi quy trình TalentBridge được trả lời kèm căn cứ; không tái hiện màn trắng.
+  - `/api/v1/health` trả HTTP 200, `UP`, đúng build marker; `/api/v1/jobs` trả HTTP 200 nhưng có 0 tin. Hai lượt đọc live đo được lần lượt khoảng 437 ms và 367 ms; đây chỉ là phép đo tức thời khi kiểm tra, không đại diện cold start hay tải cao.
+  - CD run `38690585931` thành công cho đúng commit production. CI gần nhất `38690247959` thành công trên PR cập nhật báo cáo (`49530f2`), không phải cùng SHA với production; CI 3/3 của PR release trước đã được ghi ở mục kiểm chứng form.
+  - Thanh điều hướng production xác định phiên hiện tại là **Ứng viên**, dù người dùng báo đã vào trang quản trị. Vì vậy chưa chạy thao tác/luồng Admin hoặc Recruiter và không ghi dữ liệu RDS. Tab TiDB hiện vẫn ở trang đăng nhập, nên chưa xác minh resource để xóa; không có thao tác xóa nào được thực hiện.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Production UI qua Computer Use, Spring REST health/jobs, build marker, GitHub Actions run metadata, Render CD và retrieval nội bộ của chatbot.
+- **Mục đích chức năng / việc đã làm**: Xác nhận hồi quy chatbot và đường đọc API sau deploy, đồng thời phân định rõ các cổng còn thiếu: tài khoản đúng vai trò để thử ghi nghiệp vụ, dữ liệu job để thử luồng tuyển dụng end-to-end, và đăng nhập TiDB để kiểm kê trước thao tác xóa.
+
+---
+
+## KIỂM THỬ TOÀN BỘ CỤC BỘ VÀ RÀ SOÁT CƠ CHẾ DỮ LIỆU - 15/10/2026
+- **Đã làm được gì**:
+  - Chạy lại `mvnw verify` bằng JDK 21: 300/300 test đạt, trong đó `HexagonalArchitectureTest` đạt 11/11. Lần chạy ban đầu dùng Java 8 từ PATH nên không nạp được class Java 21; đã dùng JDK 21 cài sẵn cho lượt chạy xác nhận, không đổi cấu hình máy.
+  - Frontend: 90/90 unit test, ESLint và Vite/TypeScript production build đều đạt. Script `scripts/run-e2e.ps1` chạy API E2E 28/28 và Playwright UI E2E 4/4 trên backend H2 cô lập; bao gồm chatbot/widget, phục hồi khi cuộn lỗi, form yêu cầu doanh nghiệp và viewport 360/555/1280px cho ba vai trò.
+  - Xác nhận `DataInitializer` chỉ chạy ở profile `local`, `test`, `dev`, `e2e`; dữ liệu công ty/tài khoản và 100 tin đang tuyển là dữ liệu demo cho môi trường không production. Không thể bật cấu hình này để nạp RDS production vì sẽ đưa dữ liệu demo sang production và tin được tạo ở trạng thái `ACTIVE`.
+  - Không có thay đổi source ứng dụng hoặc thao tác ghi DB production. E2E lưu ảnh QA trong `artifacts/roleplay-qa`; kiểm thử persistence vẫn dùng H2, còn RDS chỉ mới được xác nhận qua API đọc việc làm HTTP 200 với 0 bản ghi.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: JDK 21, Maven Surefire, ArchUnit, Vitest, ESLint, TypeScript/Vite, Playwright và backend H2 tạm thời; Spring profile gating bảo vệ initializer.
+- **Mục đích chức năng / việc đã làm**: Xác nhận bộ kiểm thử source hiện tại và ngăn dùng seed demo không phù hợp cho production; để nạp tin nghiệp vụ cần phiên Admin/Recruiter thật và luồng kiểm duyệt, còn xóa TiDB cần đăng nhập để kiểm kê resource trước.
+
+---
+
+## KIỂM TRA LẠI RELEASE LIVE VÀ RELEASE GATE MAIN - 15/10/2026
+- **Đã làm được gì**:
+  - Đo lại API việc làm production 5 lần: mọi lượt HTTP 200, `totalElements=0`, thời gian 418/205/158/194/201 ms (median 201 ms). Frontend trả HTTP 200 với marker đúng `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`.
+  - Xác nhận GitHub CI có 3 check backend/frontend/Docker đều pass ở PR gần nhất trước release; CD main hiện phục vụ đúng commit production. Phát hiện GitHub `main` đang **không có branch protection** và branch ruleset rỗng, nên CI hiện là bằng chứng xanh nhưng chưa được cài làm merge gate bắt buộc. Đã hỏi chủ repo chọn cấu hình bảo vệ; chưa thay đổi setting.
+  - Mở trang đăng nhập production để người dùng tự xác thực; trang vẫn nhận diện phiên là Ứng viên, nên chưa thực hiện tạo dữ liệu, thử ghi RDS hoặc xóa TiDB. TiDB Cloud và AWS Console cũng vẫn chờ đăng nhập.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions check-run metadata, GitHub branch protection API read-only, HTTP Stopwatch và Render build marker.
+- **Mục đích chức năng / việc đã làm**: Phân biệt pipeline đã chạy thành công với bảo vệ merge thực sự; xác nhận lại API đọc production và nêu chính xác bước xác thực/quyền còn thiếu trước các thao tác production.
+
+---
+
+## BẬT RULESET BẢO VỆ NHÁNH MAIN - 15/10/2026
+- **Đã làm được gì**:
+  - Tạo ruleset repository `Protect main: PR and all CI checks` (ID `25142828`), trạng thái active, chỉ áp dụng `refs/heads/main`.
+  - Bắt buộc mọi thay đổi vào `main` đi qua Pull Request, yêu cầu ba status check do GitHub Actions phát: `Backend Build & Verify (Spring Boot 3 + JDK 21)`, `Frontend Test, Lint & Build (React 19 + Node 20)`, `Dockerfile Build Verification`; không yêu cầu số review tối thiểu và chặn force-push.
+  - Đọc lại ruleset qua GitHub API và endpoint rule evaluation của `main`; xác nhận đủ ba rule PR, required status checks, non-fast-forward. Không sửa source ứng dụng và không redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Repository Rulesets REST API, GitHub Actions check-run metadata (integration `github-actions`, ID `15368`), ba job trong `.github/workflows/ci.yml`.
+- **Mục đích chức năng / việc đã làm**: Chuyển CI từ trạng thái chỉ chạy khi có sự kiện sang cổng merge bắt buộc cho `main`, đồng thời giữ lựa chọn không yêu cầu người duyệt PR.
+---
+
+## TÁI XÁC MINH PRODUCTION SAU KHI BẬT RULESET - 15/10/2026
+- **Đã làm được gì**:
+  - Production tại build `ede188fc9b95e14725b7b25c56b75faf68dcbfb6`: health HTTP 200 (458 ms), API jobs HTTP 200 (196 ms, `totalElements=0`), frontend route `/assistant` HTTP 200 (125 ms). Đây là một lượt đo tức thời, không phải benchmark tải hoặc cold-start.
+  - GitHub API xác nhận ruleset `25142828` đang active trên `main`, yêu cầu PR, đúng ba check backend/frontend/Docker và chặn non-fast-forward.
+  - Browser recheck: TalentBridge hiện nhận diện tài khoản `Duy Khánh Lê` là Ứng viên; TiDB Cloud và AWS Console còn ở trang đăng nhập. Không thể chạy luồng ghi RDS, kiểm thử tuyển dụng từ đầu đến cuối hoặc xác định resource TiDB cần xóa.
+  - Không ghi/xóa dữ liệu production và không redeploy vì không có thay đổi source ứng dụng.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: HTTP GET/Stopwatch, Spring Boot health/jobs API, Render build marker, GitHub Repository Rulesets API, Computer Use đọc trạng thái phiên.
+- **Mục đích chức năng / việc đã làm**: Cập nhật bằng chứng live sau khi bật merge gate; phân định rõ API đọc đang phục vụ tốt với các luồng cần quyền Admin/Recruiter và quyền console cloud chưa được xác minh.
+
+---
+
+## XÁC MINH RDS, TIDB VÀ CI/CD SAU KHI ĐĂNG NHẬP CLOUD - 15/10/2026
+- **Đã làm được gì**:
+  - AWS Console xác nhận RDS `talentbridge-mysql` ở Singapore đang `Available`, MySQL 8.4.9, `db.t4g.micro`, Single-AZ; mã hóa lưu trữ và deletion protection bật. Storage hiện 20 GiB gp2 nhưng autoscaling cho phép đến 1000 GiB; backup tự động chỉ giữ 1 ngày và có 3 snapshot tự động ở trạng thái Available.
+  - Log Render của commit production `ede188fc9b95e14725b7b25c56b75faf68dcbfb6` ghi Flyway schema `talentbridge_db` đã up-to-date và Hikari tạo kết nối MySQL thành công. Biểu đồ RDS có DatabaseConnections dao động 0–4 trong khoảng thời gian gần nhất; kết hợp với log cho thấy luồng BE–DB đang hoạt động. URL datasource bị che nên chưa đối chiếu độc lập được hostname với endpoint RDS; RDS Console đồng thời hiển thị DB name khởi tạo là `test`, cần giữ ghi chú này khi rà soát cấu hình.
+  - Smoke test live hiện tại: `/api/v1/health` HTTP 200, build marker đúng; `/api/v1/jobs` HTTP 200 trong 281 ms, `totalElements=0`. Đây là request ấm đơn lẻ, không phải benchmark. Không ghi dữ liệu production.
+  - Log khởi động cùng deploy ghi ứng dụng mất 200.699 giây mới sẵn sàng; trước lúc mở port Render nhiều lần báo chưa phát hiện port. Hikari cũng cảnh báo `idleTimeout` mặc định lớn hơn `maxLifetime` đã cấu hình nên bị vô hiệu hóa. Đã chỉnh cấu hình source local thành `idle-timeout=240000` (nhỏ hơn `max-lifetime=300000`) và `mvnw verify` đạt 300/300; thay đổi chưa được merge/deploy. Cold start 200.699 giây vẫn chưa được giải quyết. Render Free không cung cấp metric CPU/RAM nên hiện chưa đủ dữ liệu kết luận nguyên nhân.
+  - TiDB Cloud đã đăng nhập: cả Resource View và Project View đều không còn resource/instance trong tổ chức/project JS2. Vì vậy hiện không có cluster TiDB để xóa thêm. Trạng thái danh sách không chứng minh lịch sử xóa hoặc việc dữ liệu TiDB đã được nhập/đối soát; không có bằng chứng migration đầy đủ.
+  - CI run `38690247959` pass đủ 3 job backend/frontend/Docker trên head PR `49530f2`; CD run `38690585931` thành công và Render đang phục vụ commit `ede188fc`. Không có CI run gắn trực tiếp với đúng SHA production trong danh sách hiện tại; merge gate PR đã được bật ở mục trước.
+  - Tab TalentBridge vẫn xác thực ở vai trò Ứng viên. Vì vậy chưa thể tạo 100 tin chờ duyệt qua luồng Recruiter/Admin hoặc thực hiện kiểm thử ghi/đọc nghiệp vụ bằng tài khoản có quyền. API jobs hiện không có tin.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: AWS RDS Console/CloudWatch metrics, TiDB Cloud Resource View, Render application logs, Spring Boot health/jobs API, HikariCP, Flyway, GitHub Actions CI và Render CD.
+- **Mục đích chức năng / việc đã làm**: Xác nhận DB đang nhận kết nối và CI/CD đang chạy, đồng thời tách bạch rõ giữa khả năng kết nối, migration dữ liệu, thao tác ghi nghiệp vụ và hiệu năng cold start. Không xóa thêm resource, không nạp dữ liệu mẫu, không đọc hoặc tiết lộ secret.
+
+---
+
+## GỠ TÀI KHOẢN MẪU VÀ NÂNG QUYỀN ADMIN CÓ KIỂM SOÁT - 15/10/2026
+- **Đã làm được gì**: Gỡ khối nút điền nhanh tài khoản mẫu khỏi trang đăng nhập. Bổ sung cờ `ADMIN_BOOTSTRAP_PROMOTE_EXISTING` mặc định tắt; khi bật chỉ nâng đúng tài khoản hiện hữu đang ACTIVE, giữ nguyên mật khẩu/hồ sơ/các role, và lỗi an toàn nếu email không khớp. Cập nhật runbook và test cho các trường hợp tạo mới, đã là Admin, nâng quyền, tài khoản khóa và email không tồn tại. Xác minh `mvnw verify` đạt 304/304; frontend ESLint, 90/90 unit test và Vite production build đều đạt. Chưa thay đổi Render production hoặc cấp role trong DB.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript; Spring Boot ApplicationRunner chỉ trong profile `prod`; inbound use case/port, persistence adapter và role domain theo kiến trúc hexagonal; JUnit 5/Mockito, Vitest, ESLint, TypeScript/Vite.
+- **Mục đích chức năng / việc đã làm**: Loại bỏ thông tin đăng nhập mẫu gây nhầm lẫn và cung cấp đường nâng quyền một lần có kiểm soát, không mở đăng ký Admin công khai và không thay mật khẩu tài khoản sẵn có.
+
+---
+
+## KHÔI PHỤC TÀI KHOẢN ADMIN ĐANG BỊ KHÓA - 15/10/2026
+- **Đã làm được gì**:
+  - Đã xác minh Render Free không hỗ trợ Shell, vì vậy không dùng được SQL trực tiếp từ service.
+  - Thêm cờ một lần `ADMIN_BOOTSTRAP_REACTIVATE_LOCKED_ADMIN` mặc định `false`; chỉ khi cờ được bật, email bootstrap khớp tài khoản hiện có có `ROLE_ADMIN`, và trạng thái là `LOCKED` thì use case mới chuyển trạng thái sang `ACTIVE`. Giữ nguyên password hash, hồ sơ và roles; từ chối trạng thái `BANNED`, `INACTIVE`, `PENDING` và không tác động tài khoản không phải Admin.
+  - Thêm test cho mở khóa được phê duyệt, cờ mặc định tắt, không tự mở khóa và từ chối tài khoản BANNED. `mvnw verify` bằng JDK 21 đạt 308/308, gồm kiểm tra kiến trúc hexagonal 11/11. Chưa thay đổi production; đang chuẩn bị PR để CI kiểm tra trước khi deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot ApplicationRunner chỉ trong profile `prod`, cờ cấu hình opt-in, domain `User.activate()`, port/use case hexagonal, JUnit 5/Mockito, Maven và JDK 21.
+- **Mục đích chức năng / việc đã làm**: Khôi phục quyền truy cập cho đúng tài khoản Admin bị khóa do đăng nhập sai, không đặt lại mật khẩu hoặc mở rộng quyền cho tài khoản khác; cờ sẽ được tắt và gỡ sau khi xác minh.
+
+---
+
+## TRI-VECTOR MATCHING, MCP CÓ KIỂM SOÁT VÀ CHATBOT RAG - 16/10/2026
+- **Đã làm được gì**:
+  - Hoàn thiện điểm tương đồng CV–job dạng tham khảo, tách thành bằng chứng trực tiếp 60%, ngữ cảnh nghề nghiệp 25% và năng lực liên quan suy luận thận trọng 15%. Trả kèm điểm thành phần, bằng chứng/kỹ năng khớp, kỹ năng chưa thấy bằng chứng, câu hỏi xác minh trung lập và cảnh báo đây không phải xác suất trúng tuyển. CV được trích xuất và chấm trong backend sau kiểm tra quyền sở hữu ứng tuyển; không gửi CV sang Gemini.
+  - MCP Streamable HTTP công bố năm tool ATS giới hạn schema và dữ liệu; yêu cầu Recruiter xác thực, use case kiểm tra tenant/ownership, giới hạn kích thước đầu vào/kết quả và bắt buộc `confirm=true` cho cập nhật giai đoạn ứng tuyển. Kiểm thử protocol xác nhận lifecycle/discovery/tool call, anonymous 401, Candidate 403 và từ chối thao tác ghi thiếu xác nhận.
+  - Chatbot truy xuất tối đa ba mục hướng dẫn TalentBridge bằng lexical hybrid (token chính xác, synonym và character-trigram), đưa căn cứ truy xuất vào system instruction để Gemini sinh câu trả lời, và trả câu hướng dẫn truy xuất khi thiếu key/provider lỗi. FAQ vẫn trả lời cục bộ; không gửi lịch sử hội thoại; chặn các mẫu PII/credential phổ biến trước provider. Chatbot không dùng MCP tool hoặc đọc dữ liệu riêng.
+  - Xác minh `mvnw verify` với JDK 21: 311/311 test đạt, gồm Hexagonal Architecture 11/11. Frontend: ESLint đạt, Vitest 90/90, TypeScript/Vite production build đạt. E2E H2 cô lập: API 28/28 và Playwright UI 4/4; kiểm thử assistant/widget và viewport. `git diff --check` đạt.
+  - Đây là kết quả trên nhánh tính năng; chưa merge/deploy. Chưa gọi Gemini production trực tiếp và chưa chứng minh độ chính xác tuyển dụng hay interoperability với MCP client độc lập.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Java 21, Spring Security, MCP Java SDK/Streamable HTTP, use case hexagonal, lexical weighted coverage + cosine cho ba vector CV–job, synonym/token + Dice character-trigram cho truy xuất hướng dẫn, Gemini GenerateContent grounded bởi tài liệu, JUnit/ArchUnit, Maven, React/TypeScript, Vitest, ESLint, Vite, H2 và Playwright.
+- **Mục đích chức năng / việc đã làm**: Cung cấp tín hiệu tương đồng có thể giải thích cho Recruiter, mở công cụ ATS qua giao thức chuẩn với quyền và xác nhận rõ ràng, và hoàn thiện luồng RAG có sinh câu trả lời nhưng có căn cứ, giới hạn phạm vi và fallback an toàn. Công thức Tri-Vector là thiết kế riêng của TalentBridge, không quy nguồn cho bài báo AI–KM; giới hạn nguồn được ghi trong tài liệu nghiên cứu và README.
+
+## TÍCH HỢP REDESIGN V2 TRÊN MAIN MỚI NHẤT - 16/10/2026
+- **Đã làm được gì**:
+  - Tích hợp riêng giao diện V2 lên nền `main` mới nhất, giữ các route Trợ lý, bong bóng chatbot và thay đổi đăng nhập đã được merge ở PR #40/#38. Không đưa các sửa đổi backend/AI còn dang dở trong checkout khác vào thay đổi giao diện.
+  - Giải quyết xung đột router, đăng nhập và báo cáo tiến độ; điều chỉnh selector Playwright cũ để khớp nhãn đăng nhập V2.
+  - Xác minh frontend: lint đạt, 90/90 unit tests, production build đạt. E2E trên H2 cô lập: API 28/28, Playwright UI 7/7, gồm ba vai trò, trang trợ lý/widget, luồng gửi yêu cầu doanh nghiệp và viewport 360/555/1280px.
+  - PR #41 đã squash-merge vào `main` tại commit `0538a07ef6b30c781c4c6c82355b8b146a2b8b50`. GitHub Actions run `38866941682` đạt 3/3 check Backend/Frontend/Docker. CD run `38867330201` đã xác minh frontend và backend phục vụ đúng commit, health/jobs API, title trang và credentialed CORS đều đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - React/TypeScript, Tailwind CSS, Vite, Be Vietnam Pro cục bộ, SVG 2.5D; pnpm 9, Vitest, ESLint, Playwright, Spring Boot và H2 tạm cho E2E.
+- **Mục đích chức năng / việc đã làm**:
+  - Đưa Sapphire & Graphite V2 vào `main` và Render production, vẫn giữ hành vi trợ lý; xác nhận qua unit, build, E2E và smoke test production đa vai trò/API.
+
+## SỬA LỖI HEADER RESPONSIVE V2 - 16/10/2026
+- **Đã làm được gì**: Chặn menu và cụm tài khoản bị ép xuống nhiều dòng; từ 1024–1279px dùng điều hướng biểu tượng có nhãn truy cập, từ 1280px hiển thị đầy đủ nhãn; thu gọn thao tác đổi mật khẩu/đăng xuất thành nút biểu tượng có accessible label. Kiểm tra Playwright ở 1780, 1440, 1280, 1024, 1000 và 390px: không tràn ngang, các mục desktop cao 40px và không xuống dòng. `pnpm lint`, `pnpm test` (12 file/90 test) và `pnpm run build` đều đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `NavLink`, Tailwind responsive utilities, Lucide icons, ARIA labels, Playwright Chromium, ESLint, Vitest, TypeScript và Vite.
+- **Mục đích chức năng / việc đã làm**: Làm thanh điều hướng V2 dễ đọc và dùng ổn định trên desktop/tablet/mobile; giữ toàn bộ chức năng theo vai trò và tránh các nhãn tài khoản bị bẻ dòng như ảnh production.
+
+## RÀ SOÁT VÀ ĐỒNG BỘ GIAO DIỆN V2 THEO FIGMA - 16/10/2026
+- **Đã làm được gì**:
+  - Chuẩn hóa header dùng chung theo cấu trúc Figma: thương hiệu bên trái, nhóm điều hướng dạng pill với mục hiện tại có nền trắng, cụm tài khoản có avatar/vai trò và thao tác đổi mật khẩu/đăng xuất. Gộp khung workspace của Recruiter/Admin để cùng dùng header, sidebar, vùng nội dung và mobile drawer; giữ guard RBAC và các route hiện hành.
+  - Rà soát và chỉnh các màn trang chủ, tìm việc/chi tiết việc, trợ lý và bong bóng chat, hồ sơ ứng viên, workspace tuyển dụng/thống kê/sàng lọc ứng viên và danh sách quản trị. Dữ liệu hiển thị vẫn lấy từ API; trạng thái lỗi/rỗng không bị thay bằng số liệu giả. Ảnh QA dùng fixture trên H2 cô lập.
+  - Mở rộng kiểm thử viewport để chụp và xác nhận tất cả route công khai cùng route theo ba vai trò tại 360px và 1280px. Lượt kiểm tra phát hiện rồi sửa tràn ngang ở trang tìm việc mobile, bộ lọc trạng thái bị cắt, bảng quản trị bị nén chữ và cụm thao tác ứng viên recruiter chật; bảng admin nay có vùng cuộn ngang đặt tên và nhận focus bàn phím.
+  - Kiểm tra ảnh desktop/mobile cho trang chủ, tìm việc, ứng viên, recruiter và admin; E2E cuối trên H2 tạm: API 28/28, Playwright 7/7, không có route trắng hoặc tràn ngang. Frontend `pnpm lint`, Vitest 90/90, TypeScript/Vite production build và `git diff --check` đều đạt.
+  - Source đã sẵn sàng để cập nhật PR #43; chưa merge hoặc redeploy. Figma MCP từ chối thêm thao tác do hết quota Starter và tài khoản chỉ có ghế View, nên không thể sửa/đồng bộ trực tiếp file Figma trong lượt này.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, React Router `NavLink`, Lucide icons, layout dùng chung theo vai trò, responsive breakpoints, ARIA labels, ESLint, Vitest, Vite, Playwright Chromium và backend H2 tạm cho E2E.
+- **Mục đích chức năng / việc đã làm**: Làm giao diện nhất quán giữa các vai trò và thiết bị theo cấu trúc Sapphire & Graphite V2, giữ luồng điều hướng/quyền truy cập và khả năng thao tác hiện có; phân biệt rõ dữ liệu kiểm thử với dữ liệu production và giới hạn chỉnh sửa trực tiếp trong Figma.
+
+## ẨN HEADER Ở MÀN ĐĂNG NHẬP — 16/10/2026
+- **Đã làm được gì**:
+  - Ẩn hoàn toàn header điều hướng dùng chung tại `/login`, giữ nguyên header trên trang chủ và các route khác.
+  - Giữ nguyên form, footer và bong bóng truy cập nhanh chatbot; kiểm tra trực tiếp trên Vite local: trang đăng nhập có 0 header, trang chủ có 1 header và chatbot vẫn hiện.
+  - `pnpm run lint`, `pnpm run test` (90/90) và `pnpm run build` đều đạt; không thay đổi backend hoặc deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `useLocation` kiểm tra pathname trong `MainLayout`; render có điều kiện trong React; Vitest, ESLint, TypeScript/Vite và kiểm tra DOM qua trình duyệt local.
+- **Mục đích chức năng / việc đã làm**: Tạo màn xác thực gọn, không có điều hướng gây phân tán; giữ trải nghiệm đăng nhập và trợ lý nhanh, không ảnh hưởng điều hướng ở các trang khác.
+
+## CHẨN ĐOÁN ĐĂNG NHẬP VÀ ĐĂNG KÝ LOCAL — 16/10/2026
+- **Đã làm được gì**:
+  - Xác nhận frontend `127.0.0.1:5175` gọi qua Vite proxy tới backend TalentBridge `127.0.0.1:8081`; `GET /api/v1/health` và đọc danh sách việc làm trả HTTP 200. Endpoint đăng ký/đăng nhập nhận đúng request thiếu dữ liệu và trả HTTP 400 validation; không gửi hay đọc payload người dùng.
+  - Xác nhận cổng 8080 hiện do ứng dụng `agent-demo` chiếm; frontend auth dùng cùng-origin `/api/v1`, nên không gọi nhầm ứng dụng này.
+  - Chạy kiểm thử Java 21 trên H2 cô lập: `AuthControllerTest` 11/11 và `RegisterRoleValidationIntegrationTest` 3/3 đạt. Lần chạy đầu dùng nhầm Java 8; đã chuyển sang JDK 21 và chạy lại thành công.
+  - Backend local hiện chạy profile `local` với H2 file, không phải RDS. Tài khoản chỉ tồn tại trên RDS có thể không đăng nhập được ở localhost. Chưa bắt được HTTP status của lần gửi form thật và chưa xác minh ghi trên H2 file đang chạy; nguyên nhân riêng của lần thử đó còn mở.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Spring Security, Vite proxy, H2, Maven Wrapper, JDK 21, JUnit, MockMvc và Spring Boot integration tests.
+- **Mục đích chức năng / việc đã làm**: Phân biệt lỗi backend ngừng hoạt động, sai proxy và khác môi trường DB; xác nhận luồng auth trong code hoạt động trên DB kiểm thử và khoanh vùng phần còn cần mã HTTP của request thật.
+
+## ĐỒNG BỘ FE LOCAL THEO FIGMA V2 VÀ KIỂM TRA RESPONSIVE — 16/10/2026
+- **Đã làm được gì**:
+  - Rà giao diện công khai, ứng viên, nhà tuyển dụng và quản trị trên desktop/mobile; đồng bộ lại chi tiết việc làm, danh sách tin nhà tuyển dụng và hồ sơ ứng viên theo bố cục V2, giữ nguyên API, phân quyền, dữ liệu và thao tác hiện có.
+  - Sửa bảng ứng viên quản trị để hiển thị đủ cột thao tác ở desktop; thêm kiểm tra Playwright cho bố cục hồ sơ hai cột và vị trí nút thao tác.
+  - Xác minh `npm run lint`, `npm run build`, `npm run test` (90/90), E2E API (28/28) và E2E UI (7/7) đạt; kiểm tra viewport 360/555/1280px và lưu ảnh QA riêng tại `artifacts/roleplay-parity-final`.
+  - Figma MCP Starter đã hết lượt gọi trong phiên; đối chiếu bằng ảnh thiết kế được cung cấp và ảnh render local, chưa xác nhận parity từng layer/nút với mọi frame trong Figma.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React + TypeScript + Tailwind CSS; CSS Grid responsive; Playwright, Vitest, ESLint, TypeScript/Vite; backend E2E trên H2 cô lập.
+- **Mục đích chức năng / việc đã làm**: Đưa các luồng chính về cùng hệ Sapphire & Graphite V2, giảm sai khác bố cục desktop/mobile và ngăn tái xuất hiện lỗi cột thao tác bị cắt mà không đổi hợp đồng backend.
+
+## HIỂN THỊ MÃ LỖI ĐĂNG NHẬP VÀ ĐĂNG KÝ — 16/10/2026
+- **Đã làm được gì**:
+  - Cập nhật fallback của API xác thực để hiển thị mã HTTP khi backend/proxy trả lỗi không kèm thông báo chuẩn; thêm hướng dẫn rõ cho HTTP 400, 404, 409, 429 và 5xx.
+  - Thêm test cho phản hồi HTML 502 của gateway và phản hồi 429 thiếu message; bảo toàn ưu tiên hiển thị thông điệp backend khi có.
+  - Bản sửa được cô lập trên nhánh phát hành riêng để không đưa các thay đổi backend/AI chưa liên quan vào production; xác minh `pnpm test` đạt 92/92, `pnpm lint`, `pnpm build` và `git diff --check` đều đạt. Đang chờ CI/review PR trước khi deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**:
+  - React/TypeScript Fetch API, kiểu lỗi `AuthApiError`, Vitest; tích hợp với envelope `ApiResponse` hiện có của Spring Boot.
+- **Mục đích chức năng / việc đã làm**:
+  - Giúp phân biệt lỗi dữ liệu/tài khoản với lỗi API, gateway hoặc giới hạn tốc độ để chẩn đoán đăng nhập/đăng ký mà không lộ thông tin xác thực.
+
+## CẬP NHẬT PR VÀ XÁC MINH PREVIEW V2 — 16/10/2026
+- **Đã làm được gì**:
+  - Đồng bộ nhánh giao diện với `main` sau khi PR #44 được merge; giữ phần xử lý lỗi đăng nhập/đăng ký mới nhất, giải quyết xung đột tài liệu và cập nhật PR #43 lên commit `b5ae44c`.
+  - Xác minh local `http://localhost:5176`: trang chủ có header chính; `/login` và `/register` không có menu Trang chủ/Việc làm/Trợ lý; form đăng nhập/đăng ký và chatbot hiển thị.
+  - Lint và production build đạt; Vitest 92/92; E2E H2 cô lập gần nhất đạt API 28/28 và UI 7/7. PR #43 hiện mergeable; CI Frontend, Backend và Docker 3/3 đạt.
+  - Chưa merge/deploy production; chờ trưởng nhóm review theo quy trình dự án. Figma MCP vẫn bị giới hạn ở Starter/View nên không xác minh pixel/layer cho mọi frame.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind CSS, Vite, React Router, Vitest, Playwright, Spring Boot trên H2 cô lập, GitHub Actions.
+- **Mục đích chức năng / việc đã làm**: Đưa bản FE V2 có thể xem tại localhost và review trên PR, đồng thời giữ kiểm soát phát hành trước khi Render nhận deploy.
+
+## CATALOG MÔ PHỎNG 20 DOANH NGHIỆP VÀ 100 VIỆC LÀM — 18/10/2026
+- **Đã làm được gì**:
+  - Thêm Flyway V3 tạo 20 hồ sơ doanh nghiệp hư cấu có tiền tố `DEMO` và 100 tin mô phỏng (5 vai trò mỗi doanh nghiệp), kèm 280 liên kết kỹ năng mẫu. Không dùng website, mã số thuế, văn phòng, nhà tuyển dụng hay lợi ích tuyển dụng có thật; hồ sơ công ty giữ trạng thái `PENDING`.
+  - Truyền cờ `isDemo` qua JPA, domain, DTO/API; trang chủ, tìm việc, chi tiết tin và danh sách admin ghi rõ nội dung mô phỏng. Tin chỉ cho xem; use case backend từ chối ứng tuyển, yêu cầu gia nhập hoặc phê duyệt hồ sơ công ty mô phỏng.
+  - Thêm kiểm thử migration trên H2 chế độ MySQL: xác nhận đúng 20 công ty, 100 tin `ACTIVE` để xuất hiện trong tìm kiếm, không gắn recruiter, không có đơn ứng tuyển và có đủ liên kết kỹ năng. Backend `mvnw verify` đạt 315/315; frontend `pnpm test` đạt 92/92, `pnpm run lint`, `pnpm run build` và `git diff --check` đạt.
+  - Chưa đưa dữ liệu lên production: migration sẽ chạy khi bản thay đổi được trưởng nhóm review/merge và Render deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Flyway SQL V3; MySQL/H2 tương thích; Spring Boot, JPA, DTO REST, use case hexagonal; React/TypeScript, Vitest, ESLint, Vite và Maven/JDK 21.
+- **Mục đích chức năng / việc đã làm**: Có dữ liệu để xem thử luồng tìm kiếm và ATS trên website mà không mạo nhận tuyển dụng thật, nhận hồ sơ ứng viên hoặc xác thực doanh nghiệp hư cấu.
+
+## ĐỐI CHIẾU MCP VÀ SỬA CHUẨN HÓA ĐIỂM TRI-VECTOR — 19/10/2026
+- **Đã làm được gì**:
+  - So sánh kết quả matching trực tiếp với use case mà tool MCP gọi trên cùng tin và hai hồ sơ tổng hợp; cả 500 cặp cho kết quả DTO giống nhau, hồ sơ phù hợp đạt 77.1% và hồ sơ không liên quan 0.0%. Phép đo trong JVM dao động giữa 229.41/285.50 µs và 245.42/343.98 µs; không đại diện độ trễ HTTP hoặc dữ liệu thực tế.
+  - Phát hiện hàm làm tròn chặn `matchPercentage` ở 1.0 do tái sử dụng clamp của điểm thành phần 0–1. Tách làm tròn phần trăm theo thang 0–100 và thêm assertion hồi quy.
+  - `mvnw -B verify` đạt 316/316, gồm HexagonalArchitecture 11/11 và MCP Streamable HTTP integration 4/4. Ghi rõ trong tài liệu rằng benchmark không đo RAG matcher độc lập; HRPM-58 còn chờ đồng thuận nhóm.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, Tri-Vector lexical coverage/cosine, use case MCP có kiểm tra công ty và đơn ứng tuyển, JUnit/Mockito, Maven Wrapper; tài liệu so sánh chi phí/latency/chất lượng/bảo trì.
+- **Mục đích chức năng / việc đã làm**: Sửa thang điểm tổng để UI và API nhận đúng phần trăm, ngăn regression và cung cấp bằng chứng đo lường trung thực cho quyết định dùng Tri-Vector, MCP và RAG.
+## TRIỂN KHAI THỐNG KÊ API QUẢN TRỊ — HRPM-59 — 19/10/2026
+- **Đã làm được gì**:
+  - Ghi request count, latency trung bình/cao nhất và số/tỷ lệ lỗi 4xx/5xx theo route template; hiển thị xu hướng bucket 5 phút trong trang `/admin/metrics`.
+  - Bảo vệ API metrics bằng quyền `ROLE_ADMIN`; loại URL query, body, token, tài khoản và ID động khỏi dữ liệu thu thập. Dọn bucket sau 24 giờ; ghi rõ số liệu nằm trong bộ nhớ từng tiến trình và sẽ mất khi restart.
+  - Kiểm thử nhánh từ `origin/main`: backend Maven `verify` đạt 323/323; frontend Vitest 92/92, ESLint và Vite build đều đạt. Thêm test bảo đảm HTTP method tùy ý được gom thành `OTHER` để giới hạn cardinality của metrics.
+  - Cấu hình hai dịch vụ Render tự deploy sau khi CI checks pass bằng `autoDeployTrigger: checksPass`, theo yêu cầu bật auto-deploy. Render hiện phục vụ backend health `UP`, build `90a56e3`; phiên bản metrics mới chỉ được xác nhận sau merge/deploy.
+  - Sửa request dashboard metrics dùng `authenticatedFetch` để khi access token hết hạn, phiên hợp lệ được refresh và thử lại như các API admin khác. Kiểm tra helper xác thực 3/3 test và frontend production build đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Servlet filter, `ConcurrentHashMap`, `LongAdder`/`LongAccumulator`, allowlist HTTP method, route template, bucket 5 phút, Spring Security `ROLE_ADMIN`, React/TypeScript và Vitest.
+- **Mục đích chức năng / việc đã làm**: Cho quản trị viên theo dõi lưu lượng, độ trễ và lỗi API theo endpoint mà không ghi dữ liệu nhạy cảm hoặc truy vấn DB trong luồng xử lý request.
+
+## UAT TOÀN WEBSITE, SỬA LỖI VÀ KIỂM THỬ HỒI QUY — 20/10/2026
+- **Đã làm được gì**: Rà các route public, ứng viên, nhà tuyển dụng, quản trị và trợ lý trên 360/390/555/1280/1440 px; ghi 5 lỗi UAT và sửa trong nhánh riêng. Kiểm tra backend mvnw verify 324/324, frontend Vitest 100/100, ESLint, production build, API E2E H2 28/28, Playwright 11/11; lưu 125 ảnh cùng log tại docs/qa/full-site-uat-2026-10-20/. Production smoke chỉ đọc xác nhận bản nền SHA 474b749...; các sửa UAT còn chờ PR/review/CD.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, AbortController và ReadableStream để giới hạn thời gian cả response body; TanStack Query cho trạng thái lỗi/thử lại; Vitest, ESLint, TypeScript/Vite, Playwright Chromium; Spring Boot/Maven với H2 cô lập; GET/OPTIONS smoke trên Render.
+- **Mục đích chức năng / việc đã làm**: Giúp người dùng luôn thấy lỗi tạo tin ngay trong form, thoát trạng thái tải vô hạn, đăng xuất có giới hạn thời gian, và nhận thông báo đúng khi response đăng nhập bị timeout; xác nhận responsive và quyền cơ bản mà không ghi dữ liệu production.
+
+## RE-REVIEW VÀ SỬA HỒI QUY UAT — 20/10/2026
+- **Đã làm được gì**: Khắc phục hai P2 từ Bugbot: logout khi token hết hạn không còn chờ refresh trước khi UI chuyển trang; timeout body chatbot hiện thông báo chậm thay vì lỗi JSON. `MainLayout` và `WorkspaceLayoutFrame` điều hướng ngay khi logout; thao tác chờ lock tối đa 10.5 giây và mỗi request revoke tối đa 2.5 giây. Regression mới kiểm tra logout 401 + refresh treo và chatbot response body treo. Kiểm tra cuối tại mốc đó đạt frontend Vitest 102/102, ESLint, TypeScript/Vite build, API E2E H2 28/28, Playwright 12/12; lưu log, 125 ảnh hậu review và trace lỗi đã khắc phục trong `docs/qa/full-site-uat-2026-10-20/`. Production khi đó vẫn ở SHA nền `474b749...`; PR #48 chưa merge/deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router điều hướng logout không chờ mạng; `FetchTimeoutError`, Fetch API và `ReadableStream` giữ timeout tới khi body kết thúc; request auth dùng access/refresh token đã chụp trước khi xóa local; Vitest và Playwright trên Spring Boot/H2.
+- **Mục đích chức năng / việc đã làm**: Đảm bảo người dùng thoát giao diện ngay khi chọn đăng xuất kể cả khi backend/refresh bị treo, đồng thời trợ lý giải thích rõ lỗi timeout khi máy chủ đã gửi headers nhưng body chưa về.
+
+## FULL REGRESSION SAU SECURITY/BUGBOT REVIEW — 20/10/2026
+- **Đã làm được gì**: Đóng race để refresh không khôi phục token sau logout và áp dụng deadline tuyệt đối cho request có retry. Chạy lại Maven `verify` 324/324, Vitest 104/104, ESLint, TypeScript/Vite build, API E2E H2 28/28 và Playwright 12/12; log/backend output được lưu trong `docs/qa/full-site-uat-2026-10-20/`. Production chưa được cập nhật: PR #48 còn chờ review/merge của trưởng nhóm theo gitflow.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, auth-mutation version, refresh-token snapshot, `FetchTimeoutError`, absolute deadline và thời gian còn lại cho HTTP/refresh/retry; Vitest, Playwright Chromium, Spring Boot/H2, Maven/JDK 21.
+- **Mục đích chức năng / việc đã làm**: Tránh người dùng bị đăng nhập trở lại sau khi thoát và đảm bảo timeout chatbot/API phản ánh tổng thời gian chờ thay vì đặt lại ở từng chặng; full regression xác nhận các route/role và viewport trong môi trường dữ liệu cô lập.
+
+## SỬA RACE THU HỒI PHIÊN KHI REFRESH TOKEN BỊ XOAY — 20/10/2026
+- **Đã làm được gì**: Security Review tìm ra trường hợp logout thất bại nếu request khác vừa xoay refresh token. Frontend dùng Web Lock để chờ refresh và gửi cặp token mới nhất; backend xác minh chữ ký, thời hạn, loại và cùng session, còn refresh-only cần hash hiện hành. Token cũ không thể tự thu hồi phiên. Thêm kiểm thử hồi quy cho xoay token; E2E runner chọn JDK 21 theo môi trường và lưu log/ảnh. Kiểm thử tại mốc UAT-10: Maven `verify` 327/327, Vitest 104/104, ESLint/build đạt, API E2E 28/28, Playwright 12/12.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Security `permitAll` cho endpoint logout tự xác thực token ở use case; `TokenProviderPort` xác minh JWT; repository thu hồi session theo session ID; Spring MockMvc/JUnit, Vitest và Playwright Chromium.
+- **Mục đích chức năng / việc đã làm**: Thu hồi session ổn định dù refresh và logout đến server đồng thời; refresh token chỉ dùng để chấm dứt đúng session, không cấp quyền gọi API. Log và 125 ảnh mới lưu tại `docs/qa/full-site-uat-2026-10-20/runs/2026-10-20-015604/`. Bản sửa chưa deploy production; chờ Bugbot/Security re-review, CI và leader review/merge theo gitflow.
+
+## FULL UAT VÀ KHẮC PHỤC — 20/10/2026
+- **Đã làm được gì**: Hoàn tất UAT-01–11 trên local, thêm regression cho timeout, lỗi tạo tin, theo dõi ứng tuyển và đăng xuất/thu hồi phiên. Kiểm thử xác nhận: Maven verify 327/327 (backend không đổi sau lượt verify), API E2E H2 28/28, Vitest 111/111, Playwright 15/15 với ba vai trò và viewport 360/390/555/1280/1440 px; ESLint và production build đạt. Bugbot và Security Review đều không còn finding cần xử lý. Lưu test log, trace lỗi đã sửa và 125 ảnh QA dưới `docs/qa/full-site-uat-2026-10-20/`. Chưa ghi dữ liệu production; PR #48 còn cần CI mới và merge trước khi Render deploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Web Locks API, auth-mutation version và refresh-token snapshot; deadline tuyệt đối cho Fetch/body/retry; Spring Boot, JWT, session revocation qua JPA; Vitest, Playwright Chromium, Maven/JDK 21 và H2 cô lập.
+- **Mục đích chức năng / việc đã làm**: Giữ luồng đăng nhập, trợ lý, tạo tin và lịch sử ứng tuyển có lỗi/timeout rõ ràng; đăng xuất đưa người dùng về trang đăng nhập ngay và thu hồi đúng phiên server trong giới hạn thời gian. Cải thiện khả năng tái kiểm thử nhờ log từng lệnh và bằng chứng theo viewport.
+
+## SỬA PHẢN HỒI KHÔI PHỤC MẬT KHẨU — 20/10/2026
+- **Đã làm được gì**: Bỏ nhãn “Bảo mật tài khoản”; sửa thông báo để không khẳng định email đã được gửi. Backend trả HTTP 503 với nội dung dễ hiểu khi gửi mail bị tắt, trước khi tra cứu tài khoản hoặc tạo token; frontend cũng có thông báo dự phòng cho HTTP 503. Khi kiểm thử qua `127.0.0.1`, phát hiện mặc định CORS chỉ cho `localhost`; bổ sung loopback IP trong cấu hình và fallback của `SecurityConfig` để giao diện tại `127.0.0.1:5173` nhận được phản hồi API. Kiểm thử liên quan sau cập nhật: Maven 9/9, Vitest 112/112; ESLint và Vite build đạt; trình duyệt nhận đúng HTTP 503 và thông báo tiếng Việt chính xác trên preview.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Spring Boot `DomainException`/`GlobalExceptionHandler`, SMTP config `PASSWORD_RESET_MAIL_ENABLED`, CORS allowlist, JUnit/Mockito và MockMvc.
+- **Mục đích chức năng / việc đã làm**: Tránh báo thành công giả khi mail reset password chưa được cấu hình, đồng thời tránh CORS chặn API trên địa chỉ loopback thường dùng; email thực chỉ gửi được sau khi bật cờ và cung cấp credential SMTP hợp lệ qua biến môi trường.
+
+## QUÊN MẬT KHẨU BẰNG OTP EMAIL — 20/10/2026
+- **Đã làm được gì**: Thay luồng khôi phục bằng email → gửi OTP 6 chữ số → xác minh → đặt mật khẩu mới. OTP hết hạn sau 15 phút, resend sau 60 giây, tối đa 5 lần nhập sai; mã đúng được đổi thành reset grant dùng một lần, hết hạn sau 5 phút. Thêm migration V4, API/DTO, giao diện trạng thái từng bước, cập nhật OpenAPI và tài liệu DB. Xác minh Maven `verify` 341/341, Vitest 115/115, ESLint và Vite production build đều đạt; `git diff --check` sạch.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Spring Security rate limit, JPA/Flyway, `SecureRandom`, HMAC-SHA-256 cho OTP và token hash cho reset grant; React/TypeScript, Vitest, JUnit/MockMvc và H2.
+- **Mục đích chức năng / việc đã làm**: Chỉ người dùng có email nhận được OTP hợp lệ mới được đặt mật khẩu mới; nhập sai có thể thử lại đến giới hạn, OTP không thể dùng trực tiếp để đổi mật khẩu và email không tồn tại không bị lộ qua phản hồi yêu cầu gửi mã. Gửi email thật cần bật `PASSWORD_RESET_MAIL_ENABLED=true` và cấu hình SMTP hợp lệ. Chưa redeploy production.
+
+## NÚT HIỆN / ẨN MẬT KHẨU KHI KHÔI PHỤC — 21/10/2026
+- **Đã làm được gì**: Thêm nút biểu tượng mắt cho ô mật khẩu mới và xác nhận mật khẩu ở bước đặt lại; hai trạng thái bật/tắt độc lập và được đặt lại sau khi đổi mật khẩu thành công. Vitest 115/115, ESLint và Vite production build đạt.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React `useState`, TypeScript, Lucide `Eye`/`EyeOff`, nhãn ARIA và focus-visible để hỗ trợ bàn phím.
+- **Mục đích chức năng / việc đã làm**: Giúp người dùng kiểm tra chính xác mật khẩu mới và nội dung xác nhận trước khi lưu, đồng thời giữ nội dung che mặc định.
+
+## BẬT CỜ GỬI OTP TRÊN LOCAL — 21/10/2026
+- **Đã làm được gì**: Lưu biến môi trường Windows cấp user `PASSWORD_RESET_MAIL_ENABLED=true` và khởi động lại BE local cổng 8080 bằng JDK 21, profile `local`. Giữ nguyên file H2 hiện có; Flyway xác thực 4 migration và áp dụng V4 thành công. Smoke test trang `/forgot-password` trên FE 5180 trả HTTP 200; POST yêu cầu OTP không có email trả HTTP 400 như validation mong đợi. Không thay đổi Render/production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Windows User environment kết hợp với Spring Boot externalized configuration trong `application.yml`.
+- **Mục đích chức năng / việc đã làm**: Cho phép backend local nhận cờ gửi OTP mới và chạy schema OTP V4; email thực vẫn cần SMTP credentials `MAIL_USERNAME` và `MAIL_PASSWORD`, hiện chưa có trong Windows User environment.
+
+## TRỢ LÝ QUẢN TRỊ VÀ PHÁT HÀNH MAIN — 21/10/2026
+- **Đã làm được gì**: Thêm trang `/admin/assistant` trong khu vực Admin, điều hướng sidebar mở đúng trợ lý riêng, ẩn widget trợ lý thường trên mọi route `/admin/*`. Gỡ nhãn “Không gian làm việc” và nhãn vai trò khỏi header/sidebar admin; giữ layout recruiter mặc định. Trang tải số liệu thật từ API quản trị và có lối tắt tới màn quản lý; chat trả lời tổng quan/hàng chờ/API từ dữ liệu tải tại chỗ, câu hỏi quy trình dùng trợ lý RAG hiện có. Xác minh ESLint, Vitest 115/115, frontend production build và Maven verify 341/341 đạt. Docker daemon local không chạy; workflow CD trên main sẽ build và kiểm tra marker production của cả hai service.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, React Router lazy route, API `getAdminDashboardStats`/`getAdminApiMetrics`, xử lý thống kê xác định tại client và RAG knowledge base cho câu hỏi quy trình; pnpm 9, Vitest, ESLint, Vite, Maven/JDK 21.
+- **Mục đích chức năng / việc đã làm**: Phân biệt trợ lý quản trị với trợ lý người dùng thường, hỗ trợ đọc số liệu/vận hành và mở nhanh tác vụ quản trị mà không tự thay đổi trạng thái tài khoản, doanh nghiệp hoặc tin tuyển dụng.
+
+## SỬA ĐIỀU HƯỚNG TRỢ LÝ QUẢN TRỊ — 21/10/2026
+- **Đã làm được gì**: Sửa mục Trợ lý ở thanh điều hướng chung để tài khoản ROLE_ADMIN mở `/admin/assistant` và hiển thị nhãn “Trợ lý quản trị”; thêm điều hướng dự phòng để admin truy cập trực tiếp `/assistant` cũng được chuyển sang trang riêng. Đã chạy kiểm tra lint, test và build frontend.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React Router `Navigate`, kiểm tra role `ROLE_ADMIN` từ phiên đăng nhập đang lưu, điều hướng theo vai trò trong React.
+- **Mục đích chức năng / việc đã làm**: Không để quản trị viên vô tình vào trợ lý user khi chọn mục Trợ lý ở header hoặc mở URL `/assistant` trực tiếp.
+
+## ẨN THAO TÁC TÀI KHOẢN TRONG KHU VỰC QUẢN TRỊ — 21/10/2026
+- **Đã làm được gì**: Ẩn hai nút đổi mật khẩu và đăng xuất ở khu vực tài khoản của layout Admin; các layout dùng chung khác vẫn giữ nút và hộp thoại đổi mật khẩu. Đã xác minh bằng lint, test và build frontend.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript; thuộc tính tùy chọn `showAccountActions` trên `WorkspaceLayoutFrame`, được bật mặc định và tắt riêng từ `AdminLayout`.
+- **Mục đích chức năng / việc đã làm**: Gọn khu vực tài khoản trong trang quản trị theo yêu cầu mà không thay đổi thao tác ở recruiter hoặc layout khác.
+
+## SỬA PHẢN HỒI LỖI PHÊ DUYỆT DOANH NGHIỆP — 21/10/2026
+- **Đã làm được gì**: Đưa lỗi API phê duyệt vào ngay modal xác nhận thay vì chỉ đặt thông báo phía sau lớp phủ; lỗi giữ modal mở để người quản trị sửa nguyên nhân và thử lại. Xóa lỗi cũ khi mở modal/thử lại, hiển thị trạng thái đang gửi rõ ràng, và lấy tên doanh nghiệp từ đúng request khi báo thành công. Thêm Playwright regression mô phỏng HTTP 409 rồi HTTP 200. Vitest 115/115, ESLint, Vite production build đạt; API E2E H2 28/28 và Playwright 16/16 đạt. Không thay đổi dữ liệu production; chưa merge/redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, TanStack Query mutation variables, ARIA dialog/alert, Lucide LoaderCircle, Playwright Chromium, Spring Boot với H2 cô lập; endpoint phê duyệt tiếp tục dùng `TransactionalUpdateCompanyStatusUseCase` để rollback khi lỗi nghiệp vụ.
+- **Mục đích chức năng / việc đã làm**: Giúp admin nhìn thấy chính xác lý do API từ chối duyệt ngay tại thao tác, có thể thử lại sau khi khắc phục; xác nhận không nhầm lỗi nghiệp vụ thành trạng thái thành công.
+
+## HOÀN THIỆN KHÔNG GIAN QUẢN TRỊ, XUẤT BÁO CÁO VÀ ĐÓNG HRPM-58/59 — 22/10/2026
+- **Đã làm được gì**:
+  - Thiết kế lại khu vực quản trị với header ngang co giãn theo màn hình, menu Cài đặt gom đổi mật khẩu/đăng xuất, bỏ nhãn “Phiên làm việc an toàn”; căn chỉnh lại nút, trạng thái và bảng doanh nghiệp để tránh nhãn bị vỡ dòng. Sửa lỗi lớp phủ chặn nút Cài đặt khi đóng menu.
+  - Mở rộng trang Trợ lý quản trị và thêm xuất biểu đồ PNG, workbook Excel theo tổng quan/endpoint/bucket 5 phút, cùng báo cáo Word từ số liệu API đã xác thực. Báo cáo nêu nguồn và thời điểm, không tạo số liệu suy diễn.
+  - Cải thiện phê duyệt doanh nghiệp: thời hạn chờ 90 giây, đối chiếu lại trạng thái server sau lỗi phản hồi không rõ để thông báo đúng kết quả và không bắt duyệt lại khi server đã lưu thành công.
+  - Theo xác nhận thống nhất của nhóm, chuyển HRPM-58 và HRPM-59 sang Done; đối chiếu đủ 13 issue của Sprint 2 (HRPM-8, 50, 55–59, 62–67) và tất cả đều Done. Tài liệu HRPM-58 vẫn ghi rõ benchmark tổng hợp không đại diện độ trễ HTTP hay dữ liệu thực; không đo một RAG matcher độc lập.
+  - Xác minh backend `mvnw -B verify` đạt 341/341 trên JDK 21; frontend Vitest 122/122, ESLint, Vite production build và `pnpm audit --prod` (không phát hiện lỗ hổng) đều đạt; API E2E H2 28/28 và Playwright 18/18 đạt. Lần E2E đầu phát hiện lỗi lớp phủ menu, đã sửa và chạy lại toàn bộ thành công.
+  - Lưu log kiểm thử và ảnh giao diện tại `docs/qa/full-site-uat-2026-10-20/runs/2026-10-22-003037/`. PR [#54](https://github.com/leduykhanhdevs/TalentBridge_JS2/pull/54) được mở vào `dev` theo quy tắc repo. Tại thời điểm kiểm tra, `dev` còn sau `main`, PR ở trạng thái conflict và GitHub chưa tạo CI checks; Dockerfile verification local cũng chưa chạy vì Docker daemon không sẵn sàng. Chưa merge hoặc redeploy production.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind, React Router, TanStack Query; SVG raster hóa bằng Canvas cho PNG, OOXML workbook tạo bằng `fflate`, tài liệu DOCX tạo bằng `docx`; dữ liệu dashboard/metrics từ API `ROLE_ADMIN`; Java 21, Spring Boot, Maven, JUnit/MockMvc, H2, Vitest, Playwright Chromium. Hướng sản phẩm đã thống nhất: Tri-Vector cho matching, MCP cho thao tác ATS có phân quyền và RAG cho trợ lý kiến thức.
+- **Mục đích chức năng / việc đã làm**: Làm cho quản trị viên thao tác nhất quán, nhìn rõ kết quả duyệt và xuất được báo cáo từ dữ liệu hệ thống; hoàn tất các yêu cầu triển khai API metrics và quyết định kiến trúc AI đã thống nhất, đồng thời lưu bằng chứng kiểm thử để review.
+
+## UAT FOLLOW-UP: OTP EMAIL, AUTH NAVIGATION VÀ TRỢ LÝ QUẢN TRỊ — 22/10/2026
+- **Đã làm được gì**: Đối chiếu Render backend logs và xác định OTP thất bại khi kết nối `smtp.gmail.com:587` bị timeout; đặt giới hạn SMTP 10 giây và sửa phản hồi UI để không tuyên bố email đã gửi khi chưa có bằng chứng gửi thành công. Ẩn điều hướng Home/Jobs/Assistant trên login/register/forgot/reset password. Sửa ưu tiên nhận diện thống kê API trong trợ lý quản trị và phân biệt từ “ảnh” với đại từ “Anh”. Kiểm thử đạt: Maven 341/341, Vitest 127/127, API E2E H2 28/28, Playwright 20/20, ESLint, Vite production build và `pnpm audit --prod` đều pass. Ghi rõ email thật vẫn không gửi được từ Render Free vì chính sách chặn SMTP; xem chẩn đoán ở `docs/qa/full-site-uat-2026-10-20/runs/2026-10-22-otp-nav-followup/production-email-diagnosis.md`.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, React Router, Spring Boot SMTP properties, timeout kết nối/đọc/ghi 10 giây, Vitest, Playwright Chromium, Maven/JDK 21, H2 E2E; kiểm tra chính sách Render Free tại [Render Free web services](https://render.com/docs/free) và [Render SMTP restriction notice](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports).
+- **Mục đích chức năng / việc đã làm**: Tránh thông báo sai về việc gửi OTP, giúp người dùng nhìn thấy lỗi backend kịp thời, tập trung giao diện auth và bảo đảm yêu cầu thống kê API được xử lý đúng. Các sửa đổi mới còn ở PR #54; chưa xác minh CI/CD hay ghi nhận redeploy. Việc gửi mail cần dịch vụ Render cho phép SMTP hoặc nhà cung cấp email qua HTTPS với khóa do chủ dự án cấu hình.
+
+## SỬA FINDINGS CUỐI BUGBOT/SECURITY CHO PR #54 — 22/10/2026
+- **Đã làm được gì**: Sửa ba lỗi review: câu hỏi `password` không còn bị nhận nhầm thành xuất Word; trường email OTP bị khóa khi request pending và bước xác minh giữ đúng email đã gửi; reset-grant dạng Base64URL được privacy guard chặn trước khi gửi sang Gemini. Thêm kiểm thử hồi quy và chạy lại: Maven `verify` 341/341, Vitest 20 files / 128 tests, API E2E H2 28/28, Playwright 21/21, ESLint và Vite production build đều đạt. Playwright xác nhận menu điều hướng không còn trên `/forgot-password`. Log đầy đủ tại `docs/qa/full-site-uat-2026-10-20/runs/2026-10-22-012713/`.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: TypeScript whole-term matching bằng Unicode letter/number boundaries; React/TanStack Query mutation variables cho snapshot email OTP; Java regex phát hiện token 32 byte dạng Base64URL dài 43 ký tự; Vitest, JUnit, Spring Boot/H2 và Playwright Chromium.
+- **Mục đích chức năng / việc đã làm**: Ngăn chatbot xuất tài liệu sai ý định hoặc tiết lộ grant reset cho Gemini; giữ luồng OTP nhất quán khi request bất đồng bộ; bảo đảm UI auth tập trung. PR #54 chưa có các sửa đổi mới trên remote và chưa deploy production. Render Free vẫn chặn SMTP Gmail; cần gói cho phép SMTP hoặc tích hợp API email HTTPS có secret do chủ dự án cấu hình.
+
+## XÁC NHẬN LẠI FULL UAT VÀ REGRESSION — 22/10/2026
+- **Đã làm được gì**: Xác định test Playwright lỗi lần đầu do Chromium báo `ERR_NO_BUFFER_SPACE` khi tải `src/main.tsx`; giữ lại trace và log thất bại, sau đó chạy lại toàn bộ E2E trên backend H2 cô lập. Kết quả xác nhận: Maven `verify` 347/347, API E2E 28/28, Playwright 21/21, Vitest 20 files / 128 tests, ESLint và Vite production build đều đạt; `git diff --check` sạch. Log cuối ở `docs/qa/full-site-uat-2026-10-20/runs/2026-10-22-015549/`, Maven verify ở `runs/2026-10-22-015000/`.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot, Maven/JUnit, H2; React/TypeScript, Vitest, ESLint, Vite; Playwright Chromium chạy tuần tự với API E2E và ảnh viewport. Rate limiting tin cậy `CF-Connecting-IP` do Cloudflare edge của Render ghi đè và fallback về socket address; request OTP bị từ chối do queue đầy trả HTTP 503 chung trước khi tra cứu tài khoản.
+- **Mục đích chức năng / việc đã làm**: Xác nhận những lỗi auth, OTP, trợ lý quản trị và luồng nhà tuyển dụng đã sửa không tái phát trong regression. Tất cả dữ liệu ghi trong E2E dùng H2/fixture; không gửi mail OTP thật hay ghi dữ liệu production. PR #54, CI mới và release/CD vẫn là các cổng cần hoàn tất trước khi ghi nhận redeploy; Render Free vẫn chặn SMTP Gmail.

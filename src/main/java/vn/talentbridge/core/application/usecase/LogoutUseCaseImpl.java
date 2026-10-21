@@ -21,41 +21,62 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
     }
 
     @Override
-    public void logout(String accessToken) {
-        if (accessToken == null
-                || accessToken.isBlank()
-                || !tokenProvider.validateToken(accessToken)) {
+    public void logout(String accessToken, String refreshToken) {
+        SessionIdentity accessSession = readSessionIdentity(accessToken, "access");
+        SessionIdentity refreshSession = readSessionIdentity(refreshToken, "refresh");
+
+        if (accessSession == null && refreshSession == null) {
             throw new InvalidSessionException();
         }
 
-        String tokenType;
-        String sessionId;
-        Long userId;
-
-        try {
-            tokenType = tokenProvider.getTokenTypeFromToken(accessToken);
-            sessionId = tokenProvider.getSessionIdFromToken(accessToken);
-            userId = tokenProvider.getUserIdFromToken(accessToken);
-        } catch (RuntimeException exception) {
-            // Token có thể vừa hết hạn giữa các lần đọc.
+        if (accessSession != null
+                && refreshSession != null
+                && !accessSession.equals(refreshSession)) {
             throw new InvalidSessionException();
         }
 
-        if (!"access".equals(tokenType)
-                || sessionId == null
-                || sessionId.isBlank()
-                || userId == null) {
-            throw new InvalidSessionException();
-        }
-
-        boolean revoked = authSessionRepository.revokeActiveSession(
-                sessionId,
-                userId,
-                LocalDateTime.now()
-        );
+        SessionIdentity session = accessSession != null ? accessSession : refreshSession;
+        LocalDateTime now = LocalDateTime.now();
+        boolean revoked = accessSession != null
+                ? authSessionRepository.revokeActiveSession(
+                        session.sessionId(),
+                        session.userId(),
+                        now
+                )
+                : authSessionRepository.revokeActiveSessionByRefreshTokenHash(
+                        session.sessionId(),
+                        session.userId(),
+                        tokenProvider.hashRefreshToken(refreshToken),
+                        now
+                );
 
         if (!revoked) {
             throw new InvalidSessionException();
         }
+    }
+
+    private SessionIdentity readSessionIdentity(String token, String expectedType) {
+        if (token == null || token.isBlank() || !tokenProvider.validateToken(token)) {
+            return null;
+        }
+
+        try {
+            String tokenType = tokenProvider.getTokenTypeFromToken(token);
+            String sessionId = tokenProvider.getSessionIdFromToken(token);
+            Long userId = tokenProvider.getUserIdFromToken(token);
+            if (!expectedType.equals(tokenType)
+                    || sessionId == null
+                    || sessionId.isBlank()
+                    || userId == null) {
+                return null;
+            }
+            return new SessionIdentity(sessionId, userId);
+        } catch (RuntimeException exception) {
+            // Token có thể vừa hết hạn giữa các lần đọc.
+            return null;
+        }
+    }
+
+    private record SessionIdentity(String sessionId, Long userId) {
     }
 }

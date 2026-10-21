@@ -74,6 +74,7 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
         entity.setDeadline(domainJob.getDeadline());
         entity.setStatus(domainJob.getStatus());
         entity.setRecruiterUserId(domainJob.getRecruiterUserId());
+        entity.setIsDemo(domainJob.isDemo());
 
         // Process skills
         if (domainJob.getSkills() != null) {
@@ -252,7 +253,7 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
                 ? entity.getSkills().stream().map(SkillJpaEntity::getName).sorted().toList()
                 : Collections.emptyList();
 
-        return new Job(
+        Job job = new Job(
                 entity.getId(),
                 companyId,
                 companyName,
@@ -275,5 +276,7 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
+        job.setDemo(Boolean.TRUE.equals(entity.getIsDemo()));
+        return job;
     }
 }
