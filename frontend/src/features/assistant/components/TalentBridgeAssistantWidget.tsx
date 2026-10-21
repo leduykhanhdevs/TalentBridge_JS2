@@ -8,13 +8,14 @@ export function TalentBridgeAssistantWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const { pathname } = useLocation()
     const normalizedPathname = pathname.replace(/\/+$/, '') || '/'
+    const isAdminPage = normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')
     const isAuthenticationPage = [
         '/login',
         '/register',
         '/forgot-password',
         '/reset-password',
     ].includes(normalizedPathname)
-    if (normalizedPathname === '/assistant' || isAuthenticationPage) return null
+    if (normalizedPathname === '/assistant' || isAuthenticationPage || isAdminPage) return null
 
     return (
         <div className="hidden sm:fixed sm:bottom-7 sm:right-7 sm:z-[45] sm:block">
