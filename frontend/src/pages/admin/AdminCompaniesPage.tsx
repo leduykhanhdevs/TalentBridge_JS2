@@ -9,6 +9,7 @@ import {
     Clock,
     ExternalLink,
     Filter,
+    LoaderCircle,
     MapPin,
     RefreshCw,
     Search,
@@ -46,6 +47,7 @@ export function AdminCompaniesPage() {
     const [activeKeyword, setActiveKeyword] = useState('')
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [actionError, setActionError] = useState<string | null>(null)
+    const [approvalError, setApprovalError] = useState<string | null>(null)
 
     // Status parameter for API
     const statusParam = activeTab === 'ALL' ? undefined : (activeTab as CompanyStatus)
@@ -86,6 +88,7 @@ export function AdminCompaniesPage() {
             request,
         }: {
             companyId: number
+            companyName: string
             request: UpdateCompanyStatusRequest
         }) => {
             return await updateCompanyStatus(companyId, request)
@@ -93,23 +96,24 @@ export function AdminCompaniesPage() {
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['admin-companies'] })
             if (variables.request.status === 'APPROVED') {
-                setSuccessMessage(`Doanh nghiệp "${approvingCompany?.name}" đã được phê duyệt thành công.`)
+                setSuccessMessage(`Doanh nghiệp "${variables.companyName}" đã được phê duyệt thành công.`)
+                setApprovalError(null)
                 setApprovingCompany(null)
             } else {
-                setSuccessMessage(`Đã từ chối doanh nghiệp "${rejectingCompany?.name}".`)
+                setSuccessMessage(`Đã từ chối doanh nghiệp "${variables.companyName}".`)
                 setRejectingCompany(null)
                 setRejectReason('')
                 setRejectInputError(null)
             }
             setTimeout(() => setSuccessMessage(null), 4000)
         },
-        onError: (err: unknown) => {
+        onError: (err: unknown, variables) => {
             const msg = err instanceof Error ? err.message : 'Thao tác không thành công'
-            if (rejectingCompany) {
-                setRejectInputError(msg)
-            } else {
-                setActionError(msg)
+            if (variables.request.status === 'APPROVED') {
+                setApprovalError(msg)
+                return
             }
+            setRejectInputError(msg)
         },
     })
 
@@ -143,8 +147,10 @@ export function AdminCompaniesPage() {
 
     function handleConfirmApprove() {
         if (!approvingCompany) return
+        setApprovalError(null)
         statusMutation.mutate({
             companyId: approvingCompany.id,
+            companyName: approvingCompany.name,
             request: { status: 'APPROVED' },
         })
     }
@@ -158,6 +164,7 @@ export function AdminCompaniesPage() {
 
         statusMutation.mutate({
             companyId: rejectingCompany.id,
+            companyName: rejectingCompany.name,
             request: {
                 status: 'REJECTED',
                 reason: rejectReason.trim(),
@@ -591,7 +598,11 @@ export function AdminCompaniesPage() {
                                                         <button
                                                             className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-600 px-3 py-1.5 text-xs sm:text-sm font-black text-white shadow-2xs hover:bg-emerald-700 transition"
                                                             disabled={statusMutation.isPending}
-                                                            onClick={() => setApprovingCompany(company)}
+                                                            onClick={() => {
+                                                                setActionError(null)
+                                                                setApprovalError(null)
+                                                                setApprovingCompany(company)
+                                                            }}
                                                             title="Phê duyệt doanh nghiệp"
                                                             type="button"
                                                         >
@@ -635,7 +646,11 @@ export function AdminCompaniesPage() {
                                                     <button
                                                         className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 shadow-2xs"
                                                         disabled={statusMutation.isPending}
-                                                        onClick={() => setApprovingCompany(company)}
+                                                        onClick={() => {
+                                                            setActionError(null)
+                                                            setApprovalError(null)
+                                                            setApprovingCompany(company)
+                                                        }}
                                                         title="Phê duyệt lại hồ sơ"
                                                         type="button"
                                                     >
@@ -801,14 +816,14 @@ export function AdminCompaniesPage() {
 
             {/* 7. Bento Approve Confirmation Modal */}
             {approvingCompany && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bento-card w-full max-w-md border border-slate-200/90 bg-white p-6 sm:p-7 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in" role="presentation">
+                    <div aria-labelledby="approve-company-dialog-title" aria-modal="true" className="bento-card w-full max-w-md border border-slate-200/90 bg-white p-6 sm:p-7 shadow-2xl" role="dialog">
                         <div className="flex items-center gap-3.5">
                             <div className="grid size-12 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
                                 <Check size={24} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-slate-900">Xác nhận phê duyệt pháp nhân</h3>
+                                <h3 className="text-lg font-black text-slate-900" id="approve-company-dialog-title">Xác nhận phê duyệt pháp nhân</h3>
                                 <p className="text-xs font-semibold text-slate-500">{approvingCompany.name}</p>
                             </div>
                         </div>
@@ -817,6 +832,17 @@ export function AdminCompaniesPage() {
                             Khi hoàn tất phê duyệt, doanh nghiệp sẽ được cấp trạng thái <strong>APPROVED</strong>.
                             Các chuyên viên nhân sự của công ty sẽ chính thức được kích hoạt quyền đăng tin tuyển dụng và tìm kiếm hồ sơ ứng viên TopCV trên toàn hệ thống TalentBridge.
                         </p>
+
+                        {approvalError && (
+                            <div aria-live="assertive" className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50 px-3.5 py-3 text-sm text-rose-800" role="alert">
+                                <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-rose-600" />
+                                <div className="space-y-1">
+                                    <p className="font-bold">Không thể phê duyệt doanh nghiệp</p>
+                                    <p className="font-medium leading-relaxed">{approvalError}</p>
+                                    <p className="text-xs font-semibold text-rose-700">Kiểm tra thông tin và thử lại.</p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mt-6 flex justify-end gap-3">
                             <button
@@ -828,12 +854,15 @@ export function AdminCompaniesPage() {
                                 Hủy bỏ
                             </button>
                             <button
+                                aria-busy={statusMutation.isPending}
                                 className="rounded-xl bg-emerald-600 px-5 py-2 text-xs sm:text-sm font-black text-white shadow-sm hover:bg-emerald-700 transition"
                                 disabled={statusMutation.isPending}
                                 onClick={handleConfirmApprove}
                                 type="button"
                             >
-                                {statusMutation.isPending ? 'Đang xử lý...' : 'Xác nhận phê duyệt'}
+                                {statusMutation.isPending ? (
+                                    <span className="inline-flex items-center gap-2"><LoaderCircle aria-hidden="true" className="animate-spin" size={15} />Đang xử lý...</span>
+                                ) : 'Xác nhận phê duyệt'}
                             </button>
                         </div>
                     </div>

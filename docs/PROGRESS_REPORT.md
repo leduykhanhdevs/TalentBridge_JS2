@@ -668,3 +668,8 @@
 - **Đã làm được gì**: Ẩn hai nút đổi mật khẩu và đăng xuất ở khu vực tài khoản của layout Admin; các layout dùng chung khác vẫn giữ nút và hộp thoại đổi mật khẩu. Đã xác minh bằng lint, test và build frontend.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript; thuộc tính tùy chọn `showAccountActions` trên `WorkspaceLayoutFrame`, được bật mặc định và tắt riêng từ `AdminLayout`.
 - **Mục đích chức năng / việc đã làm**: Gọn khu vực tài khoản trong trang quản trị theo yêu cầu mà không thay đổi thao tác ở recruiter hoặc layout khác.
+
+## SỬA PHẢN HỒI LỖI PHÊ DUYỆT DOANH NGHIỆP — 21/10/2026
+- **Đã làm được gì**: Đưa lỗi API phê duyệt vào ngay modal xác nhận thay vì chỉ đặt thông báo phía sau lớp phủ; lỗi giữ modal mở để người quản trị sửa nguyên nhân và thử lại. Xóa lỗi cũ khi mở modal/thử lại, hiển thị trạng thái đang gửi rõ ràng, và lấy tên doanh nghiệp từ đúng request khi báo thành công. Thêm Playwright regression mô phỏng HTTP 409 rồi HTTP 200. Vitest 115/115, ESLint, Vite production build đạt; API E2E H2 28/28 và Playwright 16/16 đạt. Không thay đổi dữ liệu production; chưa merge/redeploy.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, TanStack Query mutation variables, ARIA dialog/alert, Lucide LoaderCircle, Playwright Chromium, Spring Boot với H2 cô lập; endpoint phê duyệt tiếp tục dùng `TransactionalUpdateCompanyStatusUseCase` để rollback khi lỗi nghiệp vụ.
+- **Mục đích chức năng / việc đã làm**: Giúp admin nhìn thấy chính xác lý do API từ chối duyệt ngay tại thao tác, có thể thử lại sau khi khắc phục; xác nhận không nhầm lỗi nghiệp vụ thành trạng thái thành công.
