@@ -19,6 +19,7 @@ interface WorkspaceLayoutFrameProps {
     showWorkspaceLabel?: boolean
     showRoleBadge?: boolean
     showRoleCaption?: boolean
+    showAccountActions?: boolean
 }
 
 function initialsFor(name: string) {
@@ -36,6 +37,7 @@ export function WorkspaceLayoutFrame({
     showWorkspaceLabel = true,
     showRoleBadge = true,
     showRoleCaption = true,
+    showAccountActions = true,
 }: WorkspaceLayoutFrameProps) {
     const navigate = useNavigate()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -108,14 +110,16 @@ export function WorkspaceLayoutFrame({
                                 {showRoleCaption && <p className="mt-0.5 text-[11px] text-slate-500">{roleLabel}</p>}
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button aria-label="Đổi mật khẩu" className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]" onClick={() => setIsChangePasswordOpen(true)} title="Đổi mật khẩu" type="button">
-                                <KeyRound aria-hidden="true" size={15} />
-                            </button>
-                            <button aria-label="Đăng xuất" className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]" onClick={() => void handleLogout()} title="Đăng xuất" type="button">
-                                <LogOut aria-hidden="true" size={15} />
-                            </button>
-                        </div>
+                        {showAccountActions && (
+                            <div className="grid grid-cols-2 gap-2">
+                                <button aria-label="Đổi mật khẩu" className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]" onClick={() => setIsChangePasswordOpen(true)} title="Đổi mật khẩu" type="button">
+                                    <KeyRound aria-hidden="true" size={15} />
+                                </button>
+                                <button aria-label="Đăng xuất" className="grid size-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-[#1D4ED8]" onClick={() => void handleLogout()} title="Đăng xuất" type="button">
+                                    <LogOut aria-hidden="true" size={15} />
+                                </button>
+                            </div>
+                        )}
                         <NavLink className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-[#1D4ED8]" to="/">
                             <ArrowLeft aria-hidden="true" size={14} />Về TalentBridge
                         </NavLink>
@@ -137,7 +141,7 @@ export function WorkspaceLayoutFrame({
                 <span className="hidden font-semibold text-slate-500 sm:inline">TalentBridge ATS</span>
             </footer>
 
-            <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
+            {showAccountActions && <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />}
         </div>
     )
 }

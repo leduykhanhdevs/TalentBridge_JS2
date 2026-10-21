@@ -57,6 +57,7 @@ export function AdminLayout() {
             showWorkspaceLabel={false}
             showRoleBadge={false}
             showRoleCaption={false}
+            showAccountActions={false}
         />
     )
 }
