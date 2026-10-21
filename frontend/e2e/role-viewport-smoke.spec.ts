@@ -27,7 +27,7 @@ const actors = [
         password: 'AdminPassword123!',
         route: '/admin/jobs',
         heading: 'Kiểm duyệt tin tuyển dụng',
-        routes: ['/admin/candidates', '/admin/recruiters', '/admin/companies', '/admin/jobs', '/admin/metrics'],
+        routes: ['/admin/candidates', '/admin/recruiters', '/admin/companies', '/admin/jobs', '/admin/metrics', '/admin/assistant'],
     },
 ] as const
 
@@ -71,9 +71,12 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         if (actor.name === 'recruiter' || actor.name === 'admin') {
             await page.setViewportSize({ width: 360, height: 900 })
             await page.getByRole('button', { name: 'Mở điều hướng' }).click()
-            await page.getByRole('link', { name: 'Trợ lý', exact: true }).click()
-            await expect(page).toHaveURL(/\/assistant$/)
-            await expect(page.getByRole('heading', { name: 'Trợ lý TalentBridge', level: 1 })).toBeVisible()
+            const assistantLabel = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý'
+            const assistantPath = actor.name === 'admin' ? '/admin/assistant' : '/assistant'
+            const assistantHeading = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'
+            await page.getByRole('link', { name: assistantLabel, exact: true }).click()
+            await expect(page).toHaveURL(new RegExp(`${assistantPath.replaceAll('/', '\\/')}$`))
+            await expect(page.getByRole('heading', { name: assistantHeading, level: 1 })).toBeVisible()
             await page.goto(`${baseURL}${actor.route}`)
         }
 
