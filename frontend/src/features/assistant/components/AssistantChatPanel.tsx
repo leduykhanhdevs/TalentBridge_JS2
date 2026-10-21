@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, LoaderCircle, Send, Sparkles, User } from 'lucide-react'
+import { Bot, Download, FileSpreadsheet, FileText, Image, LoaderCircle, Send, Sparkles, User } from 'lucide-react'
 import { Link } from 'react-router'
 import { askTalentBridge } from '../assistantApi'
 import type { AssistantTurn } from '../assistantTypes'
 import { getAccessToken } from '../../auth/tokenStorage'
-import type { AdminApiMetricsResponse, AdminDashboardStatsResponse } from '../../admin/adminTypes'
+import type { AdminApiMetricsResponse, AdminDashboardStatsResponse, AdminReportFormat } from '../../admin/adminTypes'
 
 interface DisplayTurn extends AssistantTurn {
     references?: string[]
     source?: string
+    artifacts?: Array<{ format: AdminReportFormat; href: string; filename: string; label: string }>
 }
 
 interface AssistantChatPanelProps {
@@ -26,7 +27,7 @@ const STARTER_TURN: DisplayTurn = {
 
 const ADMIN_STARTER_TURN: DisplayTurn = {
     role: 'ASSISTANT',
-    content: 'Xin chào! Tôi là Trợ lý quản trị. Tôi có thể tóm tắt số liệu hệ thống, chỉ ra mục cần xử lý và hướng dẫn bạn tới đúng màn quản lý. Các thao tác duyệt hoặc thay đổi tài khoản vẫn được thực hiện trong màn quản trị tương ứng.',
+    content: 'Xin chào! Tôi là Trợ lý quản trị. Tôi có thể phân tích số liệu đang có, hướng dẫn bạn tới đúng màn quản lý và xuất ảnh thống kê, Excel hoặc Word từ dữ liệu API. Các thao tác duyệt hoặc thay đổi dữ liệu vẫn cần bạn thực hiện trong màn quản trị tương ứng.',
 }
 
 const ADMIN_STARTER_PROMPTS = [
@@ -52,7 +53,13 @@ export function AssistantChatPanel({
     const [message, setMessage] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [isSending, setIsSending] = useState(false)
+    const [isCreatingArtifact, setIsCreatingArtifact] = useState(false)
     const bottomRef = useRef<HTMLDivElement>(null)
+    const artifactUrlsRef = useRef<string[]>([])
+
+    useEffect(() => () => {
+        artifactUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    }, [])
 
     useEffect(() => {
         function syncAuthentication() {
@@ -93,7 +100,35 @@ export function AssistantChatPanel({
             const pendingIntent = ['cho duyet', 'can duyet', 'cho xu ly', 'can xu ly', 'chua duyet']
                 .some((term) => normalizedQuestion.includes(term))
             const apiIntent = ['api', 'do tre', 'latency', 'loi'].some((term) => normalizedQuestion.includes(term))
+            const reportFormat: AdminReportFormat | null = !adminMode ? null
+                : ['excel', 'xlsx', 'bang tinh'].some((term) => normalizedQuestion.includes(term)) ? 'xlsx'
+                : ['word', 'docx', 'van ban', 'tai lieu'].some((term) => normalizedQuestion.includes(term)) ? 'docx'
+                : ['anh', 'png', 'bieu do', 'chart'].some((term) => normalizedQuestion.includes(term)) ? 'png'
+                : null
             let adminAnswer: string | null = null
+
+            if (adminMode && reportFormat) {
+                setIsCreatingArtifact(true)
+                const formatLabels: Record<AdminReportFormat, string> = { png: 'ảnh thống kê PNG', xlsx: 'bảng tính Excel', docx: 'báo cáo Word' }
+                const extensionLabels: Record<AdminReportFormat, string> = { png: 'PNG', xlsx: 'Excel', docx: 'Word' }
+                try {
+                    const { createAdminReportFile } = await import('../../admin/adminReportExports')
+                    const blob = await createAdminReportFile(reportFormat, { stats: adminStats, metrics: adminMetrics, generatedAt: new Date() })
+                    const href = URL.createObjectURL(blob)
+                    artifactUrlsRef.current.push(href)
+                    const filename = `TalentBridge-bao-cao-quan-tri-${new Date().toISOString().slice(0, 10)}.${reportFormat}`
+                    setTurns((current) => [...current, {
+                        role: 'ASSISTANT',
+                        content: `Đã tạo ${formatLabels[reportFormat]} từ số liệu quản trị đang tải. Tệp chỉ chứa dữ liệu được phép xem qua API quản trị; thời điểm tạo và nguồn dữ liệu được ghi trong báo cáo.`,
+                        artifacts: [{ format: reportFormat, href, filename, label: `Tải báo cáo ${extensionLabels[reportFormat]}` }],
+                    }])
+                } catch (caught) {
+                    setError(caught instanceof Error ? caught.message : 'Không thể tạo tệp báo cáo lúc này.')
+                } finally {
+                    setIsCreatingArtifact(false)
+                }
+                return
+            }
 
             if (adminMode && overviewIntent) {
                 adminAnswer = adminStats
@@ -128,7 +163,7 @@ export function AssistantChatPanel({
     }
 
     return (
-        <section className={`flex min-h-0 flex-col overflow-hidden bg-white ${compact ? 'h-full rounded-xl' : 'h-[min(62dvh,42rem)] min-h-[26rem] rounded-xl border border-slate-200 shadow-sm sm:h-[min(68vh,42rem)] sm:min-h-[34rem]'}`} aria-label={adminMode ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'}>
+        <section className={`flex min-h-0 flex-col overflow-hidden bg-white ${compact ? 'h-full rounded-xl' : adminMode ? 'h-[min(74dvh,54rem)] min-h-[36rem] rounded-2xl border border-slate-200 shadow-sm' : 'h-[min(62dvh,42rem)] min-h-[26rem] rounded-xl border border-slate-200 shadow-sm sm:h-[min(68vh,42rem)] sm:min-h-[34rem]'}`} aria-label={adminMode ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'}>
             <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-blue-50/70 px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-blue-700 text-white"><Bot aria-hidden="true" size={20} /></span>
@@ -152,13 +187,19 @@ export function AssistantChatPanel({
                         <span className={`grid size-8 shrink-0 place-items-center rounded-full ${turn.role === 'USER' ? 'bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-700'}`}>
                             {turn.role === 'USER' ? <User aria-hidden="true" size={15} /> : <Bot aria-hidden="true" size={15} />}
                         </span>
-                        <div className={`max-w-[85%] rounded-xl px-3.5 py-3 text-sm leading-6 ${turn.role === 'USER' ? 'bg-blue-700 text-white' : 'border border-slate-200 bg-white text-slate-800'}`}>
+                        <div className={`max-w-[95%] rounded-xl px-3.5 py-3 text-sm leading-6 md:max-w-[88%] ${turn.role === 'USER' ? 'bg-blue-700 text-white' : 'border border-slate-200 bg-white text-slate-800'}`}>
                             <p className="whitespace-pre-wrap">{turn.content}</p>
                             {turn.references && turn.references.length > 0 && (
                                 <p className="mt-2 border-t border-slate-100 pt-2 text-[11px] leading-5 text-slate-500">
                                     Căn cứ: {turn.references.join(' · ')}{turn.source === 'KNOWLEDGE_BASE' ? ' · Hướng dẫn nội bộ' : ''}
                                 </p>
                             )}
+                            {turn.artifacts?.map((artifact) => {
+                                const ArtifactIcon = artifact.format === 'png' ? Image : artifact.format === 'xlsx' ? FileSpreadsheet : FileText
+                                return <a className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 font-semibold text-blue-800 transition hover:border-blue-300 hover:bg-blue-100" download={artifact.filename} href={artifact.href} key={artifact.href}>
+                                    <ArtifactIcon aria-hidden="true" size={17} />{artifact.label}<Download aria-hidden="true" size={15} />
+                                </a>
+                            })}
                         </div>
                     </article>
                 ))}
@@ -171,7 +212,7 @@ export function AssistantChatPanel({
                         ))}
                     </div>
                 )}
-                {isSending && <div className="flex items-center gap-2 pl-10 text-xs text-slate-500" role="status"><LoaderCircle aria-hidden="true" className="animate-spin" size={14} />Đang tìm hướng dẫn phù hợp...</div>}
+                {isSending && <div className="flex items-center gap-2 pl-10 text-xs text-slate-500" role="status"><LoaderCircle aria-hidden="true" className="animate-spin" size={14} />{isCreatingArtifact ? 'Đang tạo tệp báo cáo...' : 'Đang tìm hướng dẫn phù hợp...'}</div>}
                 <div ref={bottomRef} />
             </div>
 
@@ -180,7 +221,13 @@ export function AssistantChatPanel({
                     {error}{error.includes('Đăng nhập') && <Link className="ml-1 font-bold underline" to="/login">Đăng nhập</Link>}
                 </div>
             )}
-            <form className="flex items-end gap-2 border-t border-slate-200 bg-white p-3" onSubmit={(event) => { event.preventDefault(); void sendMessage() }}>
+            {adminMode && <div aria-label="Xuất báo cáo quản trị" className="flex flex-wrap items-center gap-2 border-t border-slate-100 bg-white px-4 pt-3">
+                <span className="mr-1 text-xs font-semibold text-slate-500">Xuất số liệu:</span>
+                <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50" disabled={isSending || (!adminStats && !adminMetrics)} onClick={() => void sendMessage('Tạo ảnh PNG biểu đồ thống kê')} type="button"><Image aria-hidden="true" size={14} />Ảnh PNG</button>
+                <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50" disabled={isSending || (!adminStats && !adminMetrics)} onClick={() => void sendMessage('Tạo file Excel thống kê')} type="button"><FileSpreadsheet aria-hidden="true" size={14} />Excel</button>
+                <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-50" disabled={isSending || (!adminStats && !adminMetrics)} onClick={() => void sendMessage('Tạo báo cáo Word')} type="button"><FileText aria-hidden="true" size={14} />Word</button>
+            </div>}
+            <form className="flex items-end gap-2 border-t border-slate-200 bg-white p-3 sm:p-4" onSubmit={(event) => { event.preventDefault(); void sendMessage() }}>
                 <label className="sr-only" htmlFor="assistant-message">Câu hỏi về TalentBridge</label>
                 <textarea
                     className="max-h-28 min-h-11 flex-1 resize-y rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"

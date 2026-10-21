@@ -186,3 +186,5 @@ export type AdminApiMetricsResponse = {
     maxLatencyMs: number
     endpoints: ApiMetricsEndpointResponse[]
 }
+
+export type AdminReportFormat = 'png' | 'xlsx' | 'docx'

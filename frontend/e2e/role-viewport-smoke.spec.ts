@@ -66,14 +66,19 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         }
         if (actor.name === 'admin') {
             await expect(page.getByRole('button', { name: 'Duyệt' }).first()).toBeVisible()
+            await expect(page.getByText('Phiên làm việc an toàn')).toHaveCount(0)
+            await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
+            await expect(page.getByRole('menuitem', { name: 'Đổi mật khẩu' })).toBeVisible()
+            await expect(page.getByRole('menuitem', { name: 'Đăng xuất' })).toBeVisible()
+            await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
         }
 
         if (actor.name === 'recruiter' || actor.name === 'admin') {
             await page.setViewportSize({ width: 360, height: 900 })
-            await page.getByRole('button', { name: 'Mở điều hướng' }).click()
             const assistantLabel = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý'
             const assistantPath = actor.name === 'admin' ? '/admin/assistant' : '/assistant'
             const assistantHeading = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'
+            if (actor.name === 'recruiter') await page.getByRole('button', { name: 'Mở điều hướng' }).click()
             await page.getByRole('link', { name: assistantLabel, exact: true }).click()
             await expect(page).toHaveURL(new RegExp(`${assistantPath.replaceAll('/', '\\/')}$`))
             await expect(page.getByRole('heading', { name: assistantHeading, level: 1 })).toBeVisible()

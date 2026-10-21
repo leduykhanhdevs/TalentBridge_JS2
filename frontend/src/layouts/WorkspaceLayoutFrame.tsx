@@ -123,9 +123,6 @@ export function WorkspaceLayoutFrame({
                         <NavLink className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-[#1D4ED8]" to="/">
                             <ArrowLeft aria-hidden="true" size={14} />Về TalentBridge
                         </NavLink>
-                        <p className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
-                            <span className="size-1.5 rounded-full bg-emerald-500" />Phiên làm việc an toàn
-                        </p>
                     </div>
                 </aside>
 

@@ -33,6 +33,9 @@ const API_BASE_URL = (
     import.meta.env.VITE_API_BASE_URL || '/api/v1'
 ).replace(/\/$/, '')
 
+/** Render Free can take over 50 seconds to wake after inactivity. */
+export const COMPANY_STATUS_MUTATION_TIMEOUT_MS = 90_000
+
 function getAuthHeaders(): HeadersInit {
     const token = getAccessToken()
     if (!token) {
@@ -188,7 +191,7 @@ export async function updateCompanyStatus(
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
-    })
+    }, COMPANY_STATUS_MUTATION_TIMEOUT_MS)
 
     return handleResponse<CompanyAdminResponse>(
         response,

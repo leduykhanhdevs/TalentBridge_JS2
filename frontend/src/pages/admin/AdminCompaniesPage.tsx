@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FetchTimeoutError } from '../../app/fetchWithTimeout'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     AlertCircle,
@@ -18,6 +19,7 @@ import {
     XCircle,
 } from 'lucide-react'
 import {
+    AdminApiError,
     getAdminCompanies,
     getCompanyById,
     updateCompanyStatus,
@@ -107,13 +109,46 @@ export function AdminCompaniesPage() {
             }
             setTimeout(() => setSuccessMessage(null), 4000)
         },
-        onError: (err: unknown, variables) => {
+        onError: async (err: unknown, variables) => {
             const msg = err instanceof Error ? err.message : 'Thao tác không thành công'
+            const outcomeMayBeUnknown = err instanceof FetchTimeoutError
+                || !(err instanceof AdminApiError)
+                || err.status >= 500
+
+            // A browser timeout or a server error can happen after the database commit.
+            // Read the authoritative state before telling the admin to retry.
+            if (outcomeMayBeUnknown) {
+                try {
+                    const currentCompany = await getCompanyById(variables.companyId)
+                    if (currentCompany.status === variables.request.status) {
+                        void queryClient.invalidateQueries({ queryKey: ['admin-companies'] })
+                        if (variables.request.status === 'APPROVED') {
+                            setApprovingCompany(null)
+                            setApprovalError(null)
+                            setSuccessMessage(`Đã xác nhận doanh nghiệp "${variables.companyName}" được phê duyệt.`)
+                        } else {
+                            setRejectingCompany(null)
+                            setRejectReason('')
+                            setRejectInputError(null)
+                            setSuccessMessage(`Đã xác nhận doanh nghiệp "${variables.companyName}" bị từ chối.`)
+                        }
+                        setTimeout(() => setSuccessMessage(null), 4000)
+                        return
+                    }
+                } catch {
+                    // Keep the original failure and tell the admin the outcome needs checking.
+                }
+            }
+
             if (variables.request.status === 'APPROVED') {
-                setApprovalError(msg)
+                setApprovalError(err instanceof FetchTimeoutError
+                    ? 'Máy chủ chưa xác nhận trong 90 giây; trạng thái có thể chưa rõ. Hãy đóng hộp thoại, làm mới danh sách và kiểm tra trước khi gửi lần nữa.'
+                    : msg)
                 return
             }
-            setRejectInputError(msg)
+            setRejectInputError(err instanceof FetchTimeoutError
+                ? 'Máy chủ chưa xác nhận trong 90 giây. Hãy đóng hộp thoại, làm mới danh sách và kiểm tra trạng thái trước khi gửi lần nữa.'
+                : msg)
         },
     })
 
@@ -480,7 +515,7 @@ export function AdminCompaniesPage() {
                     </div>
                 ) : (
                     <div aria-label="Bảng danh sách doanh nghiệp" className="overflow-x-auto" role="region" tabIndex={0}>
-                        <table className="w-full min-w-[1080px] text-left text-sm text-slate-600">
+                        <table className="w-full min-w-[1320px] table-auto text-left text-sm text-slate-600">
                             <thead className="border-b border-slate-200 bg-slate-100/90 text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                                 <tr>
                                     <th className="px-6 py-4" scope="col">Doanh nghiệp</th>
@@ -496,7 +531,7 @@ export function AdminCompaniesPage() {
                                         className="group hover:bg-blue-50/20 transition-colors duration-150"
                                         key={company.id}
                                     >
-                                        <td className="px-6 py-4 sm:py-5">
+                                        <td className="min-w-[280px] px-6 py-4 sm:py-5">
                                             <div className="flex items-center gap-3.5">
                                                 {company.logoUrl ? (
                                                     <img
@@ -510,11 +545,11 @@ export function AdminCompaniesPage() {
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <div className="text-base font-black text-slate-900 group-hover:text-blue-700 transition-colors">
+                                                    <div className="max-w-[300px] truncate text-base font-black text-slate-900 transition-colors group-hover:text-blue-700" title={company.name}>
                                                         {company.name}
                                                     </div>
                                                     {company.isDemo && (
-                                                        <span className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                                                        <span className="mt-1 inline-flex w-fit whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900">
                                                             HỒ SƠ MÔ PHỎNG · KHÔNG XÁC MINH
                                                         </span>
                                                     )}
@@ -535,13 +570,13 @@ export function AdminCompaniesPage() {
                                             </div>
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5">
-                                            <span className="font-mono text-xs sm:text-sm font-black text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
+                                        <td className="min-w-[170px] px-6 py-4 sm:py-5">
+                                            <span className="inline-flex whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold text-slate-800 sm:text-sm">
                                                 {company.taxCode || 'Chưa cập nhật'}
                                             </span>
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5">
+                                        <td className="min-w-[250px] px-6 py-4 sm:py-5">
                                             <div className="flex flex-col gap-1 text-xs sm:text-sm">
                                                 <div className="flex items-center gap-1.5 font-bold text-slate-800">
                                                     <MapPin size={14} className="text-rose-500 shrink-0" />
@@ -553,36 +588,36 @@ export function AdminCompaniesPage() {
                                             </div>
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5">
+                                        <td className="min-w-[220px] px-6 py-4 sm:py-5">
                                             {company.isDemo && (
-                                                <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-amber-900">
+                                                <span className="inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 sm:text-sm">
                                                     Mô phỏng · Không xác thực
                                                 </span>
                                             )}
                                             {!company.isDemo && company.status === 'APPROVED' && (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 border border-emerald-200 shadow-2xs">
-                                                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                <span className="inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 sm:text-sm">
+                                                    <span className="size-2 rounded-full bg-emerald-500" />
                                                     Đã xác thực
                                                 </span>
                                             )}
                                             {!company.isDemo && company.status === 'PENDING' && (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-amber-800 border border-amber-300 shadow-2xs">
-                                                    <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                                                <span className="inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 sm:text-sm">
+                                                    <span className="size-2 rounded-full bg-amber-500" />
                                                     Chờ phê duyệt
                                                 </span>
                                             )}
                                             {!company.isDemo && company.status === 'REJECTED' && (
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200 shadow-2xs">
+                                                <span className="inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 sm:text-sm">
                                                     <span className="size-2 rounded-full bg-rose-500" />
                                                     Bị từ chối
                                                 </span>
                                             )}
                                         </td>
 
-                                        <td className="px-6 py-4 sm:py-5 text-right">
-                                            <div className="inline-flex items-center gap-2">
+                                        <td className="min-w-[390px] whitespace-nowrap px-6 py-4 text-right sm:py-5">
+                                            <div className="inline-flex items-center justify-end gap-2">
                                                 <button
-                                                    className="btn-bento-secondary px-3 py-1.5 text-xs sm:text-sm font-bold shadow-2xs hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300"
+                                                    className="inline-flex h-9 min-w-[88px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:text-sm"
                                                     onClick={() => handleViewDetail(company.id)}
                                                     type="button"
                                                 >
@@ -596,7 +631,7 @@ export function AdminCompaniesPage() {
                                                 {!company.isDemo && company.status === 'PENDING' && (
                                                     <>
                                                         <button
-                                                            className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-600 px-3 py-1.5 text-xs sm:text-sm font-black text-white shadow-2xs hover:bg-emerald-700 transition"
+                                                            className="inline-flex h-9 min-w-[92px] items-center justify-center gap-1.5 rounded-lg border border-emerald-700 bg-emerald-700 px-3 text-xs font-semibold text-white shadow-sm transition hover:border-emerald-800 hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-sm"
                                                             disabled={statusMutation.isPending}
                                                             onClick={() => {
                                                                 setActionError(null)
@@ -610,7 +645,7 @@ export function AdminCompaniesPage() {
                                                             <span>Duyệt</span>
                                                         </button>
                                                         <button
-                                                            className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 transition hover:bg-rose-100 shadow-2xs"
+                                                            className="inline-flex h-9 min-w-[96px] items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 sm:text-sm"
                                                             disabled={statusMutation.isPending}
                                                             onClick={() => {
                                                                 setRejectingCompany(company)
@@ -628,7 +663,7 @@ export function AdminCompaniesPage() {
 
                                                 {!company.isDemo && company.status === 'APPROVED' && (
                                                     <button
-                                                        className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-rose-700 transition hover:bg-rose-100 shadow-2xs"
+                                                        className="inline-flex h-9 min-w-[96px] items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 sm:text-sm"
                                                         disabled={statusMutation.isPending}
                                                         onClick={() => {
                                                             setRejectingCompany(company)
@@ -644,7 +679,7 @@ export function AdminCompaniesPage() {
 
                                                 {!company.isDemo && company.status === 'REJECTED' && (
                                                     <button
-                                                        className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs sm:text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 shadow-2xs"
+                                                        className="inline-flex h-9 min-w-[96px] items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-sm"
                                                         disabled={statusMutation.isPending}
                                                         onClick={() => {
                                                             setActionError(null)
@@ -833,6 +868,12 @@ export function AdminCompaniesPage() {
                             Các chuyên viên nhân sự của công ty sẽ chính thức được kích hoạt quyền đăng tin tuyển dụng và tìm kiếm hồ sơ ứng viên TopCV trên toàn hệ thống TalentBridge.
                         </p>
 
+                        {statusMutation.isPending && (
+                            <p aria-live="polite" className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-sm font-medium text-blue-900" role="status">
+                                Đang chờ máy chủ xác nhận. Nếu dịch vụ vừa khởi động sau thời gian không hoạt động, thao tác có thể mất thêm thời gian.
+                            </p>
+                        )}
+
                         {approvalError && (
                             <div aria-live="assertive" className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50 px-3.5 py-3 text-sm text-rose-800" role="alert">
                                 <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-rose-600" />
@@ -909,6 +950,12 @@ export function AdminCompaniesPage() {
                                 </p>
                             )}
                         </div>
+
+                        {statusMutation.isPending && (
+                            <p aria-live="polite" className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-sm font-medium text-blue-900" role="status">
+                                Đang chờ máy chủ xác nhận. Nếu dịch vụ vừa khởi động sau thời gian không hoạt động, thao tác có thể mất thêm thời gian.
+                            </p>
+                        )}
 
                         <div className="mt-6 flex justify-end gap-3">
                             <button
