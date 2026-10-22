@@ -1,0 +1,12 @@
+
+> frontend@0.0.0 test:e2e
+> vitest run --config vitest.e2e.config.ts
+
+
+ RUN  v5.0.1 C:/Users/leduy/.codex/worktrees/login-cold-start-fix/TalentBridge_JS2/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  21:02:16
+   Duration  3.42s (tests 97%, transform 2%, import 1%)

@@ -61,7 +61,10 @@ talentbridge:
   password-reset:
     token-expiration-minutes: "${PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES:15}"
     mail-enabled: "${PASSWORD_RESET_MAIL_ENABLED:false}"
+    mail-provider: "${PASSWORD_RESET_MAIL_PROVIDER:smtp}"
     mail-from: "${MAIL_FROM:no-reply@talentbridge.vn}"
+    apps-script-url: "${GOOGLE_APPS_SCRIPT_URL:}"
+    apps-script-secret: "${GOOGLE_APPS_SCRIPT_SECRET:}"
   rate-limit:
     enabled: "${RATE_LIMIT_ENABLED:true}"
     auth-limit: "${AUTH_RATE_LIMIT:10}"

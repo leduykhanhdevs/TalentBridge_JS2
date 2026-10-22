@@ -127,7 +127,7 @@ Cơ sở dữ liệu được chuẩn hóa theo chuẩn **3NF**, gồm **27 bả
 - `applications`, `application_stages`, `application_notes`: Quản lý đơn ứng tuyển & quy trình ATS pipeline.
 - `interviews`, `notifications`: Lịch phỏng vấn và thông báo hệ thống.
 
-Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua email, xác minh OTP, rồi dùng mã đặt lại một lần có hiệu lực 5 phút để lưu mật khẩu mới. OTP có hạn 15 phút, được HMAC-SHA-256 bằng khóa máy chủ trước khi lưu DB và bị khóa sau 5 lần nhập sai; việc gửi thư cần cấu hình SMTP và `PASSWORD_RESET_MAIL_ENABLED=true`.
+Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua email, xác minh OTP, rồi dùng mã đặt lại một lần có hiệu lực 5 phút để lưu mật khẩu mới. OTP có hạn 15 phút, được HMAC-SHA-256 bằng khóa máy chủ trước khi lưu DB và bị khóa sau 5 lần nhập sai. Gửi thư cần `PASSWORD_RESET_MAIL_ENABLED=true`; chọn SMTP bằng mặc định `PASSWORD_RESET_MAIL_PROVIDER=smtp`, hoặc Google Apps Script HTTPS relay bằng `PASSWORD_RESET_MAIL_PROVIDER=apps-script`. Xem [hướng dẫn cấu hình relay Gmail](docs/operations/otp-mail/SETUP.md).
 
 > 📖 **Xem chi tiết tài liệu CSDL**: [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md)  
 > 💾 **File script DDL MySQL**: [database/schema.sql](database/schema.sql)
@@ -161,10 +161,15 @@ Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua emai
 | `DB_POOL_MAX_SIZE` | Không | `5` | Số kết nối tối đa trong pool ở profile production. |
 | `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
-| `PASSWORD_RESET_MAIL_ENABLED` | Không | `false` | Bật gửi email khôi phục (`true`) sau khi cấu hình SMTP. Khi tắt, API trả HTTP 503 và không giả báo đã gửi. |
-| `MAIL_USERNAME` | Không | `your-email@gmail.com` | Email người gửi thông báo hệ thống. |
-| `MAIL_PASSWORD` | Không | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. |
-| `MAIL_FROM` | Không | `TalentBridge <no-reply@talentbridge.vn>` | Tên và địa chỉ hiển thị trong hộp thư đến của người nhận. |
+| `PASSWORD_RESET_MAIL_ENABLED` | Không | `false` | Bật gửi OTP (`true`). Cần cấu hình đầy đủ thông tin cho provider đã chọn; nếu tắt, API trả HTTP 503 và không giả báo đã gửi. |
+| `PASSWORD_RESET_MAIL_PROVIDER` | Không | `smtp` | Chọn `smtp` hoặc `apps-script`. Dùng `apps-script` trên Render Free nếu cần gửi qua Gmail HTTPS relay. |
+| `GOOGLE_APPS_SCRIPT_URL` | Khi `apps-script` | *(URL Web App `/exec`)* | HTTPS URL Web App đã deploy từ Google Apps Script. |
+| `GOOGLE_APPS_SCRIPT_SECRET` | Khi `apps-script` | *(secret dùng chung)* | Secret ngẫu nhiên giống `TALENTBRIDGE_SHARED_SECRET` trong Script Properties; chỉ lưu ở backend và Apps Script. |
+| `MAIL_USERNAME` | Khi `smtp` | `your-email@gmail.com` | Tài khoản SMTP gửi email. Không dùng bởi provider `apps-script`. |
+| `MAIL_PASSWORD` | Khi `smtp` | `your-app-password` | Mật khẩu ứng dụng (App Password) của Gmail/SMTP. Không dùng bởi provider `apps-script`. |
+| `MAIL_FROM` | Khi `smtp` | `no-reply@talentbridge.vn` | Địa chỉ người gửi SMTP. Provider `apps-script` gửi từ Gmail sở hữu Apps Script. |
+| `MAIL_HOST` | Khi `smtp` | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
+| `MAIL_PORT` | Khi `smtp` | `587` | Cổng kết nối SMTP. |
 
 API nhập CV trả `processingSource` là `GEMINI` hoặc `RULE_BASED`. API matching trả `matchingSource=DETERMINISTIC` và ba điểm tham khảo: bằng chứng trực tiếp (60%), ngữ cảnh hồ sơ/nghề nghiệp (25%), và năng lực liên quan suy luận thận trọng (15%). Các thành phần dùng độ phủ từ khóa và cosine similarity trên từ vựng đã chuẩn hóa; kèm câu hỏi phỏng vấn ngược được suy ra từ năng lực liên quan/kỹ năng chưa có bằng chứng để Recruiter xác minh. Không dùng embedding, không phải xác suất trúng tuyển và không gán cho bài AI-KM. Matching yêu cầu Recruiter, xác minh công ty sở hữu tin và quan hệ ứng tuyển; phần đánh giá CV tải nội dung trong backend sau khi kiểm tra quyền, không nhận CV thô từ trình duyệt hay gửi CV sang Gemini.
 

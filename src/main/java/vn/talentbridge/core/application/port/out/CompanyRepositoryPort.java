@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface CompanyRepositoryPort {
     Optional<Company> findById(Long id);
+    Optional<Company> findPendingByCreatedByUserId(Long userId);
     Company save(Company company);
     List<Company> findAll(int page, int size, String keyword, CompanyStatus status);
     long count(String keyword, CompanyStatus status);

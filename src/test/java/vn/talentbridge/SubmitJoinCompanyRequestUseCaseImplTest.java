@@ -111,6 +111,31 @@ class SubmitJoinCompanyRequestUseCaseImplTest {
     }
 
     @Test
+    @DisplayName("Không thể gia nhập công ty khác khi còn yêu cầu tạo công ty chờ duyệt")
+    void blocksJoinWhenCreatorHasAnUnlinkedPendingCompanyRequest() {
+        Long userId = 100L;
+        Recruiter recruiter = new Recruiter();
+        recruiter.setCompany(null);
+        Company pendingCompany = new Company();
+        pendingCompany.setId(300L);
+        pendingCompany.setCreatedByUserId(userId);
+        pendingCompany.setStatus(CompanyStatus.PENDING);
+
+        when(recruiterRepository.findByUserId(userId)).thenReturn(Optional.of(recruiter));
+        when(companyRepository.findPendingByCreatedByUserId(userId))
+                .thenReturn(Optional.of(pendingCompany));
+
+        assertThrows(DomainException.class, () -> useCase.submitJoinRequest(
+                userId,
+                200L,
+                new SubmitJoinCompanyRequestCommand("HR", "")
+        ));
+
+        verify(companyRepository, never()).findById(any());
+        verifyNoInteractions(companyJoinRequestRepository);
+    }
+
+    @Test
     @DisplayName("Nộp đơn xin gia nhập lấy chức danh mặc định từ hồ sơ HR nếu command position để trống")
     void submitJoinRequestFallsBackToRecruiterPositionWhenBlank() {
         Long userId = 100L;

@@ -33,6 +33,17 @@ public class RequestCreateCompanyUseCaseImpl implements RequestCreateCompanyUseC
             throw new DomainException(40001, "Nhà tuyển dụng đã thuộc về một công ty khác");
         }
 
+        // Repair pending requests created before company creation and recruiter
+        // association were committed together. This also prevents duplicate requests.
+        Company existingPendingCompany = companyRepository
+                .findPendingByCreatedByUserId(userId)
+                .orElse(null);
+        if (existingPendingCompany != null) {
+            recruiter.setCompany(existingPendingCompany);
+            recruiterRepository.save(recruiter);
+            return CompanyResult.from(existingPendingCompany);
+        }
+
         if (command.taxCode() != null && !command.taxCode().isBlank()) {
             if (companyRepository.existsByTaxCode(command.taxCode().trim())) {
                 throw new DomainException(40901, "Mã số thuế đã tồn tại trên hệ thống");
@@ -54,6 +65,8 @@ public class RequestCreateCompanyUseCaseImpl implements RequestCreateCompanyUseC
         company.setUpdatedAt(LocalDateTime.now());
 
         Company savedCompany = companyRepository.save(company);
+        recruiter.setCompany(savedCompany);
+        recruiterRepository.save(recruiter);
         return CompanyResult.from(savedCompany);
     }
 }
