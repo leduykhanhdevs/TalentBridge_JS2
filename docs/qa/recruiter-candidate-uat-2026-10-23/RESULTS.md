@@ -20,4 +20,4 @@ Lần chạy full-site đạt cuối cùng lưu log và ảnh ở `docs/qa/full-
 
 ## Trạng thái phát hành
 
-Local verification đạt. PR và GitHub Actions đang chờ; sau khi merge cần theo dõi Render CD và xác minh backend health, frontend marker cùng SHA đúng với commit phát hành.
+PR #65 đã merge vào `main` bằng commit `5132b0b28da8a82ce52b8da0d33e727e2e6d381c`. Cả ba job GitHub CI (backend, frontend, Docker) pass. Render CD run `39837408472` pass: backend health `UP` và `buildCommit` đúng; frontend HTML marker đúng SHA; `/api/v1/jobs`, trang frontend và CORS preflight đều HTTP 200. Lần triển khai backend mất khoảng 4 phút để khởi động; không coi các probe timeout trước khi Render sẵn sàng là pass.
