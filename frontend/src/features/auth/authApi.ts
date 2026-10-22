@@ -70,6 +70,7 @@ const API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const LOGOUT_TIMEOUT_MS = 2_500
+export const LOGIN_REQUEST_TIMEOUT_MS = 30_000
 
 function connectionErrorMessage(error: unknown): string {
     return error instanceof FetchTimeoutError
@@ -173,7 +174,7 @@ export async function loginUser(
                 'Content-Type': 'application/json; charset=UTF-8',
             },
             body: JSON.stringify(request),
-        })
+        }, LOGIN_REQUEST_TIMEOUT_MS)
     } catch (error) {
         throw new AuthApiError(
             0,
