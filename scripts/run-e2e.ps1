@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Continue'
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $frontendRoot = Join-Path $repositoryRoot 'frontend'
 $runId = Get-Date -Format 'yyyy-MM-dd-HHmmss'
@@ -14,13 +14,19 @@ $stderrPath = Join-Path $logRoot 'backend.stderr.log'
 $mavenWrapper = Join-Path $repositoryRoot 'mvnw.cmd'
 $jarPath = Join-Path $repositoryRoot 'target\talentbridge-0.0.1-SNAPSHOT.jar'
 $javaHome = $env:JAVA_HOME
-if ([string]::IsNullOrWhiteSpace($javaHome)) {
-    $javacCommand = Get-Command javac.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($javacCommand) {
-        $javaHome = Split-Path (Split-Path $javacCommand.Source -Parent) -Parent
+if ([string]::IsNullOrWhiteSpace($javaHome) -or (-not (Test-Path (Join-Path $javaHome 'bin\java.exe')))) {
+    if (Test-Path 'C:\Program Files\Java\jdk-21.0.10\bin\java.exe') {
+        $javaHome = 'C:\Program Files\Java\jdk-21.0.10'
+    } elseif (Test-Path 'C:\Program Files\Java\latest\bin\java.exe') {
+        $javaHome = 'C:\Program Files\Java\latest'
+    } else {
+        $javacCommand = Get-Command javac.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($javacCommand) {
+            $javaHome = Split-Path (Split-Path $javacCommand.Source -Parent) -Parent
+        }
     }
 }
-if ([string]::IsNullOrWhiteSpace($javaHome)) {
+if ([string]::IsNullOrWhiteSpace($javaHome) -or (-not (Test-Path (Join-Path $javaHome 'bin\java.exe')))) {
     throw 'JDK 21 chưa được tìm thấy. Hãy đặt JAVA_HOME trỏ tới JDK 21.'
 }
 $javaExecutable = Join-Path $javaHome 'bin\java.exe'
@@ -40,7 +46,10 @@ try {
     if (-not (Test-Path $javaExecutable)) {
         throw "JDK 21 chưa được tìm thấy tại $javaHome"
     }
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $javaVersion = (& $javaExecutable -version 2>&1 | Out-String)
+    $ErrorActionPreference = $prevEAP
     if ($javaVersion -notmatch 'version "21(?:\.|")|openjdk 21') {
         throw "E2E yêu cầu JDK 21; runtime hiện tại tại $javaHome không phải Java 21."
     }
@@ -91,6 +100,7 @@ try {
     $env:TALENTBRIDGE_E2E_API_BASE_URL = 'http://127.0.0.1:18080/api/v1'
     $env:TALENTBRIDGE_E2E_DATA_ISOLATED = 'true'
     $env:TALENTBRIDGE_E2E_SCREENSHOT_DIR = $screenshotRoot
+    if (-not $env:PLAYWRIGHT_CHANNEL) { $env:PLAYWRIGHT_CHANNEL = 'chrome' }
 
     Push-Location $frontendRoot
     try {

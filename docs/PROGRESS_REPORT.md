@@ -739,3 +739,23 @@
 - **Đã làm được gì**: Sửa xong TB-01 (CV Builder không lưu CV: seed cv_templates bằng Flyway V5, fallback template, banner trạng thái hiển thị ở cả tab Xem trước), TB-02 (step/min/max số năm kinh nghiệm kỹ năng + @DecimalMin/@DecimalMax), TB-03 (chặn ngày sinh tương lai ở frontend và backend theo múi giờ Asia/Ho_Chi_Minh), TB-04 (loại hồ sơ demo khỏi hàng chờ PENDING). Phát hiện và sửa lỗi migration V5 tham chiếu cột updated_at không tồn tại. Kiểm thử: backend 26/26, Vitest 131/131, lint và build PASS, Playwright mobile 390x844 2/2 PASS. Ảnh minh chứng sạch tại docs/qa/mobile-qa-2026-10-22-fixes/; báo cáo Word tại docs/Bao_Cao_Sua_Loi_QA_Mobile_TalentBridge_2026-10-22.docx.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot 3.3.4, Flyway, Spring Data JPA (JPQL lọc isDemo), Bean Validation, PDFBox; React 19, TypeScript, Vitest; Playwright (Chrome headless) trên backend H2 cô lập; thư viện docx để sinh báo cáo Word.
 - **Mục đích chức năng / việc đã làm**: Khôi phục tính năng tạo CV trên mobile và production, đảm bảo toàn vẹn dữ liệu hồ sơ ứng viên, và giúp admin duyệt doanh nghiệp đúng hàng chờ thực.
+
+## ĐỒNG BỘ MAIN & KIỂM THỬ TOÀN DIỆN DOANH NGHIỆP E2E ENTERPRISE — 22/10/2026
+
+- **Đã làm được gì**: 
+  - Đồng bộ thành công `origin/main` (`ceaf6a6`) vào nhánh làm việc `fix/tinh/mobile-qa-20261022`. Xử lý trọn vẹn conflict tại `CompanyJpaRepository.java` (bảo toàn điều kiện lọc TB-04 `isDemo = false` kết hợp phương thức mới `findFirstByCreatedByUserIdAndStatusOrderByCreatedAtDesc` từ PR #60) và `docs/PROGRESS_REPORT.md`.
+  - Cập nhật các test suite `FlywaySchemaValidationTest` và `RdsProductionConfigurationIntegrationTest` khớp với Flyway migration V5 mới nhất.
+  - Tối ưu bộ script tự động hóa E2E `scripts/run-e2e.ps1` (tự động nhận diện JDK 21 tại chuẩn `C:\Program Files\Java\jdk-21.0.10`, cấu hình kênh Chrome hệ thống, xử lý luồng stream stderr native tránh ngắt tiến trình trên PowerShell).
+  - Kiểm thử nghiệp vụ Doanh nghiệp chuyên sâu:
+    - Backend Unit & Integration Tests (33/33 tests PASS): `CompanyJoinRequestIntegrationTest` (10/10 PASS), `SubmitJoinCompanyRequestUseCaseImplTest` (10/10 PASS), `RequestCreateCompanyUseCaseImplTest` (3/3 PASS), `UpdateCompanyStatusUseCaseImplTest` (5/5 PASS), `GetCompanyJoinRequestsUseCaseImplTest` (5/5 PASS).
+    - Toàn bộ Backend JUnit Test Suite: 368/368 tests PASS (0 Errors, 0 Failures).
+    - Frontend Unit Test Suite: 131/131 tests PASS (Vitest), ESLint 0 warning/error, production bundle build thành công.
+    - E2E Ecosystem Integration (H2 cô lập): 28/28 tests PASS (bao gồm toàn bộ vòng đời ứng viên, nhà tuyển dụng tạo công ty PENDING, admin phê duyệt APPROVED, nhà tuyển dụng thứ hai gửi yêu cầu gia nhập, chặn duplicate 409, HR quản trị phê duyệt ngang hàng Peer Approval).
+    - Playwright UI E2E trên trình duyệt thực: `company-approval-feedback.spec.ts` PASS (xử lý xung đột 409, retry và lỗi mạng/mất phản hồi), `recruiter-company-request.spec.ts` PASS (validation website/logo URL và gửi duyệt), `mobile-qa-verification.spec.ts` PASS (xác minh mobile viewport 390x844).
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: 
+  - Java 21 LTS, Spring Boot 3.3.4, Spring Data JPA / Hibernate, Flyway Database Migration, H2 In-Memory DB (chế độ MySQL compatibility).
+  - Kiến trúc Hexagonal (Ports & Adapters) với Transactional Use Cases đảm bảo tính toàn vẹn dữ liệu khi tạo công ty và xử lý yêu cầu gia nhập.
+  - React 19, TypeScript, Vitest, Playwright (Chromium/System Chrome), PowerShell automation scripting.
+- **Mục đích chức năng / việc đã làm**: 
+  - Đảm bảo tính toàn vẹn và thông suốt 100% của toàn bộ luồng nghiệp vụ Doanh nghiệp (Luồng A: Tạo mới, Luồng B: Gia nhập & Peer Approval, Luồng C: Xử lý ngoại lệ, phân quyền và bảo mật), bảo toàn đồng thời các tính năng mới từ `main` và các bản sửa lỗi QA mobile TB-01..TB-04. Sẵn sàng tạo Pull Request tích hợp lên nhánh phát triển chung.
+

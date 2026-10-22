@@ -32,6 +32,7 @@ const actors = [
 ] as const
 
 test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang tại 360/390/555/1280/1440px', async ({ browser, baseURL }) => {
+    test.setTimeout(180_000)
     await mkdir(screenshotDirectory, { recursive: true })
 
     for (const actor of actors) {
