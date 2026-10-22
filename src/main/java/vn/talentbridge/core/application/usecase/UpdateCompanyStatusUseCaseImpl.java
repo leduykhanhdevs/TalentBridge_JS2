@@ -36,28 +36,44 @@ public class UpdateCompanyStatusUseCaseImpl implements UpdateCompanyStatusUseCas
         if (company.isDemo() && status == CompanyStatus.APPROVED) {
             throw new DomainException(40001, "Không thể xác thực hồ sơ doanh nghiệp mô phỏng.");
         }
-        company.setStatus(status);
-        Company updated = companyRepository.save(company);
 
-        if (status == CompanyStatus.APPROVED && updated.getCreatedByUserId() != null) {
-            recruiterRepository.findByUserId(updated.getCreatedByUserId()).ifPresent(recruiter -> {
+        if (status == CompanyStatus.APPROVED && company.getCreatedByUserId() != null) {
+            recruiterRepository.findByUserId(company.getCreatedByUserId()).ifPresent(recruiter -> {
                 Company linkedCompany = recruiter.getCompany();
-                if (linkedCompany != null && !updated.getId().equals(linkedCompany.getId())) {
+                if (linkedCompany != null && !company.getId().equals(linkedCompany.getId())) {
+                    String linkedCompanyName = linkedCompany.getName() == null
+                            ? "khác"
+                            : "“" + linkedCompany.getName() + "”";
                     throw new DomainException(40001,
-                            "Người tạo doanh nghiệp đã được liên kết với một công ty khác");
+                            "Không thể duyệt: người tạo đang liên kết với công ty "
+                                    + linkedCompanyName
+                                    + ". Hãy kiểm tra đúng tài khoản hoặc gỡ liên kết hiện tại trước khi duyệt.");
                 }
                 if (linkedCompany == null) {
-                    recruiter.setCompany(updated);
+                    recruiter.setCompany(company);
                     recruiterRepository.save(recruiter);
                 }
                 joinRequestRepository.findByUserIdAndStatus(
-                                updated.getCreatedByUserId(), CompanyJoinRequestStatus.PENDING)
+                                company.getCreatedByUserId(), CompanyJoinRequestStatus.PENDING)
                         .forEach(request -> {
                             request.cancel(SYSTEM_CANCELLATION_REASON);
                             joinRequestRepository.save(request);
                         });
             });
         }
+
+        if (status == CompanyStatus.REJECTED && company.getCreatedByUserId() != null) {
+            recruiterRepository.findByUserId(company.getCreatedByUserId()).ifPresent(recruiter -> {
+                Company linkedCompany = recruiter.getCompany();
+                if (linkedCompany != null && company.getId().equals(linkedCompany.getId())) {
+                    recruiter.setCompany(null);
+                    recruiterRepository.save(recruiter);
+                }
+            });
+        }
+
+        company.setStatus(status);
+        Company updated = companyRepository.save(company);
         return CompanyResult.from(updated);
     }
 }

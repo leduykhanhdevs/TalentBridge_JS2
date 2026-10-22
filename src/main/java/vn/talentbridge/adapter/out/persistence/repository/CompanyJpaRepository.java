@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 
+import java.util.Optional;
+
 @Repository
 public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Long> {
 
@@ -34,6 +36,11 @@ public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Lo
     @Query("SELECT c FROM CompanyJpaEntity c " +
            "WHERE c.status = :status AND (:status != vn.talentbridge.core.domain.vo.CompanyStatus.PENDING OR c.isDemo = false)")
     Page<CompanyJpaEntity> findByStatus(@Param("status") CompanyStatus status, Pageable pageable);
+
+    Optional<CompanyJpaEntity> findFirstByCreatedByUserIdAndStatusOrderByCreatedAtDesc(
+            Long createdByUserId,
+            CompanyStatus status
+    );
 
     @Query("SELECT COUNT(c) FROM CompanyJpaEntity c " +
            "WHERE c.status = :status AND (:status != vn.talentbridge.core.domain.vo.CompanyStatus.PENDING OR c.isDemo = false)")
