@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthApiError, loginUser, logoutUser, LOGOUT_TIMEOUT_MS, registerCandidate, requestForgotPassword, resetPassword, verifyPasswordResetOtp } from '../authApi'
+import { AuthApiError, loginUser, logoutUser, LOGIN_REQUEST_TIMEOUT_MS, LOGOUT_TIMEOUT_MS, registerCandidate, requestForgotPassword, resetPassword, verifyPasswordResetOtp } from '../authApi'
 import { refreshAuthSession } from '../sessionRefresh'
 import { getAccessToken, saveAuthTokens } from '../tokenStorage'
 import { AUTH_SESSION_LOCK_NAME } from '../authSessionLock'
-import { API_REQUEST_TIMEOUT_MESSAGE, API_REQUEST_TIMEOUT_MS } from '../../../app/fetchWithTimeout'
+import { API_REQUEST_TIMEOUT_MESSAGE } from '../../../app/fetchWithTimeout'
 
 afterEach(() => {
     vi.useRealTimers()
@@ -164,7 +164,7 @@ describe('auth API fallback errors', () => {
             status: 0,
             message: API_REQUEST_TIMEOUT_MESSAGE,
         })
-        await vi.advanceTimersByTimeAsync(API_REQUEST_TIMEOUT_MS)
+        await vi.advanceTimersByTimeAsync(LOGIN_REQUEST_TIMEOUT_MS)
 
         await assertion
     })
@@ -188,7 +188,7 @@ describe('auth API fallback errors', () => {
             status: 0,
             message: API_REQUEST_TIMEOUT_MESSAGE,
         })
-        await vi.advanceTimersByTimeAsync(API_REQUEST_TIMEOUT_MS)
+        await vi.advanceTimersByTimeAsync(LOGIN_REQUEST_TIMEOUT_MS)
 
         await assertion
     })
