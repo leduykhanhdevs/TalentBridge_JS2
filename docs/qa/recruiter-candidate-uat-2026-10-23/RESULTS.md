@@ -25,4 +25,9 @@ PR #65 đã merge vào `main` bằng commit `5132b0b28da8a82ce52b8da0d33e727e2e6
 
 ## Hậu kiểm local–Render và phát hành phần AI
 
-Chín hạng mục Candidate/Recruiter đã được PR #65 phát hành như phần trên. Nhánh hậu kiểm hiện chỉ có sửa backend để khi Gemini trả nội dung rỗng, trợ lý gắn nguồn fallback là `KNOWLEDGE_BASE`, cùng test và tài liệu; không có thay đổi FE. Chỉ kết luận bản Render tương đồng sau khi PR hậu kiểm được CI, merge, CD chạy cả hai deploy hook và hai dịch vụ cùng báo một SHA mới. Ghi SHA/check run cuối tại đây sau khi live smoke hoàn tất.
+Chín hạng mục Candidate/Recruiter đã được PR #65 phát hành như phần trên. PR #67 chỉ sửa backend để khi Gemini trả nội dung rỗng, trợ lý gắn nguồn fallback là `KNOWLEDGE_BASE`, đồng thời cập nhật test/tài liệu; không thay đổi mã FE.
+
+- PR [#67](https://github.com/leduykhanhdevs/TalentBridge_JS2/pull/67) đã merge vào `main` bằng commit `d33d5ddf50e3681dd29d372dfc8948ac2a0680d9`; cả ba job CI (backend, frontend, Docker) pass.
+- Render CD run [39847644086](https://github.com/leduykhanhdevs/TalentBridge_JS2/actions/runs/39847644086) pass cho FE và BE. Frontend `render-git-commit`, backend `/api/v1/health` `data.buildCommit`, và `headSha` của CD cùng bằng `d33d5ddf50e3681dd29d372dfc8948ac2a0680d9`.
+- Kiểm tra live sau CD: frontend HTTP 200 với đúng title/build marker; backend health HTTP 200, `status=UP`; `/api/v1/jobs` HTTP 200; CORS preflight từ frontend trả HTTP 200 với đúng `Access-Control-Allow-Origin` và `Access-Control-Allow-Credentials: true`.
+- Bản FE/BE đã deploy cùng source tree với localhost QA; follow-up PR chỉ thay adapter AI backend và tài liệu. Không chạy đăng ký/ghi dữ liệu trên production; self-registration đã được kiểm thử trên H2 cô lập trong Playwright 30/30.

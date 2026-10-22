@@ -1,6 +1,6 @@
 # Trạng thái tích hợp AI của TalentBridge
 
-**Kiểm tra source:** `origin/main` tại `db91be982e4ad009e7417a959552bc67d8c09687`, cộng với sửa nhãn nguồn fallback Gemini trên nhánh hậu kiểm; cập nhật audit ngày 23/10/2026.
+**Kiểm tra source:** `main` tại `d33d5ddf50e3681dd29d372dfc8948ac2a0680d9`; cập nhật audit ngày 23/10/2026. Sửa nhãn nguồn fallback Gemini đã được merge cùng commit này.
 
 ## Các thành phần đã có
 
