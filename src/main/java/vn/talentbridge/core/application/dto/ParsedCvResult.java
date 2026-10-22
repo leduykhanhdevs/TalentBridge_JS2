@@ -32,6 +32,10 @@ public record ParsedCvResult(
         processingSource = processingSource == null ? CvParsingSource.RULE_BASED : processingSource;
     }
 
+    public ParsedCvResult withProcessingSource(CvParsingSource source) {
+        return new ParsedCvResult(fullName, email, phone, title, city, summary, skills, experiences, rawText, source);
+    }
+
     public record ParsedExperienceItem(
             String companyName,
             String position,

@@ -79,7 +79,7 @@ export function AdminLayout() {
     return (
         <div className="min-h-screen bg-[#F5F7FB] text-[#172033]">
             <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm shadow-slate-900/[0.02] backdrop-blur">
-                <div className="mx-auto flex min-h-[76px] w-full max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-[76px] w-full max-w-[1760px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
                     <Link aria-label="TalentBridge — Trang chủ" className="flex shrink-0 items-center gap-2.5" to="/">
                         <span className="grid size-10 place-items-center rounded-xl bg-[#1D4ED8] text-white shadow-sm shadow-blue-900/20"><BriefcaseBusiness aria-hidden="true" size={19} /></span>
                         <span className="leading-tight">
@@ -152,7 +152,7 @@ export function AdminLayout() {
                 </div>
             </header>
 
-            <main className="mx-auto min-h-[calc(100dvh-140px)] w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <main className="mx-auto min-h-[calc(100dvh-140px)] w-full max-w-[1760px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
                 <Outlet />
             </main>
 

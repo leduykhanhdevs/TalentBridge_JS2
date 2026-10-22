@@ -3,6 +3,11 @@
 
 ---
 
+## MỞ RỘNG GIAO DIỆN VÀ HOÀN THIỆN HỒ SƠ ỨNG VIÊN — 23/10/2026
+- **Đã làm được gì**: Mở rộng khung giao diện các trang và modal CV; thay các hộp chọn native bằng hộp chọn dùng chung có tìm kiếm, bàn phím và menu portal; đổi trường ngày sang hiển thị/nhập dd/mm/yyyy trong khi API vẫn nhận ISO. Hoàn thiện luồng nhập CV với thông báo nguồn phân tích AI và fallback rõ ràng; bổ sung/diễn đạt lại lịch sử kinh nghiệm để hệ thống tự tính năm từ các khoảng làm việc, gộp khoảng chồng lấn và không lấy số năm cũ khi thiếu lịch sử. Thêm cập nhật avatar bằng URL hoặc kéo thả/chọn PNG/JPEG (tối đa 5 MB). Kiểm thử: Maven verify 369/369; Vitest 22 file / 134 test; ESLint, Vite production build; API E2E H2 28/28; Playwright 23/23, gồm đăng nhập ba vai trò và kiểm tra tràn ngang ở 360/390/555/1280/1440 px. Log và ảnh E2E: docs/qa/full-site-uat-2026-10-20/runs/2026-10-23-000847/.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind, React Portal/ARIA, Playwright và Vitest; CustomSelect dùng chung, định dạng ngày UI dd/mm/yyyy chuyển đổi ISO ở biên API; Java/Spring Boot multipart upload với kiểm tra MIME, giải mã ảnh, kích thước, UUID và quyền ứng viên; Gemini CV parser phân biệt nguồn AI, fallback và lỗi; tính kinh nghiệm bằng gộp khoảng ngày làm việc và tổng số tháng lịch.
+- **Mục đích chức năng / việc đã làm**: Giúp các trang, chữ và biểu mẫu dùng được trên màn hình lớn/nhỏ, giảm vỡ bố cục và lỗi chọn/ngày; cho ứng viên cập nhật hồ sơ và avatar; tránh hiển thị sai tổng năm kinh nghiệm khi chưa có lịch sử. Gemini thật cần GEMINI_API_KEY; xác minh đã dùng parser tests/fake endpoint, chưa có xác nhận gọi dịch vụ Gemini thật. File avatar hiện dùng local storage adapter; trên Render cần persistent disk hoặc storage bền vững để giữ ảnh sau khi instance khởi động lại. PR/CI chưa được xác nhận ở thời điểm ghi mục này.
+
 ## 📌 BÁO CÁO ĐỢT 2: NGHIÊN CỨU KHOA HỌC, CI/CD, CLOUD RENDER & HỆ THỐNG AI (RAG + MCP)
 - **Thời gian hoàn thành**: 06/10/2026
 - **Người thực hiện**: Lê Duy Khánh (Tech Lead) & AI Pair Programmer

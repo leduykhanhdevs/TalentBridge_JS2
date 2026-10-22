@@ -27,6 +27,7 @@ import {
     type CompanyRequestFieldErrors,
 } from '../../features/recruiter/companyRequestValidation'
 import type { RequestCreateCompanyRequest } from '../../features/recruiter/recruiterTypes'
+import { CustomSelect } from '../../components/ui/CustomSelect'
 
 type CompanyFormValues = {
     name: string
@@ -414,19 +415,20 @@ export function RecruiterCompanyPage() {
                                 <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="comp-size">
                                     Quy mô công ty
                                 </label>
-                                <select
-                                    className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                                <CustomSelect
                                     id="comp-size"
-                                    onChange={(e) => setFormValues((prev) => ({ ...prev, companySize: e.target.value }))}
+                                    aria-label="Quy mô công ty"
+                                    onChange={(companySize) => setFormValues((prev) => ({ ...prev, companySize }))}
+                                    options={[
+                                        { value: '1-10 nhân viên', label: '1-10 nhân viên' },
+                                        { value: '10-50 nhân viên', label: '10-50 nhân viên' },
+                                        { value: '50-100 nhân viên', label: '50-100 nhân viên' },
+                                        { value: '100-500 nhân viên', label: '100-500 nhân viên' },
+                                        { value: '500-1000 nhân viên', label: '500-1000 nhân viên' },
+                                        { value: '1000+ nhân viên', label: '1000+ nhân viên' },
+                                    ]}
                                     value={formValues.companySize}
-                                >
-                                    <option value="1-10 nhân viên">1-10 nhân viên</option>
-                                    <option value="10-50 nhân viên">10-50 nhân viên</option>
-                                    <option value="50-100 nhân viên">50-100 nhân viên</option>
-                                    <option value="100-500 nhân viên">100-500 nhân viên</option>
-                                    <option value="500-1000 nhân viên">500-1000 nhân viên</option>
-                                    <option value="1000+ nhân viên">1000+ nhân viên</option>
-                                </select>
+                                />
                             </div>
                         </div>
 

@@ -77,8 +77,22 @@ class GeminiCvParserServiceTest {
         ParsedCvResult result = service.parse(cvBytes, "test.pdf");
 
         assertThat(result.fullName()).isEqualTo("Nguyen Van A");
-        assertThat(result.processingSource()).isEqualTo(CvParsingSource.RULE_BASED);
+        assertThat(result.processingSource()).isEqualTo(CvParsingSource.RULE_BASED_NO_API_KEY);
         verify(fallbackParser).parse(cvBytes, "test.pdf");
+    }
+
+    @Test
+    @DisplayName("Báo rõ khi không trích xuất được văn bản từ CV")
+    void reportsTextExtractionFailure() {
+        byte[] cvBytes = "image-only cv".getBytes(StandardCharsets.UTF_8);
+        when(fallbackParser.extractRawText(cvBytes, "scan.pdf")).thenReturn(" ");
+        when(fallbackParser.parse(cvBytes, "scan.pdf")).thenReturn(ruleBasedResult("", ""));
+
+        ParsedCvResult result = service("test-secret").parse(cvBytes, "scan.pdf");
+
+        assertThat(result.processingSource()).isEqualTo(CvParsingSource.RULE_BASED_TEXT_EXTRACTION);
+        verify(fallbackParser).extractRawText(cvBytes, "scan.pdf");
+        verify(fallbackParser).parse(cvBytes, "scan.pdf");
     }
 
     @Test
@@ -96,7 +110,7 @@ class GeminiCvParserServiceTest {
         ParsedCvResult result = service.parse(cvBytes, "test.pdf");
 
         assertThat(result.fullName()).isEqualTo("Nguyen Van B");
-        assertThat(result.processingSource()).isEqualTo(CvParsingSource.RULE_BASED);
+        assertThat(result.processingSource()).isEqualTo(CvParsingSource.RULE_BASED_AI_ERROR);
     }
 
     private GeminiCvParserService service(String apiKey) {
