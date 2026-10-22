@@ -175,6 +175,35 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
                     <button type="button" onClick={() => setMobilePanel('preview')} className={`rounded-lg px-3 py-2 text-xs font-bold ${mobilePanel === 'preview' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>Xem trước</button>
                 </div>
 
+                {/* Status Feedback Banner (Visible across both edit and preview modes) */}
+                {message && (
+                    <div
+                        className={`mx-3 my-2 flex items-center justify-between gap-2 rounded-xl p-3 text-xs sm:text-sm font-semibold shadow-sm animate-in fade-in sm:mx-6 ${
+                            message.type === 'success'
+                                ? 'border border-emerald-300 bg-emerald-50 text-emerald-800'
+                                : 'border border-rose-300 bg-rose-50 text-rose-800'
+                        }`}
+                        role="alert"
+                    >
+                        <div className="flex items-center gap-2">
+                            {message.type === 'success' ? (
+                                <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                            ) : (
+                                <X className="h-4 w-4 shrink-0 text-rose-600" />
+                            )}
+                            <span>{message.text}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setMessage(null)}
+                            className="rounded p-1 text-gray-500 hover:text-gray-800"
+                            aria-label="Đóng thông báo"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                )}
+
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
                     {/* Left Panel: Settings */}
                     <div className={`${mobilePanel === 'edit' ? 'flex' : 'hidden'} min-h-0 w-full flex-shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-gray-50/50 p-4 space-y-6 sm:p-5 md:flex md:w-80`}>
@@ -254,19 +283,6 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
                                 ))}
                             </div>
                         </div>
-
-                        {/* Message alert */}
-                        {message && (
-                            <div
-                                className={`rounded-lg p-3 text-xs font-medium ${
-                                    message.type === 'success'
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : 'bg-rose-50 text-rose-700 border border-rose-200'
-                                }`}
-                            >
-                                {message.text}
-                            </div>
-                        )}
                     </div>
 
                     {/* Right Panel: Live CV Preview */}

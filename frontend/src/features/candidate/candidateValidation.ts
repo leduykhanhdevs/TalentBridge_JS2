@@ -20,6 +20,16 @@ export interface CandidateProfileFormData {
 const PHONE_REGEX = /^(0|\+84)[0-9]{9,10}$/
 const URL_REGEX = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 
+export function getVietnamTodayString(): string {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    })
+    return formatter.format(new Date())
+}
+
 export function validateCandidateProfile(data: Partial<CandidateProfileFormData>): CandidateProfileFormErrors {
     const errors: CandidateProfileFormErrors = {}
 
@@ -37,6 +47,13 @@ export function validateCandidateProfile(data: Partial<CandidateProfileFormData>
     if (data.phone && data.phone.trim()) {
         if (!PHONE_REGEX.test(data.phone.trim())) {
             errors.phone = 'Số điện thoại không đúng định dạng (VD: 0912345678)'
+        }
+    }
+
+    if (data.dob && data.dob.trim()) {
+        const todayStr = getVietnamTodayString()
+        if (data.dob.trim() > todayStr) {
+            errors.dob = 'Ngày sinh không được ở trong tương lai'
         }
     }
 

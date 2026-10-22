@@ -722,3 +722,9 @@
 - **Đã làm được gì**: Khởi động backend và frontend trên worktree `fix/khanh/bugdocx-uat-fixes`; backend `/api/v1/health` trả HTTP 200, frontend `http://localhost:5173/` trả HTTP 200. Backend dùng profile `local`, H2 file database và đã áp dụng 4 migration. Mở giao diện trong browser Codex; không thao tác hay ghi dữ liệu production.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot 3.3.4, Maven, H2, Flyway; Node.js, pnpm và Vite 8; kiểm tra health bằng HTTP và frontend bằng HTTP loopback.
 - **Mục đích chức năng / việc đã làm**: Cho phép xem và thử trực tiếp bản sửa các finding trong `bug.docx` trên máy local. Backend chạy tại `http://127.0.0.1:8080`; frontend tại `http://localhost:5173/`. Dữ liệu thử nghiệm thuộc H2 local; việc gửi email thật không được kiểm thử.
+
+## Sửa 4 lỗi QA mobile TB-01 đến TB-04 ngày 22 tháng 10 năm 2026
+
+- **Đã làm được gì**: Sửa TB-01 (CV Builder lưu CV được, có mẫu dự phòng và trạng thái thao tác hiển thị ở cả tab Xem trước), TB-02 (bước và giới hạn số năm kinh nghiệm nhất quán ở giao diện và API), TB-03 (chặn ngày sinh tương lai ở giao diện và backend theo giờ Việt Nam), TB-04 (loại hồ sơ demo khỏi hàng chờ PENDING nhưng vẫn xem được ở danh sách chung). Sửa migration V5 để khớp schema. Kiểm thử: backend 26/26, Vitest 131/131, lint/build PASS, Playwright mobile 390x844 2/2 PASS. Ảnh tại `docs/qa/mobile-qa-2026-10-22-fixes/`; báo cáo Word tại `docs/Bao_Cao_Sua_Loi_QA_Mobile_TalentBridge_2026-10-22.docx`.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Flyway, Spring Data JPA, Bean Validation, PDFBox; React, TypeScript, Vitest; Playwright trên H2 cô lập; thư viện docx.
+- **Mục đích chức năng / việc đã làm**: Khôi phục tạo CV trên mobile, bảo vệ dữ liệu hồ sơ ứng viên và giúp admin duyệt đúng các công ty thật đang chờ.

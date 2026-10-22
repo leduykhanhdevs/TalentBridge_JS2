@@ -30,6 +30,7 @@ public class UpdateCandidateProfileRequest {
     @Size(max = 150, message = "Chức danh không được vượt quá 150 ký tự")
     private String title;
 
+    @jakarta.validation.constraints.PastOrPresent(message = "Ngày sinh không được ở trong tương lai")
     private LocalDate dob;
 
     @Pattern(regexp = "^$|^(?i)(MALE|FEMALE|OTHER|NAM|NU|NỮ|KHAC|KHÁC)$", message = "Giới tính không hợp lệ")

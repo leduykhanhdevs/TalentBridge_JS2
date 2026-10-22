@@ -19,7 +19,7 @@ public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Lo
            "LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(c.taxCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(c.address) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-           "AND (:status IS NULL OR c.status = :status)")
+           "AND (:status IS NULL OR (c.status = :status AND (:status != vn.talentbridge.core.domain.vo.CompanyStatus.PENDING OR c.isDemo = false)))")
     Page<CompanyJpaEntity> searchCompanies(@Param("keyword") String keyword,
                                            @Param("status") CompanyStatus status,
                                            Pageable pageable);
@@ -29,15 +29,20 @@ public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Lo
            "LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(c.taxCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(c.address) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-           "AND (:status IS NULL OR c.status = :status)")
+           "AND (:status IS NULL OR (c.status = :status AND (:status != vn.talentbridge.core.domain.vo.CompanyStatus.PENDING OR c.isDemo = false)))")
     long countSearchCompanies(@Param("keyword") String keyword,
                               @Param("status") CompanyStatus status);
 
-    Page<CompanyJpaEntity> findByStatus(CompanyStatus status, Pageable pageable);
+    @Query("SELECT c FROM CompanyJpaEntity c " +
+           "WHERE c.status = :status AND (:status != vn.talentbridge.core.domain.vo.CompanyStatus.PENDING OR c.isDemo = false)")
+    Page<CompanyJpaEntity> findByStatus(@Param("status") CompanyStatus status, Pageable pageable);
+
+    @Query("SELECT COUNT(c) FROM CompanyJpaEntity c " +
+           "WHERE c.status = :status AND (:status != vn.talentbridge.core.domain.vo.CompanyStatus.PENDING OR c.isDemo = false)")
+    long countByStatus(@Param("status") CompanyStatus status);
     Optional<CompanyJpaEntity> findFirstByCreatedByUserIdAndStatusOrderByCreatedAtDesc(
             Long createdByUserId,
             CompanyStatus status
     );
-    long countByStatus(CompanyStatus status);
     boolean existsByTaxCode(String taxCode);
 }

@@ -21,5 +21,7 @@ public class CandidateSkillRequest {
     @Max(value = 5, message = "Đánh giá tối đa 5 sao")
     private Integer rating;
 
+    @jakarta.validation.constraints.DecimalMin(value = "0.1", message = "Số năm kinh nghiệm tối thiểu là 0.1 năm")
+    @jakarta.validation.constraints.DecimalMax(value = "50.0", message = "Số năm kinh nghiệm không được vượt quá 50 năm")
     private Double yearsOfExperience;
 }

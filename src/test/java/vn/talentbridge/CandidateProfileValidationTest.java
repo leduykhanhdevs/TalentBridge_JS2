@@ -63,4 +63,32 @@ class CandidateProfileValidationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @WithMockUser(username = "candidate@talentbridge.vn", roles = {"CANDIDATE"})
+    @DisplayName("TB-03: Should reject future date of birth (e.g. 2030-02-01)")
+    void testFutureDateOfBirthRejected() throws Exception {
+        UpdateCandidateProfileRequest request = UpdateCandidateProfileRequest.builder()
+                .fullName("Valid Candidate")
+                .dob(java.time.LocalDate.of(2030, 2, 1))
+                .build();
+
+        mockMvc.perform(put("/api/v1/candidates/profile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "candidate@talentbridge.vn", roles = {"CANDIDATE"})
+    @DisplayName("TB-02: Should validate skill years of experience constraints (min 0.1, max 50)")
+    void testSkillYearsValidation() throws Exception {
+        vn.talentbridge.adapter.in.web.dto.request.CandidateSkillRequest invalidRequest =
+                new vn.talentbridge.adapter.in.web.dto.request.CandidateSkillRequest(null, "Java", "INTERMEDIATE", 3, 0.05);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/candidates/skills")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -59,7 +59,17 @@ public class ResumeUseCaseImpl implements ResumeUseCase {
     @Override
     public ResumeResult generateResume(Long userId, String templateCode, String title, String customizationJson, byte[] fileContent) {
         CvTemplate template = cvTemplateRepository.findByTemplateCode(templateCode)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy mẫu CV với mã: " + templateCode));
+                .or(() -> cvTemplateRepository.findAllActive().stream().findFirst())
+                .orElseGet(() -> new CvTemplate(
+                        1,
+                        "Modern IT Professional",
+                        "MODERN_IT_01",
+                        "",
+                        "Mẫu CV hiện đại chuyên biệt cho ngành IT & Phần mềm",
+                        "{\"primaryColor\": \"#2563EB\", \"fontFamily\": \"Inter\", \"columns\": 2, \"layout\": \"sidebar-left\"}",
+                        true,
+                        null
+                ));
 
         Candidate candidate = getOrCreateCandidate(userId);
         User user = userRepository.findById(userId)
@@ -330,7 +340,8 @@ public class ResumeUseCaseImpl implements ResumeUseCase {
         return normalized.replaceAll("\\p{M}", "")
                 .replaceAll("đ", "d")
                 .replaceAll("Đ", "D")
-                .replaceAll("[^\\x00-\\x7F]", " ");
+                .replaceAll("[\\r\\n\\t]", " ")
+                .replaceAll("[^\\x20-\\x7E]", " ");
     }
 
     private String sanitizeFileName(String name) {
