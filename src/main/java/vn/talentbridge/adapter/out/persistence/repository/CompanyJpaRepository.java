@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
 
+import java.util.Optional;
+
 @Repository
 public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Long> {
 
@@ -32,6 +34,10 @@ public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Lo
                               @Param("status") CompanyStatus status);
 
     Page<CompanyJpaEntity> findByStatus(CompanyStatus status, Pageable pageable);
+    Optional<CompanyJpaEntity> findFirstByCreatedByUserIdAndStatusOrderByCreatedAtDesc(
+            Long createdByUserId,
+            CompanyStatus status
+    );
     long countByStatus(CompanyStatus status);
     boolean existsByTaxCode(String taxCode);
 }
