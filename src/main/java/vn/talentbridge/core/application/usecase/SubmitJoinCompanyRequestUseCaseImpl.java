@@ -43,6 +43,14 @@ public class SubmitJoinCompanyRequestUseCaseImpl implements SubmitJoinCompanyReq
             throw new DomainException(40001, "Nhà tuyển dụng đã thuộc về một công ty khác");
         }
 
+        if (companyRepository.findPendingByCreatedByUserId(userId).isPresent()) {
+            throw new DomainException(
+                    40001,
+                    "Yêu cầu tạo doanh nghiệp của bạn đang chờ duyệt. "
+                            + "Bạn không thể gia nhập công ty khác trong thời gian này."
+            );
+        }
+
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy công ty với ID: " + companyId));
 

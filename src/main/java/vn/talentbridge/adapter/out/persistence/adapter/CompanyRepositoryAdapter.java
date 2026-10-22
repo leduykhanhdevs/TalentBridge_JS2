@@ -30,6 +30,17 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Company> findPendingByCreatedByUserId(Long userId) {
+        return companyJpaRepository
+                .findFirstByCreatedByUserIdAndStatusOrderByCreatedAtDesc(
+                        userId,
+                        CompanyStatus.PENDING
+                )
+                .map(this::toDomain);
+    }
+
+    @Override
     public Company save(Company domainCompany) {
         CompanyJpaEntity entity;
         if (domainCompany.getId() != null) {

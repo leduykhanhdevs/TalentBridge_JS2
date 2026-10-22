@@ -78,7 +78,7 @@ export function WorkspaceLayoutFrame({
                 </div>
             </header>
 
-            <div className="relative min-h-[calc(100dvh-128px)] md:grid md:grid-cols-[232px_minmax(0,1fr)]">
+            <div className="relative min-h-[calc(100dvh-128px)] md:min-h-[calc(100dvh-148px)] md:grid md:grid-cols-[232px_minmax(0,1fr)]">
                 {isMenuOpen && <button aria-label="Đóng điều hướng" className="fixed inset-x-0 bottom-0 top-16 z-20 bg-slate-950/20 md:hidden" onClick={() => setIsMenuOpen(false)} type="button" />}
 
                 <aside
@@ -133,7 +133,7 @@ export function WorkspaceLayoutFrame({
                 </main>
             </div>
 
-            <footer className="flex min-h-16 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 text-xs text-slate-600 sm:px-8">
+            <footer className="flex min-h-16 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 text-xs text-slate-600 sm:px-8" data-testid="workspace-footer">
                 <span>TalentBridge · Kết nối nghề nghiệp có trách nhiệm</span>
                 <span className="hidden font-semibold text-slate-500 sm:inline">TalentBridge ATS</span>
             </footer>

@@ -5,6 +5,7 @@ test('company request rejects incompatible website and logo values before sendin
     let submittedPayload: Record<string, unknown> | undefined
 
     await page.route('**/api/v1/recruiters/profile', async (route) => {
+        const hasPendingCompany = submitCount > 0
         await route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -17,6 +18,11 @@ test('company request rejects incompatible website and logo values before sendin
                     fullName: 'Nhà tuyển dụng E2E',
                     email: 'recruiter@fpt.com',
                     status: 'ACTIVE',
+                    ...(hasPendingCompany && {
+                        companyId: 101,
+                        companyName: 'Công ty Vin',
+                        companyStatus: 'PENDING',
+                    }),
                 },
             }),
         })
@@ -60,6 +66,9 @@ test('company request rejects incompatible website and logo values before sendin
     await page.getByRole('button', { name: 'Gửi yêu cầu xét duyệt' }).click()
 
     await expect(page.getByText('Yêu cầu tạo doanh nghiệp đã được gửi thành công', { exact: false })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Công ty Vin' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Bắt đầu tạo công ty' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Tìm kiếm & nộp đơn' })).toHaveCount(0)
     expect(submitCount).toBe(1)
     expect(submittedPayload).toMatchObject({
         name: 'Công ty Vin',

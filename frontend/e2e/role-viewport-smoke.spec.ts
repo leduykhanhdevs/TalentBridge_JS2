@@ -159,6 +159,18 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
                     await page.screenshot({ path: join(screenshotDirectory, `${actor.name}-route-${routeSlug}-${width}-overflow.png`), fullPage: true })
                 }
                 expect(layout.documentWidth, `${actor.name} route ${route} tràn ngang tại ${width}px: ${JSON.stringify(layout.offenders)}`).toBeLessThanOrEqual(width)
+                if (actor.name === 'recruiter' && route === '/recruiter/company' && width >= 1280) {
+                    const gap = await page.evaluate(() => {
+                        const sidebar = document.querySelector('#workspace-navigation')
+                        const footer = document.querySelector('[data-testid="workspace-footer"]')
+                        if (!sidebar || !footer) return null
+                        return Math.round(
+                            footer.getBoundingClientRect().top
+                            - sidebar.getBoundingClientRect().bottom,
+                        )
+                    })
+                    expect(gap, 'Không để khoảng hở dọc giữa menu nhà tuyển dụng và chân trang').toBe(0)
+                }
                 await page.screenshot({
                     path: join(screenshotDirectory, `${actor.name}-route-${routeSlug}-${width}.png`),
                     fullPage: true,

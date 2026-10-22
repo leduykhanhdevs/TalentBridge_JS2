@@ -3,6 +3,11 @@ import { join } from 'node:path'
 
 const screenshotDirectory = process.env.TALENTBRIDGE_E2E_SCREENSHOT_DIR!
 
+async function signOutThroughSettings(page: import('@playwright/test').Page) {
+    await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
+    await page.getByRole('menuitem', { name: 'Đăng xuất' }).click()
+}
+
 test('password reset email failure stays on the email step and shows the server error', async ({ page }) => {
     await page.route('**/api/v1/auth/forgot-password', async (route) => {
         await route.fulfill({
@@ -185,7 +190,7 @@ test('logout in another tab waits for an active refresh and revokes the rotated 
         await refreshPage.goto('/candidate/profile')
         await refreshStarted
         await logoutPage.goto('/')
-        await logoutPage.getByRole('button', { name: 'Đăng xuất' }).click()
+        await signOutThroughSettings(logoutPage)
         await expect(logoutPage).toHaveURL(/\/login$/)
         expect(logoutBody).toBeUndefined()
 
@@ -312,9 +317,9 @@ test('candidate can register, sign out and sign back in using the local H2 backe
 
     await expect(page.getByRole('status')).toContainText('Đăng ký thành công')
     await expect(page).toHaveURL(/\/$/, { timeout: 10_000 })
-    await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Cài đặt tài khoản' })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Đăng xuất' }).click()
+    await signOutThroughSettings(page)
     await expect(page).toHaveURL(/\/login$/)
     expect(await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
 
@@ -322,7 +327,7 @@ test('candidate can register, sign out and sign back in using the local H2 backe
     await page.getByLabel('Mật khẩu').fill(password)
     await page.getByRole('button', { name: 'Đăng nhập' }).click()
     await expect(page).toHaveURL(/\/$/, { timeout: 10_000 })
-    await expect(page.getByRole('button', { name: 'Đăng xuất' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Cài đặt tài khoản' })).toBeVisible()
 })
 
 test('a stalled server logout still clears the local session and returns to login', async ({ page }) => {
@@ -357,7 +362,7 @@ test('a stalled server logout still clears the local session and returns to logi
     })
 
     await page.goto('/')
-    await page.getByRole('button', { name: 'Đăng xuất' }).click()
+    await signOutThroughSettings(page)
     await expect(page).toHaveURL(/\/login$/, { timeout: 5_000 })
     expect(await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
     releaseRequest?.()
@@ -389,7 +394,7 @@ test('expired-token logout returns to login without starting another refresh', a
     })
 
     await page.goto('/')
-    await page.getByRole('button', { name: 'Đăng xuất' }).click()
+    await signOutThroughSettings(page)
     await expect(page).toHaveURL(/\/login$/, { timeout: 1_500 })
     expect(await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
     expect(logoutCalls).toBe(1)
