@@ -279,12 +279,13 @@ describe('E2E Ecosystem Integration Test: Admin -> HR -> Candidate', () => {
             hr1CompanyId = res.data.data.id
         })
 
-        it('3.5. HR1 profile remains unlinked until Admin approves company', async () => {
+        it('3.5. HR1 profile links the pending company immediately', async () => {
             const res = await apiRequest('/recruiters/profile', { method: 'GET' }, hr1Token)
 
             expect(res.status).toBe(200)
-            expect(res.data?.data?.companyId).toBeNull()
-            expect(res.data?.data?.companyName).toBeNull()
+            expect(res.data?.data?.companyId).toBe(hr1CompanyId)
+            expect(res.data?.data?.companyName).toBe(companyName)
+            expect(res.data?.data?.companyStatus).toBe('PENDING')
         })
     })
 
