@@ -34,6 +34,7 @@ import java.util.HashSet;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -165,6 +166,31 @@ class HieuRecruiterIntegrationTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/recruiters/profile - tự liên kết yêu cầu công ty chờ duyệt cũ")
+    void testRecruiterProfileRepairsLegacyPendingCompanyLink() throws Exception {
+        CompanyJpaEntity pendingCompany = companyRepository.save(CompanyJpaEntity.builder()
+                .name("Legacy Pending Company")
+                .status(CompanyStatus.PENDING)
+                .createdByUserId(hrUser2.getId())
+                .build());
+
+        mockMvc.perform(get("/api/v1/recruiters/profile")
+                        .header("Authorization", "Bearer " + hrToken2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.companyId").value(pendingCompany.getId()))
+                .andExpect(jsonPath("$.data.companyName").value("Legacy Pending Company"))
+                .andExpect(jsonPath("$.data.companyStatus").value("PENDING"));
+
+        assertEquals(
+                pendingCompany.getId(),
+                recruiterRepository.findByUserId(hrUser2.getId())
+                        .orElseThrow()
+                        .getCompany()
+                        .getId()
+        );
+    }
+
+    @Test
     @DisplayName("PUT /api/v1/recruiters/profile - Cập nhật hồ sơ HR thành công")
     void testUpdateRecruiterProfileSuccess() throws Exception {
         UpdateRecruiterProfileRequest request = new UpdateRecruiterProfileRequest();
@@ -212,6 +238,12 @@ class HieuRecruiterIntegrationTest {
                 .andExpect(jsonPath("$.data.name").value("FPT Software Innovation"))
                 .andExpect(jsonPath("$.data.city").value("Ho Chi Minh"))
                 .andExpect(jsonPath("$.data.status").value("PENDING"));
+
+        mockMvc.perform(get("/api/v1/recruiters/profile")
+                        .header("Authorization", "Bearer " + hrToken2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.companyName").value("FPT Software Innovation"))
+                .andExpect(jsonPath("$.data.companyStatus").value("PENDING"));
     }
 
     @Test
