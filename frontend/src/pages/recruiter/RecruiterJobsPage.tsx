@@ -27,6 +27,7 @@ import {
     formatJobSalary,
 } from '../../features/recruiter/recruiterJobValidation'
 import { JobFormModal } from '../../features/recruiter/components/JobFormModal'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 const JOB_STATUS_TABS: Array<{ label: string; value: JobStatus | '' }> = [
     { label: 'Tất cả', value: '' },
@@ -285,7 +286,7 @@ export function RecruiterJobsPage() {
                                         <p className="mt-1 text-sm text-slate-600">
                                             {formatJobSalary(job.minSalary, job.maxSalary, job.isNegotiable)}
                                             <span aria-hidden="true" className="px-2 text-slate-300">·</span>
-                                            Hạn {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'chưa đặt'}
+                                            Hạn {job.deadline ? formatIsoDate(job.deadline) : 'chưa đặt'}
                                         </p>
                                         <span className={`mt-2 inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${JOB_STATUS_STYLES[job.status]}`}>
                                             {JOB_STATUS_LABELS[job.status]}

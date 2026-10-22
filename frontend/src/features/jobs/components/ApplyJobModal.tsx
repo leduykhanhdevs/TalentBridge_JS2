@@ -18,6 +18,7 @@ import {
     uploadResume,
 } from '../../candidate/candidateApi'
 import type { ResumeItem } from '../../candidate/candidateTypes'
+import { formatIsoDate } from '../../../components/ui/dateFormat'
 
 interface ApplyJobModalProps {
     isOpen: boolean
@@ -275,9 +276,7 @@ export function ApplyJobModal({
                                                             </p>
                                                             <p className="truncate text-xs text-slate-500">
                                                                 {resume.fileName} &bull; Tải lên{' '}
-                                                                {resume.createdAt
-                                                                    ? resume.createdAt.split('T')[0]
-                                                                    : ''}
+                                                                {formatIsoDate(resume.createdAt)}
                                                             </p>
                                                         </div>
                                                     </div>

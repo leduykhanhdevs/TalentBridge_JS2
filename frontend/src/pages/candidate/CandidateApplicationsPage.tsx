@@ -31,6 +31,7 @@ import type {
     CandidateApplicationItem,
 } from '../../features/candidate/candidateTypes'
 import { CandidateInterviewCard } from '../../features/candidate/components/CandidateInterviewCard'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 const STAGE_LABELS: Record<ApplicationStage, { label: string; color: string; bg: string; border: string }> = {
     APPLIED: {
@@ -147,7 +148,7 @@ export function CandidateApplicationsPage() {
 
     return (
         <div className="min-h-[calc(100vh-4rem)] py-6 sm:py-8">
-            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8 space-y-6">
             {/* Header section */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -418,7 +419,7 @@ export function CandidateApplicationsPage() {
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Calendar size={13} className="text-slate-400" />
-                                                    Nộp ngày: {new Date(app.appliedAt).toLocaleDateString('vi-VN')}
+                                                    Nộp ngày: {formatIsoDate(app.appliedAt)}
                                                 </span>
                                             </div>
                                         </div>

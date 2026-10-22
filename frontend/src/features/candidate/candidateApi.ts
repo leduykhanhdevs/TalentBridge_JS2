@@ -90,6 +90,29 @@ export async function updateCandidateProfile(
     return payload.data
 }
 
+export async function uploadCandidateAvatar(file: File): Promise<string> {
+    const token = getAccessToken()
+    if (!token) {
+        throw new CandidateApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    }
+
+    const body = new FormData()
+    body.append('file', file)
+    const res = await fetch(`${API_BASE_URL}/candidates/profile/avatar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body,
+    })
+
+    if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(res.status, errJson?.message || 'Không thể tải ảnh đại diện lên')
+    }
+
+    const payload: ApiResponse<{ avatarUrl: string }> = await res.json()
+    return payload.data.avatarUrl
+}
+
 // ==========================================
 // WORK EXPERIENCES
 // ==========================================

@@ -175,7 +175,12 @@ export interface ParsedCvResult {
     skills: string[]
     experiences: ParsedCvExperience[]
     rawText: string
-    processingSource: 'GEMINI' | 'RULE_BASED'
+    processingSource:
+        | 'GEMINI'
+        | 'RULE_BASED'
+        | 'RULE_BASED_NO_API_KEY'
+        | 'RULE_BASED_AI_ERROR'
+        | 'RULE_BASED_TEXT_EXTRACTION'
 }
 
 export interface ApplyParsedCvPayload {

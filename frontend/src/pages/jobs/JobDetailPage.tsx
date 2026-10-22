@@ -59,7 +59,7 @@ function JobNotFoundState() {
 
 function JobDetailSkeleton() {
     return (
-        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-[1200px] animate-pulse px-4 py-8 sm:px-6 lg:px-8">
+        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-[1760px] animate-pulse px-4 py-8 sm:px-6 lg:px-8">
             <div className="h-5 w-40 rounded bg-slate-200" />
             <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-8">
                 <div className="h-7 w-2/3 rounded bg-slate-200" />
@@ -228,7 +228,7 @@ export function JobDetailPage() {
 
     return (
         <div className="min-h-full bg-[#F5F7FB] py-7 sm:py-9">
-            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8">
                 <nav aria-label="Đường dẫn" className="text-xs text-slate-500 sm:text-sm">
                     <Link className="transition-colors hover:text-[#1D4ED8]" to="/jobs">Việc làm</Link>
                     <span aria-hidden="true" className="px-2">/</span>

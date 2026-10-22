@@ -24,7 +24,7 @@ public class UpdateCandidateProfileRequest {
     private String phone;
 
     @Size(max = 500, message = "URL ảnh đại diện không được vượt quá 500 ký tự")
-    @Pattern(regexp = "^$|^https?://.*", message = "URL ảnh đại diện phải bắt đầu bằng http:// hoặc https://")
+    @Pattern(regexp = "^$|^https?://.*|^/api/v1/candidates/profile/avatar/[a-fA-F0-9-]{36}\\.(?:jpg|png)$", message = "URL ảnh đại diện phải là http(s) hoặc ảnh đã tải lên hệ thống")
     private String avatarUrl;
 
     @Size(max = 150, message = "Chức danh không được vượt quá 150 ký tự")

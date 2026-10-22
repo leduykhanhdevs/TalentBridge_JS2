@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateCandidateProfileRequest;
 import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.RoleJpaEntity;
@@ -19,16 +20,24 @@ import vn.talentbridge.adapter.out.persistence.entity.UserJpaEntity;
 import vn.talentbridge.adapter.out.persistence.repository.CandidateJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.RoleJpaRepository;
 import vn.talentbridge.adapter.out.persistence.repository.UserJpaRepository;
+import vn.talentbridge.adapter.out.persistence.repository.WorkExperienceJpaRepository;
 import vn.talentbridge.core.application.dto.LoginCommand;
 import vn.talentbridge.core.application.port.in.LoginUseCase;
+import vn.talentbridge.core.application.port.out.FileStoragePort;
 import vn.talentbridge.core.domain.vo.UserStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashSet;
+import java.net.URI;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import javax.imageio.ImageIO;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,6 +63,9 @@ class CandidateProfileIntegrationTest {
     private CandidateJpaRepository candidateRepository;
 
     @Autowired
+    private WorkExperienceJpaRepository workExperienceRepository;
+
+    @Autowired
     private vn.talentbridge.adapter.out.persistence.repository.RecruiterJpaRepository recruiterRepository;
 
     @Autowired
@@ -67,6 +79,9 @@ class CandidateProfileIntegrationTest {
 
     @Autowired
     private LoginUseCase loginUseCase;
+
+    @Autowired
+    private FileStoragePort fileStoragePort;
 
     private String candidateToken;
     private String recruiterToken;
@@ -120,12 +135,100 @@ class CandidateProfileIntegrationTest {
         ).accessToken();
     }
 
+    @Test
+    @DisplayName("Ứng viên tải ảnh PNG lên, ảnh được đọc công khai bằng URL trả về")
+    void uploadAndReadCandidateAvatar() throws Exception {
+        ByteArrayOutputStream imageOutput = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(4, 4, BufferedImage.TYPE_INT_ARGB), "png", imageOutput);
+        byte[] png = imageOutput.toByteArray();
+        MockMultipartFile image = new MockMultipartFile("file", "avatar.png", MediaType.IMAGE_PNG_VALUE, png);
+
+        String response = mockMvc.perform(multipart("/api/v1/candidates/profile/avatar")
+                        .file(image)
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.avatarUrl").isNotEmpty())
+                .andReturn().getResponse().getContentAsString();
+
+        String avatarUrl = objectMapper.readTree(response).path("data").path("avatarUrl").asText();
+        String fileName = URI.create(avatarUrl).getPath().substring(URI.create(avatarUrl).getPath().lastIndexOf('/') + 1);
+        try {
+            mockMvc.perform(get(URI.create(avatarUrl).getPath()))
+                    .andExpect(status().isOk())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                            .contentType(MediaType.IMAGE_PNG))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes(png));
+            mockMvc.perform(put("/api/v1/candidates/profile")
+                            .header("Authorization", "Bearer " + candidateToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsBytes(UpdateCandidateProfileRequest.builder()
+                                    .avatarUrl(avatarUrl)
+                                    .build())))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.avatarUrl").value(avatarUrl));
+        } finally {
+            fileStoragePort.deleteFile("avatars/" + fileName);
+        }
+    }
+
+    @Test
+    @DisplayName("Tự tính số năm từ lịch sử công việc và không cộng hai khoảng thời gian bị chồng lấp")
+    void calculateExperienceYearsFromWorkHistory() throws Exception {
+        String firstExperienceResponse = mockMvc.perform(post("/api/v1/candidates/work-experiences")
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"companyName":"Công ty A","position":"Lập trình viên",
+                                 "startDate":"2020-01-01","endDate":"2023-12-31","isCurrent":false}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long firstExperienceId = objectMapper.readTree(firstExperienceResponse).path("data").path("id").asLong();
+
+        mockMvc.perform(post("/api/v1/candidates/work-experiences")
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"companyName":"Công ty B","position":"Kỹ sư phần mềm",
+                                 "startDate":"2022-01-01","endDate":"2023-12-31","isCurrent":false}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/candidates/profile")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.experienceYears").value(4));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .delete("/api/v1/candidates/work-experiences/{id}", firstExperienceId)
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/candidates/profile")
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.experienceYears").value(2));
+    }
+
+    @Test
+    @DisplayName("Từ chối file không giải mã được như ảnh")
+    void rejectInvalidAvatarImage() throws Exception {
+        MockMultipartFile invalidImage = new MockMultipartFile(
+                "file", "avatar.png", MediaType.IMAGE_PNG_VALUE, "not an image".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/candidates/profile/avatar")
+                        .file(invalidImage)
+                        .header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isBadRequest());
+    }
+
     @AfterEach
     void tearDown() {
         cleanup();
     }
 
     private void cleanup() {
+        workExperienceRepository.deleteAll();
         candidateRepository.deleteAll();
         recruiterRepository.deleteAll();
         companyRepository.deleteAll();

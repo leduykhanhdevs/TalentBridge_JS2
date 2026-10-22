@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { parseCv, applyParsedCv } from '../candidateApi'
 import type { ParsedCvResult, ApplyParsedCvPayload } from '../candidateTypes'
+import { formatIsoDate } from '../../../components/ui/dateFormat'
 
 interface CvImportModalProps {
     isOpen: boolean
@@ -148,7 +149,7 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-gradient-to-r from-slate-50 to-blue-50/40">
                     <div className="flex items-center gap-3">
@@ -187,18 +188,6 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                             <span>{successMessage}</span>
                         </div>
                     )}
-                    {parsedResult && (
-                        <div className={`rounded-2xl border p-4 text-xs font-medium ${
-                            parsedResult.processingSource === 'GEMINI'
-                                ? 'border-violet-200 bg-violet-50 text-violet-800'
-                                : 'border-amber-200 bg-amber-50 text-amber-800'
-                        }`} role="status">
-                            {parsedResult.processingSource === 'GEMINI'
-                                ? 'CV đã được phân tích bằng Gemini AI. Vui lòng kiểm tra lại thông tin trước khi lưu.'
-                                : 'Gemini AI chưa khả dụng; thông tin được trích xuất bằng bộ quy tắc cơ bản. Vui lòng kiểm tra kỹ trước khi lưu.'}
-                        </div>
-                    )}
-
                     {/* Step 1: Upload Dropzone if no parsed result */}
                     {!parsedResult && (
                         <div className="space-y-4">
@@ -273,6 +262,27 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                                 >
                                     <RefreshCw className="h-3.5 w-3.5" /> Chọn file khác
                                 </button>
+                            </div>
+
+                            <div className={`flex items-start gap-2 rounded-xl border p-3 text-sm ${
+                                parsedResult.processingSource === 'GEMINI'
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                                    : 'border-amber-200 bg-amber-50 text-amber-900'
+                            }`} role="status">
+                                {parsedResult.processingSource === 'GEMINI'
+                                    ? <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                                    : <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />}
+                                <span>
+                                    {parsedResult.processingSource === 'GEMINI'
+                                        ? 'Gemini AI đã phân tích CV. Vui lòng rà soát lại thông tin trước khi đồng bộ.'
+                                        : parsedResult.processingSource === 'RULE_BASED_NO_API_KEY'
+                                            ? 'Backend chưa có GEMINI_API_KEY nên đang dùng bộ trích xuất cơ bản. Hãy cấu hình API key trong môi trường chạy backend rồi khởi động lại.'
+                                            : parsedResult.processingSource === 'RULE_BASED_AI_ERROR'
+                                                ? 'Gemini AI gặp lỗi hoặc hết quota; hệ thống đã chuyển sang trích xuất cơ bản. Kiểm tra model, API key, quota và log backend.'
+                                                : parsedResult.processingSource === 'RULE_BASED_TEXT_EXTRACTION'
+                                                    ? 'Không đọc được văn bản từ CV để gửi Gemini. Hãy thử PDF có thể chọn văn bản hoặc DOCX khác.'
+                                                    : 'File được đọc bằng bộ trích xuất cơ bản. Vui lòng kiểm tra kỹ trước khi đồng bộ.'}
+                                </span>
                             </div>
 
                             {/* Section 1: Basic Info */}
@@ -409,7 +419,7 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                                                 <div className="font-semibold text-blue-600 mt-0.5">{exp.companyName}</div>
                                                 <div className="text-slate-500 text-[11px] mt-0.5 flex items-center gap-1">
                                                     <Calendar className="h-3 w-3" />
-                                                    {exp.startDate} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate || 'Chưa ghi')}
+                                                    {formatIsoDate(exp.startDate)} – {exp.isCurrent ? 'Hiện tại' : (formatIsoDate(exp.endDate) || 'Chưa ghi')}
                                                 </div>
                                                 {exp.description && (
                                                     <p className="mt-2 text-slate-600 text-[11px] line-clamp-2">

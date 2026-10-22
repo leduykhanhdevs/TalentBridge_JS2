@@ -52,7 +52,7 @@ export function WorkspaceLayoutFrame({
     return (
         <div className="min-h-screen bg-[#F5F7FB] text-[#172033]">
             <header className="sticky top-0 z-40 h-16 border-b border-slate-200 bg-white md:h-[84px]">
-                <div className="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto grid h-full w-full max-w-[1760px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6 lg:px-8">
                     <NavLink aria-label="TalentBridge — Trang chủ" className="flex w-fit shrink-0 items-center gap-2.5" end to="/">
                         <span className="grid size-9 place-items-center rounded-lg bg-[#1D4ED8] text-white">
                             <BriefcaseBusiness aria-hidden="true" size={18} />
@@ -127,7 +127,7 @@ export function WorkspaceLayoutFrame({
                 </aside>
 
                 <main className="min-w-0 px-4 py-7 sm:px-6 md:px-8 lg:px-10 lg:py-9">
-                    <div className="mx-auto w-full max-w-[1176px]">
+                    <div className="mx-auto w-full max-w-[1760px]">
                         <Outlet />
                     </div>
                 </main>

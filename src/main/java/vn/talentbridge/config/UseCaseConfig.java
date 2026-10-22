@@ -238,6 +238,11 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public CandidateAvatarUseCase candidateAvatarUseCase(FileStoragePort fileStoragePort) {
+        return new CandidateAvatarUseCaseImpl(fileStoragePort);
+    }
+
+    @Bean
     public UpdateCandidateProfileUseCase updateCandidateProfileUseCase(
             CandidateRepositoryPort candidateRepository,
             UserRepositoryPort userRepository) {

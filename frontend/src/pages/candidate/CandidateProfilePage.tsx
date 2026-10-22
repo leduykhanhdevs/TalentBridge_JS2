@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     AlertCircle,
@@ -24,6 +24,7 @@ import {
     User,
     X,
     FileText,
+    UploadCloud,
 } from 'lucide-react'
 import {
     deleteCandidateSkill,
@@ -34,6 +35,7 @@ import {
     getCandidateSkills,
     getWorkExperiences,
     updateCandidateProfile,
+    uploadCandidateAvatar,
 } from '../../features/candidate/candidateApi'
 import type {
     CandidateSkill,
@@ -47,6 +49,9 @@ import { ResumeUploadSection } from '../../features/candidate/components/ResumeU
 import { CvBuilderModal } from '../../features/candidate/components/CvBuilderModal'
 import { CvImportModal } from '../../features/candidate/components/CvImportModal'
 import { EmptyStateIllustration } from '../../components/illustrations'
+import { CustomSelect } from '../../components/ui/CustomSelect'
+import { DateInput } from '../../components/ui/DateInput'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 export function CandidateProfilePage() {
     const queryClient = useQueryClient()
@@ -117,6 +122,33 @@ export function CandidateProfilePage() {
 
     const [formData, setFormData] = useState<UpdateCandidateProfileRequest>({})
     const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+    const avatarInputRef = useRef<HTMLInputElement>(null)
+    const [isAvatarDragging, setIsAvatarDragging] = useState(false)
+    const [isAvatarUploading, setIsAvatarUploading] = useState(false)
+
+    async function handleAvatarFile(file?: File) {
+        if (!file) return
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            setErrorMessage('Ảnh đại diện chỉ hỗ trợ định dạng JPG hoặc PNG.')
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setErrorMessage('Ảnh đại diện tối đa 5 MB.')
+            return
+        }
+
+        setIsAvatarUploading(true)
+        setErrorMessage(null)
+        try {
+            const avatarUrl = await uploadCandidateAvatar(file)
+            setFormData((current) => ({ ...current, avatarUrl }))
+        } catch (err) {
+            setErrorMessage(err instanceof Error ? err.message : 'Không thể tải ảnh đại diện lên.')
+        } finally {
+            setIsAvatarUploading(false)
+            if (avatarInputRef.current) avatarInputRef.current.value = ''
+        }
+    }
 
     const handleStartEditing = () => {
         if (!profile) return
@@ -216,13 +248,11 @@ export function CandidateProfilePage() {
 
     const today = new Date()
     const todayDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-    const hasRecordedExperience = experiences.some((exp) => {
-        const endDate = exp.isCurrent || !exp.endDate ? todayDate : exp.endDate
-        return exp.startDate <= todayDate && endDate >= exp.startDate
-    })
-    const experienceDisplayLabel = profile.experienceYears
-        ? `${profile.experienceYears} năm (tự động tính)`
-        : hasRecordedExperience ? 'Dưới 1 năm' : 'Chưa có kinh nghiệm (0 năm)'
+    const experienceDisplayLabel = experiences.length === 0
+        ? 'Chưa có kinh nghiệm (0 năm)'
+        : profile.experienceYears
+            ? `${profile.experienceYears} năm (tự động tính)`
+            : 'Dưới 1 năm (tự động tính)'
     const hasSkillExperienceExceeding = skills.some(
         (skill) => (skill.yearsOfExperience ?? 0) > (profile.experienceYears ?? 0),
     )
@@ -234,7 +264,7 @@ export function CandidateProfilePage() {
 
     return (
         <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-6xl space-y-5">
+            <div className="mx-auto w-full max-w-[1760px] space-y-5">
                 <header className="space-y-1">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Hồ sơ ứng viên</p>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
@@ -379,6 +409,72 @@ export function CandidateProfilePage() {
                                 <User className="h-5 w-5 text-blue-600" /> Thông tin cá nhân
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div className="sm:col-span-2">
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700" htmlFor="candidate-avatar-url">
+                                        Ảnh đại diện
+                                    </label>
+                                    <div className="flex flex-col gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-4 sm:flex-row sm:items-center">
+                                        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl bg-blue-100 text-2xl font-bold text-blue-700">
+                                            {formData.avatarUrl ? (
+                                                <img alt="Xem trước ảnh đại diện" className="size-full object-cover" src={formData.avatarUrl} />
+                                            ) : (
+                                                formData.fullName?.charAt(0)?.toUpperCase() || 'U'
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <label
+                                                className={`flex min-h-20 cursor-pointer flex-col justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm transition ${isAvatarDragging ? 'border-blue-500 bg-blue-50' : 'hover:border-blue-300 hover:bg-blue-50/50'} ${isAvatarUploading ? 'pointer-events-none opacity-60' : ''}`}
+                                                htmlFor="candidate-avatar-file"
+                                                onDragEnter={(event) => { event.preventDefault(); setIsAvatarDragging(true) }}
+                                                onDragOver={(event) => event.preventDefault()}
+                                                onDragLeave={(event) => {
+                                                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsAvatarDragging(false)
+                                                }}
+                                                onDrop={(event) => {
+                                                    event.preventDefault()
+                                                    setIsAvatarDragging(false)
+                                                    void handleAvatarFile(event.dataTransfer.files[0])
+                                                }}
+                                            >
+                                                <input
+                                                    accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+                                                    className="sr-only"
+                                                    disabled={isAvatarUploading}
+                                                    id="candidate-avatar-file"
+                                                    onChange={(event) => void handleAvatarFile(event.target.files?.[0])}
+                                                    ref={avatarInputRef}
+                                                    type="file"
+                                                />
+                                                <span className="flex items-center gap-2 font-semibold text-slate-800">
+                                                    <UploadCloud aria-hidden="true" className="size-4 text-blue-700" />
+                                                    {isAvatarUploading ? 'Đang tải ảnh lên...' : 'Thả ảnh vào đây hoặc bấm để chọn từ thiết bị'}
+                                                </span>
+                                                <span className="mt-1 text-xs text-slate-500">JPG hoặc PNG, tối đa 5 MB.</span>
+                                            </label>
+                                            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                                <input
+                                                    className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-800 shadow-sm outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+                                                    id="candidate-avatar-url"
+                                                    maxLength={500}
+                                                    onChange={(event) => setFormData({ ...formData, avatarUrl: event.target.value })}
+                                                    placeholder="Hoặc dán đường dẫn https://..."
+                                                    type="url"
+                                                    value={formData.avatarUrl || ''}
+                                                />
+                                                {formData.avatarUrl && (
+                                                    <button
+                                                        className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                                                        onClick={() => setFormData({ ...formData, avatarUrl: '' })}
+                                                        type="button"
+                                                    >
+                                                        Xóa ảnh
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                         Họ và tên <span className="text-rose-500">*</span>
@@ -423,11 +519,12 @@ export function CandidateProfilePage() {
                                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                         Ngày sinh
                                     </label>
-                                    <input
-                                        type="date"
+                                    <DateInput
+                                        id="candidate-dob"
+                                        aria-label="Ngày sinh"
+                                        max={todayDate}
+                                        onChange={(dob) => setFormData({ ...formData, dob })}
                                         value={formData.dob || ''}
-                                        onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
 
@@ -435,15 +532,17 @@ export function CandidateProfilePage() {
                                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                         Giới tính
                                     </label>
-                                    <select
+                                    <CustomSelect
+                                        id="candidate-gender"
+                                        aria-label="Giới tính"
                                         value={formData.gender || 'OTHER'}
-                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="NAM">Nam</option>
-                                        <option value="NU">Nữ</option>
-                                        <option value="OTHER">Khác</option>
-                                    </select>
+                                        onChange={(gender) => setFormData({ ...formData, gender })}
+                                        options={[
+                                            { value: 'NAM', label: 'Nam' },
+                                            { value: 'NU', label: 'Nữ' },
+                                            { value: 'OTHER', label: 'Khác' },
+                                        ]}
+                                    />
                                 </div>
 
                                 <div>
@@ -494,8 +593,8 @@ export function CandidateProfilePage() {
                                 </div>
 
                                 <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5">
-                                    <p className="text-xs font-semibold text-blue-950">Kinh nghiệm được tính từ lịch sử làm việc</p>
-                                    <p className="mt-1 text-xs text-blue-800">Cập nhật các mốc công việc bên dưới để hệ thống tự tính tổng số năm.</p>
+                                    <p className="text-xs font-semibold text-blue-950">Kinh nghiệm hiện tại: {experienceDisplayLabel}</p>
+                                    <p className="mt-1 text-xs text-blue-800">Thêm hoặc cập nhật các mốc công việc ở phần ngay bên dưới; hệ thống sẽ tự cộng thời gian, không tính trùng giai đoạn.</p>
                                 </div>
 
                                 <div>
@@ -531,6 +630,68 @@ export function CandidateProfilePage() {
                                 </div>
                             </div>
                         </div>
+
+                        <section id="candidate-experiences" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                                        <Building2 aria-hidden="true" className="size-5 text-blue-700" /> Kinh nghiệm làm việc
+                                    </h2>
+                                    <p className="mt-1 text-sm text-slate-600">
+                                        Hệ thống tự cộng các giai đoạn không trùng nhau để tính tổng số năm kinh nghiệm.
+                                    </p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-3">
+                                    <span className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-800">
+                                        {experienceDisplayLabel}
+                                    </span>
+                                    <button
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+                                        onClick={() => { setEditingExp(null); setIsExpModalOpen(true) }}
+                                        type="button"
+                                    >
+                                        <Plus aria-hidden="true" className="size-4" /> Thêm
+                                    </button>
+                                </div>
+                            </div>
+
+                            {experiences.length === 0 ? (
+                                <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+                                    <p className="text-sm font-medium text-slate-700">Chưa có mốc công việc nào.</p>
+                                    <p className="mt-1 text-sm text-slate-500">Thêm công ty, vị trí và thời gian làm việc để hệ thống tính kinh nghiệm cho hồ sơ.</p>
+                                </div>
+                            ) : (
+                                <ul className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-200">
+                                    {experiences.map((experience) => (
+                                        <li className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between" key={experience.id}>
+                                            <div className="min-w-0">
+                                                <p className="break-words font-semibold text-slate-900">{experience.position}</p>
+                                                <p className="mt-0.5 break-words text-sm text-slate-600">{experience.companyName}</p>
+                                                <p className="mt-1 text-sm text-slate-500">
+                                                    {formatIsoDate(experience.startDate)} – {experience.isCurrent ? 'Hiện tại' : formatIsoDate(experience.endDate)}
+                                                </p>
+                                            </div>
+                                            <div className="flex shrink-0 items-center gap-2">
+                                                <button
+                                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                    onClick={() => { setEditingExp(experience); setIsExpModalOpen(true) }}
+                                                    type="button"
+                                                >
+                                                    Chỉnh sửa
+                                                </button>
+                                                <button
+                                                    className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                                                    onClick={() => void handleDeleteExp(experience.id)}
+                                                    type="button"
+                                                >
+                                                    Xóa
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </section>
 
                         {/* Social & Portfolio Links */}
                         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -616,7 +777,7 @@ export function CandidateProfilePage() {
                                             {profile.dob ? (
                                                 <span className="flex items-center gap-1">
                                                     <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                    {profile.dob}
+                                                    {formatIsoDate(profile.dob)}
                                                 </span>
                                             ) : (
                                                 'Chưa cập nhật'
@@ -728,7 +889,7 @@ export function CandidateProfilePage() {
                                                     </p>
                                                     <p className="text-xs text-slate-500 flex items-center gap-1">
                                                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                        {exp.startDate} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate || 'Chưa ghi')}
+                                                        {formatIsoDate(exp.startDate)} - {exp.isCurrent ? 'Hiện tại' : (formatIsoDate(exp.endDate) || 'Chưa ghi')}
                                                     </p>
                                                 </div>
 
