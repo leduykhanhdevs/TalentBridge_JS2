@@ -44,6 +44,10 @@ export function getCandidateJobAssessment(jobId: number, candidateId: number): P
     return getData(`/statistics/recruiter/jobs/${jobId}/candidates/${candidateId}`)
 }
 
+export function getMyJobFitAssessment(jobId: number): Promise<CandidateJobAssessment> {
+    return getData(`/ai/jobs/${jobId}/my-fit`)
+}
+
 export function getRecruiterPipeline(jobId: number): Promise<RecruiterPipelineAnalytics> {
     return getData(`/statistics/recruiter/jobs/${jobId}/pipeline`)
 }

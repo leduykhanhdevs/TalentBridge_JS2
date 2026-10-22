@@ -217,6 +217,15 @@ test('failed recruiter job creation keeps the form open and shows the API error 
             roles: ['ROLE_RECRUITER'],
         }))
     })
+    await page.route('**/api/v1/recruiters/profile', async (route) => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+            statusCode: 200,
+            message: 'OK',
+            data: { id: 901, userId: 901, fullName: 'QA Recruiter', email: 'qa.recruiter@example.invalid', status: 'ACTIVE', companyId: 901, companyName: 'QA Company', companyStatus: 'APPROVED' },
+        }),
+    }))
 
     await page.route('**/api/v1/jobs/my-jobs*', async (route) => {
         await route.fulfill({

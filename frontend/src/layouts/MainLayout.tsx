@@ -20,6 +20,7 @@ import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
 import type { UserResponse } from '../features/auth/authTypes'
 import { ChangePasswordModal } from '../features/auth/components/ChangePasswordModal'
+import { WorkspaceLayoutFrame } from './WorkspaceLayoutFrame'
 
 function initialsFor(name: string) {
     const parts = name.trim().split(/\s+/).filter(Boolean)
@@ -81,6 +82,21 @@ export function MainLayout() {
         ...(isRecruiter ? [{ to: '/recruiter/profile', label: 'Tuyển dụng', icon: Building2 }] : []),
         ...(isAdmin ? [{ to: '/admin/candidates', label: 'Quản trị', icon: ShieldCheck }] : []),
     ]
+
+    if (authenticated && user && showBrowsingNavigation) {
+        const roleLabel = isAdmin ? 'Quản trị' : isRecruiter ? 'Nhà tuyển dụng' : 'Ứng viên'
+
+        return (
+            <WorkspaceLayoutFrame
+                navigationItems={navigationLinks}
+                roleLabel={roleLabel}
+                sectionLabel={roleLabel}
+                showRoleBadge={false}
+                showWorkspaceLabel={false}
+                user={user}
+            />
+        )
+    }
 
     return (
         <div className="flex min-h-screen flex-col bg-bento-canvas text-slate-900">

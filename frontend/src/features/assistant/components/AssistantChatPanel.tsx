@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, Download, FileSpreadsheet, FileText, Image, LoaderCircle, Send, Sparkles, User } from 'lucide-react'
+import { Bot, Download, FileSpreadsheet, FileText, Image, LoaderCircle, Send, Sparkles, User, Users } from 'lucide-react'
 import { Link } from 'react-router'
 import { askTalentBridge } from '../assistantApi'
 import type { AssistantTurn } from '../assistantTypes'
 import { getAdminReportFormat } from '../adminReportIntent'
-import { getAccessToken } from '../../auth/tokenStorage'
+import { getAccessToken, getStoredUser } from '../../auth/tokenStorage'
 import type { AdminApiMetricsResponse, AdminDashboardStatsResponse, AdminReportFormat } from '../../admin/adminTypes'
+import { getMyJobs } from '../../recruiter/recruiterJobApi'
+import type { RecruiterJobItem } from '../../recruiter/recruiterJobTypes'
+import { getJobApplicants } from '../../recruiter/recruiterApplicantApi'
+import type { JobApplicant } from '../../recruiter/recruiterApplicantTypes'
+import { downloadRecruiterApplicantsCsv } from '../../recruiter/recruiterApplicantExport'
 
 interface DisplayTurn extends AssistantTurn {
     references?: string[]
@@ -17,6 +22,7 @@ interface AssistantChatPanelProps {
     compact?: boolean
     onClose?: () => void
     adminMode?: boolean
+    recruiterMode?: boolean
     adminStats?: AdminDashboardStatsResponse | null
     adminMetrics?: AdminApiMetricsResponse | null
 }
@@ -38,6 +44,23 @@ const ADMIN_STARTER_PROMPTS = [
     'Cách xem lỗi và độ trễ API?',
 ]
 
+const RECRUITER_STARTER_TURN: DisplayTurn = {
+    role: 'ASSISTANT',
+    content: 'Xin chào! Tôi là Trợ lý nhà tuyển dụng. Tôi có thể thống kê pipeline, lọc ứng viên trong các tin bạn quản lý và xuất danh sách đang lọc. Số liệu lấy từ ATS theo quyền tài khoản của bạn; trợ lý không tự đổi trạng thái hồ sơ.',
+}
+
+const RECRUITER_STARTER_PROMPTS = [
+    'Thống kê ứng viên của tin đang chọn',
+    'Lọc ứng viên theo vòng tuyển dụng',
+    'Có bao nhiêu ứng viên đang phỏng vấn?',
+    'Xuất danh sách ứng viên đang lọc',
+]
+
+const RECRUITER_STAGE_LABELS: Record<string, string> = {
+    APPLIED: 'Mới nộp', REVIEWING: 'Đang xem xét', SCREENING: 'Đang xem xét', SHORTLISTED: 'Đạt sơ loại',
+    INTERVIEW: 'Phỏng vấn', OFFERED: 'Đã gửi offer', HIRED: 'Đã tuyển dụng', REJECTED: 'Từ chối', WITHDRAWN: 'Đã rút hồ sơ',
+}
+
 function normalizeQuestion(value: string) {
     return value.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd')
 }
@@ -46,17 +69,30 @@ export function AssistantChatPanel({
     compact = false,
     onClose,
     adminMode = false,
+    recruiterMode = false,
     adminStats = null,
     adminMetrics = null,
 }: AssistantChatPanelProps) {
     const [authenticated, setAuthenticated] = useState(() => Boolean(getAccessToken()))
-    const [turns, setTurns] = useState<DisplayTurn[]>([adminMode ? ADMIN_STARTER_TURN : STARTER_TURN])
+    const recruiterUserId = getStoredUser()?.id ?? null
+    const [turns, setTurns] = useState<DisplayTurn[]>([adminMode ? ADMIN_STARTER_TURN : recruiterMode ? RECRUITER_STARTER_TURN : STARTER_TURN])
     const [message, setMessage] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [isSending, setIsSending] = useState(false)
     const [isCreatingArtifact, setIsCreatingArtifact] = useState(false)
+    const [recruiterJobs, setRecruiterJobs] = useState<RecruiterJobItem[]>([])
+    const [selectedRecruiterJobId, setSelectedRecruiterJobId] = useState<number | null>(null)
+    const [recruiterKeyword, setRecruiterKeyword] = useState('')
+    const [recruiterStage, setRecruiterStage] = useState('')
+    const [recruiterMinExperience, setRecruiterMinExperience] = useState('')
+    const [appliedRecruiterFilters, setAppliedRecruiterFilters] = useState({ keyword: '', stage: '', minExperience: '' })
+    const [recruiterApplicants, setRecruiterApplicants] = useState<JobApplicant[]>([])
+    const [isLoadingRecruiterJobs, setIsLoadingRecruiterJobs] = useState(false)
+    const [isLoadingRecruiterApplicants, setIsLoadingRecruiterApplicants] = useState(false)
+    const [recruiterDataError, setRecruiterDataError] = useState<string | null>(null)
     const bottomRef = useRef<HTMLDivElement>(null)
     const artifactUrlsRef = useRef<string[]>([])
+    const selectedRecruiterJob = recruiterJobs.find((job) => job.id === selectedRecruiterJobId) ?? null
 
     useEffect(() => () => {
         artifactUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
@@ -73,6 +109,57 @@ export function AssistantChatPanel({
             window.removeEventListener('storage', syncAuthentication)
         }
     }, [])
+
+    useEffect(() => {
+        if (!recruiterMode || !authenticated || recruiterUserId === null) {
+            setRecruiterJobs([])
+            setSelectedRecruiterJobId(null)
+            setRecruiterApplicants([])
+            return
+        }
+        let active = true
+        setIsLoadingRecruiterJobs(true)
+        setRecruiterDataError(null)
+        getMyJobs({ page: 1, size: 100 })
+            .then((result) => {
+                if (!active) return
+                const jobs = result.content || []
+                setRecruiterJobs(jobs)
+                setSelectedRecruiterJobId((current) => jobs.some((job) => job.id === current) ? current : (jobs[0]?.id ?? null))
+            })
+            .catch((error: unknown) => {
+                if (active) setRecruiterDataError(error instanceof Error ? error.message : 'Không thể tải tin tuyển dụng của bạn.')
+            })
+            .finally(() => { if (active) setIsLoadingRecruiterJobs(false) })
+        return () => { active = false }
+    }, [authenticated, recruiterMode, recruiterUserId])
+
+    useEffect(() => {
+        if (!recruiterMode || !authenticated || selectedRecruiterJobId === null) {
+            setRecruiterApplicants([])
+            return
+        }
+        let active = true
+        setIsLoadingRecruiterApplicants(true)
+        setRecruiterDataError(null)
+        getJobApplicants(selectedRecruiterJobId, {
+            keyword: appliedRecruiterFilters.keyword || undefined,
+            stage: appliedRecruiterFilters.stage || undefined,
+            minExperience: appliedRecruiterFilters.minExperience ? Number(appliedRecruiterFilters.minExperience) : undefined,
+        })
+            .then((applicants) => { if (active) setRecruiterApplicants(applicants) })
+            .catch((error: unknown) => {
+                if (active) setRecruiterDataError(error instanceof Error ? error.message : 'Không thể tải ứng viên của tin này.')
+            })
+            .finally(() => { if (active) setIsLoadingRecruiterApplicants(false) })
+        return () => { active = false }
+    }, [appliedRecruiterFilters, authenticated, recruiterMode, selectedRecruiterJobId])
+
+    const recruiterStageCounts = recruiterApplicants.reduce<Record<string, number>>((summary, applicant) => {
+        const stage = applicant.currentStage === 'SCREENING' ? 'REVIEWING' : applicant.currentStage
+        summary[stage] = (summary[stage] || 0) + 1
+        return summary
+    }, {})
 
     useEffect(() => {
         const bottomElement = bottomRef.current
@@ -103,6 +190,41 @@ export function AssistantChatPanel({
             const apiIntent = ['api', 'do tre', 'latency', 'loi'].some((term) => normalizedQuestion.includes(term))
             const reportFormat = getAdminReportFormat(question, adminMode)
             let adminAnswer: string | null = null
+
+            if (recruiterMode && !adminMode) {
+                const exportIntent = ['xuat', 'export', 'tai ve'].some((term) => normalizedQuestion.includes(term))
+                const recruiterDataIntent = overviewIntent
+                    || ['ung vien', 'phong van', 'pipeline', 'loc'].some((term) => normalizedQuestion.includes(term))
+                if (exportIntent || recruiterDataIntent) {
+                    let recruiterAnswer: string
+                    if (isLoadingRecruiterJobs || isLoadingRecruiterApplicants) {
+                        recruiterAnswer = 'Đang tải dữ liệu ATS theo quyền của tài khoản. Vui lòng thử lại sau giây lát.'
+                    } else if (recruiterDataError) {
+                        recruiterAnswer = `Chưa lấy được dữ liệu tuyển dụng: ${recruiterDataError}`
+                    } else if (!selectedRecruiterJob) {
+                        recruiterAnswer = 'Bạn chưa có tin tuyển dụng để thống kê. Hãy liên kết doanh nghiệp và tạo tin trước.'
+                    } else if (exportIntent) {
+                        downloadRecruiterApplicantsCsv(recruiterApplicants, selectedRecruiterJob.title)
+                        recruiterAnswer = `Đã xuất ${recruiterApplicants.length.toLocaleString('vi-VN')} hồ sơ theo bộ lọc hiện tại của tin “${selectedRecruiterJob.title}” thành CSV.`
+                    } else {
+                        const counts = recruiterApplicants.reduce<Record<string, number>>((summary, applicant) => {
+                            const stage = applicant.currentStage === 'SCREENING' ? 'REVIEWING' : applicant.currentStage
+                            summary[stage] = (summary[stage] || 0) + 1
+                            return summary
+                        }, {})
+                        const interviewIntent = normalizedQuestion.includes('phong van')
+                        const interviewCount = recruiterApplicants.filter((applicant) => applicant.currentStage === 'INTERVIEW').length
+                        const stageSummary = Object.entries(counts)
+                            .map(([stage, count]) => `${RECRUITER_STAGE_LABELS[stage] || stage}: ${count}`)
+                            .join(' · ') || 'chưa có hồ sơ'
+                        recruiterAnswer = interviewIntent
+                            ? `Tin “${selectedRecruiterJob.title}” có ${interviewCount.toLocaleString('vi-VN')} hồ sơ ở vòng phỏng vấn trong ${recruiterApplicants.length.toLocaleString('vi-VN')} hồ sơ đang hiển thị theo bộ lọc. Phân bố hiện tại: ${stageSummary}.`
+                            : `Tin “${selectedRecruiterJob.title}” có ${recruiterApplicants.length.toLocaleString('vi-VN')} hồ sơ theo bộ lọc hiện tại. Phân bố pipeline: ${stageSummary}. Bạn có thể chọn vòng, kinh nghiệm và từ khóa ở công cụ ATS phía trên; danh sách và CSV sẽ theo đúng bộ lọc đó.`
+                    }
+                    setTurns((current) => [...current, { role: 'ASSISTANT', content: recruiterAnswer }])
+                    return
+                }
+            }
 
             if (adminMode && reportFormat) {
                 setIsCreatingArtifact(true)
@@ -160,13 +282,13 @@ export function AssistantChatPanel({
     }
 
     return (
-        <section className={`flex min-h-0 flex-col overflow-hidden bg-white ${compact ? 'h-full rounded-xl' : adminMode ? 'h-[min(74dvh,54rem)] min-h-[36rem] rounded-2xl border border-slate-200 shadow-sm' : 'h-[min(62dvh,42rem)] min-h-[26rem] rounded-xl border border-slate-200 shadow-sm sm:h-[min(68vh,42rem)] sm:min-h-[34rem]'}`} aria-label={adminMode ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'}>
+        <section className={`flex min-h-0 flex-col overflow-hidden bg-white ${compact ? 'h-full rounded-xl' : adminMode || recruiterMode ? 'h-[min(74dvh,54rem)] min-h-[36rem] rounded-2xl border border-slate-200 shadow-sm' : 'h-[min(62dvh,42rem)] min-h-[26rem] rounded-xl border border-slate-200 shadow-sm sm:h-[min(68vh,42rem)] sm:min-h-[34rem]'}`} aria-label={adminMode ? 'Trợ lý quản trị' : recruiterMode ? 'Trợ lý nhà tuyển dụng' : 'Trợ lý TalentBridge'}>
             <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-blue-50/70 px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-blue-700 text-white"><Bot aria-hidden="true" size={20} /></span>
                     <div className="min-w-0">
-                        <h2 className="truncate text-sm font-bold text-slate-900">{adminMode ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'}</h2>
-                        <p className="text-xs text-slate-600">{adminMode ? 'Thống kê và hỗ trợ quản lý hệ thống' : 'Hướng dẫn sử dụng trong ứng dụng'}</p>
+                        <h2 className="truncate text-sm font-bold text-slate-900">{adminMode ? 'Trợ lý quản trị' : recruiterMode ? 'Trợ lý nhà tuyển dụng' : 'Trợ lý TalentBridge'}</h2>
+                        <p className="text-xs text-slate-600">{adminMode ? 'Thống kê và hỗ trợ quản lý hệ thống' : recruiterMode ? 'Lọc hồ sơ, xem pipeline và xuất số liệu ATS' : 'Hướng dẫn sử dụng trong ứng dụng'}</p>
                     </div>
                 </div>
                 {onClose && <button className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900" onClick={onClose} type="button">Đóng</button>}
@@ -176,8 +298,61 @@ export function AssistantChatPanel({
                 <p className="rounded-lg border border-blue-100 bg-white p-3 text-xs leading-5 text-slate-600">
                     {adminMode
                         ? 'Số liệu quản trị được lấy từ API phân quyền và các câu trả lời thống kê được tạo tại chỗ. Câu hỏi về quy trình mới dùng trợ lý kiến thức; không tự duyệt hoặc đổi trạng thái dữ liệu.'
-                        : 'Chỉ hỗ trợ quy trình TalentBridge. Không gửi mật khẩu, mã xác minh hay dữ liệu nhạy cảm.'}
+                        : recruiterMode
+                            ? 'Công cụ bên dưới chỉ đọc hồ sơ từ các tin bạn quản lý. Lọc và xuất dữ liệu được thực hiện tại chỗ; câu hỏi hướng dẫn khác sẽ dùng trợ lý kiến thức.'
+                            : 'Chỉ hỗ trợ quy trình TalentBridge. Không gửi mật khẩu, mã xác minh hay dữ liệu nhạy cảm.'}
                 </p>
+                {recruiterMode && !adminMode && (
+                    <section aria-label="Công cụ tuyển dụng" className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900"><Users aria-hidden="true" className="text-blue-700" size={16} />Công cụ tuyển dụng</div>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                            <label className="text-[11px] font-semibold text-slate-600 sm:col-span-2">
+                                Tin tuyển dụng
+                                <select className="mt-1 w-full border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800" disabled={isLoadingRecruiterJobs || recruiterJobs.length === 0} onChange={(event) => setSelectedRecruiterJobId(Number(event.target.value) || null)} value={selectedRecruiterJobId ?? ''}>
+                                    {recruiterJobs.length === 0 && <option value="">{isLoadingRecruiterJobs ? 'Đang tải tin…' : 'Chưa có tin tuyển dụng'}</option>}
+                                    {recruiterJobs.map((job) => <option key={job.id} value={job.id}>{job.title}</option>)}
+                                </select>
+                            </label>
+                            <label className="text-[11px] font-semibold text-slate-600">
+                                Từ khóa
+                                <input className="mt-1 w-full border border-slate-200 px-3 text-sm font-normal" onChange={(event) => setRecruiterKeyword(event.target.value)} placeholder="Tên, email, kỹ năng" value={recruiterKeyword} />
+                            </label>
+                            <label className="text-[11px] font-semibold text-slate-600">
+                                Vòng tuyển dụng
+                                <select className="mt-1 w-full border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800" onChange={(event) => setRecruiterStage(event.target.value)} value={recruiterStage}>
+                                    <option value="">Tất cả vòng</option>
+                                    <option value="APPLIED">Mới nộp</option>
+                                    <option value="REVIEWING">Đang xem xét</option>
+                                    <option value="SHORTLISTED">Đạt sơ loại</option>
+                                    <option value="INTERVIEW">Phỏng vấn</option>
+                                    <option value="OFFERED">Đã gửi offer</option>
+                                    <option value="HIRED">Đã tuyển dụng</option>
+                                    <option value="REJECTED">Từ chối</option>
+                                </select>
+                            </label>
+                            <label className="text-[11px] font-semibold text-slate-600">
+                                Kinh nghiệm tối thiểu
+                                <select className="mt-1 w-full border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800" onChange={(event) => setRecruiterMinExperience(event.target.value)} value={recruiterMinExperience}>
+                                    <option value="">Không giới hạn</option>
+                                    <option value="1">1 năm</option>
+                                    <option value="3">3 năm</option>
+                                    <option value="5">5 năm</option>
+                                </select>
+                            </label>
+                            <button className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-3 text-xs font-semibold text-white transition hover:bg-blue-800 sm:self-end" disabled={isLoadingRecruiterApplicants || !selectedRecruiterJobId} onClick={() => setAppliedRecruiterFilters({ keyword: recruiterKeyword.trim(), stage: recruiterStage, minExperience: recruiterMinExperience })} type="button">Áp dụng bộ lọc</button>
+                        </div>
+                        {recruiterDataError && <p className="mt-2 text-xs text-rose-700" role="alert">{recruiterDataError}</p>}
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                            <p className="text-xs text-slate-600" aria-live="polite">{isLoadingRecruiterApplicants ? 'Đang tải hồ sơ…' : `${recruiterApplicants.length} ứng viên theo bộ lọc`}{Object.entries(recruiterStageCounts).length > 0 && ` · ${Object.entries(recruiterStageCounts).map(([stage, count]) => `${RECRUITER_STAGE_LABELS[stage] || stage}: ${count}`).join(' · ')}`}</p>
+                            <button className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-800 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50" disabled={!selectedRecruiterJob || isLoadingRecruiterApplicants || recruiterApplicants.length === 0} onClick={() => selectedRecruiterJob && downloadRecruiterApplicantsCsv(recruiterApplicants, selectedRecruiterJob.title)} type="button"><Download aria-hidden="true" size={14} />Xuất CSV</button>
+                        </div>
+                        {recruiterApplicants.length > 0 && (
+                            <ul className="mt-2 max-h-36 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-100" aria-label="Danh sách ứng viên đã lọc">
+                                {recruiterApplicants.slice(0, 8).map((applicant) => <li className="flex items-center justify-between gap-3 px-3 py-2 text-xs" key={applicant.id}><span className="min-w-0"><strong className="block truncate text-slate-800">{applicant.candidateFullName}</strong><span className="block truncate text-slate-500">{applicant.candidateTitle || applicant.candidateEmail}</span></span><span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-700">{RECRUITER_STAGE_LABELS[applicant.currentStage] || applicant.currentStage}</span></li>)}
+                            </ul>
+                        )}
+                    </section>
+                )}
                 {!authenticated && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">Đăng nhập để trò chuyện với trợ lý. <Link className="font-bold underline" to="/login">Đăng nhập</Link></p>}
                 {turns.map((turn, index) => (
                     <article className={`flex gap-2.5 ${turn.role === 'USER' ? 'flex-row-reverse' : ''}`} key={`${turn.role}-${index}`}>
@@ -202,7 +377,7 @@ export function AssistantChatPanel({
                 ))}
                 {authenticated && turns.length === 1 && (
                     <div className="flex flex-wrap gap-2 pl-10">
-                        {(adminMode ? ADMIN_STARTER_PROMPTS : ['Làm sao để ứng tuyển?', 'Tạo tin tuyển dụng thế nào?', 'Quên mật khẩu phải làm gì?']).map((prompt) => (
+                        {(adminMode ? ADMIN_STARTER_PROMPTS : recruiterMode ? RECRUITER_STARTER_PROMPTS : ['Làm sao để ứng tuyển?', 'Tạo tin tuyển dụng thế nào?', 'Quên mật khẩu phải làm gì?']).map((prompt) => (
                             <button className="rounded-full border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50 sm:text-sm" key={prompt} onClick={() => void sendMessage(prompt)} type="button">
                                 <Sparkles aria-hidden="true" className="mr-1 inline" size={12} />{prompt}
                             </button>
@@ -232,7 +407,7 @@ export function AssistantChatPanel({
                     disabled={!authenticated || isSending}
                     maxLength={1000}
                     onChange={(event) => setMessage(event.target.value)}
-                    placeholder={adminMode ? 'Hỏi về thống kê hoặc quản lý hệ thống...' : 'Hỏi về cách dùng TalentBridge...'}
+                    placeholder={adminMode ? 'Hỏi về thống kê hoặc quản lý hệ thống...' : recruiterMode ? 'Hỏi về ứng viên, pipeline hoặc xuất số liệu...' : 'Hỏi về cách dùng TalentBridge...'}
                     rows={1}
                     value={message}
                 />

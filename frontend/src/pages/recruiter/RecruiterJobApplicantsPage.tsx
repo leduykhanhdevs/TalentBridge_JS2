@@ -27,6 +27,7 @@ import {
     getApplicantNotes,
     getApplicantStageHistory,
     getJobApplicants,
+    openApplicantResume,
     reopenApplicantApplication,
     updateApplicantStage,
 } from '../../features/recruiter/recruiterApplicantApi'
@@ -156,6 +157,16 @@ export function RecruiterJobApplicantsPage() {
     function handleSearchSubmit(e: React.FormEvent) {
         e.preventDefault()
         fetchApplicants()
+    }
+
+    async function handleViewResume(applicant: JobApplicant) {
+        if (!applicant.resumeId) return
+        setErrorMsg(null)
+        try {
+            await openApplicantResume(numericJobId, applicant.resumeId, applicant.resumeFileName || 'CV')
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'Không thể mở CV ứng viên.')
+        }
     }
 
     async function handleAiMatch(applicant: JobApplicant) {
@@ -669,17 +680,16 @@ export function RecruiterJobApplicantsPage() {
                                         </button>
 
                                         {/* Resume Link */}
-                                        {app.resumeUrl ? (
-                                            <a
-                                                href={app.resumeUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                        {app.resumeId ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => void handleViewResume(app)}
                                                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
-                                                title="Tải hoặc xem file CV"
+                                                title="Xem CV an toàn trong ứng dụng"
                                             >
                                                 <FileText size={13} />
                                                 <span>Xem CV</span>
-                                            </a>
+                                            </button>
                                         ) : (
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-400">
                                                 <FileText size={13} />

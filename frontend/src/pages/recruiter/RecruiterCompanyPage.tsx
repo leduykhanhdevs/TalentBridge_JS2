@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { getStoredUser } from '../../features/auth/tokenStorage'
 import {
     getRecruiterProfile,
     RecruiterApiError,
@@ -61,7 +62,7 @@ export function RecruiterCompanyPage() {
         isLoading,
         error: profileError,
     } = useQuery({
-        queryKey: ['recruiter-profile'],
+        queryKey: ['recruiter-profile', getStoredUser()?.id ?? 'anonymous'],
         queryFn: getRecruiterProfile,
     })
 

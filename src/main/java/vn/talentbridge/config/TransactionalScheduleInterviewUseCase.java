@@ -34,7 +34,7 @@ public class TransactionalScheduleInterviewUseCase implements ScheduleInterviewU
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportIcsCalendar(Long interviewId) {
-        return delegate.exportIcsCalendar(interviewId);
+    public byte[] exportIcsCalendar(Long userId, String actorRole, Long interviewId) {
+        return delegate.exportIcsCalendar(userId, actorRole, interviewId);
     }
 }
