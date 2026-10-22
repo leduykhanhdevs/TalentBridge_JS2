@@ -44,6 +44,7 @@ export interface UpdateCandidateProfileRequest {
 export interface CandidateProfileFormErrors {
     fullName?: string
     phone?: string
+    dob?: string
     experienceYears?: string
     currentSalary?: string
     expectedSalary?: string

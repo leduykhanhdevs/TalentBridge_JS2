@@ -243,6 +243,46 @@ class AdminControllerTest {
     }
 
     @Test
+    @DisplayName("TB-04: Admin Companies - Hàng chờ PENDING loại bỏ hoàn toàn các hồ sơ demo (isDemo = true)")
+    void testGetAllCompanies_ExcludeDemoFromPendingQueue() throws Exception {
+        // Create a simulated demo company with status PENDING and isDemo = true
+        CompanyJpaEntity demoCompany = CompanyJpaEntity.builder()
+                .name("DEMO Tech Simulation Corp")
+                .taxCode("0999999999")
+                .address("Demo Virtual Office")
+                .status(CompanyStatus.PENDING)
+                .isDemo(true)
+                .build();
+        companyRepository.save(demoCompany);
+
+        // When requesting PENDING companies, only real company (FPT Software) is returned, NOT demo company
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("status", "PENDING")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value("FPT Software"))
+                .andExpect(jsonPath("$.data.content[0].isDemo").value(false));
+
+        // When searching keyword DEMO under PENDING queue, returns 0 results
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("status", "PENDING")
+                        .param("keyword", "DEMO")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+
+        // In ALL companies view, demo company remains visible for inspection
+        mockMvc.perform(get("/api/v1/admin/companies")
+                        .param("keyword", "DEMO")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value("DEMO Tech Simulation Corp"))
+                .andExpect(jsonPath("$.data.content[0].isDemo").value(true));
+    }
+
+    @Test
     @DisplayName("Admin Companies - Tìm kiếm công ty theo từ khóa (tên, MST)")
     void testGetAllCompanies_SearchKeyword() throws Exception {
         mockMvc.perform(get("/api/v1/admin/companies")

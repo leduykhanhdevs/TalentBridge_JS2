@@ -40,7 +40,7 @@ import type {
     UpdateCandidateProfileRequest,
     WorkExperience,
 } from '../../features/candidate/candidateTypes'
-import { validateCandidateProfile } from '../../features/candidate/candidateValidation'
+import { validateCandidateProfile, getVietnamTodayString } from '../../features/candidate/candidateValidation'
 import { WorkExperienceModal } from '../../features/candidate/components/WorkExperienceModal'
 import { CandidateSkillModal } from '../../features/candidate/components/CandidateSkillModal'
 import { ResumeUploadSection } from '../../features/candidate/components/ResumeUploadSection'
@@ -167,6 +167,7 @@ export function CandidateProfilePage() {
         const errors = validateCandidateProfile({
             fullName: formData.fullName,
             phone: formData.phone,
+            dob: formData.dob,
             currentSalary: formData.currentSalary,
             expectedSalary: formData.expectedSalary,
             personalWebsite: formData.personalWebsite,
@@ -425,10 +426,30 @@ export function CandidateProfilePage() {
                                     </label>
                                     <input
                                         type="date"
+                                        max={getVietnamTodayString()}
                                         value={formData.dob || ''}
-                                        onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        onChange={(e) => {
+                                            const nextDob = e.target.value
+                                            setFormData({ ...formData, dob: nextDob })
+                                            setFormErrors((prev) => {
+                                                const next = { ...prev }
+                                                if (nextDob && nextDob > getVietnamTodayString()) {
+                                                    next.dob = 'Ngày sinh không được ở trong tương lai'
+                                                } else {
+                                                    delete next.dob
+                                                }
+                                                return next
+                                            })
+                                        }}
+                                        className={`w-full rounded-xl border px-3.5 py-2 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 ${
+                                            formErrors.dob
+                                                ? 'border-rose-300 focus:ring-rose-400'
+                                                : 'border-slate-200 focus:ring-blue-500'
+                                        }`}
                                     />
+                                    {formErrors.dob && (
+                                        <p className="mt-1 text-xs text-rose-500">{formErrors.dob}</p>
+                                    )}
                                 </div>
 
                                 <div>

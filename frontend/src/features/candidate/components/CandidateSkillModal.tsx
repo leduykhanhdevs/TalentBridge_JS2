@@ -56,6 +56,16 @@ export function CandidateSkillModal({
             return
         }
 
+        const expNum = parseFloat(yearsOfExperience)
+        if (isNaN(expNum) || expNum < 0.1) {
+            setErrorMsg('Số năm kinh nghiệm tối thiểu là 0.1 năm.')
+            return
+        }
+        if (expNum > 50) {
+            setErrorMsg('Số năm kinh nghiệm không được vượt quá 50 năm.')
+            return
+        }
+
         const matchedMaster = availableSkills.find(
             (s) => s.name.toLowerCase() === skillName.toLowerCase(),
         )
@@ -67,7 +77,7 @@ export function CandidateSkillModal({
                 skillName: matchedMaster ? undefined : skillName,
                 proficiencyLevel,
                 rating,
-                yearsOfExperience: parseFloat(yearsOfExperience) || 1.0,
+                yearsOfExperience: expNum,
             })
             onSuccess()
             onClose()
@@ -225,9 +235,10 @@ export function CandidateSkillModal({
                             disabled={loading}
                             id="years-exp"
                             min="0.1"
+                            max="50"
                             onChange={(e) => setYearsOfExperience(e.target.value)}
-                            placeholder="VD: 2.5"
-                            step="0.5"
+                            placeholder="VD: 1.0"
+                            step="0.1"
                             type="number"
                             value={yearsOfExperience}
                         />

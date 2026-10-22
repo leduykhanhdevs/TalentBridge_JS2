@@ -708,3 +708,15 @@
 - **Đã làm được gì**: PR phát hành [#57](https://github.com/leduykhanhdevs/TalentBridge_JS2/pull/57) đã merge vào `main`; GitHub Actions CD run [39788712825](https://github.com/leduykhanhdevs/TalentBridge_JS2/actions/runs/39788712825) hoàn tất thành công. Backend và frontend Render đều xác nhận phục vụ commit `ce8caff08202e9065f5fa211840e789ebf5d7df4`. Production smoke checks đạt: health API, jobs API, tiêu đề trang và CORS credentials. Không gửi thông tin đăng nhập hay OTP thật trong production.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: GitHub Actions CD, Render Deploy Hooks riêng cho backend/frontend, xác minh SHA qua health JSON và thẻ meta HTML; smoke test HTTP chỉ đọc cho Spring Boot API và React/Vite frontend.
 - **Mục đích chức năng / việc đã làm**: Phát hành xử lý chờ backend khởi động khi Render Free cold start, đồng thời xác minh hai dịch vụ production cùng chạy đúng một commit trước khi kết luận deploy hoàn tất.
+
+## Đồng bộ và bàn giao QA mobile ngày 22 tháng 10 năm 2026
+
+- **Đã làm được gì**: Fetch origin thành công; tạo worktree riêng từ origin/dev tại b8e4690 và nhánh fix/tinh/mobile-qa-20261022; kiểm tra Git hoạt động. Giữ nguyên hai file recruiter đang sửa trong checkout cũ. Đã ghi prompt bàn giao chi tiết trong docs/QA_MOBILE_HANDOFF_2026-10-22.md. Theo yêu cầu mới của người dùng, dừng sửa để chuyển agent do hạn mức. Chưa sửa lỗi, chạy test hoặc tạo Word.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Git fetch, managed worktree, PowerShell; khảo sát React/TypeScript và Java Spring Boot; đọc báo cáo QA mobile.
+- **Mục đích chức năng / việc đã làm**: Cung cấp code nền mới nhất và đủ thông tin để agent tiếp tục xử lý TB-01 đến TB-04, bảo toàn công việc hiện có; hoàn tất sau bằng báo cáo Word với ảnh kiểm chứng sạch không có con trỏ Codex.
+
+## Sửa 4 lỗi QA mobile TB-01 đến TB-04 ngày 22 tháng 10 năm 2026
+
+- **Đã làm được gì**: Sửa xong TB-01 (CV Builder không lưu CV: seed cv_templates bằng Flyway V5, fallback template, banner trạng thái hiển thị ở cả tab Xem trước), TB-02 (step/min/max số năm kinh nghiệm kỹ năng + @DecimalMin/@DecimalMax), TB-03 (chặn ngày sinh tương lai ở frontend và backend theo múi giờ Asia/Ho_Chi_Minh), TB-04 (loại hồ sơ demo khỏi hàng chờ PENDING). Phát hiện và sửa lỗi migration V5 tham chiếu cột updated_at không tồn tại. Kiểm thử: backend 26/26, Vitest 131/131, lint và build PASS, Playwright mobile 390x844 2/2 PASS. Ảnh minh chứng sạch tại docs/qa/mobile-qa-2026-10-22-fixes/; báo cáo Word tại docs/Bao_Cao_Sua_Loi_QA_Mobile_TalentBridge_2026-10-22.docx.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot 3.3.4, Flyway, Spring Data JPA (JPQL lọc isDemo), Bean Validation, PDFBox; React 19, TypeScript, Vitest; Playwright (Chrome headless) trên backend H2 cô lập; thư viện docx để sinh báo cáo Word.
+- **Mục đích chức năng / việc đã làm**: Khôi phục tính năng tạo CV trên mobile và production, đảm bảo toàn vẹn dữ liệu hồ sơ ứng viên, và giúp admin duyệt doanh nghiệp đúng hàng chờ thực.

@@ -11,7 +11,9 @@ import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.User;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 public class UpdateCandidateProfileUseCaseImpl implements UpdateCandidateProfileUseCase {
 
@@ -71,6 +73,10 @@ public class UpdateCandidateProfileUseCaseImpl implements UpdateCandidateProfile
             candidate.setTitle(command.title().trim());
         }
         if (command.dob() != null) {
+            LocalDate todayInVietnam = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            if (command.dob().isAfter(todayInVietnam)) {
+                throw new DomainException(40002, "Ngày sinh không được ở trong tương lai");
+            }
             candidate.setDob(command.dob());
         }
         if (command.gender() != null && !command.gender().isBlank()) {

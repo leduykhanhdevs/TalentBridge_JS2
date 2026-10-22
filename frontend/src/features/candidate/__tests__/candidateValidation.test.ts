@@ -41,4 +41,24 @@ describe('Candidate Profile Validation Tests (HRPM-14)', () => {
         expect(validateCandidateProfile({ githubUrl: 'not-a-url' }).github).toBeDefined()
         expect(validateCandidateProfile({ linkedinUrl: 'not-a-url' }).linkedin).toBeDefined()
     })
+
+    it('rejects future date of birth and accepts valid past or today date of birth (TB-03)', () => {
+        // Future date must be rejected
+        const futureErrors = validateCandidateProfile({ dob: '2030-02-01' })
+        expect(futureErrors.dob).toBe('Ngày sinh không được ở trong tương lai')
+
+        // Valid past date must be accepted
+        const pastErrors = validateCandidateProfile({ dob: '2000-07-19' })
+        expect(pastErrors.dob).toBeUndefined()
+
+        // Today date in Vietnam timezone must be accepted
+        const todayStr = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(new Date())
+        const todayErrors = validateCandidateProfile({ dob: todayStr })
+        expect(todayErrors.dob).toBeUndefined()
+    })
 })
