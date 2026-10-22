@@ -1,0 +1,64 @@
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.4)
+
+2026-10-22T21:02:01.122+07:00  INFO 26112 --- [TalentBridge] [           main] v.talentbridge.TalentBridgeApplication   : Starting TalentBridgeApplication v0.0.1-SNAPSHOT using Java 21.0.10 with PID 26112 (C:\Users\leduy\.codex\worktrees\login-cold-start-fix\TalentBridge_JS2\target\talentbridge-0.0.1-SNAPSHOT.jar started by leduy in C:\Users\leduy\.codex\worktrees\login-cold-start-fix\TalentBridge_JS2)
+2026-10-22T21:02:01.127+07:00  INFO 26112 --- [TalentBridge] [           main] v.talentbridge.TalentBridgeApplication   : The following 1 profile is active: "e2e"
+2026-10-22T21:02:02.697+07:00  INFO 26112 --- [TalentBridge] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-22T21:02:02.992+07:00  INFO 26112 --- [TalentBridge] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 285 ms. Found 19 JPA repository interfaces.
+2026-10-22T21:02:04.183+07:00  INFO 26112 --- [TalentBridge] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-22T21:02:04.201+07:00  INFO 26112 --- [TalentBridge] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-22T21:02:04.201+07:00  INFO 26112 --- [TalentBridge] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.30]
+2026-10-22T21:02:04.283+07:00  INFO 26112 --- [TalentBridge] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-22T21:02:04.286+07:00  INFO 26112 --- [TalentBridge] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3081 ms
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+2026-10-22T21:02:04.759+07:00  INFO 26112 --- [TalentBridge] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-22T21:02:05.098+07:00  INFO 26112 --- [TalentBridge] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:talentbridge_e2e user=SA
+2026-10-22T21:02:05.100+07:00  INFO 26112 --- [TalentBridge] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-22T21:02:05.200+07:00  INFO 26112 --- [TalentBridge] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:talentbridge_e2e (H2 2.2)
+2026-10-22T21:02:05.209+07:00  WARN 26112 --- [TalentBridge] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-10-22T21:02:05.285+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-10-22T21:02:05.292+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 4 migrations (execution time 00:00.044s)
+2026-10-22T21:02:05.300+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-10-22T21:02:05.362+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "PUBLIC": << Empty Schema >>
+2026-10-22T21:02:05.399+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "1 - baseline"
+2026-10-22T21:02:05.492+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "2 - job moderation history"
+2026-10-22T21:02:05.506+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "3 - seed demo catalog"
+2026-10-22T21:02:05.635+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "4 - password reset otp verification"
+2026-10-22T21:02:05.666+07:00  INFO 26112 --- [TalentBridge] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 4 migrations to schema "PUBLIC", now at version v4 (execution time 00:00.224s)
+2026-10-22T21:02:05.800+07:00  INFO 26112 --- [TalentBridge] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-10-22T21:02:05.900+07:00  INFO 26112 --- [TalentBridge] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-10-22T21:02:05.960+07:00  INFO 26112 --- [TalentBridge] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-10-22T21:02:06.472+07:00  INFO 26112 --- [TalentBridge] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-22T21:02:06.559+07:00  WARN 26112 --- [TalentBridge] [           main] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-10-22T21:02:09.272+07:00  INFO 26112 --- [TalentBridge] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-10-22T21:02:09.305+07:00  INFO 26112 --- [TalentBridge] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-22T21:02:09.704+07:00  INFO 26112 --- [TalentBridge] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-22T21:02:11.670+07:00  INFO 26112 --- [TalentBridge] [           main] v.t.a.o.storage.LocalFileStorageAdapter  : Khởi tạo thư mục lưu trữ file thành công tại: C:\Users\leduy\.codex\worktrees\login-cold-start-fix\TalentBridge_JS2\uploads
+2026-10-22T21:02:13.466+07:00  INFO 26112 --- [TalentBridge] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-22T21:02:13.496+07:00  INFO 26112 --- [TalentBridge] [           main] v.talentbridge.TalentBridgeApplication   : Started TalentBridgeApplication in 13.006 seconds (process running for 13.73)
+2026-10-22T21:02:13.760+07:00  INFO 26112 --- [TalentBridge] [           main] vn.talentbridge.config.DataInitializer   : >>> [DataInitializer] Đã khởi tạo tài khoản Admin mẫu cho môi trường không production.
+2026-10-22T21:02:13.863+07:00  INFO 26112 --- [TalentBridge] [           main] vn.talentbridge.config.DataInitializer   : >>> [DataInitializer] Đã khởi tạo tài khoản nhà tuyển dụng mẫu cho môi trường không production.
+2026-10-22T21:02:13.937+07:00  INFO 26112 --- [TalentBridge] [           main] vn.talentbridge.config.DataInitializer   : >>> [DataInitializer] Đã khởi tạo tài khoản ứng viên mẫu cho môi trường không production.
+2026-10-22T21:02:13.959+07:00  INFO 26112 --- [TalentBridge] [           main] vn.talentbridge.config.DataInitializer   : >>> [DataInitializer] Đã khởi tạo 3 mẫu CV chuẩn cho Resume Generator.
+2026-10-22T21:02:14.866+07:00  INFO 26112 --- [TalentBridge] [io-18080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-22T21:02:14.867+07:00  INFO 26112 --- [TalentBridge] [io-18080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-22T21:02:14.870+07:00  INFO 26112 --- [TalentBridge] [io-18080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms
+2026-10-22T21:02:18.077+07:00  WARN 26112 --- [TalentBridge] [io-18080-exec-9] v.t.a.i.w.e.GlobalExceptionHandler       : AccessDeniedException occurred: Access Denied
+2026-10-22T21:02:18.458+07:00  WARN 26112 --- [TalentBridge] [io-18080-exec-2] v.t.a.i.w.e.GlobalExceptionHandler       : DomainException occurred: code=40301, message=Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên.
+2026-10-22T21:02:19.338+07:00  WARN 26112 --- [TalentBridge] [io-18080-exec-9] v.t.a.i.w.e.GlobalExceptionHandler       : DomainException occurred: code=40901, message=Bạn đã có một yêu cầu gia nhập đang chờ xét duyệt
+2026-10-22T21:02:50.276+07:00 ERROR 26112 --- [TalentBridge] [o-18080-exec-10] v.t.a.o.s.JwtTokenProviderAdapter        : JWT validation error: Invalid compact JWT string: Compact JWSs must contain exactly 2 period characters, and compact JWEs must contain exactly 4.  Found: 0
+2026-10-22T21:02:50.277+07:00 ERROR 26112 --- [TalentBridge] [io-18080-exec-1] v.t.a.o.s.JwtTokenProviderAdapter        : JWT validation error: Invalid compact JWT string: Compact JWSs must contain exactly 2 period characters, and compact JWEs must contain exactly 4.  Found: 0
+2026-10-22T21:02:50.279+07:00 ERROR 26112 --- [TalentBridge] [io-18080-exec-5] v.t.a.o.s.JwtTokenProviderAdapter        : JWT validation error: Invalid compact JWT string: Compact JWSs must contain exactly 2 period characters, and compact JWEs must contain exactly 4.  Found: 0
+2026-10-22T21:02:50.286+07:00 ERROR 26112 --- [TalentBridge] [io-18080-exec-5] v.t.a.i.s.JwtAuthenticationEntryPoint    : Unauthorized error: Full authentication is required to access this resource
+2026-10-22T21:02:50.286+07:00 ERROR 26112 --- [TalentBridge] [io-18080-exec-1] v.t.a.i.s.JwtAuthenticationEntryPoint    : Unauthorized error: Full authentication is required to access this resource
+2026-10-22T21:02:50.286+07:00 ERROR 26112 --- [TalentBridge] [o-18080-exec-10] v.t.a.i.s.JwtAuthenticationEntryPoint    : Unauthorized error: Full authentication is required to access this resource
+2026-10-22T21:03:24.055+07:00  WARN 26112 --- [TalentBridge] [io-18080-exec-5] v.t.a.i.w.e.GlobalExceptionHandler       : DomainException occurred: code=40001, message=Nhà tuyển dụng chưa thuộc công ty nào
+2026-10-22T21:03:24.069+07:00  WARN 26112 --- [TalentBridge] [io-18080-exec-7] v.t.a.i.w.e.GlobalExceptionHandler       : DomainException occurred: code=40001, message=Nhà tuyển dụng chưa thuộc công ty nào
