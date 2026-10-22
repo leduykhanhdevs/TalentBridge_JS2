@@ -157,7 +157,7 @@ Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua emai
 | `GEMINI_MODEL` | Không | `gemini-3.5-flash-lite` | Mô hình Gemini dùng để sinh câu trả lời chatbot từ hướng dẫn TalentBridge đã truy xuất. |
 | `GEMINI_API_BASE_URL` | Không | `https://generativelanguage.googleapis.com/v1beta` | Endpoint Gemini; chủ yếu dùng để cấu hình môi trường và kiểm thử. |
 | `GEMINI_CONNECT_TIMEOUT_MS` | Không | `5000` | Timeout kết nối tới Gemini. |
-| `GEMINI_READ_TIMEOUT_MS` | Không | `20000` | Timeout chờ phản hồi Gemini; không tự retry để tránh kéo dài request lỗi. |
+| `GEMINI_READ_TIMEOUT_MS` | Không | `8000` | Timeout chờ phản hồi Gemini; không tự retry để tránh kéo dài request lỗi. |
 | `DB_POOL_MAX_SIZE` | Không | `5` | Số kết nối tối đa trong pool ở profile production. |
 | `MAIL_HOST` | Không | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Không | `587` | Cổng kết nối SMTP. |
@@ -171,7 +171,7 @@ Khôi phục mật khẩu chạy theo ba bước: yêu cầu OTP 6 số qua emai
 | `MAIL_HOST` | Khi `smtp` | `smtp.gmail.com` | Máy chủ SMTP gửi email đặt lại mật khẩu. |
 | `MAIL_PORT` | Khi `smtp` | `587` | Cổng kết nối SMTP. |
 
-API nhập CV trả `processingSource` là `GEMINI` hoặc `RULE_BASED`. API matching trả `matchingSource=DETERMINISTIC` và ba điểm tham khảo: bằng chứng trực tiếp (60%), ngữ cảnh hồ sơ/nghề nghiệp (25%), và năng lực liên quan suy luận thận trọng (15%). Các thành phần dùng độ phủ từ khóa và cosine similarity trên từ vựng đã chuẩn hóa; kèm câu hỏi phỏng vấn ngược được suy ra từ năng lực liên quan/kỹ năng chưa có bằng chứng để Recruiter xác minh. Không dùng embedding, không phải xác suất trúng tuyển và không gán cho bài AI-KM. Matching yêu cầu Recruiter, xác minh công ty sở hữu tin và quan hệ ứng tuyển; phần đánh giá CV tải nội dung trong backend sau khi kiểm tra quyền, không nhận CV thô từ trình duyệt hay gửi CV sang Gemini.
+API nhập CV trả `processingSource` là `GEMINI`, `RULE_BASED`, `RULE_BASED_NO_API_KEY`, `RULE_BASED_AI_ERROR` hoặc `RULE_BASED_TEXT_EXTRACTION` để phân biệt fallback và nguyên nhân. API matching trả `matchingSource=DETERMINISTIC` và ba điểm tham khảo: bằng chứng trực tiếp (60%), ngữ cảnh hồ sơ/nghề nghiệp (25%), và năng lực liên quan suy luận thận trọng (15%). Các thành phần dùng độ phủ từ khóa và cosine similarity trên từ vựng đã chuẩn hóa; kèm câu hỏi phỏng vấn ngược được suy ra từ năng lực liên quan/kỹ năng chưa có bằng chứng để Recruiter xác minh. Không dùng embedding, không phải xác suất trúng tuyển và không gán cho bài AI-KM. Matching yêu cầu Recruiter, xác minh công ty sở hữu tin và quan hệ ứng tuyển; phần đánh giá CV tải nội dung trong backend sau khi kiểm tra quyền, không nhận CV thô từ trình duyệt hay gửi CV sang Gemini.
 
 ### 3. Khởi Chạy Backend (Spring Boot 3)
 
