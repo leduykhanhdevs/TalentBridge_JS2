@@ -199,8 +199,14 @@ public class UseCaseConfig {
 
     @Bean
     public GetRecruiterProfileUseCase getRecruiterProfileUseCase(
-            RecruiterRepositoryPort recruiterRepository) {
-        return new GetRecruiterProfileUseCaseImpl(recruiterRepository);
+            RecruiterRepositoryPort recruiterRepository,
+            CompanyRepositoryPort companyRepository) {
+        return new TransactionalGetRecruiterProfileUseCase(
+                new GetRecruiterProfileUseCaseImpl(
+                        recruiterRepository,
+                        companyRepository
+                )
+        );
     }
 
     @Bean
@@ -216,7 +222,12 @@ public class UseCaseConfig {
     public RequestCreateCompanyUseCase requestCreateCompanyUseCase(
             RecruiterRepositoryPort recruiterRepository,
             CompanyRepositoryPort companyRepository) {
-        return new RequestCreateCompanyUseCaseImpl(recruiterRepository, companyRepository);
+        return new TransactionalRequestCreateCompanyUseCase(
+                new RequestCreateCompanyUseCaseImpl(
+                        recruiterRepository,
+                        companyRepository
+                )
+        );
     }
 
     @Bean
