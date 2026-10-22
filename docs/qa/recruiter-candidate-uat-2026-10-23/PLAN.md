@@ -53,6 +53,6 @@ Sửa 9 vấn đề người dùng phản ánh ở hồ sơ, trợ lý AI, ATS, 
 - [x] Query key trạng thái công ty/yêu cầu gia nhập có phạm vi tài khoản; thêm kiểm tra không rò cache khi đổi recruiter.
 - [x] Không cho đăng tuyển khi thiếu công ty; hiển thị đúng thông báo và nút Đóng chuyển tới `/recruiter/company`.
 - [x] Local verification: Maven verify 378/378; Vitest 135/135; ESLint; TypeScript/Vite build; API E2E 28/28; Playwright 30/30; `git diff --check`.
-- [ ] Phát hành: tạo PR vào `main`, chờ toàn bộ GitHub CI, merge khi xanh, xác minh Render CD, health và commit SHA live.
+- [x] Phát hành: PR #65 merge commit `5132b0b28da8a82ce52b8da0d33e727e2e6d381c`; GitHub CI pass backend/frontend/Docker; Render CD run `39837408472` pass. Backend `/api/v1/health` báo `UP` và SHA đúng, frontend build marker cùng SHA, jobs API/frontend/CORS đều trả HTTP 200.
 
-Log/ảnh của lần chạy API + Playwright đạt cuối cùng: `docs/qa/full-site-uat-2026-10-20/runs/2026-10-23-015610/`. Gemini thật và Google Calendar ngoài mạng chưa được kiểm chứng; không tính fixture/matching cục bộ là lời gọi provider thật.
+Log/ảnh của lần chạy API + Playwright đạt cuối cùng: `docs/qa/full-site-uat-2026-10-20/runs/2026-10-23-015610/`. Gemini thật và khả năng kết nối Google Calendar ngoài mạng chưa được kiểm chứng; không tính fixture/matching cục bộ là lời gọi provider thật. Build marker đã xác minh trên Render là `5132b0b28da8a82ce52b8da0d33e727e2e6d381c`.
