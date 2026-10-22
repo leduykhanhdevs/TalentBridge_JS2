@@ -532,11 +532,33 @@ export async function getCandidateInterview(applicationId: number): Promise<Cand
     })
 
     if (!res.ok) {
-        return null
+        const errJson = await res.json().catch(() => null)
+        throw new CandidateApiError(res.status, errJson?.message || 'Không thể tải lịch phỏng vấn của bạn.')
     }
 
     const json: ApiResponse<CandidateInterviewItem> = await res.json()
     return json.data || null
+}
+
+export async function downloadCandidateInterviewCalendar(interviewId: number): Promise<void> {
+    const token = getAccessToken()
+    if (!token) throw new CandidateApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    const response = await authenticatedFetch(`${API_BASE_URL}/interviews/${interviewId}/calendar.ics`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) {
+        const body = await response.json().catch(() => null) as { message?: string } | null
+        throw new CandidateApiError(response.status, body?.message || 'Không thể tải lịch phỏng vấn. Vui lòng thử lại.')
+    }
+    const objectUrl = URL.createObjectURL(await response.blob())
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = `TalentBridge-phong-van-${interviewId}.ics`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
 }
 
 

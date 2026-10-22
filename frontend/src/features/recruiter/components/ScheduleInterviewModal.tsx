@@ -12,7 +12,7 @@ import {
     Loader2,
     CalendarCheck2
 } from 'lucide-react'
-import { scheduleApplicantInterview } from '../recruiterApplicantApi'
+import { downloadRecruiterInterviewCalendar, scheduleApplicantInterview } from '../recruiterApplicantApi'
 import type { InterviewItem, JobApplicant } from '../recruiterApplicantTypes'
 
 interface ScheduleInterviewModalProps {
@@ -23,9 +23,10 @@ interface ScheduleInterviewModalProps {
     onSuccess: (interview: InterviewItem) => void
 }
 
-const API_BASE_URL = (
-    import.meta.env.VITE_API_BASE_URL || '/api/v1'
-).replace(/\/$/, '')
+function toLocalDateTimeInput(date: Date): string {
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+    return localDate.toISOString().slice(0, 16)
+}
 
 export function ScheduleInterviewModal({
     isOpen,
@@ -38,7 +39,7 @@ export function ScheduleInterviewModal({
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setHours(9, 0, 0, 0)
-    const defaultTimeStr = tomorrow.toISOString().slice(0, 16)
+    const defaultTimeStr = toLocalDateTimeInput(tomorrow)
 
     const [interviewTime, setInterviewTime] = useState(defaultTimeStr)
     const [locationType, setLocationType] = useState<'ONLINE' | 'OFFLINE'>('ONLINE')
@@ -87,10 +88,17 @@ export function ScheduleInterviewModal({
         }
     }
 
-    const handleDownloadIcs = () => {
+    const handleDownloadIcs = async () => {
         if (!createdInterview) return
-        const icsUrl = `${API_BASE_URL}/interviews/${createdInterview.id}/calendar.ics`
-        window.open(icsUrl, '_blank')
+        setErrorMessage(null)
+        setIsSubmitting(true)
+        try {
+            await downloadRecruiterInterviewCalendar(createdInterview.id)
+        } catch (err: unknown) {
+            setErrorMessage(err instanceof Error ? err.message : 'Không thể tải lịch phỏng vấn.')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     const handleOpenGoogleCalendar = () => {
@@ -185,10 +193,11 @@ export function ScheduleInterviewModal({
                                 <button
                                     type="button"
                                     onClick={handleDownloadIcs}
+                                    disabled={isSubmitting}
                                     className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                                 >
                                     <Download className="h-4 w-4 text-slate-500" />
-                                    Tải file lịch iCalendar (.ics)
+                                    {isSubmitting ? 'Đang tải lịch…' : 'Tải file lịch iCalendar (.ics)'}
                                 </button>
                             </div>
                         </div>

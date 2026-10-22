@@ -88,6 +88,24 @@ export async function updateRecruiterProfile(
     )
 }
 
+export async function uploadRecruiterAvatar(file: File): Promise<string> {
+    const token = getAccessToken()
+    if (!token) {
+        throw new RecruiterApiError(401, 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await authenticatedFetch(`${API_BASE_URL}/recruiters/profile/avatar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+    })
+
+    const result = await handleResponse<{ avatarUrl: string }>(response, 'Không thể tải ảnh đại diện lên.')
+    return result.avatarUrl
+}
+
 export async function requestCreateCompany(
     request: RequestCreateCompanyRequest,
 ): Promise<CompanyResponse> {

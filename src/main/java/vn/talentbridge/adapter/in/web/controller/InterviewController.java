@@ -22,6 +22,7 @@ import vn.talentbridge.core.application.port.in.ScheduleInterviewUseCase;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -84,14 +85,24 @@ public class InterviewController {
     }
 
     @GetMapping("/api/v1/interviews/{interviewId}/calendar.ics")
+    @SecurityRequirement(name = "BearerAuth")
+    @PreAuthorize("hasAnyRole('CANDIDATE', 'RECRUITER')")
     @Operation(summary = "Tải file lịch iCalendar (.ics) đồng bộ Google Calendar / Outlook")
-    public ResponseEntity<byte[]> downloadIcsCalendar(@PathVariable Long interviewId) {
-        byte[] icsBytes = scheduleInterviewUseCase.exportIcsCalendar(interviewId);
+    public ResponseEntity<byte[]> downloadIcsCalendar(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long interviewId) {
+        String actorRole = principal.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .filter(Set.of("ROLE_CANDIDATE", "ROLE_RECRUITER")::contains)
+                .findFirst()
+                .orElse("");
+        byte[] icsBytes = scheduleInterviewUseCase.exportIcsCalendar(principal.getId(), actorRole, interviewId);
         String filename = "interview-" + interviewId + ".ics";
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType("text/calendar; charset=utf-8"))
+                .cacheControl(org.springframework.http.CacheControl.noStore())
                 .body(icsBytes);
     }
 }
