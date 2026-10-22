@@ -72,7 +72,7 @@ Không commit hoặc push trực tiếp lên main/dev, không merge PR khi leade
 
 ## Giới hạn và chẩn đoán
 
-- Render Free có thể ngủ khi ít truy cập; request đầu tiên sau thời gian idle có thể chậm. Việc tối ưu frontend không loại bỏ giới hạn cold start của hạ tầng.
+- Render Free tự ngủ sau 15 phút không có traffic; lần đánh thức có thể mất khoảng một phút ([giới hạn Free của Render](https://render.com/docs/free)). Frontend warm-up `/api/v1/health` tối đa 70 giây, thử lại các phản hồi chưa sẵn sàng và làm mới trạng thái sau 12 phút; luồng đăng nhập chờ backend sẵn sàng rồi cho API tối đa 30 giây. Đây là cải thiện trải nghiệm cold start, không loại bỏ giới hạn của gói Free.
 - Nếu CD hết thời gian chờ backend, kiểm tra service đã nhận commit trên main, build mới thành công và /api/v1/health trả data.buildCommit đúng SHA của workflow.
 - Nếu CD hết thời gian chờ frontend, kiểm tra Blueprint đã sync build command có VITE_RENDER_GIT_COMMIT=$RENDER_GIT_COMMIT và HTML có meta render-git-commit đúng SHA.
 - Nếu jobs API trả HTTP 200 nhưng 0 việc làm, điều đó xác nhận endpoint/DB query phản hồi chứ không chứng minh đã có dữ liệu nghiệp vụ. Cần kiểm tra số lượng dữ liệu RDS riêng.

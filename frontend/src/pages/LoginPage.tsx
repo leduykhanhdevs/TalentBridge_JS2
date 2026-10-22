@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { useMutation } from '@tanstack/react-query'
 import { HeroTalentIllustration } from '../components/illustrations'
 import { AuthApiError, loginUser, LOGOUT_TIMEOUT_MS } from '../features/auth/authApi'
+import { warmUpBackend } from '../app/backendWarmup'
 import { getCandidatePostLoginPath } from '../features/auth/loginRedirect'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
 import { REFRESH_TIMEOUT_MS } from '../features/auth/sessionRefresh'
@@ -18,9 +19,22 @@ export function LoginPage() {
     const [formValues, setFormValues] = useState({ email: '', password: '' })
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
     const [serverError, setServerError] = useState<string | null>(null)
+    const [isConnecting, setIsConnecting] = useState(false)
 
     const loginMutation = useMutation({
-        mutationFn: loginUser,
+        mutationFn: async (request: Parameters<typeof loginUser>[0]) => {
+            setIsConnecting(true)
+            let backendReady: boolean
+            try {
+                backendReady = await warmUpBackend()
+            } finally {
+                setIsConnecting(false)
+            }
+            if (!backendReady) {
+                throw new AuthApiError(0, 'Máy chủ chưa sẵn sàng sau thời gian chờ. Vui lòng thử lại sau ít phút.')
+            }
+            return loginUser(request)
+        },
         onSuccess: async (data) => {
             await withAuthSessionLock(() => saveAuthTokens(data), LOGOUT_TIMEOUT_MS + REFRESH_TIMEOUT_MS)
             const roles = data.user.roles ?? []
@@ -157,8 +171,9 @@ export function LoginPage() {
 
                             <button className="btn-bento-primary mt-2 h-12 w-full text-sm font-semibold" disabled={loginMutation.isPending} type="submit">
                                 {loginMutation.isPending ? <LoaderCircle aria-hidden="true" className="animate-spin" size={18} /> : <LogIn aria-hidden="true" size={18} />}
-                                <span>{loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}</span>
+                                <span>{loginMutation.isPending ? (isConnecting ? 'Đang kết nối máy chủ...' : 'Đang đăng nhập...') : 'Đăng nhập'}</span>
                             </button>
+                            {isConnecting && <p className="text-center text-xs text-slate-500" role="status">Máy chủ miễn phí có thể cần đến khoảng 1 phút để khởi động sau khi không hoạt động.</p>}
                         </form>
 
                         <p className="mt-6 text-center text-sm text-slate-600">
