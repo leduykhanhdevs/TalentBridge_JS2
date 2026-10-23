@@ -40,7 +40,7 @@ Hoàn thiện luồng tuyển dụng từ quản trị doanh nghiệp, nhà tuy�
 - HRPM-71: Zalo OA/app, quyền ZBS, template OTP được duyệt, secret Render và xác nhận nhận OTP thật.
 - HRPM-72: triển khai Apps Script relay, đặt shared secret trong Script Properties/Render, xác nhận OTP email thật. Render Free chặn SMTP outbound nên cấu hình hiện dùng HTTPS relay.
 - HRPM-73: provision tài khoản/job/application demo trong môi trường tách biệt; không đưa mật khẩu người dùng vào repository.
-- CI PR và xác nhận SHA frontend/backend sau CD chưa chạy vì chưa phát hành.
+- CI PR #70 đã pass cả backend, frontend và Docker ở run `39899357130`. CD và xác nhận SHA frontend/backend chưa chạy vì chưa merge; hai provider OTP live và dữ liệu demo riêng vẫn là các điều kiện phát hành còn mở.
 
 ## Quyết định phát hành
 
