@@ -238,6 +238,11 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public CandidateAvatarUseCase candidateAvatarUseCase(FileStoragePort fileStoragePort) {
+        return new CandidateAvatarUseCaseImpl(fileStoragePort);
+    }
+
+    @Bean
     public UpdateCandidateProfileUseCase updateCandidateProfileUseCase(
             CandidateRepositoryPort candidateRepository,
             UserRepositoryPort userRepository) {
@@ -321,6 +326,17 @@ public class UseCaseConfig {
     }
 
     @Bean
+    public DownloadApplicantResumeUseCase downloadApplicantResumeUseCase(
+            RecruiterRepositoryPort recruiterRepository,
+            JobRepositoryPort jobRepository,
+            JobApplicationRepositoryPort applicationRepository,
+            ResumeRepositoryPort resumeRepository,
+            FileStoragePort fileStorage) {
+        return new DownloadApplicantResumeUseCaseImpl(
+                recruiterRepository, jobRepository, applicationRepository, resumeRepository, fileStorage);
+    }
+
+    @Bean
     public MatchApplicantUseCase matchApplicantUseCase(
             RecruiterRepositoryPort recruiterRepository,
             JobRepositoryPort jobRepository,
@@ -332,6 +348,19 @@ public class UseCaseConfig {
                 applicationRepository,
                 matchingPort
         );
+    }
+
+    @Bean
+    public AssessMyJobFitUseCase assessMyJobFitUseCase(
+            CandidateJobMatchingPort matchingPort,
+            JobRepositoryPort jobRepository,
+            CandidateRepositoryPort candidateRepository,
+            CandidateSkillRepositoryPort candidateSkillRepository,
+            ResumeRepositoryPort resumeRepository,
+            FileStoragePort fileStorage,
+            CvTextExtractionPort cvTextExtraction) {
+        return new AssessMyJobFitUseCaseImpl(matchingPort, jobRepository, candidateRepository,
+                candidateSkillRepository, resumeRepository, fileStorage, cvTextExtraction);
     }
 
     @Bean
@@ -391,12 +420,14 @@ public class UseCaseConfig {
             JobApplicationRepositoryPort jobApplicationRepository,
             JobRepositoryPort jobRepository,
             RecruiterRepositoryPort recruiterRepository,
+            CandidateRepositoryPort candidateRepository,
             ApplicationStageRepositoryPort applicationStageRepository) {
         return new TransactionalScheduleInterviewUseCase(new ScheduleInterviewUseCaseImpl(
                 interviewRepository,
                 jobApplicationRepository,
                 jobRepository,
                 recruiterRepository,
+                candidateRepository,
                 applicationStageRepository
         ));
     }

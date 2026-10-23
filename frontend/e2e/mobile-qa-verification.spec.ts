@@ -36,7 +36,8 @@ test.describe('Mobile QA Bug Verification (TB-01, TB-02, TB-03, TB-04)', () => {
         await expect(skillModal).toBeVisible()
 
         // Select a skill
-        await skillModal.locator('select').first().selectOption({ index: 1 })
+        await skillModal.getByRole('combobox', { name: 'Chọn kỹ năng tiêu chuẩn' }).click()
+        await page.getByRole('option').nth(1).click()
 
         // Inspect yearsOfExperience input
         const yearsInput = page.locator('#years-exp')
@@ -65,36 +66,50 @@ test.describe('Mobile QA Bug Verification (TB-01, TB-02, TB-03, TB-04)', () => {
         await editProfileBtn.scrollIntoViewIfNeeded()
         await editProfileBtn.click()
 
-        const dobInput = page.locator('input[type="date"]').first()
+        const profileUpdates: unknown[] = []
+        page.on('request', (request) => {
+            if (request.method() === 'PUT' && request.url().endsWith('/api/v1/candidates/profile')) {
+                profileUpdates.push(request.postDataJSON())
+            }
+        })
+
+        const dobInput = page.getByRole('textbox', { name: 'Ngày sinh', exact: true })
         await dobInput.scrollIntoViewIfNeeded()
+        await expect(dobInput).toHaveAttribute('placeholder', 'dd/mm/yyyy')
 
-        // Check max attribute is set to today in Vietnam
-        const maxAttr = await dobInput.getAttribute('max')
-        expect(maxAttr).toBeTruthy()
+        // Today in Vietnam remains valid with the new DateInput.
+        const todayInVietnam = await page.evaluate(() => new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).format(new Date()))
+        await dobInput.fill(todayInVietnam.split('-').reverse().join('/'))
+        await expect(dobInput).toHaveAttribute('aria-invalid', 'false')
 
-        // Fill future date
-        await dobInput.fill('2030-02-01')
+        // The shared DateInput rejects future dates before submitting to the API.
+        await dobInput.fill('01/02/2030')
+        await expect(dobInput).toHaveAttribute('aria-invalid', 'true')
+        expect(await dobInput.evaluate((el: HTMLInputElement) => el.checkValidity())).toBe(false)
 
         const saveChangesBtn = page.locator('button[form="candidate-profile-form"]')
         await saveChangesBtn.click()
 
-        // Expect validation error message displayed under input
-        const dobErrorMsg = page.getByText('Ngày sinh không được ở trong tương lai')
+        const dobErrorMsg = page.getByRole('alert').filter({ hasText: 'Nhập ngày hợp lệ theo định dạng dd/mm/yyyy và không vượt quá hôm nay.' })
         await expect(dobErrorMsg).toBeVisible()
-        await expect(dobInput).toHaveValue('2030-02-01')
+        await expect(dobInput).toHaveValue('01/02/2030')
+        expect(profileUpdates).toHaveLength(0)
         await dobInput.scrollIntoViewIfNeeded()
 
-        // Capture clean screenshot of TB-03 showing error rejected
         await page.screenshot({
             path: join(screenshotDirectory, 'tb03-future-birthdate-blocked-mobile.png'),
             fullPage: false,
         })
 
-        // Restore to valid past birthdate 2000-07-19
-        await dobInput.fill('2000-07-19')
+        // The UI keeps dd/mm/yyyy while the API receives the ISO birthdate.
+        await dobInput.fill('19/07/2000')
         await expect(dobErrorMsg).not.toBeVisible()
+        await expect(dobInput).toHaveAttribute('aria-invalid', 'false')
         await saveChangesBtn.click()
         await expect(page.getByRole('button', { name: 'Chỉnh sửa hồ sơ' }).first()).toBeVisible()
+        expect(profileUpdates).toEqual([expect.objectContaining({ dob: '2000-07-19' })])
 
         // ==============================================================
         // TB-01: CV Builder Save to Profile on Mobile (Preview Tab)

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Briefcase, Calendar, DollarSign, Plus, Sparkles, X } from 'lucide-react'
 import type { CreateJobPayload, RecruiterJobItem } from '../recruiterJobTypes'
+import { CustomSelect } from '../../../components/ui/CustomSelect'
+import { DateInput } from '../../../components/ui/DateInput'
 import {
     EXPERIENCE_LABELS,
     JOB_TYPE_LABELS,
@@ -191,36 +193,26 @@ export function JobFormModal({
                             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-type">
                                 Hình thức làm việc <span className="text-rose-500">*</span>
                             </label>
-                            <select
+                            <CustomSelect
                                 id="job-type"
+                                aria-label="Hình thức làm việc"
                                 value={jobType}
-                                onChange={(e) => setJobType(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
-                            >
-                                {Object.entries(JOB_TYPE_LABELS).map(([val, label]) => (
-                                    <option key={val} value={val}>
-                                        {label}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={setJobType}
+                                options={Object.entries(JOB_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+                            />
                         </div>
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" htmlFor="job-experience">
                                 Cấp bậc / Kinh nghiệm <span className="text-rose-500">*</span>
                             </label>
-                            <select
+                            <CustomSelect
                                 id="job-experience"
+                                aria-label="Cấp bậc / Kinh nghiệm"
                                 value={experienceLevel}
-                                onChange={(e) => setExperienceLevel(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
-                            >
-                                {Object.entries(EXPERIENCE_LABELS).map(([val, label]) => (
-                                    <option key={val} value={val}>
-                                        {label}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={setExperienceLevel}
+                                options={Object.entries(EXPERIENCE_LABELS).map(([value, label]) => ({ value, label }))}
+                            />
                         </div>
                     </div>
 
@@ -324,12 +316,12 @@ export function JobFormModal({
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5" htmlFor="job-deadline">
                             <Calendar size={14} className="text-blue-700" /> Hạn nộp hồ sơ <span className="text-rose-500">*</span>
                         </label>
-                        <input
+                        <DateInput
                             id="job-deadline"
-                            type="date"
                             value={deadline}
-                            onChange={(e) => setDeadline(e.target.value)}
-                            className="w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-900 transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100"
+                            onChange={setDeadline}
+                            aria-label="Hạn nộp hồ sơ"
+                            className="sm:max-w-64"
                         />
                         {errors.deadline && <p className="mt-1 text-xs text-rose-500">{errors.deadline}</p>}
                     </div>

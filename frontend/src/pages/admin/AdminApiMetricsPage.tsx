@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Activity, AlertTriangle, Clock3, RefreshCw, Server, ShieldAlert } from 'lucide-react'
 import { AdminApiError, getAdminApiMetrics } from '../../features/admin/adminApi'
 import type { AdminApiMetricsResponse, ApiMetricsBucketResponse, ApiMetricsEndpointResponse } from '../../features/admin/adminTypes'
+import { CustomSelect } from '../../components/ui/CustomSelect'
 
 const numberFormat = new Intl.NumberFormat('vi-VN')
 
@@ -88,7 +89,7 @@ export function AdminApiMetricsPage() {
     const sortedEndpoints = [...(metrics?.endpoints ?? [])].sort((left, right) => right.requestCount - left.requestCount)
 
     return (
-        <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-[1760px] px-4 py-8 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Vận hành hệ thống</p>
@@ -97,11 +98,18 @@ export function AdminApiMetricsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <label className="sr-only" htmlFor="metrics-range">Khoảng thời gian</label>
-                    <select id="metrics-range" className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700" onChange={(event) => setHours(Number(event.target.value))} value={hours}>
-                        <option value={1}>1 giờ</option>
-                        <option value={6}>6 giờ</option>
-                        <option value={24}>24 giờ</option>
-                    </select>
+                    <CustomSelect
+                        id="metrics-range"
+                        aria-label="Khoảng thời gian"
+                        className="w-36"
+                        onChange={(value) => setHours(Number(value))}
+                        options={[
+                            { value: '1', label: '1 giờ' },
+                            { value: '6', label: '6 giờ' },
+                            { value: '24', label: '24 giờ' },
+                        ]}
+                        value={String(hours)}
+                    />
                     <button className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" onClick={() => setRefreshVersion((value) => value + 1)} type="button">
                         <RefreshCw aria-hidden="true" className={loading ? 'animate-spin' : ''} size={15} /> Làm mới
                     </button>

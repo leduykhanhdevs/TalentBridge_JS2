@@ -6,25 +6,31 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
 import vn.talentbridge.adapter.in.web.dto.request.ApplyParsedCvRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateCandidateProfileRequest;
+import vn.talentbridge.adapter.in.web.dto.response.AvatarUploadResult;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.core.application.dto.*;
+import vn.talentbridge.core.application.port.in.CandidateAvatarUseCase;
 import vn.talentbridge.core.application.port.in.CandidateSkillUseCase;
 import vn.talentbridge.core.application.port.in.GetCandidateProfileUseCase;
 import vn.talentbridge.core.application.port.in.ParseCvUseCase;
 import vn.talentbridge.core.application.port.in.UpdateCandidateProfileUseCase;
 import vn.talentbridge.core.application.port.in.WorkExperienceUseCase;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.time.Duration;
 import java.util.List;
 
 @Slf4j
@@ -40,6 +46,7 @@ public class CandidateProfileController {
     private final CandidateSkillUseCase candidateSkillUseCase;
     private final WorkExperienceUseCase workExperienceUseCase;
     private final ParseCvUseCase parseCvUseCase;
+    private final CandidateAvatarUseCase candidateAvatarUseCase;
 
     @GetMapping("/profile")
     @PreAuthorize("hasRole('CANDIDATE')")
@@ -77,6 +84,54 @@ public class CandidateProfileController {
 
         CandidateResult result = updateCandidateProfileUseCase.updateProfile(principal.getId(), command);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật hồ sơ ứng viên thành công", result));
+    }
+
+    @PostMapping(value = "/profile/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Tải ảnh đại diện ứng viên lên", description = "Hỗ trợ PNG/JPEG tối đa 5 MB")
+    public ResponseEntity<ApiResponse<AvatarUploadResult>> uploadAvatar(
+            @RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn ảnh đại diện.");
+        }
+        if (file.getSize() > 5L * 1024 * 1024) {
+            throw new IllegalArgumentException("Ảnh đại diện không được vượt quá 5 MB.");
+        }
+
+        try {
+            String fileName = candidateAvatarUseCase.upload(file.getBytes());
+            String avatarUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/api/v1/candidates/profile/avatar/{fileName}")
+                    .buildAndExpand(fileName)
+                    .toUriString();
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.created("Tải ảnh đại diện thành công", new AvatarUploadResult(avatarUrl)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Ảnh không hợp lệ hoặc không thể lưu được.", e);
+        }
+    }
+
+    @GetMapping("/profile/avatar/{fileName}")
+    @Operation(summary = "Lấy ảnh đại diện ứng viên")
+    public ResponseEntity<byte[]> getAvatar(@PathVariable String fileName) {
+        if (!fileName.matches("^[a-fA-F0-9-]{36}\\.(?:jpg|png)$")) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            byte[] bytes = candidateAvatarUseCase.load(fileName);
+            MediaType contentType = fileName.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
+            return ResponseEntity.ok()
+                    .contentType(contentType)
+                    .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable())
+                    .body(bytes);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PostMapping(value = "/profile/parse-cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

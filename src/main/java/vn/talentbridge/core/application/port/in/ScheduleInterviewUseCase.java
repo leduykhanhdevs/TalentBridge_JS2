@@ -13,5 +13,5 @@ public interface ScheduleInterviewUseCase {
 
     InterviewResult getLatestInterviewForApplication(Long userId, Long applicationId);
 
-    byte[] exportIcsCalendar(Long interviewId);
+    byte[] exportIcsCalendar(Long userId, String actorRole, Long interviewId);
 }

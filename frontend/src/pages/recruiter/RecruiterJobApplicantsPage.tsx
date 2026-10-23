@@ -27,6 +27,7 @@ import {
     getApplicantNotes,
     getApplicantStageHistory,
     getJobApplicants,
+    openApplicantResume,
     reopenApplicantApplication,
     updateApplicantStage,
 } from '../../features/recruiter/recruiterApplicantApi'
@@ -41,6 +42,8 @@ import { ScheduleInterviewModal } from '../../features/recruiter/components/Sche
 import { countApplicantsByStage } from '../../features/recruiter/recruiterApplicantMetrics'
 import { getCandidateJobAssessment } from '../../features/statistics/statisticsApi'
 import type { CandidateJobAssessment } from '../../features/statistics/statisticsTypes'
+import { CustomSelect } from '../../components/ui/CustomSelect'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 const PIPELINE_ORDER = ['APPLIED', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'HIRED', 'REJECTED']
 
@@ -154,6 +157,16 @@ export function RecruiterJobApplicantsPage() {
     function handleSearchSubmit(e: React.FormEvent) {
         e.preventDefault()
         fetchApplicants()
+    }
+
+    async function handleViewResume(applicant: JobApplicant) {
+        if (!applicant.resumeId) return
+        setErrorMsg(null)
+        try {
+            await openApplicantResume(numericJobId, applicant.resumeId, applicant.resumeFileName || 'CV')
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'Không thể mở CV ứng viên.')
+        }
     }
 
     async function handleAiMatch(applicant: JobApplicant) {
@@ -424,19 +437,16 @@ export function RecruiterJobApplicantsPage() {
                         <label htmlFor={stageSelectId} className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             Vòng tuyển dụng
                         </label>
-                        <select
+                        <CustomSelect
                             id={stageSelectId}
+                            aria-label="Vòng tuyển dụng"
                             value={stageFilter}
-                            onChange={(e) => setStageFilter(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
-                        >
-                            <option value="">Tất cả các vòng</option>
-                            {Object.entries(APPLICANT_STAGE_CONFIG).map(([val, conf]) => (
-                                <option key={val} value={val}>
-                                    {conf.label} ({val})
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setStageFilter}
+                            options={[
+                                { value: '', label: 'Tất cả các vòng' },
+                                ...Object.entries(APPLICANT_STAGE_CONFIG).map(([value, conf]) => ({ value, label: `${conf.label} (${value})` })),
+                            ]}
+                        />
                     </div>
 
                     {/* Min Experience */}
@@ -444,21 +454,20 @@ export function RecruiterJobApplicantsPage() {
                         <label htmlFor={expSelectId} className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             Kinh nghiệm tối thiểu
                         </label>
-                        <select
+                        <CustomSelect
                             id={expSelectId}
-                            value={minExpFilter}
-                            onChange={(e) =>
-                                setMinExpFilter(e.target.value === '' ? '' : Number(e.target.value))
-                            }
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
-                        >
-                            <option value="">Tất cả kinh nghiệm</option>
-                            <option value="1">1+ năm</option>
-                            <option value="2">2+ năm</option>
-                            <option value="3">3+ năm</option>
-                            <option value="5">5+ năm</option>
-                            <option value="8">8+ năm</option>
-                        </select>
+                            aria-label="Kinh nghiệm tối thiểu"
+                            value={minExpFilter === '' ? '' : String(minExpFilter)}
+                            onChange={(value) => setMinExpFilter(value === '' ? '' : Number(value))}
+                            options={[
+                                { value: '', label: 'Tất cả kinh nghiệm' },
+                                { value: '1', label: '1+ năm' },
+                                { value: '2', label: '2+ năm' },
+                                { value: '3', label: '3+ năm' },
+                                { value: '5', label: '5+ năm' },
+                                { value: '8', label: '8+ năm' },
+                            ]}
+                        />
                     </div>
 
                     {/* Sort By */}
@@ -467,17 +476,18 @@ export function RecruiterJobApplicantsPage() {
                             Sắp xếp theo
                         </label>
                         <div className="flex gap-2">
-                            <select
+                            <CustomSelect
                                 id={sortSelectId}
+                                aria-label="Sắp xếp theo"
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
-                            >
-                                <option value="appliedDate">Ngày nộp</option>
-                                <option value="score">Điểm AI Match</option>
-                                <option value="experience">Năm kinh nghiệm</option>
-                                <option value="fullName">Họ tên ứng viên</option>
-                            </select>
+                                onChange={setSortBy}
+                                options={[
+                                    { value: 'appliedDate', label: 'Ngày nộp' },
+                                    { value: 'score', label: 'Điểm AI Match' },
+                                    { value: 'experience', label: 'Năm kinh nghiệm' },
+                                    { value: 'fullName', label: 'Họ tên ứng viên' },
+                                ]}
+                            />
                             <button
                                 type="button"
                                 onClick={() =>
@@ -610,7 +620,7 @@ export function RecruiterJobApplicantsPage() {
                                                 <span className="flex items-center gap-1 shrink-0">
                                                     <Calendar size={12} className="text-slate-400 shrink-0" />
                                                     Nộp ngày:{' '}
-                                                    {new Date(app.appliedAt).toLocaleDateString('vi-VN')}
+                                                    {formatIsoDate(app.appliedAt)}
                                                 </span>
                                             </div>
 
@@ -670,17 +680,16 @@ export function RecruiterJobApplicantsPage() {
                                         </button>
 
                                         {/* Resume Link */}
-                                        {app.resumeUrl ? (
-                                            <a
-                                                href={app.resumeUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                        {app.resumeId ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => void handleViewResume(app)}
                                                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
-                                                title="Tải hoặc xem file CV"
+                                                title="Xem CV an toàn trong ứng dụng"
                                             >
                                                 <FileText size={13} />
                                                 <span>Xem CV</span>
-                                            </a>
+                                            </button>
                                         ) : (
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-400">
                                                 <FileText size={13} />

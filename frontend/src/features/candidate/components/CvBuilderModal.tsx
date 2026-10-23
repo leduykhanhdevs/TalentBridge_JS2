@@ -18,6 +18,7 @@ import type {
     WorkExperience
 } from '../candidateTypes'
 import { generateResume } from '../candidateApi'
+import { formatIsoDate } from '../../../components/ui/dateFormat'
 
 interface CvBuilderModalProps {
     isOpen: boolean
@@ -389,7 +390,7 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
                                                             <h4 className="text-xs font-bold text-gray-900">{exp.position}</h4>
                                                             <p className="text-xs font-medium text-gray-600">{exp.companyName}</p>
                                                             <p className="text-[10px] text-gray-400 mt-0.5">
-                                                                {exp.startDate} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate || 'Hiện tại')}
+                                                                {formatIsoDate(exp.startDate)} – {exp.isCurrent ? 'Hiện tại' : (formatIsoDate(exp.endDate) || 'Hiện tại')}
                                                             </p>
                                                             {exp.description && (
                                                                 <p className="text-xs text-gray-600 mt-1.5 leading-relaxed whitespace-pre-line">
@@ -446,7 +447,7 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
                                             <div key={exp.id} className="mb-3.5">
                                                 <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between">
                                                     <span className="font-bold text-gray-900">{exp.position} — <span className="font-semibold text-gray-700">{exp.companyName}</span></span>
-                                                    <span className="text-[11px] text-gray-500">{exp.startDate} – {exp.isCurrent ? 'Nay' : (exp.endDate || 'Nay')}</span>
+                                                    <span className="text-[11px] text-gray-500">{formatIsoDate(exp.startDate)} – {exp.isCurrent ? 'Nay' : (formatIsoDate(exp.endDate) || 'Nay')}</span>
                                                 </div>
                                                 {exp.description && (
                                                     <p className="text-xs text-gray-600 mt-1 leading-relaxed">
@@ -534,7 +535,7 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
                                                 <div key={exp.id} className="border-b last:border-0 pb-3 last:pb-0">
                                                     <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between">
                                                         <span className="font-bold text-gray-900">{exp.position}</span>
-                                                        <span className="text-[10px] text-gray-400">{exp.startDate} - {exp.isCurrent ? 'Nay' : (exp.endDate || 'Nay')}</span>
+                                                        <span className="text-[10px] text-gray-400">{formatIsoDate(exp.startDate)} – {exp.isCurrent ? 'Nay' : (formatIsoDate(exp.endDate) || 'Nay')}</span>
                                                     </div>
                                                     <p className="text-xs font-medium text-gray-600">{exp.companyName}</p>
                                                     {exp.description && (

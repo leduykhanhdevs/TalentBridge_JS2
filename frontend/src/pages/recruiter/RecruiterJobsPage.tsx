@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
     AlertCircle,
     Archive,
@@ -11,7 +12,9 @@ import {
     Plus,
     Search,
 } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { getStoredUser } from '../../features/auth/tokenStorage'
+import { getRecruiterProfile } from '../../features/recruiter/recruiterApi'
 import {
     closeJob,
     createJob,
@@ -27,6 +30,7 @@ import {
     formatJobSalary,
 } from '../../features/recruiter/recruiterJobValidation'
 import { JobFormModal } from '../../features/recruiter/components/JobFormModal'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 const JOB_STATUS_TABS: Array<{ label: string; value: JobStatus | '' }> = [
     { label: 'Tất cả', value: '' },
@@ -54,6 +58,11 @@ const JOB_STATUS_STYLES: Record<JobStatus, string> = {
 }
 
 export function RecruiterJobsPage() {
+    const navigate = useNavigate()
+    const profileQuery = useQuery({
+        queryKey: ['recruiter-profile', getStoredUser()?.id ?? 'anonymous'],
+        queryFn: getRecruiterProfile,
+    })
     const [jobs, setJobs] = useState<RecruiterJobItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -93,8 +102,13 @@ export function RecruiterJobsPage() {
     }, [page, pageSize, statusFilter])
 
     useEffect(() => {
+        if (profileQuery.isPending) return
+        if (!profileQuery.data?.companyId) {
+            setIsLoading(false)
+            return
+        }
         loadJobs()
-    }, [loadJobs])
+    }, [loadJobs, profileQuery.data?.companyId, profileQuery.isPending])
 
     // Filter jobs client-side by keyword
     const filteredJobs = jobs.filter((job) => {
@@ -142,6 +156,33 @@ export function RecruiterJobsPage() {
             const msg = err instanceof Error ? err.message : 'Không thể đóng tin tuyển dụng.'
             setErrorMsg(msg)
         }
+    }
+
+    if (profileQuery.isPending) {
+        return <div className="bento-card p-10 text-center text-sm text-slate-500" role="status">Đang kiểm tra liên kết doanh nghiệp…</div>
+    }
+
+    if (profileQuery.isError) {
+        return (
+            <section className="bento-card mx-auto max-w-xl p-8 text-center" role="alert">
+                <h1 className="text-lg font-bold text-slate-900">Không thể kiểm tra doanh nghiệp</h1>
+                <p className="mt-2 text-sm text-slate-600">{profileQuery.error instanceof Error ? profileQuery.error.message : 'Vui lòng thử tải lại.'}</p>
+                <button className="mt-4 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" onClick={() => void profileQuery.refetch()} type="button">Thử lại</button>
+            </section>
+        )
+    }
+
+    if (!profileQuery.data?.companyId) {
+        return (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/50 p-4" role="presentation">
+                <section aria-labelledby="recruiter-company-required-title" aria-modal="true" className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xl" role="alertdialog">
+                    <span className="mx-auto grid size-12 place-items-center rounded-xl bg-amber-50 text-amber-700"><Briefcase aria-hidden="true" size={23} /></span>
+                    <h1 className="mt-4 text-lg font-bold text-slate-900" id="recruiter-company-required-title">Bạn cần liên kết doanh nghiệp trước khi tuyển dụng</h1>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Hãy tạo doanh nghiệp hoặc gửi yêu cầu gia nhập để bắt đầu quản lý tin tuyển dụng.</p>
+                    <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 text-sm font-semibold text-white transition hover:bg-blue-800" onClick={() => navigate('/recruiter/company')} type="button">Đóng</button>
+                </section>
+            </div>
+        )
     }
 
     return (
@@ -285,7 +326,7 @@ export function RecruiterJobsPage() {
                                         <p className="mt-1 text-sm text-slate-600">
                                             {formatJobSalary(job.minSalary, job.maxSalary, job.isNegotiable)}
                                             <span aria-hidden="true" className="px-2 text-slate-300">·</span>
-                                            Hạn {job.deadline ? new Date(job.deadline).toLocaleDateString('vi-VN') : 'chưa đặt'}
+                                            Hạn {job.deadline ? formatIsoDate(job.deadline) : 'chưa đặt'}
                                         </p>
                                         <span className={`mt-2 inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${JOB_STATUS_STYLES[job.status]}`}>
                                             {JOB_STATUS_LABELS[job.status]}

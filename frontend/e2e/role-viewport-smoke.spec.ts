@@ -41,6 +41,18 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         const pageErrors: string[] = []
         page.on('pageerror', (error) => pageErrors.push(error.message))
 
+        if (actor.name === 'recruiter') {
+            await page.route('**/api/v1/recruiters/profile', async (route) => route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    statusCode: 200,
+                    message: 'OK',
+                    data: { id: 2, userId: 2, fullName: 'QA Recruiter', email: actor.email, status: 'ACTIVE', companyId: 2, companyName: 'QA Company', companyStatus: 'APPROVED' },
+                }),
+            }))
+        }
+
         await page.goto(`${baseURL}/login`)
         await page.getByLabel('Email').fill(actor.email)
         await page.getByLabel('Mật khẩu').fill(actor.password)
@@ -52,7 +64,8 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
         await expect(page.getByRole('heading', { name: actor.heading, exact: false }).first()).toBeVisible()
         if (actor.name === 'candidate') {
             await expect(page.getByRole('heading', { name: 'Thể hiện năng lực bằng trải nghiệm', exact: true })).toBeVisible()
-            await expect(page.getByRole('complementary')).toContainText(actor.heading)
+            await expect(page.locator('#workspace-navigation')).toContainText(actor.heading)
+            await expect(page.locator('aside:not(#workspace-navigation)')).toContainText(actor.heading)
             await expect(page.getByRole('region', { name: 'Nội dung hồ sơ' })).toBeVisible()
         }
         if (actor.name === 'recruiter') {
@@ -78,8 +91,8 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
             await page.setViewportSize({ width: 360, height: 900 })
             const assistantLabel = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý'
             const assistantPath = actor.name === 'admin' ? '/admin/assistant' : '/assistant'
-            const assistantHeading = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý TalentBridge'
-            if (actor.name === 'recruiter') await page.getByRole('button', { name: 'Mở điều hướng' }).click()
+            const assistantHeading = actor.name === 'admin' ? 'Trợ lý quản trị' : 'Trợ lý nhà tuyển dụng'
+            await page.getByRole('button', { name: 'Mở điều hướng' }).click()
             await page.getByRole('link', { name: assistantLabel, exact: true }).click()
             await expect(page).toHaveURL(new RegExp(`${assistantPath.replaceAll('/', '\\/')}$`))
             await expect(page.getByRole('heading', { name: assistantHeading, level: 1 })).toBeVisible()

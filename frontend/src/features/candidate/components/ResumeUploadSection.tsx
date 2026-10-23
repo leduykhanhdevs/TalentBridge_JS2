@@ -17,6 +17,7 @@ import {
     CandidateApiError,
 } from '../candidateApi'
 import type { ResumeItem } from '../candidateTypes'
+import { formatIsoDate } from '../../../components/ui/dateFormat'
 import { EmptyStateIllustration, CvManagerIllustration } from '../../../components/illustrations'
 
 interface ResumeUploadSectionProps {
@@ -220,7 +221,7 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
                                             )}
                                         </div>
                                         <p className="mt-0.5 max-w-full truncate text-xs text-slate-500 sm:max-w-md">
-                                            {resume.fileName} &bull; Tải lên ngày {resume.createdAt ? resume.createdAt.split('T')[0] : ''}
+                                            {resume.fileName} &bull; Tải lên ngày {formatIsoDate(resume.createdAt)}
                                         </p>
                                     </div>
                                 </div>

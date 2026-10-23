@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Briefcase, X } from 'lucide-react'
 import { addWorkExperience, updateWorkExperience, CandidateApiError } from '../candidateApi'
 import type { WorkExperience, WorkExperienceRequest } from '../candidateTypes'
+import { DateInput } from '../../../components/ui/DateInput'
 
 interface WorkExperienceModalProps {
     isOpen: boolean
@@ -17,6 +18,8 @@ interface WorkExperienceFormProps {
 }
 
 function WorkExperienceForm({ initialData, onClose, onSuccess }: WorkExperienceFormProps) {
+    const now = new Date()
+    const maxDate = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10)
     const [companyName, setCompanyName] = useState(initialData?.companyName || '')
     const [position, setPosition] = useState(initialData?.position || '')
     const [startDate, setStartDate] = useState(initialData?.startDate || '')
@@ -149,13 +152,12 @@ function WorkExperienceForm({ initialData, onClose, onSuccess }: WorkExperienceF
                             Ngày bắt đầu <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
-                            <input
-                                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                                disabled={loading}
+                            <DateInput
                                 id="start-date"
-                                onChange={(e) => setStartDate(e.target.value)}
+                                disabled={loading}
+                                max={maxDate}
+                                onChange={setStartDate}
                                 required
-                                type="date"
                                 value={startDate}
                             />
                         </div>
@@ -165,12 +167,12 @@ function WorkExperienceForm({ initialData, onClose, onSuccess }: WorkExperienceF
                         <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor="end-date">
                             Ngày kết thúc
                         </label>
-                        <input
-                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400"
-                            disabled={loading || isCurrent}
+                        <DateInput
                             id="end-date"
-                            onChange={(e) => setEndDate(e.target.value)}
-                            type="date"
+                            disabled={loading || isCurrent}
+                            max={maxDate}
+                            onChange={setEndDate}
+                            required={!isCurrent}
                             value={isCurrent ? '' : endDate}
                         />
                     </div>
