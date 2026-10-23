@@ -18,6 +18,7 @@ import vn.talentbridge.core.domain.model.Application;
 import vn.talentbridge.core.domain.model.Candidate;
 import vn.talentbridge.core.domain.model.Job;
 import vn.talentbridge.core.domain.model.Resume;
+import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.JobStatus;
 
 import java.time.LocalDate;
@@ -176,6 +177,13 @@ class ApplyJobUseCaseImplTest {
     private void stubCandidateAndJob(Job job) {
         Candidate candidate = new Candidate();
         candidate.setId(20L);
+        User user = new User();
+        user.setId(10L);
+        user.setEmail("candidate@example.invalid");
+        user.setPhoneNumber("+84912345678");
+        user.setEmailVerified(true);
+        user.setPhoneVerified(true);
+        candidate.setUser(user);
         when(candidateRepository.findByUserId(10L))
                 .thenReturn(Optional.of(candidate));
         when(jobRepository.findById(5L)).thenReturn(Optional.of(job));

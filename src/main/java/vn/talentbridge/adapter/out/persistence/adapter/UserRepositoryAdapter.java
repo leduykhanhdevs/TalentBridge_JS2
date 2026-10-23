@@ -61,6 +61,8 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
         entity.setPasswordHash(domainUser.getPasswordHash());
         entity.setFullName(domainUser.getFullName());
         entity.setPhoneNumber(domainUser.getPhoneNumber());
+        entity.setEmailVerified(domainUser.isEmailVerified());
+        entity.setPhoneVerified(domainUser.isPhoneVerified());
         entity.setAvatarUrl(domainUser.getAvatarUrl());
         entity.setStatus(domainUser.getStatus());
 
@@ -127,7 +129,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
                 })
                 .collect(Collectors.toSet());
 
-        return new User(
+        User user = new User(
                 entity.getId(),
                 entity.getEmail(),
                 entity.getPasswordHash(),
@@ -139,5 +141,8 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
+        user.setEmailVerified(entity.isEmailVerified());
+        user.setPhoneVerified(entity.isPhoneVerified());
+        return user;
     }
 }

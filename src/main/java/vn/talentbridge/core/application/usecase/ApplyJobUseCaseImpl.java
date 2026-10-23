@@ -50,6 +50,12 @@ public class ApplyJobUseCaseImpl implements ApplyJobUseCase {
         Candidate candidate = candidateRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Hồ sơ ứng viên", userId));
 
+        if (candidate.getUser() == null
+                || !candidate.getUser().isEmailVerified()
+                || !candidate.getUser().isPhoneVerified()) {
+            throw new IllegalArgumentException("Bạn cần xác minh email và số điện thoại trước khi ứng tuyển.");
+        }
+
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng", jobId));
 

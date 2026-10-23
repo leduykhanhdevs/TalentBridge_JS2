@@ -226,6 +226,259 @@ test('recruiter CV preview uses the authenticated, scoped download endpoint', as
     await expect(preview.getByRole('link', { name: /Tải CV/ })).toHaveAttribute('download', 'candidate.pdf')
 })
 
+test('recruiter must confirm before cancelling an applicant', async ({ page }) => {
+    await installSession(page, 806, 'ROLE_RECRUITER')
+    let stageUpdate: Record<string, unknown> | undefined
+    const applicant = {
+        id: 55, jobId: 77, jobTitle: 'Backend Engineer', candidateId: 12,
+        candidateFullName: 'Ứng viên cần xác nhận', candidateEmail: 'cancel@example.invalid',
+        candidateTitle: 'Backend Developer', currentStage: 'APPLIED', status: 'APPLIED',
+        resumeId: 93, resumeFileName: 'candidate.pdf', appliedAt: '2026-10-20T00:00:00Z', notesCount: 0,
+    }
+    await page.route('**/api/v1/recruiters/jobs/77/applicants*', async (route) => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(apiResponse([applicant])),
+    }))
+    await page.route('**/api/v1/recruiters/jobs/77/applicants/55/stage', async (route) => {
+        stageUpdate = route.request().postDataJSON() as Record<string, unknown>
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(apiResponse({ ...applicant, ...stageUpdate, currentStage: 'REJECTED', status: 'REJECTED' })),
+        })
+    })
+
+    await page.goto('/recruiter/jobs/77/applicants')
+    await page.getByRole('button', { name: 'Hủy ứng viên' }).click()
+    const confirmation = page.getByRole('dialog', { name: 'Xác nhận hủy ứng viên' })
+    await expect(confirmation).toContainText('Ứng viên cần xác nhận')
+    await expect(confirmation.getByRole('button', { name: 'Xác nhận hủy' })).toBeVisible()
+    expect(stageUpdate).toBeUndefined()
+
+    await confirmation.getByRole('button', { name: 'Quay lại' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(stageUpdate).toBeUndefined()
+
+    await page.getByRole('button', { name: 'Hủy ứng viên' }).click()
+    await page.getByRole('dialog', { name: 'Xác nhận hủy ứng viên' }).getByRole('button', { name: 'Xác nhận hủy' }).click()
+    await expect.poll(() => stageUpdate?.stage).toBe('REJECTED')
+    await expect(page.getByText(/Đã hủy hồ sơ ứng tuyển/)).toBeVisible()
+})
+
+test('candidate verifies email and phone, then applies with their saved primary CV', async ({ page }) => {
+    await installSession(page, 807, 'ROLE_CANDIDATE')
+    const verification = { emailVerified: false, phoneVerified: false, maskedEmail: 'q***@example.invalid', maskedPhone: '***4567' }
+    const resumes = [{
+        id: 94, candidateId: 807, title: 'CV chính của tôi', fileName: 'my-cv.pdf',
+        fileUrl: 'resumes/807/my-cv.pdf', fileType: 'application/pdf', resumeType: 'UPLOADED',
+        isDefault: true, createdAt: '2026-10-21T00:00:00Z',
+    }]
+    let applicationRequest: Record<string, unknown> | undefined
+    let currentVerification = { ...verification }
+
+    await page.route('**/api/v1/jobs/102', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify(apiResponse({
+            id: 102, companyId: 3, companyName: 'QA Company', title: 'QA Engineer',
+            description: 'Test product behavior', requirements: 'Testing', benefits: 'Flexible',
+            location: 'Hà Nội', jobType: 'FULL_TIME', experienceLevel: 'MID', minSalary: null,
+            maxSalary: null, deadline: '2026-12-31', status: 'ACTIVE', isDemo: false,
+            createdAt: '2026-10-01T00:00:00Z', updatedAt: null,
+        })),
+    }))
+    await page.route('**/api/v1/ai/jobs/102/my-fit', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify(apiResponse({
+            match: { matchPercentage: 75, matchingStrengths: ['Testing'], missingCriticalSkills: [] },
+            profileCompletenessPercentage: 80,
+            missingProfileSections: [],
+            candidateOverallAssessment: 'Hồ sơ phù hợp ở mức tham khảo.',
+            advisoryNotice: 'Kết quả AI chỉ mang tính tham khảo.',
+            resumeAssessmentStatus: 'NO_RESUME',
+        })),
+    }))
+    await page.route('**/api/v1/candidates/applications', async (route) => {
+        if (route.request().method() === 'GET') {
+            await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse([])) })
+            return
+        }
+        applicationRequest = route.request().postDataJSON() as Record<string, unknown>
+        await route.fulfill({
+            status: 201, contentType: 'application/json',
+            body: JSON.stringify(apiResponse({ id: 950, jobId: 102, resumeId: 94, status: 'SUBMITTED', currentStage: 'APPLIED' }, 201)),
+        })
+    })
+    await page.route('**/api/v1/candidates/contact-verification', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(currentVerification)),
+    }))
+    await page.route('**/api/v1/candidates/contact-verification/*/request', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(null)),
+    }))
+    await page.route('**/api/v1/candidates/contact-verification/*/verify', async (route) => {
+        const channel = new URL(route.request().url()).pathname.split('/').at(-2)
+        currentVerification = {
+            ...currentVerification,
+            ...(channel === 'EMAIL' ? { emailVerified: true } : { phoneVerified: true }),
+        }
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(currentVerification)) })
+    })
+    await page.route('**/api/v1/candidates/resumes', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(resumes)),
+    }))
+
+    await page.goto('/jobs/102')
+    await page.getByRole('button', { name: 'Ứng tuyển ngay' }).first().click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('region', { name: 'Xác minh thông tin liên hệ' })).toBeVisible()
+    await expect(dialog.getByText('Chọn CV ứng tuyển')).toHaveCount(0)
+
+    await dialog.getByRole('button', { name: 'Gửi mã xác minh' }).nth(0).click()
+    await dialog.getByLabel('Mã OTP Email').fill('123456')
+    await dialog.getByRole('button', { name: 'Xác minh' }).nth(0).click()
+    await expect(dialog.getByText('Đã xác minh').first()).toBeVisible()
+
+    await dialog.getByRole('button', { name: 'Gửi mã xác minh' }).click()
+    await dialog.getByLabel('Mã OTP Số điện thoại qua Zalo').fill('654321')
+    await dialog.getByRole('button', { name: 'Xác minh' }).click()
+    await expect(dialog.getByText('Chọn CV ứng tuyển')).toBeVisible()
+    await expect(dialog.getByRole('region', { name: 'Xác minh thông tin liên hệ' })).toHaveCount(0)
+    await expect(dialog.getByText('CV chính của tôi')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Xác nhận ứng tuyển' }).click()
+    await expect.poll(() => applicationRequest?.resumeId).toBe(94)
+    await expect(dialog.getByText('Ứng tuyển thành công!')).toBeVisible()
+})
+
+test('candidate can upload a CV from the application dialog when no saved CV exists', async ({ page }) => {
+    await installSession(page, 809, 'ROLE_CANDIDATE')
+    const uploadedResume = {
+        id: 96, candidateId: 809, title: 'CV tải khi ứng tuyển', fileName: 'apply-now.pdf',
+        fileUrl: 'resumes/809/apply-now.pdf', fileType: 'application/pdf', resumeType: 'UPLOADED',
+        isDefault: false, createdAt: '2026-10-22T00:00:00Z',
+    }
+    let savedResumes: typeof uploadedResume[] = []
+    let appliedResumeId: unknown
+
+    await page.route('**/api/v1/jobs/103', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify(apiResponse({
+            id: 103, companyId: 3, companyName: 'QA Company', title: 'Frontend QA Engineer',
+            description: 'Test product behavior', requirements: 'Testing', benefits: 'Flexible',
+            location: 'Hà Nội', jobType: 'FULL_TIME', experienceLevel: 'MID', minSalary: null,
+            maxSalary: null, deadline: '2026-12-31', status: 'ACTIVE', isDemo: false,
+            createdAt: '2026-10-01T00:00:00Z', updatedAt: null,
+        })),
+    }))
+    await page.route('**/api/v1/ai/jobs/103/my-fit', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify(apiResponse({
+            match: { matchPercentage: 50, matchingStrengths: [], missingCriticalSkills: [] },
+            profileCompletenessPercentage: 50, missingProfileSections: [],
+            candidateOverallAssessment: 'Đánh giá tham khảo.',
+            advisoryNotice: 'Kết quả chỉ mang tính tham khảo.',
+            resumeAssessmentStatus: 'NO_RESUME',
+        })),
+    }))
+    await page.route('**/api/v1/candidates/applications', async (route) => {
+        if (route.request().method() === 'GET') {
+            await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse([])) })
+            return
+        }
+        appliedResumeId = (route.request().postDataJSON() as Record<string, unknown>).resumeId
+        await route.fulfill({
+            status: 201, contentType: 'application/json',
+            body: JSON.stringify(apiResponse({ id: 951, jobId: 103, resumeId: uploadedResume.id, status: 'SUBMITTED', currentStage: 'APPLIED' }, 201)),
+        })
+    })
+    await page.route('**/api/v1/candidates/contact-verification', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify(apiResponse({ emailVerified: true, phoneVerified: true, maskedEmail: 'q***@example.invalid', maskedPhone: '***4567' })),
+    }))
+    await page.route('**/api/v1/candidates/resumes', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(savedResumes)),
+    }))
+    await page.route('**/api/v1/candidates/resumes/upload', async (route) => {
+        savedResumes = [uploadedResume]
+        await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(apiResponse(uploadedResume, 201)) })
+    })
+
+    await page.goto('/jobs/103')
+    await page.getByRole('button', { name: 'Ứng tuyển ngay' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText('Bạn chưa có CV nào trong mục CV của tôi')).toBeVisible()
+    await dialog.locator('input[type="file"]').last().setInputFiles({
+        name: 'apply-now.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\nQA application CV'),
+    })
+    await expect(dialog.getByText('CV tải khi ứng tuyển')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Xác nhận ứng tuyển' }).click()
+    await expect.poll(() => appliedResumeId).toBe(uploadedResume.id)
+    await expect(dialog.getByText('Ứng tuyển thành công!')).toBeVisible()
+})
+
+test('candidate importing a CV keeps the original file in My CV after profile sync', async ({ page }) => {
+    await installSession(page, 808, 'ROLE_CANDIDATE')
+    const profile = {
+        id: 808, userId: 808, fullName: 'QA Candidate', email: 'qa-808@example.invalid', phone: '0901234567',
+        avatarUrl: null, status: 'ACTIVE', title: null, dob: null, gender: 'OTHER', summary: null,
+        experienceYears: 0, currentSalary: null, expectedSalary: null, city: null, address: null,
+        personalWebsite: null, linkedinUrl: null, githubUrl: null, createdAt: null, updatedAt: null,
+    }
+    const savedResume = {
+        id: 95, candidateId: 808, title: 'my-imported-cv', fileName: 'my-imported-cv.pdf',
+        fileUrl: 'resumes/808/my-imported-cv.pdf', fileType: 'application/pdf', resumeType: 'UPLOADED',
+        isDefault: true, createdAt: '2026-10-21T00:00:00Z',
+    }
+    let storedResumes: Array<typeof savedResume> = []
+    let uploadRequests = 0
+    let parseRequests = 0
+
+    await page.route('**/api/v1/candidates/profile', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(profile)),
+    }))
+    await page.route('**/api/v1/candidates/work-experiences', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse([])),
+    }))
+    await page.route('**/api/v1/candidates/skills', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse([])),
+    }))
+    await page.route('**/api/v1/skills', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse([])),
+    }))
+    await page.route('**/api/v1/candidates/resumes', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(storedResumes)),
+    }))
+    await page.route('**/api/v1/candidates/resumes/upload', async (route) => {
+        uploadRequests += 1
+        storedResumes = [savedResume]
+        await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(apiResponse(savedResume, 201)) })
+    })
+    await page.route('**/api/v1/candidates/profile/parse-cv', async (route) => {
+        parseRequests += 1
+        await route.fulfill({
+            status: 200, contentType: 'application/json',
+            body: JSON.stringify(apiResponse({
+                fullName: 'QA Candidate', phone: '0901234567', title: 'QA Engineer', city: 'Hà Nội',
+                summary: 'Quality assurance', skills: ['Testing'], experiences: [],
+            })),
+        })
+    })
+    await page.route('**/api/v1/candidates/profile/apply-parsed-cv', async (route) => route.fulfill({
+        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(profile)),
+    }))
+
+    await page.goto('/candidate/profile')
+    await page.getByRole('button', { name: 'Nhập nhanh từ CV' }).click()
+    await page.locator('input[type="file"]').last().setInputFiles({
+        name: 'my-imported-cv.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\nQA CV'),
+    })
+    await expect(page.getByText(/KỸ NĂNG NHẬN DIỆN ĐƯỢC \(1\)/i)).toBeVisible()
+    await page.getByRole('button', { name: 'Đồng bộ vào Hồ sơ TalentBridge' }).click()
+    await expect(page.locator('p').filter({ hasText: /my-imported-cv\.pdf\s+• Tải lên ngày/ })).toBeVisible({ timeout: 10_000 })
+    expect(uploadRequests).toBe(1)
+    expect(parseRequests).toBe(1)
+    await expect(page.getByRole('heading', { name: 'Nhập nhanh thông tin từ file CV' })).toHaveCount(0)
+})
+
 test('recruiter without a company is directed to company linking before seeing jobs', async ({ page }) => {
     await installSession(page, 805, 'ROLE_RECRUITER')
     let myJobsRequests = 0

@@ -13,6 +13,8 @@ public class User {
     private String passwordHash;
     private String fullName;
     private String phoneNumber;
+    private boolean emailVerified;
+    private boolean phoneVerified;
     private String avatarUrl;
     private UserStatus status;
     private Set<Role> roles = new HashSet<>();
@@ -74,7 +76,12 @@ public class User {
     public void setId(Long id) { this.id = id; }
 
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) {
+        if (this.email != null && !this.email.equalsIgnoreCase(email)) {
+            this.emailVerified = false;
+        }
+        this.email = email;
+    }
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
@@ -83,7 +90,16 @@ public class User {
     public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getPhoneNumber() { return phoneNumber; }
-    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) {
+        if (this.phoneNumber != null && !this.phoneNumber.equals(phoneNumber)) {
+            this.phoneVerified = false;
+        }
+        this.phoneNumber = phoneNumber;
+    }
+    public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+    public boolean isPhoneVerified() { return phoneVerified; }
+    public void setPhoneVerified(boolean phoneVerified) { this.phoneVerified = phoneVerified; }
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test('lỗi phê duyệt hiển thị trong modal và người quản trị có thể thử lại', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('Email').fill('admin@talentbridge.vn')
-    await page.getByLabel('Mật khẩu').fill('AdminPassword123!')
+    await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill('AdminPassword123!')
     await Promise.all([
         page.waitForURL((url) => !url.pathname.endsWith('/login')),
         page.getByRole('button', { name: 'Đăng nhập' }).click(),
@@ -82,7 +82,7 @@ test('lỗi phê duyệt hiển thị trong modal và người quản trị có 
 test('xác minh lại trạng thái khi máy chủ đã duyệt nhưng phản hồi bị mất', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('Email').fill('admin@talentbridge.vn')
-    await page.getByLabel('Mật khẩu').fill('AdminPassword123!')
+    await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill('AdminPassword123!')
     await Promise.all([
         page.waitForURL((url) => !url.pathname.endsWith('/login')),
         page.getByRole('button', { name: 'Đăng nhập' }).click(),

@@ -54,7 +54,7 @@ test('đăng nhập 3 vai trò, chụp giao diện và kiểm tra tràn ngang t�
 
         await page.goto(`${baseURL}/login`)
         await page.getByLabel('Email').fill(actor.email)
-        await page.getByLabel('Mật khẩu').fill(actor.password)
+        await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill(actor.password)
         await Promise.all([
             page.waitForURL((url) => !url.pathname.endsWith('/login')),
             page.getByRole('button', { name: 'Đăng nhập' }).click(),

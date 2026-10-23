@@ -13,6 +13,7 @@ import type {
     ParsedCvResult,
     ApplyParsedCvPayload,
     CandidateInterviewItem,
+    ContactVerificationStatus,
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
 import { authenticatedFetch } from '../auth/authenticatedFetch'
@@ -319,6 +320,47 @@ export async function uploadResume(file: File, title?: string): Promise<ResumeIt
     }
 
     const payload: ApiResponse<ResumeItem> = await res.json()
+    return payload.data
+}
+
+export async function getContactVerificationStatus(): Promise<ContactVerificationStatus> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/candidates/contact-verification`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    })
+    if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new CandidateApiError(response.status, error?.message || 'Không thể tải trạng thái xác minh liên hệ.')
+    }
+    const payload: ApiResponse<ContactVerificationStatus> = await response.json()
+    return payload.data
+}
+
+export async function requestContactVerificationCode(channel: 'EMAIL' | 'PHONE'): Promise<void> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/candidates/contact-verification/${channel}/request`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    })
+    if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new CandidateApiError(response.status, error?.message || 'Không thể gửi mã xác minh.')
+    }
+}
+
+export async function verifyContactVerificationCode(
+    channel: 'EMAIL' | 'PHONE',
+    otp: string,
+): Promise<ContactVerificationStatus> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/candidates/contact-verification/${channel}/verify`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ otp }),
+    })
+    if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new CandidateApiError(response.status, error?.message || 'Mã xác minh không hợp lệ.')
+    }
+    const payload: ApiResponse<ContactVerificationStatus> = await response.json()
     return payload.data
 }
 

@@ -97,6 +97,15 @@ public class PasswordResetTokenRepositoryAdapter
     }
 
     @Override
+    public int invalidateUnusedByUserIdAndPurpose(
+            Long userId,
+            Purpose purpose,
+            LocalDateTime usedAt
+    ) {
+        return tokenJpaRepository.invalidateUnusedByUserIdAndPurpose(userId, purpose, usedAt);
+    }
+
+    @Override
     public boolean markUsedIfUsable(
             String tokenHash,
             Purpose purpose,

@@ -4,6 +4,8 @@ import {
     BriefcaseBusiness,
     Building2,
     CheckCircle2,
+    Eye,
+    EyeOff,
     LoaderCircle,
     LockKeyhole,
     Mail,
@@ -38,6 +40,7 @@ export function RegisterPage() {
     const navigate = useNavigate()
     const [formValues, setFormValues] = useState<RegisterFormValues>(initialFormValues)
     const [acceptedTerms, setAcceptedTerms] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<RegisterFormErrors>({})
     const [serverError, setServerError] = useState('')
     const [successMessage, setSuccessMessage] = useState('')
@@ -167,7 +170,16 @@ export function RegisterPage() {
                                 <label className="mb-1.5 block text-xs font-semibold text-slate-800" htmlFor="register-password">Mật khẩu</label>
                                 <div className="relative">
                                     <LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                    <input aria-describedby={fieldErrors.password ? 'register-password-error' : 'register-password-help'} aria-invalid={Boolean(fieldErrors.password)} autoComplete="new-password" className={inputClass('password')} id="register-password" name="password" onChange={(event) => updateField('password', event.target.value)} placeholder="Tối thiểu 6 ký tự" type="password" value={formValues.password} />
+                                    <input aria-describedby={fieldErrors.password ? 'register-password-error' : 'register-password-help'} aria-invalid={Boolean(fieldErrors.password)} autoComplete="new-password" className={`${inputClass('password')} pr-11`} id="register-password" name="password" onChange={(event) => updateField('password', event.target.value)} placeholder="Tối thiểu 6 ký tự" type={showPassword ? 'text' : 'password'} value={formValues.password} />
+                                    <button
+                                        aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                                        aria-pressed={showPassword}
+                                        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+                                        onClick={() => setShowPassword((visible) => !visible)}
+                                        type="button"
+                                    >
+                                        {showPassword ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
+                                    </button>
                                 </div>
                                 <FieldError id="register-password-error" message={fieldErrors.password} />
                                 {!fieldErrors.password && <p className="mt-1 text-[11px] text-slate-500" id="register-password-help">Sử dụng ít nhất 6 ký tự.</p>}
