@@ -121,6 +121,7 @@ describe('auth API fallback errors', () => {
             registerCandidate({
                 fullName: 'Local Diagnostic',
                 email: 'local-diagnostic@example.invalid',
+                phone: '0912345678',
                 password: 'not-a-real-account-password',
                 role: 'ROLE_CANDIDATE',
             }),

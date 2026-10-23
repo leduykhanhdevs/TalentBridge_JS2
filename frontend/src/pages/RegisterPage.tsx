@@ -4,7 +4,6 @@ import {
     BriefcaseBusiness,
     Building2,
     CheckCircle2,
-    ChevronDown,
     LoaderCircle,
     LockKeyhole,
     Mail,
@@ -16,21 +15,10 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { HeroTalentIllustration } from '../components/illustrations'
 import { AuthApiError, registerCandidate, LOGOUT_TIMEOUT_MS } from '../features/auth/authApi'
+import { validateRegisterForm, type RegisterFormErrors, type RegisterFormValues } from '../features/auth/registerValidation'
 import { saveAuthTokens } from '../features/auth/tokenStorage'
 import { REFRESH_TIMEOUT_MS } from '../features/auth/sessionRefresh'
 import { withAuthSessionLock } from '../features/auth/authSessionLock'
-
-type RegisterRole = 'ROLE_CANDIDATE' | 'ROLE_RECRUITER'
-type RegisterFormValues = {
-    fullName: string
-    email: string
-    phone: string
-    password: string
-    role: RegisterRole
-    position: string
-}
-type RegisterField = keyof RegisterFormValues | 'terms'
-type RegisterFormErrors = Partial<Record<RegisterField, string>>
 
 const initialFormValues: RegisterFormValues = {
     fullName: '',
@@ -39,25 +27,6 @@ const initialFormValues: RegisterFormValues = {
     password: '',
     role: 'ROLE_CANDIDATE',
     position: '',
-}
-
-function validateForm(values: RegisterFormValues, acceptedTerms: boolean): RegisterFormErrors {
-    const errors: RegisterFormErrors = {}
-    if (!values.fullName.trim()) errors.fullName = 'Vui lòng nhập họ và tên.'
-    if (!values.email.trim()) errors.email = 'Vui lòng nhập địa chỉ email.'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
-        errors.email = 'Địa chỉ email không đúng định dạng.'
-    }
-    if (values.phone.trim() && !/^\d{10,11}$/.test(values.phone.trim())) {
-        errors.phone = 'Số điện thoại phải gồm 10–11 chữ số.'
-    }
-    if (!values.password) errors.password = 'Vui lòng nhập mật khẩu.'
-    else if (values.password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự.'
-    if (!acceptedTerms) errors.terms = 'Bạn cần đồng ý với điều khoản sử dụng.'
-    if (values.role === 'ROLE_RECRUITER' && values.position.trim().length > 100) {
-        errors.position = 'Chức danh không được vượt quá 100 ký tự.'
-    }
-    return errors
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) {
@@ -124,7 +93,7 @@ export function RegisterPage() {
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        const errors = validateForm(formValues, acceptedTerms)
+        const errors = validateRegisterForm(formValues, acceptedTerms)
         setFieldErrors(errors)
         setServerError('')
         setSuccessMessage('')
@@ -133,7 +102,7 @@ export function RegisterPage() {
         registerMutation.mutate({
             fullName: formValues.fullName.trim(),
             email: formValues.email.trim().toLowerCase(),
-            phone: formValues.phone.trim() || undefined,
+            phone: formValues.phone.trim(),
             password: formValues.password,
             role: formValues.role,
             position: formValues.role === 'ROLE_RECRUITER' ? formValues.position.trim() || undefined : undefined,
@@ -227,20 +196,16 @@ export function RegisterPage() {
                                 </div>
                             )}
 
-                            <details className="group rounded-lg border border-slate-200 px-3 py-2.5">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-slate-600 [&::-webkit-details-marker]:hidden">
-                                    Thông tin bổ sung <span className="font-normal text-slate-500">(không bắt buộc)</span>
-                                    <ChevronDown aria-hidden="true" className="shrink-0 transition group-open:rotate-180" size={15} />
-                                </summary>
-                                <div className="mt-3">
-                                    <label className="mb-1.5 block text-xs font-semibold text-slate-800" htmlFor="register-phone">Số điện thoại</label>
-                                    <div className="relative">
-                                        <Phone aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                        <input aria-describedby={fieldErrors.phone ? 'register-phone-error' : undefined} aria-invalid={Boolean(fieldErrors.phone)} autoComplete="tel" className={inputClass('phone')} id="register-phone" inputMode="numeric" name="phone" onChange={(event) => updateField('phone', event.target.value)} placeholder="Số điện thoại liên hệ" type="tel" value={formValues.phone} />
-                                    </div>
-                                    <FieldError id="register-phone-error" message={fieldErrors.phone} />
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-slate-800" htmlFor="register-phone">
+                                    Số điện thoại <span aria-hidden="true" className="text-rose-600">*</span>
+                                </label>
+                                <div className="relative">
+                                    <Phone aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input aria-describedby={fieldErrors.phone ? 'register-phone-error' : undefined} aria-invalid={Boolean(fieldErrors.phone)} autoComplete="tel" className={inputClass('phone')} id="register-phone" inputMode="tel" name="phone" onChange={(event) => updateField('phone', event.target.value)} placeholder="0912345678" required type="tel" value={formValues.phone} />
                                 </div>
-                            </details>
+                                <FieldError id="register-phone-error" message={fieldErrors.phone} />
+                            </div>
 
                             <div>
                                 <label className="flex items-start gap-2.5 text-[11px] leading-5 text-slate-600">
