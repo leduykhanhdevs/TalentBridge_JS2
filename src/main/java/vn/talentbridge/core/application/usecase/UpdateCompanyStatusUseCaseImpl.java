@@ -40,15 +40,8 @@ public class UpdateCompanyStatusUseCaseImpl implements UpdateCompanyStatusUseCas
         if (status == CompanyStatus.APPROVED && company.getCreatedByUserId() != null) {
             recruiterRepository.findByUserId(company.getCreatedByUserId()).ifPresent(recruiter -> {
                 Company linkedCompany = recruiter.getCompany();
-                if (linkedCompany != null && !company.getId().equals(linkedCompany.getId())) {
-                    String linkedCompanyName = linkedCompany.getName() == null
-                            ? "khác"
-                            : "“" + linkedCompany.getName() + "”";
-                    throw new DomainException(40001,
-                            "Không thể duyệt: người tạo đang liên kết với công ty "
-                                    + linkedCompanyName
-                                    + ". Hãy kiểm tra đúng tài khoản hoặc gỡ liên kết hiện tại trước khi duyệt.");
-                }
+                // Company approval is independent from the creator's current membership.
+                // Preserve any existing link; only link the creator when they are unassigned.
                 if (linkedCompany == null) {
                     recruiter.setCompany(company);
                     recruiterRepository.save(recruiter);

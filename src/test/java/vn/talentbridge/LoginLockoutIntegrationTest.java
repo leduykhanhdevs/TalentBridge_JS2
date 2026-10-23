@@ -70,6 +70,7 @@ class LoginLockoutIntegrationTest {
                 .email(TEST_EMAIL)
                 .password(CORRECT_PASSWORD)
                 .fullName("Lockout Test User")
+                .phone("0912345678")
                 .role("ROLE_CANDIDATE")
                 .build();
 

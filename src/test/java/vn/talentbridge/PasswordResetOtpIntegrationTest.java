@@ -65,6 +65,7 @@ class PasswordResetOtpIntegrationTest {
                                 registeredEmail,
                                 password,
                                 "Enumeration Test",
+                                "0912345678",
                                 "ROLE_CANDIDATE"
                         ))))
                 .andExpect(status().isCreated());
@@ -111,6 +112,7 @@ class PasswordResetOtpIntegrationTest {
                                 email,
                                 firstPassword,
                                 "OTP Integration",
+                                "0912345678",
                                 "ROLE_CANDIDATE"
                         ))))
                 .andExpect(status().isCreated());
@@ -180,7 +182,7 @@ class PasswordResetOtpIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    private record RegisterBody(String email, String password, String fullName, String role) { }
+    private record RegisterBody(String email, String password, String fullName, String phone, String role) { }
 
     private record EmailBody(String email) { }
 

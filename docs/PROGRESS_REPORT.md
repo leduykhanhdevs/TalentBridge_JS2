@@ -3,6 +3,13 @@
 
 ---
 
+## BẮT BUỘC SỐ ĐIỆN THOẠI KHI ĐĂNG KÝ & SỬA DUYỆT DOANH NGHIỆP — 23/10/2026
+- **Đã làm được gì**: Chuyển số điện thoại khỏi nhóm thông tin tùy chọn thành trường bắt buộc trên form đăng ký và API; đồng bộ định dạng số Việt Nam `0...` / `+84...`, cập nhật hợp đồng API và các fixture đăng ký. Sửa luồng duyệt công ty để không từ chối chỉ vì người tạo đã liên kết với công ty khác; khi duyệt vẫn giữ nguyên liên kết hiện tại. Kiểm thử cục bộ: Maven `verify` 381/381; Vitest 24 file / 138 test; ESLint và Vite production build đều pass. CI/CD Render được theo dõi sau khi merge PR.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot Bean Validation (`@NotBlank`, `@Pattern`) và React/TypeScript validation dùng chung; JUnit/Vitest cho kiểm thử validation, integration API và use case; GitHub Actions chạy CI và CD Render theo commit trên `main`.
+- **Mục đích chức năng / việc đã làm**: Đảm bảo tài khoản mới luôn có số điện thoại hợp lệ ngay khi đăng ký; cho phép admin phê duyệt pháp nhân do người đã thuộc một công ty khác tạo mà không tự ý chuyển membership của tài khoản đó.
+
+---
+
 ## MỞ RỘNG GIAO DIỆN VÀ HOÀN THIỆN HỒ SƠ ỨNG VIÊN — 23/10/2026
 - **Đã làm được gì**: Mở rộng khung giao diện các trang và modal CV; thay các hộp chọn native bằng hộp chọn dùng chung có tìm kiếm, bàn phím và menu portal; đổi trường ngày sang hiển thị/nhập dd/mm/yyyy trong khi API vẫn nhận ISO. Hoàn thiện luồng nhập CV với thông báo nguồn phân tích AI và fallback rõ ràng; bổ sung/diễn đạt lại lịch sử kinh nghiệm để hệ thống tự tính năm từ các khoảng làm việc, gộp khoảng chồng lấn và không lấy số năm cũ khi thiếu lịch sử. Thêm cập nhật avatar bằng URL hoặc kéo thả/chọn PNG/JPEG (tối đa 5 MB). Kiểm thử: Maven verify 369/369; Vitest 22 file / 134 test; ESLint, Vite production build; API E2E H2 28/28; Playwright 23/23, gồm đăng nhập ba vai trò và kiểm tra tràn ngang ở 360/390/555/1280/1440 px. Log và ảnh E2E: docs/qa/full-site-uat-2026-10-20/runs/2026-10-23-000847/.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: React/TypeScript, Tailwind, React Portal/ARIA, Playwright và Vitest; CustomSelect dùng chung, định dạng ngày UI dd/mm/yyyy chuyển đổi ISO ở biên API; Java/Spring Boot multipart upload với kiểm tra MIME, giải mã ảnh, kích thước, UUID và quyền ứng viên; Gemini CV parser phân biệt nguồn AI, fallback và lỗi; tính kinh nghiệm bằng gộp khoảng ngày làm việc và tổng số tháng lịch.
