@@ -29,7 +29,11 @@ Lưu các giá trị sau trong **Render → talentbridge-backend → Environment
 
 Backend SMTP hiện dùng `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` và `MAIL_FROM`; bật gửi bằng `PASSWORD_RESET_MAIL_ENABLED=true`. Với Gmail, dùng email tài khoản gửi và App Password được tạo trong Google Account, không dùng mật khẩu đăng nhập thông thường.
 
-> **Giới hạn gói Render Free:** Render chặn kết nối outbound SMTP trên cổng 25, 465 và 587. Vì vậy, log timeout khi kết nối `smtp.gmail.com:587` trên Web Service Free là giới hạn gói dịch vụ; thay App Password sẽ không giải quyết được. Để gửi mail thật, cần nâng backend sang gói Render cho phép SMTP hoặc bổ sung adapter dùng HTTPS API của dịch vụ email. [Tài liệu giới hạn Free của Render](https://render.com/docs/free).
+> **Giới hạn gói Render Free:** Render chặn kết nối outbound SMTP trên cổng 25, 465 và 587. Vì vậy, log timeout khi kết nối `smtp.gmail.com:587` trên Web Service Free là giới hạn gói dịch vụ; thay App Password sẽ không giải quyết được. Backend đã hỗ trợ Google Apps Script HTTPS relay; cấu hình theo [hướng dẫn OTP mail](operations/otp-mail/SETUP.md), hoặc nâng backend lên gói trả phí để dùng SMTP. [Tài liệu giới hạn Free của Render](https://render.com/docs/free).
+
+### Xác minh email và số điện thoại ứng viên
+
+Email OTP dùng chung relay Gmail HTTPS trên Render Free hoặc SMTP trên gói trả phí. Đặt `CONTACT_VERIFICATION_EMAIL_ENABLED=true` và `CONTACT_VERIFICATION_MAIL_PROVIDER=apps-script` (hoặc `smtp` trên gói cho phép SMTP). Điện thoại OTP dùng Zalo Business Solutions; cần điền `ZALO_ZBS_ACCESS_TOKEN`, `ZALO_ZBS_OTP_TEMPLATE_ID` và `ZALO_ZBS_OTP_FIELD` theo OA, quyền gửi tin và template đã được duyệt. Thiếu cấu hình provider, backend trả lỗi và không tạo trạng thái xác minh giả; ứng viên chỉ được ứng tuyển sau khi xác minh cả email lẫn điện thoại.
 
 Mẫu URL JDBC có cấu trúc:
 

@@ -111,6 +111,13 @@ export interface ResumeItem {
     createdAt: string
 }
 
+export interface ContactVerificationStatus {
+    emailVerified: boolean
+    phoneVerified: boolean
+    maskedEmail: string
+    maskedPhone: string
+}
+
 export type ApplicationStage = 'APPLIED' | 'REVIEWING' | 'SCREENING' | 'SHORTLISTED' | 'INTERVIEW' | 'OFFERED' | 'HIRED' | 'REJECTED'
 export type ApplicationStatus = 'SUBMITTED' | 'ACTIVE' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN'
 

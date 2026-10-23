@@ -3,6 +3,12 @@
 
 ---
 
+- **Đã làm được gì**: Đưa doanh nghiệp mới lên đầu danh sách duyệt theo `createdAt DESC, id DESC`; thêm nút hủy ứng viên có xác nhận; thêm hiện/ẩn mật khẩu; lưu file CV gốc sau nhập nhanh; chọn CV chính hoặc tải CV mới khi ứng tuyển; triển khai xác minh OTP email và số điện thoại, đồng thời chặn apply ở backend khi thiếu một trong hai xác minh. UI E2E đăng ký tài khoản thử trên H2, kiểm tra cancel, import CV, OTP mock, apply bằng CV chính và upload CV trong modal: 34/34; API E2E 28/28; Maven verify 391/391; Vitest 24 file / 138 test; TypeScript, ESLint, Vite build pass. Kế hoạch và ma trận tiêu chí: `docs/qa/plans/2026-10-23-seven-point-release-plan.md`. Ảnh/log lượt pass: `docs/qa/full-site-uat-2026-10-20/runs/2026-10-23-111129/`. Không seed mật khẩu người dùng vào source. HRPM-71/72 chờ cấu hình và kiểm tra provider OTP thật; HRPM-73 theo dõi tài khoản/job/apply demo an toàn. CI PR và CD production chưa được xác nhận; chưa merge/deploy vì provider OTP chưa sẵn sàng.
+- **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot, Flyway, JPA và kiểm soát OTP HMAC có TTL 10 phút, cooldown gửi 60 giây, giới hạn 5 lần; adapter email HTTPS Google Apps Script và Zalo Business Solutions; React/TypeScript, React Query, Playwright, Vitest, JUnit/Spring Integration Test, H2 cô lập.
+- **Mục đích chức năng / việc đã làm**: Đặt doanh nghiệp mới ở vị trí dễ duyệt; để nhà tuyển dụng hủy ứng viên có xác nhận; giúp ứng viên kiểm soát mật khẩu và dùng lại CV; yêu cầu thông tin liên hệ được xác minh trước khi ứng tuyển để nhà tuyển dụng có cơ sở liên hệ. Provider live và dữ liệu demo dùng chung là các cổng vận hành ngoài mã nguồn, được theo dõi riêng trên Jira.
+
+---
+
 ## BẮT BUỘC SỐ ĐIỆN THOẠI KHI ĐĂNG KÝ & SỬA DUYỆT DOANH NGHIỆP — 23/10/2026
 - **Đã làm được gì**: Chuyển số điện thoại khỏi nhóm thông tin tùy chọn thành trường bắt buộc trên form đăng ký và API; đồng bộ định dạng số Việt Nam `0...` / `+84...`, cập nhật hợp đồng API và các fixture đăng ký. Sửa luồng duyệt công ty để không từ chối chỉ vì người tạo đã liên kết với công ty khác; khi duyệt vẫn giữ nguyên liên kết hiện tại. Kiểm thử cục bộ: Maven `verify` 381/381; Vitest 24 file / 138 test; ESLint và Vite production build đều pass. CI/CD Render được theo dõi sau khi merge PR.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Spring Boot Bean Validation (`@NotBlank`, `@Pattern`) và React/TypeScript validation dùng chung; JUnit/Vitest cho kiểm thử validation, integration API và use case; GitHub Actions chạy CI và CD Render theo commit trên `main`.

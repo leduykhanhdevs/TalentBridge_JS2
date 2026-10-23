@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
     UploadCloud,
     FileText,
@@ -13,7 +14,7 @@ import {
     Loader2,
     RefreshCw
 } from 'lucide-react'
-import { parseCv, applyParsedCv } from '../candidateApi'
+import { parseCv, applyParsedCv, uploadResume } from '../candidateApi'
 import type { ParsedCvResult, ApplyParsedCvPayload } from '../candidateTypes'
 import { formatIsoDate } from '../../../components/ui/dateFormat'
 
@@ -24,7 +25,9 @@ interface CvImportModalProps {
 }
 
 export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps) {
+    const queryClient = useQueryClient()
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const storedFileSignatureRef = useRef<string | null>(null)
     const [file, setFile] = useState<File | null>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [isParsing, setIsParsing] = useState(false)
@@ -33,6 +36,7 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
     const [isApplying, setIsApplying] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+    const [originalSaved, setOriginalSaved] = useState(false)
 
     if (!isOpen) return null
 
@@ -51,10 +55,20 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
         setFile(selected)
         setErrorMessage(null)
         setSuccessMessage(null)
+        const fileSignature = `${selected.name}:${selected.size}:${selected.lastModified}`
+        setOriginalSaved(storedFileSignatureRef.current === fileSignature)
 
-        // Automatically trigger parsing
+        // Keep the original upload in "CV của tôi" for later applications.
         setIsParsing(true)
         try {
+            if (storedFileSignatureRef.current !== fileSignature) {
+                await uploadResume(selected, selected.name)
+                storedFileSignatureRef.current = fileSignature
+                setOriginalSaved(true)
+                await queryClient.invalidateQueries({ queryKey: ['candidate-resumes'] })
+            }
+
+            // Automatically parse after the original file is safely stored.
             const result = await parseCv(selected)
             setParsedResult(result)
             setFormPayload({
@@ -221,7 +235,7 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                                             Đang đọc và bóc tách dữ liệu từ file CV...
                                         </p>
                                         <p className="text-xs text-slate-500 max-w-sm">
-                                            Hệ thống đang trích xuất nội dung và sẽ dùng Gemini AI nếu dịch vụ đã được cấu hình.
+                                            {originalSaved ? 'CV gốc đã lưu trong CV của tôi. ' : ''}Hệ thống đang trích xuất nội dung và sẽ dùng Gemini AI nếu dịch vụ đã được cấu hình.
                                         </p>
                                     </div>
                                 ) : (

@@ -822,7 +822,7 @@ export function CandidateProfilePage() {
                         </div>
 
                         {/* Uploaded Resumes (TopCV CV Files) */}
-                        <ResumeUploadSection
+                            <ResumeUploadSection
                             resumes={resumes}
                             onRefresh={refetchResumes}
                         />
