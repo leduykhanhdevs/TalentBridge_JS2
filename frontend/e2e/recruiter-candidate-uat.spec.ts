@@ -266,7 +266,7 @@ test('recruiter must confirm before cancelling an applicant', async ({ page }) =
     await expect(page.getByText(/Đã hủy hồ sơ ứng tuyển/)).toBeVisible()
 })
 
-test('candidate verifies email and phone, then applies with their saved primary CV', async ({ page }) => {
+test('candidate verifies email and applies with their saved primary CV without Zalo OTP', async ({ page }) => {
     await installSession(page, 807, 'ROLE_CANDIDATE')
     const verification = { emailVerified: false, phoneVerified: false, maskedEmail: 'q***@example.invalid', maskedPhone: '***4567' }
     const resumes = [{
@@ -316,10 +316,9 @@ test('candidate verifies email and phone, then applies with their saved primary 
         status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(null)),
     }))
     await page.route('**/api/v1/candidates/contact-verification/*/verify', async (route) => {
-        const channel = new URL(route.request().url()).pathname.split('/').at(-2)
         currentVerification = {
             ...currentVerification,
-            ...(channel === 'EMAIL' ? { emailVerified: true } : { phoneVerified: true }),
+            emailVerified: true,
         }
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(currentVerification)) })
     })
@@ -336,11 +335,6 @@ test('candidate verifies email and phone, then applies with their saved primary 
     await dialog.getByRole('button', { name: 'Gửi mã xác minh' }).nth(0).click()
     await dialog.getByLabel('Mã OTP Email').fill('123456')
     await dialog.getByRole('button', { name: 'Xác minh' }).nth(0).click()
-    await expect(dialog.getByText('Đã xác minh').first()).toBeVisible()
-
-    await dialog.getByRole('button', { name: 'Gửi mã xác minh' }).click()
-    await dialog.getByLabel('Mã OTP Số điện thoại qua Zalo').fill('654321')
-    await dialog.getByRole('button', { name: 'Xác minh' }).click()
     await expect(dialog.getByText('Chọn CV ứng tuyển')).toBeVisible()
     await expect(dialog.getByRole('region', { name: 'Xác minh thông tin liên hệ' })).toHaveCount(0)
     await expect(dialog.getByText('CV chính của tôi')).toBeVisible()

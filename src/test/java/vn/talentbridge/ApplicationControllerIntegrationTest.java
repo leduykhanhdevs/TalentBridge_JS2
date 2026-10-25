@@ -144,7 +144,7 @@ class ApplicationControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Bạn cần xác minh email và số điện thoại trước khi ứng tuyển."));
+                .andExpect(jsonPath("$.message").value("Bạn cần xác minh email trước khi ứng tuyển."));
 
         assertTrue(applicationRepository.findAll().isEmpty());
     }

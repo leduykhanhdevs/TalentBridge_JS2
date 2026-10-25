@@ -197,7 +197,7 @@ export function ApplyJobModal({
                             <p>Không thể kiểm tra trạng thái xác minh nên chưa thể tiếp tục ứng tuyển.</p>
                             <button className="mt-3 font-bold underline" onClick={() => void contactVerificationQuery.refetch()} type="button">Thử lại</button>
                         </div>
-                    ) : !contactVerificationQuery.data.emailVerified || !contactVerificationQuery.data.phoneVerified ? (
+                    ) : !contactVerificationQuery.data.emailVerified ? (
                         <ContactVerificationPanel
                             status={contactVerificationQuery.data}
                             onVerified={(status: ContactVerificationStatus) => queryClient.setQueryData(['candidate-contact-verification'], status)}

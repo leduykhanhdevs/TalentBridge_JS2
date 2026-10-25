@@ -81,6 +81,29 @@ class ApplyJobUseCaseImplTest {
     }
 
     @Test
+    void candidateCanApplyWithVerifiedEmailWithoutPhoneVerification() {
+        stubCandidateAndJob(activeJob(LocalDate.now().plusDays(1)));
+        when(resumeRepository.findById(30L)).thenReturn(Optional.of(resume(20L)));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertDoesNotThrow(() -> useCase.apply(10L, 5L, 30L, null));
+        verify(applicationRepository).save(any(Application.class));
+    }
+
+    @Test
+    void candidateMustVerifyEmailBeforeApplying() {
+        stubCandidate(false, false);
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> useCase.apply(10L, 5L, 30L, null)
+        );
+
+        assertTrue(error.getMessage().contains("xác minh email"));
+        verifyNoInteractions(jobRepository, resumeRepository, applicationRepository);
+    }
+
+    @Test
     void inactiveJobIsRejected() {
         Job job = activeJob(LocalDate.now().plusDays(1));
         job.setStatus(JobStatus.PENDING);
@@ -175,18 +198,26 @@ class ApplyJobUseCaseImplTest {
     }
 
     private void stubCandidateAndJob(Job job) {
+        stubCandidateAndJob(job, true, false);
+    }
+
+    private void stubCandidateAndJob(Job job, boolean emailVerified, boolean phoneVerified) {
+        stubCandidate(emailVerified, phoneVerified);
+        when(jobRepository.findById(5L)).thenReturn(Optional.of(job));
+    }
+
+    private void stubCandidate(boolean emailVerified, boolean phoneVerified) {
         Candidate candidate = new Candidate();
         candidate.setId(20L);
         User user = new User();
         user.setId(10L);
         user.setEmail("candidate@example.invalid");
         user.setPhoneNumber("+84912345678");
-        user.setEmailVerified(true);
-        user.setPhoneVerified(true);
+        user.setEmailVerified(emailVerified);
+        user.setPhoneVerified(phoneVerified);
         candidate.setUser(user);
         when(candidateRepository.findByUserId(10L))
                 .thenReturn(Optional.of(candidate));
-        when(jobRepository.findById(5L)).thenReturn(Optional.of(job));
     }
 
     private Job activeJob(LocalDate deadline) {

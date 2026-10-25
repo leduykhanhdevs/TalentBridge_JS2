@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BadgeCheck, CircleAlert, Mail, MessageCircle, Send, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, CircleAlert, Mail, Send, ShieldCheck } from 'lucide-react'
 import {
     requestContactVerificationCode,
     verifyContactVerificationCode,
@@ -11,50 +11,41 @@ interface ContactVerificationPanelProps {
     onVerified: (status: ContactVerificationStatus) => void
 }
 
-type VerificationChannel = 'EMAIL' | 'PHONE'
-
 export function ContactVerificationPanel({ status, onVerified }: ContactVerificationPanelProps) {
-    const [emailOtp, setEmailOtp] = useState('')
-    const [phoneOtp, setPhoneOtp] = useState('')
-    const [emailCodeSent, setEmailCodeSent] = useState(false)
-    const [phoneCodeSent, setPhoneCodeSent] = useState(false)
-    const [busyChannel, setBusyChannel] = useState<VerificationChannel | null>(null)
+    const [otp, setOtp] = useState('')
+    const [codeSent, setCodeSent] = useState(false)
+    const [busy, setBusy] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-    async function requestCode(channel: VerificationChannel) {
-        setBusyChannel(channel)
+    async function requestCode() {
+        setBusy(true)
         setErrorMessage(null)
         setSuccessMessage(null)
         try {
-            await requestContactVerificationCode(channel)
-            if (channel === 'EMAIL') setEmailCodeSent(true)
-            else setPhoneCodeSent(true)
-            setSuccessMessage(channel === 'EMAIL'
-                ? 'Đã gửi mã đến email của bạn.'
-                : 'Đã gửi yêu cầu OTP đến Zalo theo số điện thoại đã đăng ký.')
+            await requestContactVerificationCode('EMAIL')
+            setCodeSent(true)
+            setSuccessMessage('Đã gửi mã đến email của bạn.')
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Không thể gửi mã xác minh.')
         } finally {
-            setBusyChannel(null)
+            setBusy(false)
         }
     }
 
-    async function verifyCode(channel: VerificationChannel) {
-        setBusyChannel(channel)
+    async function verifyCode() {
+        setBusy(true)
         setErrorMessage(null)
         setSuccessMessage(null)
         try {
-            const otp = channel === 'EMAIL' ? emailOtp : phoneOtp
-            const updated = await verifyContactVerificationCode(channel, otp)
+            const updated = await verifyContactVerificationCode('EMAIL', otp)
             onVerified(updated)
-            if (channel === 'EMAIL') setEmailOtp('')
-            else setPhoneOtp('')
-            setSuccessMessage(channel === 'EMAIL' ? 'Email đã được xác minh.' : 'Số điện thoại đã được xác minh.')
+            setOtp('')
+            setSuccessMessage('Email đã được xác minh.')
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Mã xác minh không hợp lệ.')
         } finally {
-            setBusyChannel(null)
+            setBusy(false)
         }
     }
 
@@ -67,35 +58,23 @@ export function ContactVerificationPanel({ status, onVerified }: ContactVerifica
                 <div>
                     <h3 className="font-bold text-slate-900">Xác minh trước khi ứng tuyển</h3>
                     <p className="mt-1 text-xs leading-5 text-slate-600">
-                        Xác nhận email và số điện thoại để nhà tuyển dụng có thể liên hệ với bạn. Mã OTP chỉ dùng một lần.
+                        Xác nhận email để bảo vệ đơn ứng tuyển. Mã OTP chỉ dùng một lần.
                     </p>
                 </div>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="mt-4">
                 <VerificationChannelCard
                     title="Email"
                     destination={status.maskedEmail}
                     verified={status.emailVerified}
-                    sent={emailCodeSent}
-                    otp={emailOtp}
-                    busy={busyChannel === 'EMAIL'}
+                    sent={codeSent}
+                    otp={otp}
+                    busy={busy}
                     icon={<Mail aria-hidden="true" size={16} />}
-                    onOtpChange={setEmailOtp}
-                    onRequest={() => void requestCode('EMAIL')}
-                    onVerify={() => void verifyCode('EMAIL')}
-                />
-                <VerificationChannelCard
-                    title="Số điện thoại qua Zalo"
-                    destination={status.maskedPhone || 'Chưa có số điện thoại'}
-                    verified={status.phoneVerified}
-                    sent={phoneCodeSent}
-                    otp={phoneOtp}
-                    busy={busyChannel === 'PHONE'}
-                    icon={<MessageCircle aria-hidden="true" size={16} />}
-                    onOtpChange={setPhoneOtp}
-                    onRequest={() => void requestCode('PHONE')}
-                    onVerify={() => void verifyCode('PHONE')}
+                    onOtpChange={setOtp}
+                    onRequest={() => void requestCode()}
+                    onVerify={() => void verifyCode()}
                 />
             </div>
 

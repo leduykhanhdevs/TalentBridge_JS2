@@ -63,6 +63,8 @@ talentbridge:
     mail-enabled: "${PASSWORD_RESET_MAIL_ENABLED:false}"
     mail-provider: "${PASSWORD_RESET_MAIL_PROVIDER:smtp}"
     mail-from: "${MAIL_FROM:no-reply@talentbridge.vn}"
+    apps-script-url: "${GOOGLE_APPS_SCRIPT_URL:}"
+    apps-script-secret: "${GOOGLE_APPS_SCRIPT_SECRET:}"
   contact-verification:
     email-enabled: "${CONTACT_VERIFICATION_EMAIL_ENABLED:${PASSWORD_RESET_MAIL_ENABLED:false}}"
     mail-provider: "${CONTACT_VERIFICATION_MAIL_PROVIDER:${PASSWORD_RESET_MAIL_PROVIDER:smtp}}"
