@@ -15,9 +15,11 @@ import {
     applyJob,
     CandidateApiError,
     getCandidateResumes,
+    getContactVerificationStatus,
     uploadResume,
 } from '../../candidate/candidateApi'
-import type { ResumeItem } from '../../candidate/candidateTypes'
+import type { ContactVerificationStatus, ResumeItem } from '../../candidate/candidateTypes'
+import { ContactVerificationPanel } from '../../candidate/components/ContactVerificationPanel'
 import { formatIsoDate } from '../../../components/ui/dateFormat'
 
 interface ApplyJobModalProps {
@@ -48,6 +50,12 @@ export function ApplyJobModal({
     const resumesQuery = useQuery({
         queryKey: ['candidate-resumes'],
         queryFn: getCandidateResumes,
+        enabled: isOpen,
+    })
+
+    const contactVerificationQuery = useQuery({
+        queryKey: ['candidate-contact-verification'],
+        queryFn: getContactVerificationStatus,
         enabled: isOpen,
     })
 
@@ -182,6 +190,18 @@ export function ApplyJobModal({
                                 </button>
                             </div>
                         </div>
+                    ) : contactVerificationQuery.isPending ? (
+                        <p className="py-8 text-center text-sm text-slate-600" role="status">Đang kiểm tra trạng thái xác minh liên hệ…</p>
+                    ) : contactVerificationQuery.isError || !contactVerificationQuery.data ? (
+                        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700" role="alert">
+                            <p>Không thể kiểm tra trạng thái xác minh nên chưa thể tiếp tục ứng tuyển.</p>
+                            <button className="mt-3 font-bold underline" onClick={() => void contactVerificationQuery.refetch()} type="button">Thử lại</button>
+                        </div>
+                    ) : !contactVerificationQuery.data.emailVerified ? (
+                        <ContactVerificationPanel
+                            status={contactVerificationQuery.data}
+                            onVerified={(status: ContactVerificationStatus) => queryClient.setQueryData(['candidate-contact-verification'], status)}
+                        />
                     ) : (
                         <>
                             {/* Resume Selection Section */}
@@ -226,7 +246,7 @@ export function ApplyJobModal({
                                     <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 text-center">
                                         <UploadCloud className="mx-auto text-slate-400" size={32} />
                                         <p className="mt-2 text-sm font-bold text-slate-800">
-                                            Bạn chưa có CV nào trong hồ sơ
+                                            Bạn chưa có CV nào trong mục CV của tôi
                                         </p>
                                         <p className="mt-1 text-xs text-slate-500">
                                             Tải lên CV định dạng PDF, DOC, DOCX (tối đa 10MB)
@@ -282,7 +302,7 @@ export function ApplyJobModal({
                                                     </div>
                                                     {resume.isDefault && (
                                                         <span className="bento-badge bg-emerald-50 text-emerald-700 text-[10px] shrink-0">
-                                                            Mặc định
+                                                            CV chính
                                                         </span>
                                                     )}
                                                 </label>

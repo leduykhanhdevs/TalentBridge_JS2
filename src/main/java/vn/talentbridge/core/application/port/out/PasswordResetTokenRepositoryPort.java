@@ -23,6 +23,12 @@ public interface PasswordResetTokenRepositoryPort {
             LocalDateTime usedAt
     );
 
+    int invalidateUnusedByUserIdAndPurpose(
+            Long userId,
+            Purpose purpose,
+            LocalDateTime usedAt
+    );
+
     boolean markUsedIfUsable(
             String tokenHash,
             Purpose purpose,

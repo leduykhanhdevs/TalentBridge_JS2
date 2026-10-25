@@ -17,6 +17,16 @@ import vn.talentbridge.core.domain.service.JobQualityScorer;
 public class UseCaseConfig {
 
     @Bean
+    public ContactVerificationUseCase contactVerificationUseCase(
+            UserRepositoryPort userRepository,
+            PasswordResetTokenRepositoryPort tokenRepository,
+            PasswordResetTokenGeneratorPort tokenGenerator,
+            ContactVerificationDeliveryPort deliveryPort
+    ) {
+        return new ContactVerificationUseCaseImpl(userRepository, tokenRepository, tokenGenerator, deliveryPort);
+    }
+
+    @Bean
     public BootstrapAdminAccountUseCase bootstrapAdminAccountUseCase(
             UserRepositoryPort userRepository,
             PasswordEncoderPort passwordEncoder
