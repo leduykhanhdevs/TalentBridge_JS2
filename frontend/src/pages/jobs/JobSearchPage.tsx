@@ -41,6 +41,8 @@ const JOB_TYPE_OPTIONS: SelectOption[] = [
 
 const EXPERIENCE_LEVEL_OPTIONS: SelectOption[] = [
     { value: '', label: 'Tất cả kinh nghiệm' },
+    { value: 'NO_EXPERIENCE', label: 'Không yêu cầu kinh nghiệm' },
+    { value: 'UNDER_1_YEAR', label: 'Dưới 1 năm' },
     { value: 'INTERN', label: 'Thực tập sinh' },
     { value: 'FRESHER', label: 'Fresher' },
     { value: 'JUNIOR', label: 'Junior' },

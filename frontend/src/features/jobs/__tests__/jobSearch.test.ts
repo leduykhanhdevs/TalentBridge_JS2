@@ -64,3 +64,10 @@ describe('TB-002 location display', () => {
         expect(formatJobLocation(null, null)).toBe('Chưa cập nhật')
     })
 })
+
+describe('TB-003 experience filters', () => {
+    it.each(['NO_EXPERIENCE', 'UNDER_1_YEAR'] as const)('sends %s without mapping it to a different level', (experienceLevel) => {
+        const params = toJobSearchParams({ ...EMPTY_JOB_FILTERS, experienceLevel })
+        expect(new URLSearchParams(buildJobSearchQuery(params)).get('experienceLevel')).toBe(experienceLevel)
+    })
+})

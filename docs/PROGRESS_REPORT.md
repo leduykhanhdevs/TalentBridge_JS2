@@ -727,3 +727,8 @@
 - Đã làm: loại địa điểm trùng; 4 kiểm thử jobSearch đạt.
 - Công nghệ: TypeScript, Set, Vitest.
 - Mục đích: giữ địa chỉ và nhãn mô phỏng, chỉ hiển thị tên thành phố một lần.
+
+## 2026-11-01 — TB-003
+- Đã làm: bổ sung hai bộ lọc kinh nghiệm, 6 kiểm thử jobSearch đạt.
+- Công nghệ: TypeScript union, Vitest.
+- Mục đích: lọc được các mức mà nhà tuyển dụng đang sử dụng; không đổi formatter TB-001.

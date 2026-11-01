@@ -1,5 +1,5 @@
 export type JobType = 'FULL_TIME' | 'PART_TIME' | 'REMOTE' | 'HYBRID'
-export type ExperienceLevel = 'INTERN' | 'FRESHER' | 'JUNIOR' | 'MIDDLE' | 'SENIOR'
+export type ExperienceLevel = 'NO_EXPERIENCE' | 'UNDER_1_YEAR' | 'INTERN' | 'FRESHER' | 'JUNIOR' | 'MIDDLE' | 'SENIOR'
 
 export interface ApiResponse<T> {
     statusCode: number
