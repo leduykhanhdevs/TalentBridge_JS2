@@ -732,3 +732,8 @@
 - Đã làm: bổ sung hai bộ lọc kinh nghiệm, 6 kiểm thử jobSearch đạt.
 - Công nghệ: TypeScript union, Vitest.
 - Mục đích: lọc được các mức mà nhà tuyển dụng đang sử dụng; không đổi formatter TB-001.
+
+## 2026-11-01 — TB-004
+- Đã làm: loại tin thỏa thuận/không công bố lương khi lọc lương; regression JPA H2 đạt cả min-only, max-only, khoảng và count.
+- Công nghệ: JPA Criteria, H2 in-memory, JUnit.
+- Mục đích: kết quả và tổng số tin tuân thủ khoảng lương; không đổi dữ liệu DB.

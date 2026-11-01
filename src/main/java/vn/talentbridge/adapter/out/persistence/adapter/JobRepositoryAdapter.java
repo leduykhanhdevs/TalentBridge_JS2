@@ -227,18 +227,16 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
                 predicates.add(cb.equal(cb.lower(root.get("experienceLevel")), experienceLevel.trim().toLowerCase()));
             }
 
-            if (minSalary != null) {
-                // Job's max salary should be >= candidate's min salary requirement, or isNegotiable is true
-                Predicate salaryMatch = cb.greaterThanOrEqualTo(root.get("maxSalary"), minSalary);
-                Predicate negotiable = cb.isTrue(root.get("isNegotiable"));
-                predicates.add(cb.or(salaryMatch, negotiable));
+            // A numeric salary filter requires disclosed pay; negotiable jobs cannot prove a match.
+            if (minSalary != null || maxSalary != null) {
+                predicates.add(cb.or(cb.isFalse(root.get("isNegotiable")), cb.isNull(root.get("isNegotiable"))));
+                predicates.add(cb.or(cb.isNotNull(root.get("minSalary")), cb.isNotNull(root.get("maxSalary"))));
             }
-
+            if (minSalary != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("maxSalary"), minSalary));
+            }
             if (maxSalary != null) {
-                // Job's min salary should be <= candidate's max salary budget, or isNegotiable is true
-                Predicate salaryMatch = cb.lessThanOrEqualTo(root.get("minSalary"), maxSalary);
-                Predicate negotiable = cb.isTrue(root.get("isNegotiable"));
-                predicates.add(cb.or(salaryMatch, negotiable));
+                predicates.add(cb.lessThanOrEqualTo(root.get("minSalary"), maxSalary));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
