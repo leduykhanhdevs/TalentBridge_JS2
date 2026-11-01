@@ -742,3 +742,8 @@
 - Đã làm: thêm id làm khóa phụ cho thứ tự tìm kiếm; 2 regression H2 đạt, duyệt đủ 22 tin/3 trang ở 8 kiểu sắp xếp.
 - Công nghệ: Spring Data Sort, JPA, H2, JUnit.
 - Mục đích: ổn định phân trang khi nhiều tin trùng ngày tạo/tên/lương.
+
+## 2026-11-01 — TB-006
+- Đã làm: lưu trang, bộ lọc, lương, sort, size vào URL; Back và reload khôi phục đúng trang; 135 unit frontend, build, lint và 4 test Playwright đạt.
+- Công nghệ: React Router useSearchParams, React Query, TypeScript, Vitest, Playwright API mocks.
+- Mục đích: giữ ngữ cảnh tìm việc sau khi xem chi tiết; không dùng dữ liệu thật.

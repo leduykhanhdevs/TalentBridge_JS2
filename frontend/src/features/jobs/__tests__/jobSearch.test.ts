@@ -71,3 +71,23 @@ describe('TB-003 experience filters', () => {
         expect(new URLSearchParams(buildJobSearchQuery(params)).get('experienceLevel')).toBe(experienceLevel)
     })
 })
+
+import { readJobSearchParams, toJobFilterFormValues } from '../jobSearchFilters'
+
+describe('TB-006 search URL state', () => {
+    it('restores page, filters, salary, size and sorting', () => {
+        const original = { page: 3, size: 20, sort: 'SALARY_DESC', keyword: 'Java', location: 'Hà Nội',
+            jobType: 'FULL_TIME' as const, experienceLevel: 'UNDER_1_YEAR' as const,
+            minSalary: 15_000_000, maxSalary: 30_000_000 }
+        const restored = readJobSearchParams(new URLSearchParams(buildJobSearchQuery(original)))
+        expect(restored).toEqual(original)
+        expect(toJobFilterFormValues(restored).minSalaryMillions).toBe('15')
+    })
+    it('rejects invalid URL values', () => {
+        const restored = readJobSearchParams(new URLSearchParams('page=-1&size=999&minSalary=NaN&maxSalary=-1&sort=invalid&jobType=invalid'))
+        expect(restored).toMatchObject({page: 1, size: 10, sort: 'NEWEST'})
+        expect(restored.minSalary).toBeUndefined()
+        expect(restored.maxSalary).toBeUndefined()
+        expect(restored.jobType).toBeUndefined()
+    })
+})

@@ -14,13 +14,15 @@ import {
     TriangleAlert,
 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
-import { Link } from 'react-router'
-import { searchJobs } from '../../features/jobs/jobSearchApi'
+import { Link, useSearchParams } from 'react-router'
+import { buildJobSearchQuery, searchJobs } from '../../features/jobs/jobSearchApi'
 import {
     EMPTY_JOB_FILTERS,
     type JobFilterFormValues,
     toJobSearchParams,
     validateJobFilters,
+    readJobSearchParams,
+    toJobFilterFormValues,
 } from '../../features/jobs/jobSearchFilters'
 import {
     formatExperienceLevel,
@@ -66,9 +68,16 @@ const PAGE_SIZE_OPTIONS: SelectOption[] = [
 const inputClassName = 'mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-3 focus:ring-blue-100 hover:border-slate-300'
 
 export function JobSearchPage() {
-    const [formValues, setFormValues] = useState<JobFilterFormValues>(EMPTY_JOB_FILTERS)
-    const [sortBy, setSortBy] = useState<string>('NEWEST')
-    const [appliedFilters, setAppliedFilters] = useState<JobSearchParams>({ page: 1, size: 10, sort: 'NEWEST' })
+    const [searchParams, setSearchParams] = useSearchParams()
+    const appliedFilters = readJobSearchParams(searchParams)
+    const [formValues, setFormValues] = useState<JobFilterFormValues>(() => toJobFilterFormValues(appliedFilters))
+    const sortBy = appliedFilters.sort ?? 'NEWEST'
+
+    function setAppliedFilters(next: JobSearchParams | ((current: JobSearchParams) => JobSearchParams)) {
+        const values = typeof next === 'function' ? next(appliedFilters) : next
+        // Replace the list history entry so Back from a detail restores this exact search.
+        setSearchParams(buildJobSearchQuery(values), { replace: true })
+    }
     const [validationError, setValidationError] = useState<string | null>(null)
 
     const jobsQuery = useQuery({
@@ -101,12 +110,10 @@ export function JobSearchPage() {
     function handleReset() {
         setFormValues(EMPTY_JOB_FILTERS)
         setValidationError(null)
-        setSortBy('NEWEST')
         setAppliedFilters({ page: 1, size: 10, sort: 'NEWEST' })
     }
 
     function handleSortChange(newSort: string) {
-        setSortBy(newSort)
         setAppliedFilters((current) => ({ ...current, page: 1, sort: newSort }))
     }
 
