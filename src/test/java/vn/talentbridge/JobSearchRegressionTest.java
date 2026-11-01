@@ -48,4 +48,25 @@ class JobSearchRegressionTest {
         assertThat(search.countSearch(null, null, null, null, null, null)).isEqualTo(3);
         assertThat(search.search(null, null, null, null, new BigDecimal("100000000"), new BigDecimal("120000000"), 0, 10)).isEmpty();
     }
+
+    @Test void equalSortValuesHaveStableUniquePagesIncludingTheLastPage() {
+        var ids = new java.util.ArrayList<Long>();
+        for (int i = 0; i < 22; i++) {
+            ids.add(job("Same title", false, new BigDecimal("15000000"), new BigDecimal("30000000")).getId());
+        }
+        for (String sort : new String[] {"createdAt", "title", "minSalary", "maxSalary"}) {
+            for (String direction : new String[] {"asc", "desc"}) {
+                var actual = new java.util.ArrayList<Long>();
+                for (int page = 0; page < 3; page++) {
+                    var result = search.search(null, null, null, null, null, null, page, 10, sort, direction);
+                    assertThat(result).hasSize(page == 2 ? 2 : 10);
+                    actual.addAll(result.stream().map(j -> j.getId()).toList());
+                }
+                var expected = new java.util.ArrayList<>(ids);
+                if (direction.equals("desc")) java.util.Collections.reverse(expected);
+                assertThat(actual).containsExactlyElementsOf(expected);
+                assertThat(actual).doesNotHaveDuplicates();
+            }
+        }
+    }
 }

@@ -172,7 +172,7 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
             case "deadline" -> "deadline";
             default -> "createdAt";
         };
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(direction, sortProperty));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(direction, sortProperty).and(Sort.by(direction, "id")));
         return jobJpaRepository.findAll(spec, pageRequest).stream().map(this::toDomain).collect(Collectors.toList());
     }
 

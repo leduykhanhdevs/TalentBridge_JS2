@@ -737,3 +737,8 @@
 - Đã làm: loại tin thỏa thuận/không công bố lương khi lọc lương; regression JPA H2 đạt cả min-only, max-only, khoảng và count.
 - Công nghệ: JPA Criteria, H2 in-memory, JUnit.
 - Mục đích: kết quả và tổng số tin tuân thủ khoảng lương; không đổi dữ liệu DB.
+
+## 2026-11-01 — TB-005
+- Đã làm: thêm id làm khóa phụ cho thứ tự tìm kiếm; 2 regression H2 đạt, duyệt đủ 22 tin/3 trang ở 8 kiểu sắp xếp.
+- Công nghệ: Spring Data Sort, JPA, H2, JUnit.
+- Mục đích: ổn định phân trang khi nhiều tin trùng ngày tạo/tên/lương.
