@@ -53,3 +53,14 @@ describe('HRPM-35 job filters', () => {
         })).toBe('Mức lương tối thiểu không được lớn hơn mức lương tối đa.')
     })
 })
+
+import { formatJobLocation } from '../jobSearchFormatters'
+
+describe('TB-002 location display', () => {
+    it('deduplicates city while preserving the simulation label and street address', () => {
+        expect(formatJobLocation('Địa điểm mô phỏng · Hà Nội', 'Hà Nội')).toBe('Địa điểm mô phỏng · Hà Nội')
+        expect(formatJobLocation('  Hà Nội ', 'hà nội')).toBe('Hà Nội')
+        expect(formatJobLocation('123 Đường A', 'Hà Nội')).toBe('123 Đường A · Hà Nội')
+        expect(formatJobLocation(null, null)).toBe('Chưa cập nhật')
+    })
+})

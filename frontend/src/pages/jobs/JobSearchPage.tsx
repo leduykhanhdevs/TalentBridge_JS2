@@ -25,6 +25,7 @@ import {
 import {
     formatExperienceLevel,
     formatJobType,
+    formatJobLocation,
     formatSalary,
 } from '../../features/jobs/jobSearchFormatters'
 import type { JobSearchParams } from '../../features/jobs/jobSearchTypes'
@@ -330,7 +331,7 @@ export function JobSearchPage() {
                                     <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
                                         <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5">
                                             <MapPin aria-hidden="true" size={14} />
-                                            {[job.location, job.city].filter(Boolean).join(' · ') || 'Chưa cập nhật'}
+                                            {formatJobLocation(job.location, job.city)}
                                         </span>
                                         <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5">
                                             <BriefcaseBusiness aria-hidden="true" size={14} />

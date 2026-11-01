@@ -722,3 +722,8 @@
 - **Đã làm được gì**: Khởi động backend và frontend trên worktree `fix/khanh/bugdocx-uat-fixes`; backend `/api/v1/health` trả HTTP 200, frontend `http://localhost:5173/` trả HTTP 200. Backend dùng profile `local`, H2 file database và đã áp dụng 4 migration. Mở giao diện trong browser Codex; không thao tác hay ghi dữ liệu production.
 - **Sử dụng công nghệ / thuật toán gì / kết hợp với gì**: Java 21, Spring Boot 3.3.4, Maven, H2, Flyway; Node.js, pnpm và Vite 8; kiểm tra health bằng HTTP và frontend bằng HTTP loopback.
 - **Mục đích chức năng / việc đã làm**: Cho phép xem và thử trực tiếp bản sửa các finding trong `bug.docx` trên máy local. Backend chạy tại `http://127.0.0.1:8080`; frontend tại `http://localhost:5173/`. Dữ liệu thử nghiệm thuộc H2 local; việc gửi email thật không được kiểm thử.
+
+## 2026-11-01 — TB-002
+- Đã làm: loại địa điểm trùng; 4 kiểm thử jobSearch đạt.
+- Công nghệ: TypeScript, Set, Vitest.
+- Mục đích: giữ địa chỉ và nhãn mô phỏng, chỉ hiển thị tên thành phố một lần.

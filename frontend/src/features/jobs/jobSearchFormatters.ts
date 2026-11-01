@@ -36,3 +36,14 @@ export function formatSalary(
     if (minSalary !== null) return `Từ ${inMillions(minSalary)} triệu VNĐ`
     return `Đến ${inMillions(maxSalary as number)} triệu VNĐ`
 }
+
+export function formatJobLocation(location: string | null, city: string | null): string {
+    const parts = [location, city].flatMap(value => value?.split('·') ?? [])
+    const seen = new Set<string>()
+    return parts.map(part => part.trim()).filter(part => {
+        const key = part.toLocaleLowerCase('vi-VN')
+        if (!key || seen.has(key)) return false
+        seen.add(key)
+        return true
+    }).join(' · ') || 'Chưa cập nhật'
+}
