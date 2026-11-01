@@ -366,8 +366,8 @@ class JobManagementIntegrationTest {
     }
 
     @Test
-    @DisplayName("HRPM-35: GET /api/v1/jobs - Lọc theo khoảng lương và vẫn hiển thị việc làm thỏa thuận")
-    void testPublicSearchJobsBySalaryRangeIncludesNegotiableJobs() throws Exception {
+    @DisplayName("HRPM-35: GET /api/v1/jobs - Lọc theo khoảng lương loại bỏ việc làm thỏa thuận")
+    void testPublicSearchJobsBySalaryRangeExcludesNegotiableJobs() throws Exception {
         saveJob("Remote React Developer", "Remote", "Hà Nội", "REMOTE", "MIDDLE",
                 new BigDecimal("15000000"), new BigDecimal("25000000"), false, JobStatus.ACTIVE);
         saveJob("Cloud Engineer Negotiable", "Hybrid", "Hà Nội", "HYBRID", "SENIOR",
@@ -377,10 +377,9 @@ class JobManagementIntegrationTest {
                         .param("minSalary", "40000000")
                         .param("maxSalary", "45000000"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content", hasSize(2)))
-                .andExpect(jsonPath("$.data.content[*].title", containsInAnyOrder(
-                        "Senior Spring Boot Architect", "Cloud Engineer Negotiable")))
-                .andExpect(jsonPath("$.data.totalElements").value(2));
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].title").value("Senior Spring Boot Architect"))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
     }
 
     @Test

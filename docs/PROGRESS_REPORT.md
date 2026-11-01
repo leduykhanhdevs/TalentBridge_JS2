@@ -747,3 +747,8 @@
 - Đã làm: lưu trang, bộ lọc, lương, sort, size vào URL; Back và reload khôi phục đúng trang; 135 unit frontend, build, lint và 4 test Playwright đạt.
 - Công nghệ: React Router useSearchParams, React Query, TypeScript, Vitest, Playwright API mocks.
 - Mục đích: giữ ngữ cảnh tìm việc sau khi xem chi tiết; không dùng dữ liệu thật.
+
+## 2026-11-01 — Nghiệm thu TB-002 đến TB-006
+- Đã làm: 5 lỗi được sửa trên nhánh cá nhân; 135 unit frontend, 28 test backend H2, 4 UI test, build, lint đạt. Chi tiết: docs/qa/job-search-fixes-2026-11-01/RESULTS.md.
+- Công nghệ: JPA/H2, React Router, Vitest/Playwright; cập nhật test lương cũ theo nghiệp vụ đã xác nhận.
+- Mục đích: chuẩn bị PR vào dev, bảo toàn repo gốc; không merge/deploy hay sửa dữ liệu production.
