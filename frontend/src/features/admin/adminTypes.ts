@@ -157,6 +157,7 @@ export type ApiMetricsBucketResponse = {
     serverErrorCount: number
     averageLatencyMs: number
     maxLatencyMs: number
+    statusCounts?: Record<string, number>
 }
 
 export type ApiMetricsEndpointResponse = {
@@ -168,6 +169,7 @@ export type ApiMetricsEndpointResponse = {
     averageLatencyMs: number
     maxLatencyMs: number
     buckets: ApiMetricsBucketResponse[]
+    statusCounts?: Record<string, number>
 }
 
 export type AdminApiMetricsResponse = {
@@ -185,6 +187,7 @@ export type AdminApiMetricsResponse = {
     averageLatencyMs: number
     maxLatencyMs: number
     endpoints: ApiMetricsEndpointResponse[]
+    statusCounts?: Record<string, number>
 }
 
 export type AdminReportFormat = 'png' | 'xlsx' | 'docx'

@@ -6,6 +6,7 @@ const validValues: RegisterFormValues = {
     email: 'khanh@example.com',
     phone: '0912345678',
     password: 'password123',
+    confirmPassword: 'password123',
     role: 'ROLE_CANDIDATE',
     position: '',
 }
@@ -26,5 +27,21 @@ describe('validateRegisterForm', () => {
 
     it('accepts a valid local phone number', () => {
         expect(validateRegisterForm(validValues, true).phone).toBeUndefined()
+    })
+
+    it('requires a confirmation password', () => {
+        expect(validateRegisterForm({ ...validValues, confirmPassword: '' }, true).confirmPassword).toBe(
+            'Vui lòng nhập lại mật khẩu.',
+        )
+    })
+
+    it('rejects a confirmation password that does not match', () => {
+        expect(validateRegisterForm({ ...validValues, confirmPassword: 'different123' }, true).confirmPassword).toBe(
+            'Mật khẩu xác nhận không khớp.',
+        )
+    })
+
+    it('accepts matching password confirmation', () => {
+        expect(validateRegisterForm(validValues, true).confirmPassword).toBeUndefined()
     })
 })

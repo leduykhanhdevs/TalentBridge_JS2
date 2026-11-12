@@ -13,6 +13,7 @@ import type {
     ParsedCvResult,
     ApplyParsedCvPayload,
     CandidateInterviewItem,
+    ContactVerificationRequestResult,
     ContactVerificationStatus,
 } from './candidateTypes'
 import { getAccessToken } from '../auth/tokenStorage'
@@ -336,17 +337,25 @@ export async function getContactVerificationStatus(): Promise<ContactVerificatio
     return payload.data
 }
 
-export async function requestContactVerificationCode(channel: 'EMAIL' | 'PHONE'): Promise<void> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/candidates/contact-verification/${channel}/request`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-    })
+export async function requestContactVerificationCode(
+    channel: 'EMAIL' | 'PHONE',
+): Promise<ContactVerificationRequestResult> {
+    const response = await authenticatedFetch(
+        API_BASE_URL + '/candidates/contact-verification/' + channel + '/request',
+        {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        },
+    )
+    const payload: ApiResponse<ContactVerificationRequestResult> | null = await response.json().catch(() => null)
     if (!response.ok) {
-        const error = await response.json().catch(() => null)
-        throw new CandidateApiError(response.status, error?.message || 'Không thể gửi mã xác minh.')
+        throw new CandidateApiError(response.status, payload?.message || 'Không thể gửi mã xác minh.')
     }
+    if (!payload?.data || typeof payload.data.destination !== 'string') {
+        throw new CandidateApiError(response.status, 'Máy chủ chưa trả thông tin người nhận mã xác minh.')
+    }
+    return payload.data
 }
-
 export async function verifyContactVerificationCode(
     channel: 'EMAIL' | 'PHONE',
     otp: string,

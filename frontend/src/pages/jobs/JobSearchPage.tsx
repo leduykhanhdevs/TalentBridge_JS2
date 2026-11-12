@@ -233,11 +233,6 @@ export function JobSearchPage() {
                 </aside>
 
                 <section aria-live="polite" className="min-w-0">
-                    {jobsQuery.isSuccess && jobs.some((job) => job.isDemo) && (
-                        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="note">
-                            Danh sách có tin tuyển dụng mô phỏng để xem thử giao diện. Tin được gắn nhãn “Mô phỏng” không đại diện vị trí thật và không nhận hồ sơ.
-                        </p>
-                    )}
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-slate-950">Danh sách việc làm</h2>

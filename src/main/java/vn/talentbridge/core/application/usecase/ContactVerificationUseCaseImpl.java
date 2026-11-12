@@ -1,5 +1,6 @@
 package vn.talentbridge.core.application.usecase;
 
+import vn.talentbridge.core.application.dto.ContactVerificationRequestResult;
 import vn.talentbridge.core.application.dto.ContactVerificationStatusResult;
 import vn.talentbridge.core.application.port.in.ContactVerificationUseCase;
 import vn.talentbridge.core.application.port.out.ContactVerificationDeliveryPort;
@@ -43,14 +44,14 @@ public class ContactVerificationUseCaseImpl implements ContactVerificationUseCas
     }
 
     @Override
-    public void requestCode(Long userId, Channel channel) {
+    public ContactVerificationRequestResult requestCode(Long userId, Channel channel) {
         User user = findUser(userId);
         PasswordResetToken.Purpose purpose = purposeFor(channel);
+        String destination = destinationFor(user, channel);
         if (isVerified(user, channel)) {
-            return;
+            return new ContactVerificationRequestResult(destination, true, false);
         }
 
-        String destination = destinationFor(user, channel);
         LocalDateTime now = LocalDateTime.now();
         tokenRepository.findLatestActiveByUserIdAndPurpose(userId, purpose, now)
                 .filter(token -> token.getCreatedAt() != null
@@ -77,6 +78,7 @@ public class ContactVerificationUseCaseImpl implements ContactVerificationUseCas
             tokenRepository.invalidateUnusedByUserIdAndPurpose(userId, purpose, LocalDateTime.now());
             throw exception;
         }
+        return new ContactVerificationRequestResult(destination, false, true);
     }
 
     @Override

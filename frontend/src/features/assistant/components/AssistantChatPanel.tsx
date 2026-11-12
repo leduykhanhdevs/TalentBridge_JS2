@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { askTalentBridge } from '../assistantApi'
 import type { AssistantTurn } from '../assistantTypes'
 import { getAdminReportFormat } from '../adminReportIntent'
+import { isPendingAdminQuestion } from '../adminQuestionIntent'
 import { getAccessToken, getStoredUser } from '../../auth/tokenStorage'
 import type { AdminApiMetricsResponse, AdminDashboardStatsResponse, AdminReportFormat } from '../../admin/adminTypes'
 import { getMyJobs } from '../../recruiter/recruiterJobApi'
@@ -185,9 +186,12 @@ export function AssistantChatPanel({
             const normalizedQuestion = normalizeQuestion(question)
             const overviewIntent = ['thong ke', 'tong quan', 'bao nhieu', 'so lieu', 'bao cao', 'tinh hinh']
                 .some((term) => normalizedQuestion.includes(term))
-            const pendingIntent = ['cho duyet', 'can duyet', 'cho xu ly', 'can xu ly', 'chua duyet']
-                .some((term) => normalizedQuestion.includes(term))
+            const pendingIntent = isPendingAdminQuestion(normalizedQuestion)
             const apiIntent = ['api', 'do tre', 'latency', 'loi'].some((term) => normalizedQuestion.includes(term))
+            const companyApprovalIntent = ['duyet', 'phe duyet', 'kiem duyet']
+                .some((term) => normalizedQuestion.includes(term))
+                && ['doanh nghiep', 'cong ty'].some((term) => normalizedQuestion.includes(term))
+                && !pendingIntent
             const reportFormat = getAdminReportFormat(question, adminMode)
             let adminAnswer: string | null = null
 
@@ -253,6 +257,8 @@ export function AssistantChatPanel({
                 adminAnswer = adminMetrics
                     ? `Thống kê API trong ${adminMetrics.retentionHours} giờ dữ liệu đang lưu:\n• ${adminMetrics.requestCount.toLocaleString('vi-VN')} yêu cầu\n• ${(adminMetrics.clientErrorCount + adminMetrics.serverErrorCount).toLocaleString('vi-VN')} lỗi (${adminMetrics.errorRatePercent.toLocaleString('vi-VN')}%)\n• Độ trễ trung bình ${adminMetrics.averageLatencyMs.toLocaleString('vi-VN')} ms; cao nhất ${adminMetrics.maxLatencyMs.toLocaleString('vi-VN')} ms.\n\nMở “Thống kê API” để xem từng endpoint. ${adminMetrics.resetsOnRestart ? 'Bộ đếm có thể được đặt lại khi máy chủ khởi động lại.' : ''}`
                     : 'Chưa tải được thống kê API. Hãy dùng nút “Cập nhật số liệu” phía trên rồi hỏi lại.'
+            } else if (adminMode && companyApprovalIntent) {
+                adminAnswer = 'Để xử lý hồ sơ doanh nghiệp:\n1. Mở mục “Doanh nghiệp” rồi chọn tab “Chờ phê duyệt”.\n2. Chọn “Chi tiết” để xem hồ sơ doanh nghiệp và thông tin liên quan.\n3. Chọn “Phê duyệt” để chấp thuận, hoặc “Từ chối” và nhập lý do.\n\nKhi được phê duyệt, HR của công ty có thể đăng tin tuyển dụng và tìm kiếm hồ sơ ứng viên. Trạng thái phê duyệt là trạng thái trong hệ thống, không tự xác minh pháp lý hay bảo đảm uy tín doanh nghiệp.'
             } else if (adminMode && pendingIntent) {
                 adminAnswer = adminStats
                     ? `Hàng chờ hiện tại:\n• ${adminStats.pendingCompanies.toLocaleString('vi-VN')} doanh nghiệp chờ duyệt.\n• ${adminStats.pendingJobs.toLocaleString('vi-VN')} tin tuyển dụng chờ kiểm duyệt.\n\nMở “Doanh nghiệp” hoặc “Tin tuyển dụng” để xem danh sách và quyết định.`

@@ -91,19 +91,19 @@ public class ApiMetricsCollector {
                         Instant.ofEpochSecond(entry.getKey().bucketStartEpochSecond()),
                         current.requestCount(), current.clientErrors(), current.serverErrors(),
                         averageLatencyMs(current.totalLatencyNanos(), current.requestCount()),
-                        nanosToMillis(current.maxLatencyNanos())));
+                        nanosToMillis(current.maxLatencyNanos()), current.statusCounts()));
             }
             endpoints.add(new ApiMetricsResponse.EndpointSeries(
                     endpoint, endpointTotals.requestCount, endpointTotals.clientErrors, endpointTotals.serverErrors,
                     errorRatePercent(endpointTotals), averageLatencyMs(endpointTotals.totalLatencyNanos, endpointTotals.requestCount),
-                    nanosToMillis(endpointTotals.maxLatencyNanos), List.copyOf(timeline)));
+                    nanosToMillis(endpointTotals.maxLatencyNanos), List.copyOf(timeline), endpointTotals.statusCounts));
         });
 
         return new ApiMetricsResponse(
                 to, collectedSince, from, to, BUCKET_MINUTES, RETENTION_HOURS, true,
                 all.requestCount, all.clientErrors, all.serverErrors, errorRatePercent(all),
                 averageLatencyMs(all.totalLatencyNanos, all.requestCount), nanosToMillis(all.maxLatencyNanos),
-                List.copyOf(endpoints));
+                List.copyOf(endpoints), all.statusCounts);
     }
 
     @Scheduled(fixedRate = 60_000L)
@@ -143,7 +143,8 @@ public class ApiMetricsCollector {
     private record BucketKey(String endpoint, long bucketStartEpochSecond) {}
 
     private record MetricSnapshot(long requestCount, long clientErrors, long serverErrors,
-                                  long totalLatencyNanos, long maxLatencyNanos) {}
+                                  long totalLatencyNanos, long maxLatencyNanos,
+                                  Map<String, Long> statusCounts) {}
 
     private static final class MetricBucket {
         private final LongAdder requestCount = new LongAdder();
@@ -151,9 +152,11 @@ public class ApiMetricsCollector {
         private final LongAdder serverErrors = new LongAdder();
         private final LongAdder totalLatencyNanos = new LongAdder();
         private final LongAccumulator maxLatencyNanos = new LongAccumulator(Long::max, 0L);
+        private final ConcurrentMap<Integer, LongAdder> statusCounts = new ConcurrentHashMap<>();
 
         private void record(int status, long elapsedNanos) {
             requestCount.increment();
+            statusCounts.computeIfAbsent(status, ignored -> new LongAdder()).increment();
             if (status >= 400 && status < 500) clientErrors.increment();
             if (status >= 500) serverErrors.increment();
             totalLatencyNanos.add(elapsedNanos);
@@ -161,8 +164,10 @@ public class ApiMetricsCollector {
         }
 
         private MetricSnapshot snapshot() {
+            Map<String, Long> countsByStatus = new TreeMap<>(Comparator.comparingInt(Integer::parseInt));
+            statusCounts.forEach((status, count) -> countsByStatus.put(String.valueOf(status), count.sum()));
             return new MetricSnapshot(requestCount.sum(), clientErrors.sum(), serverErrors.sum(),
-                    totalLatencyNanos.sum(), maxLatencyNanos.get());
+                    totalLatencyNanos.sum(), maxLatencyNanos.get(), Map.copyOf(countsByStatus));
         }
     }
 
@@ -172,9 +177,11 @@ public class ApiMetricsCollector {
         private long serverErrors;
         private long totalLatencyNanos;
         private long maxLatencyNanos;
+        private final Map<String, Long> statusCounts = new TreeMap<>(Comparator.comparingInt(Integer::parseInt));
 
         private void add(MetricSnapshot snapshot) {
             requestCount += snapshot.requestCount();
+            snapshot.statusCounts().forEach((status, count) -> statusCounts.merge(status, count, Long::sum));
             clientErrors += snapshot.clientErrors();
             serverErrors += snapshot.serverErrors();
             totalLatencyNanos += snapshot.totalLatencyNanos();

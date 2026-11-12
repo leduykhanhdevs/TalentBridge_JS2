@@ -35,7 +35,7 @@ public class RequestCreateCompanyRequest {
     @Schema(example = "1000+")
     private String companySize;
 
-    @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
+    @Size(max = 300, message = "Địa chỉ không được vượt quá 300 ký tự")
     @Schema(example = "Khu công nghệ cao, TP. Thủ Đức")
     private String address;
 

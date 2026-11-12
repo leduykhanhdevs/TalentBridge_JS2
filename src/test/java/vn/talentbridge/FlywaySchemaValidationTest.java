@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,13 +24,22 @@ class FlywaySchemaValidationTest {
     @Autowired(required = false)
     private Flyway flyway;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     @DisplayName("Flyway baseline migration should execute and Hibernate schema validation should pass")
     void testFlywayBaselineMigrationAndSchemaValidation() {
         assertThat(flyway).isNotNull();
         MigrationInfo current = flyway.info().current();
         assertThat(current).isNotNull();
-        assertThat(current.getVersion().getVersion()).isEqualTo("5");
-        assertThat(current.getDescription()).isEqualTo("candidate contact verification");
+        assertThat(current.getVersion().getVersion()).isEqualTo("6");
+        assertThat(current.getDescription()).isEqualTo("allow company address to be optional");
+        String addressNullable = jdbcTemplate.queryForObject(
+                "SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS " +
+                        "WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = 'COMPANIES' AND COLUMN_NAME = 'ADDRESS'",
+                String.class
+        );
+        assertThat(addressNullable).isEqualTo("YES");
     }
 }

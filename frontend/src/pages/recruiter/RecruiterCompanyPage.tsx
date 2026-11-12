@@ -491,6 +491,7 @@ export function RecruiterCompanyPage() {
                             <input
                                 className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                                 id="comp-address"
+                                maxLength={300}
                                 onChange={(e) => setFormValues((prev) => ({ ...prev, address: e.target.value }))}
                                 placeholder="Tòa nhà FPT, Khu công nghệ cao, TP. Thủ Đức"
                                 type="text"

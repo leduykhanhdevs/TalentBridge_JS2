@@ -14,6 +14,8 @@ export type UserResponse = {
     email: string
     fullName: string
     phone?: string
+    emailVerified?: boolean
+    phoneVerified?: boolean
     status: 'ACTIVE' | 'BANNED'
     roles: ('ROLE_CANDIDATE' | 'ROLE_RECRUITER' | 'ROLE_ADMIN')[]
 }

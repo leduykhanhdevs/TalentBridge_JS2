@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.talentbridge.adapter.in.security.UserPrincipal;
 import vn.talentbridge.adapter.in.web.dto.request.VerifyContactOtpRequest;
 import vn.talentbridge.common.ApiResponse;
+import vn.talentbridge.core.application.dto.ContactVerificationRequestResult;
 import vn.talentbridge.core.application.dto.ContactVerificationStatusResult;
 import vn.talentbridge.core.application.port.in.ContactVerificationUseCase;
 
@@ -34,12 +35,24 @@ public class CandidateContactVerificationController {
 
     @PostMapping("/{channel}/request")
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<ApiResponse<Void>> requestCode(
+    public ResponseEntity<ApiResponse<ContactVerificationRequestResult>> requestCode(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable ContactVerificationUseCase.Channel channel
     ) {
-        contactVerificationUseCase.requestCode(principal.getId(), channel);
-        return ResponseEntity.ok(ApiResponse.success("Đã gửi mã xác minh.", null));
+        ContactVerificationRequestResult result = contactVerificationUseCase.requestCode(principal.getId(), channel);
+        String message;
+        if (result.alreadyVerified()) {
+            message = "Thông tin liên hệ đã được xác minh trước đó.";
+        } else if (!result.deliveryAccepted()) {
+            message = "Chưa có xác nhận gửi mã từ nhà cung cấp.";
+        } else if (channel == ContactVerificationUseCase.Channel.EMAIL) {
+            message = "Nhà cung cấp đã chấp nhận yêu cầu gửi mã tới " + result.destination()
+                    + ". Điều này chưa xác nhận thư đã vào hộp thư; hãy kiểm tra Inbox và Spam.";
+        } else {
+            message = "Nhà cung cấp đã chấp nhận yêu cầu gửi mã tới " + result.destination()
+                    + ". Điều này chưa xác nhận tin nhắn đã đến điện thoại.";
+        }
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     @PostMapping("/{channel}/verify")

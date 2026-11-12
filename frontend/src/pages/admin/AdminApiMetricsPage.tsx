@@ -14,6 +14,15 @@ function formatTime(value: string): string {
     return new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }).format(new Date(value))
 }
 
+function formatErrorStatusCounts(statusCounts?: Record<string, number>): string {
+    const errors = Object.entries(statusCounts ?? {})
+        .filter(([status, count]) => Number(status) >= 400 && count > 0)
+        .sort(([left], [right]) => Number(left) - Number(right))
+    return errors.length === 0
+        ? 'Chưa ghi nhận lỗi HTTP'
+        : errors.map(([status, count]) => 'HTTP ' + status + ': ' + numberFormat.format(count)).join(' · ')
+}
+
 function EndpointTimeline({ buckets, hours, endpoint, to }: { buckets: ApiMetricsBucketResponse[]; hours: number; endpoint: string; to: string }) {
     const totalSlots = Math.max(1, Math.ceil(hours * 60 / 5))
     const slots = new Map(buckets.map((bucket) => [Math.floor(new Date(bucket.startsAt).getTime() / 300_000), bucket]))
@@ -54,6 +63,9 @@ function EndpointRow({ endpoint, hours, to }: { endpoint: ApiMetricsEndpointResp
             <th className="max-w-[360px] px-4 py-4 text-left font-medium text-slate-800" scope="row">
                 <span className="block truncate font-mono text-xs" title={endpoint.endpoint}>{endpoint.endpoint}</span>
                 <span className="mt-1 block text-xs font-normal text-slate-500">{numberFormat.format(endpoint.requestCount)} request</span>
+                {formatErrorStatusCounts(endpoint.statusCounts) !== 'Chưa ghi nhận lỗi HTTP' && (
+                    <span className="mt-1 block text-xs font-normal text-rose-700">{formatErrorStatusCounts(endpoint.statusCounts)}</span>
+                )}
             </th>
             <td className="px-4 py-4 text-sm text-slate-700">{numberFormat.format(errors)} <span className="text-xs text-slate-500">(4xx {endpoint.clientErrorCount} · 5xx {endpoint.serverErrorCount})</span></td>
             <td className="px-4 py-4 text-sm font-semibold text-slate-700">{endpoint.errorRatePercent}%</td>
@@ -121,7 +133,7 @@ export function AdminApiMetricsPage() {
             {metrics && <>
                 <section aria-label="Tổng quan API" className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <MetricCard icon={Activity} label="Tổng request" value={numberFormat.format(metrics.requestCount)} detail={`trong ${hours} giờ qua`} />
-                    <MetricCard icon={AlertTriangle} label="Request lỗi" value={`${numberFormat.format(errors)} · ${metrics.errorRatePercent}%`} detail="HTTP 4xx và 5xx" />
+                    <MetricCard icon={AlertTriangle} label="Request lỗi" value={`${numberFormat.format(errors)} · ${metrics.errorRatePercent}%`} detail={formatErrorStatusCounts(metrics.statusCounts)} />
                     <MetricCard icon={Clock3} label="Độ trễ trung bình" value={formatLatency(metrics.averageLatencyMs)} detail={`cao nhất ${formatLatency(metrics.maxLatencyMs)}`} />
                     <MetricCard icon={Server} label="Endpoint ghi nhận" value={numberFormat.format(metrics.endpoints.length)} detail={`bucket ${metrics.bucketMinutes} phút`} />
                 </section>

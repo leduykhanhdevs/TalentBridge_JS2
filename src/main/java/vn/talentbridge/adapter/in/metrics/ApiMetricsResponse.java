@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.in.metrics;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 /** Bounded, in-process API telemetry returned to administrators. */
 public record ApiMetricsResponse(
@@ -18,7 +19,8 @@ public record ApiMetricsResponse(
         double errorRatePercent,
         double averageLatencyMs,
         double maxLatencyMs,
-        List<EndpointSeries> endpoints) {
+        List<EndpointSeries> endpoints,
+        Map<String, Long> statusCounts) {
 
     public record EndpointSeries(
             String endpoint,
@@ -28,7 +30,8 @@ public record ApiMetricsResponse(
             double errorRatePercent,
             double averageLatencyMs,
             double maxLatencyMs,
-            List<Bucket> buckets) {}
+            List<Bucket> buckets,
+            Map<String, Long> statusCounts) {}
 
     public record Bucket(
             Instant startsAt,
@@ -36,5 +39,6 @@ public record ApiMetricsResponse(
             long clientErrorCount,
             long serverErrorCount,
             double averageLatencyMs,
-            double maxLatencyMs) {}
+            double maxLatencyMs,
+            Map<String, Long> statusCounts) {}
 }

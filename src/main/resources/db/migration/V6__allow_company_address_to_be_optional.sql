@@ -1,0 +1,2 @@
+ALTER TABLE companies
+    MODIFY COLUMN address VARCHAR(300) NULL;

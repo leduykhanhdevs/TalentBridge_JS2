@@ -36,11 +36,14 @@ class ApiMetricsCollectorTest {
         assertThat(response.errorRatePercent()).isEqualTo(50.0);
         assertThat(response.averageLatencyMs()).isEqualTo(37.5);
         assertThat(response.maxLatencyMs()).isEqualTo(90.0);
+        assertThat(response.statusCounts()).containsEntry("200", 2L).containsEntry("400", 1L).containsEntry("500", 1L);
         assertThat(response.endpoints()).hasSize(2);
         assertThat(response.endpoints()).filteredOn(endpoint -> endpoint.endpoint().equals("GET /api/v1/jobs/{jobId}"))
                 .singleElement().satisfies(endpoint -> {
             assertThat(endpoint.buckets()).hasSize(2);
             assertThat(endpoint.requestCount()).isEqualTo(2);
+            assertThat(endpoint.statusCounts()).containsEntry("200", 2L);
+            assertThat(endpoint.buckets().getFirst().statusCounts()).containsEntry("200", 1L);
         });
     }
 

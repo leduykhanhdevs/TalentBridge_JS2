@@ -162,7 +162,7 @@ export function AdminAssistantPage() {
                                     <span className="min-w-0 flex-1">
                                         <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                                             <span className="truncate">{item.label}</span>
-                                            {item.count !== undefined && item.count > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">{formatNumber(item.count)} chờ</span>}
+                                            {item.count !== undefined && item.count > 0 && <span aria-label={`${formatNumber(item.count)} mục chờ xử lý`} className="grid size-6 shrink-0 place-items-center rounded-full bg-amber-100 text-[10px] font-bold tabular-nums text-amber-800" title={`${formatNumber(item.count)} mục chờ xử lý`}>{formatNumber(item.count)}</span>}
                                         </span>
                                         <span className="mt-0.5 block truncate text-xs text-slate-500">{item.description}</span>
                                     </span>
