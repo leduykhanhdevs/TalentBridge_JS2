@@ -10,14 +10,17 @@ import {
     Mail,
     Phone,
     Save,
+    UploadCloud,
     User,
 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { getStoredUser } from '../../features/auth/tokenStorage'
 import {
     getRecruiterProfile,
     RecruiterApiError,
     updateRecruiterProfile,
+    uploadRecruiterAvatar,
 } from '../../features/recruiter/recruiterApi'
 import type {
     RecruiterProfile,
@@ -35,6 +38,7 @@ type FormErrors = Partial<Record<keyof FormValues, string>>
 
 function ProfileEditForm({ profile }: { profile: RecruiterProfile }) {
     const queryClient = useQueryClient()
+    const avatarInputRef = useRef<HTMLInputElement>(null)
 
     const [formValues, setFormValues] = useState<FormValues>(() => ({
         fullName: profile.fullName || '',
@@ -45,11 +49,13 @@ function ProfileEditForm({ profile }: { profile: RecruiterProfile }) {
     const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
     const [serverError, setServerError] = useState('')
     const [successMessage, setSuccessMessage] = useState('')
+    const [isAvatarDragging, setIsAvatarDragging] = useState(false)
+    const [isAvatarUploading, setIsAvatarUploading] = useState(false)
 
     const updateMutation = useMutation({
         mutationFn: (data: UpdateRecruiterProfileRequest) => updateRecruiterProfile(data),
         onSuccess: (updated) => {
-            queryClient.setQueryData(['recruiter-profile'], updated)
+            queryClient.setQueryData(['recruiter-profile', getStoredUser()?.id ?? 'anonymous'], updated)
             setSuccessMessage('Cập nhật hồ sơ nhà tuyển dụng thành công!')
             setServerError('')
             setFieldErrors({})
@@ -87,6 +93,32 @@ function ProfileEditForm({ profile }: { profile: RecruiterProfile }) {
         }
 
         return errors
+    }
+
+    async function handleAvatarFile(file?: File) {
+        if (!file) return
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            setServerError('Ảnh đại diện chỉ hỗ trợ JPG hoặc PNG.')
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setServerError('Ảnh đại diện không được vượt quá 5 MB.')
+            return
+        }
+
+        setIsAvatarUploading(true)
+        setServerError('')
+        setSuccessMessage('')
+        try {
+            const avatarUrl = await uploadRecruiterAvatar(file)
+            setFormValues((current) => ({ ...current, avatarUrl }))
+            setSuccessMessage('Ảnh đã tải lên. Nhấn “Lưu thay đổi” để cập nhật hồ sơ.')
+        } catch (error) {
+            setServerError(error instanceof Error ? error.message : 'Không thể tải ảnh đại diện lên.')
+        } finally {
+            setIsAvatarUploading(false)
+            if (avatarInputRef.current) avatarInputRef.current.value = ''
+        }
     }
 
     function handleSubmit(e: FormEvent) {
@@ -232,6 +264,39 @@ function ProfileEditForm({ profile }: { profile: RecruiterProfile }) {
                     {fieldErrors.avatarUrl && (
                         <p className="mt-1 text-xs text-red-600">{fieldErrors.avatarUrl}</p>
                     )}
+                    <div
+                        className={`mt-3 flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border border-dashed px-4 py-3 text-sm text-slate-600 transition ${isAvatarDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50 hover:border-blue-300 hover:bg-blue-50/50'} ${isAvatarUploading ? 'pointer-events-none opacity-60' : ''}`}
+                        onDragEnter={(event) => { event.preventDefault(); setIsAvatarDragging(true) }}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDragLeave={(event) => {
+                            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsAvatarDragging(false)
+                        }}
+                        onDrop={(event) => {
+                            event.preventDefault()
+                            setIsAvatarDragging(false)
+                            void handleAvatarFile(event.dataTransfer.files[0])
+                        }}
+                        onClick={() => avatarInputRef.current?.click()}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault()
+                                avatarInputRef.current?.click()
+                            }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                    >
+                        <UploadCloud aria-hidden="true" className="shrink-0 text-blue-700" size={20} />
+                        <span>{isAvatarUploading ? 'Đang tải ảnh lên…' : 'Thả ảnh vào đây hoặc bấm để chọn ảnh JPG/PNG (tối đa 5 MB)'}</span>
+                        <input
+                            ref={avatarInputRef}
+                            accept="image/jpeg,image/png"
+                            className="sr-only"
+                            id="hr-avatar-upload"
+                            onChange={(event) => void handleAvatarFile(event.target.files?.[0])}
+                            type="file"
+                        />
+                    </div>
                 </div>
 
                 {serverError && (
@@ -273,7 +338,7 @@ export function RecruiterProfilePage() {
         isLoading,
         error: loadError,
     } = useQuery({
-        queryKey: ['recruiter-profile'],
+        queryKey: ['recruiter-profile', getStoredUser()?.id ?? 'anonymous'],
         queryFn: getRecruiterProfile,
     })
 
@@ -353,12 +418,6 @@ export function RecruiterProfilePage() {
                                     {profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : 'HR'}
                                 </div>
                             )}
-                            <span
-                                className={`absolute bottom-0 right-0 size-4 rounded-full border-2 border-white ${
-                                    profile?.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-red-500'
-                                }`}
-                                title={`Tài khoản: ${profile?.status}`}
-                            />
                         </div>
 
                         <h2 className="text-lg font-bold text-slate-900">{profile?.fullName}</h2>

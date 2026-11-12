@@ -89,6 +89,7 @@ Tất cả các API lấy danh sách (`/admin/candidates`, `/admin/recruiters`, 
     "role": "ROLE_CANDIDATE" 
   }
   ```
+  * **Ràng buộc**: `phone` là trường bắt buộc; dùng số điện thoại Việt Nam dạng `0912345678` hoặc `+84912345678`.
   *(Role chỉ nhận: `ROLE_CANDIDATE` hoặc `ROLE_RECRUITER`)*
 * **Response Status**: `201 Created`
 * **Mock Response**:

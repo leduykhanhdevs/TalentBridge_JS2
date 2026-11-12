@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Award, Star, X } from 'lucide-react'
 import { addCandidateSkill, CandidateApiError } from '../candidateApi'
 import type { SkillItem } from '../candidateTypes'
+import { CustomSelect } from '../../../components/ui/CustomSelect'
 
 interface CandidateSkillModalProps {
     isOpen: boolean
@@ -143,20 +144,16 @@ export function CandidateSkillModal({
                                 value={customSkillName}
                             />
                         ) : (
-                            <select
-                                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            <CustomSelect
+                                aria-label="Chọn kỹ năng tiêu chuẩn"
                                 disabled={loading}
-                                onChange={(e) => setSelectedSkillName(e.target.value)}
-                                required
+                                onChange={setSelectedSkillName}
+                                options={[
+                                    { value: '', label: '-- Chọn kỹ năng tiêu chuẩn --' },
+                                    ...availableSkills.map((skill) => ({ value: skill.name, label: skill.name })),
+                                ]}
                                 value={selectedSkillName}
-                            >
-                                <option value="">-- Chọn kỹ năng tiêu chuẩn --</option>
-                                {availableSkills.map((s) => (
-                                    <option key={s.id} value={s.name}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         )}
                     </div>
 
@@ -201,19 +198,14 @@ export function CandidateSkillModal({
                         <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor="proficiency-level">
                             Cấp độ đánh giá
                         </label>
-                        <select
-                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                            disabled={loading}
+                        <CustomSelect
                             id="proficiency-level"
-                            onChange={(e) => setProficiencyLevel(e.target.value)}
+                            aria-label="Cấp độ đánh giá"
+                            disabled={loading}
+                            onChange={setProficiencyLevel}
+                            options={PROFICIENCY_OPTIONS}
                             value={proficiencyLevel}
-                        >
-                            {PROFICIENCY_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </div>
 
                     <div>

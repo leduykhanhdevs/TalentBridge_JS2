@@ -20,6 +20,7 @@ import { getStoredUser, isAuthenticated } from '../features/auth/tokenStorage'
 import { logoutUser } from '../features/auth/authApi'
 import type { UserResponse } from '../features/auth/authTypes'
 import { ChangePasswordModal } from '../features/auth/components/ChangePasswordModal'
+import { WorkspaceLayoutFrame } from './WorkspaceLayoutFrame'
 
 function initialsFor(name: string) {
     const parts = name.trim().split(/\s+/).filter(Boolean)
@@ -82,11 +83,26 @@ export function MainLayout() {
         ...(isAdmin ? [{ to: '/admin/candidates', label: 'Quản trị', icon: ShieldCheck }] : []),
     ]
 
+    if (authenticated && user && showBrowsingNavigation) {
+        const roleLabel = isAdmin ? 'Quản trị' : isRecruiter ? 'Nhà tuyển dụng' : 'Ứng viên'
+
+        return (
+            <WorkspaceLayoutFrame
+                navigationItems={navigationLinks}
+                roleLabel={roleLabel}
+                sectionLabel={roleLabel}
+                showRoleBadge={false}
+                showWorkspaceLabel={false}
+                user={user}
+            />
+        )
+    }
+
     return (
         <div className="flex min-h-screen flex-col bg-bento-canvas text-slate-900">
             {!isLoginPage && (
             <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
-                <div className="mx-auto flex min-h-[76px] w-full max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-[76px] w-full max-w-[1760px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
                     <NavLink aria-label="TalentBridge — Trang chủ" className="flex shrink-0 items-center gap-2.5" end to="/">
                         <span className="grid size-9 place-items-center rounded-lg bg-blue-700 text-white">
                             <BriefcaseBusiness aria-hidden="true" size={18} />
@@ -181,7 +197,7 @@ export function MainLayout() {
             </main>
 
             <footer className="border-t border-slate-200 bg-white">
-                <div className="mx-auto flex min-h-16 w-full max-w-[1280px] flex-col justify-center gap-2 px-4 py-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:px-0">
+                <div className="mx-auto flex min-h-16 w-full max-w-[1760px] flex-col justify-center gap-2 px-4 py-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:px-0">
                     <span>TalentBridge · Kết nối nghề nghiệp có trách nhiệm</span>
                     <span className="font-medium text-slate-500">Thông tin tuyển dụng do doanh nghiệp cung cấp</span>
                 </div>

@@ -5,6 +5,7 @@ import { getMyJobs } from '../../features/recruiter/recruiterJobApi'
 import type { RecruiterJobItem } from '../../features/recruiter/recruiterJobTypes'
 import { getJobQualityReport, getRecruiterPipeline } from '../../features/statistics/statisticsApi'
 import type { JobQualityReport, RecruiterPipelineAnalytics } from '../../features/statistics/statisticsTypes'
+import { CustomSelect } from '../../components/ui/CustomSelect'
 
 const STAGE_LABELS: Record<string, string> = {
     APPLIED: 'Mới nộp', REVIEWING: 'Đang xem xét', SCREENING: 'Đang xem xét',
@@ -79,10 +80,13 @@ export function RecruiterStatisticsPage() {
                 </div>
                 <label className="w-full text-xs font-bold text-slate-600 sm:w-80">
                     Chọn tin tuyển dụng
-                    <select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800" disabled={isLoadingJobs || jobs.length === 0} onChange={(event) => { const jobId = Number(event.target.value); setSelectedJobId(jobId); setSearchParams({ jobId: String(jobId) }) }} value={selectedJobId ?? ''}>
-                        {jobs.length === 0 && <option value="">Chưa có tin</option>}
-                        {jobs.map((job) => <option key={job.id} value={job.id}>{job.title} · {job.status}</option>)}
-                    </select>
+                    <CustomSelect
+                        aria-label="Chọn tin tuyển dụng"
+                        disabled={isLoadingJobs || jobs.length === 0}
+                        onChange={(value) => { const jobId = Number(value); setSelectedJobId(jobId); setSearchParams({ jobId: String(jobId) }) }}
+                        options={jobs.map((job) => ({ value: String(job.id), label: `${job.title} · ${job.status}` }))}
+                        value={selectedJobId === null ? '' : String(selectedJobId)}
+                    />
                 </label>
             </header>
 

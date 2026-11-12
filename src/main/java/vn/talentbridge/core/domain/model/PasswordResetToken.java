@@ -7,7 +7,9 @@ public class PasswordResetToken {
     public enum Purpose {
         OTP,
         RESET_GRANT,
-        LEGACY
+        LEGACY,
+        EMAIL_VERIFICATION,
+        PHONE_VERIFICATION
     }
 
     private Long id;

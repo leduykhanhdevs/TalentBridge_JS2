@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import {
     Clock,
     Video,
@@ -9,14 +10,16 @@ import {
     Loader2,
     FileText
 } from 'lucide-react'
-import { getCandidateInterview, API_BASE_URL } from '../candidateApi'
+import { downloadCandidateInterviewCalendar, getCandidateInterview } from '../candidateApi'
 
 interface CandidateInterviewCardProps {
     applicationId: number
 }
 
 export function CandidateInterviewCard({ applicationId }: CandidateInterviewCardProps) {
-    const { data: interview, isLoading } = useQuery({
+    const [calendarError, setCalendarError] = useState<string | null>(null)
+    const [isDownloadingCalendar, setIsDownloadingCalendar] = useState(false)
+    const { data: interview, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['candidate-interview', applicationId],
         queryFn: () => getCandidateInterview(applicationId),
     })
@@ -26,6 +29,15 @@ export function CandidateInterviewCard({ applicationId }: CandidateInterviewCard
             <div className="mt-3.5 flex items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50/50 p-3 text-xs text-blue-800">
                 <Loader2 className="h-4 w-4 animate-spin text-blue-700" />
                 <span>Đang tải thông tin lịch phỏng vấn...</span>
+            </div>
+        )
+    }
+
+    if (isError) {
+        return (
+            <div className="mt-3.5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800" role="alert">
+                <p>{error instanceof Error ? error.message : 'Không thể tải thông tin lịch phỏng vấn.'}</p>
+                <button className="mt-2 font-semibold underline" onClick={() => void refetch()} type="button">Thử tải lại</button>
             </div>
         )
     }
@@ -45,9 +57,16 @@ export function CandidateInterviewCard({ applicationId }: CandidateInterviewCard
 
     const isOnline = interview.locationType === 'ONLINE'
 
-    const handleDownloadIcs = () => {
-        const url = `${API_BASE_URL}/interviews/${interview.id}/calendar.ics`
-        window.open(url, '_blank')
+    const handleDownloadIcs = async () => {
+        setCalendarError(null)
+        setIsDownloadingCalendar(true)
+        try {
+            await downloadCandidateInterviewCalendar(interview.id)
+        } catch (error) {
+            setCalendarError(error instanceof Error ? error.message : 'Không thể tải lịch phỏng vấn.')
+        } finally {
+            setIsDownloadingCalendar(false)
+        }
     }
 
     const handleGoogleCalendar = () => {
@@ -148,11 +167,13 @@ export function CandidateInterviewCard({ applicationId }: CandidateInterviewCard
                 <button
                     type="button"
                     onClick={handleDownloadIcs}
+                    disabled={isDownloadingCalendar}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-900 hover:bg-blue-50 transition"
                 >
                     <Download className="h-3.5 w-3.5 text-blue-700" />
-                    Tải file lịch iCalendar (.ics)
+                    {isDownloadingCalendar ? 'Đang tải lịch…' : 'Tải file lịch iCalendar (.ics)'}
                 </button>
+                {calendarError && <p className="w-full text-xs text-rose-700" role="alert">{calendarError}</p>}
             </div>
         </div>
     )

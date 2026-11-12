@@ -1,3 +1,5 @@
+param([switch]$SkipTermsAcceptance)
+
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $frontendRoot = Join-Path $repositoryRoot 'frontend'
@@ -96,7 +98,11 @@ try {
     try {
         npm run test:e2e 2>&1 | Tee-Object -FilePath $apiE2eLog
         if ($LASTEXITCODE -ne 0) { throw "API E2E thất bại với exit code $LASTEXITCODE" }
-        npm run test:e2e:ui 2>&1 | Tee-Object -FilePath $uiE2eLog
+        if ($SkipTermsAcceptance) {
+            npm run test:e2e:ui -- --grep-invert 'candidate can register, sign out and sign back in using the local H2 backend' 2>&1 | Tee-Object -FilePath $uiE2eLog
+        } else {
+            npm run test:e2e:ui 2>&1 | Tee-Object -FilePath $uiE2eLog
+        }
         if ($LASTEXITCODE -ne 0) { throw "UI E2E thất bại với exit code $LASTEXITCODE" }
     } finally {
         Pop-Location

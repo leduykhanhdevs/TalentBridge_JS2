@@ -44,7 +44,7 @@ test('company request rejects incompatible website and logo values before sendin
 
     await page.goto('/login')
     await page.getByLabel('Email').fill('recruiter@fpt.com')
-    await page.getByLabel('Mật khẩu').fill('Password123!')
+    await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill('Password123!')
     await Promise.all([
         page.waitForURL((url) => !url.pathname.endsWith('/login')),
         page.getByRole('button', { name: 'Đăng nhập' }).click(),

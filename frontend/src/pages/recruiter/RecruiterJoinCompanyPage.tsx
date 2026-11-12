@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { getStoredUser } from '../../features/auth/tokenStorage'
 import {
     getMyPendingJoinRequest,
     getRecruiterProfile,
@@ -46,12 +47,12 @@ export function RecruiterJoinCompanyPage() {
         data: pendingRequest,
         refetch: refetchPendingRequest,
     } = useQuery({
-        queryKey: ['my-pending-join-request'],
+        queryKey: ['my-pending-join-request', getStoredUser()?.id ?? 'anonymous'],
         queryFn: getMyPendingJoinRequest,
     })
 
     const { data: profile, isLoading: isProfileLoading } = useQuery({
-        queryKey: ['recruiter-profile'],
+        queryKey: ['recruiter-profile', getStoredUser()?.id ?? 'anonymous'],
         queryFn: getRecruiterProfile,
     })
 

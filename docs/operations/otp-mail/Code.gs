@@ -18,7 +18,7 @@ function doPost(event) {
 
     MailApp.sendEmail({
       to: recipient,
-      subject: 'TalentBridge - Mã OTP đặt lại mật khẩu',
+      subject: String(payload.subject || 'TalentBridge - Mã OTP đặt lại mật khẩu').slice(0, 160),
       body: textBody,
       htmlBody: htmlBody,
       name: 'TalentBridge'

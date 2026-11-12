@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { AlertCircle, LoaderCircle, LockKeyhole, LogIn, Mail } from 'lucide-react'
+import { AlertCircle, CircleHelp, Eye, EyeOff, LoaderCircle, LockKeyhole, LogIn, Mail } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useMutation } from '@tanstack/react-query'
 import { HeroTalentIllustration } from '../components/illustrations'
@@ -20,6 +20,7 @@ export function LoginPage() {
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
     const [serverError, setServerError] = useState<string | null>(null)
     const [isConnecting, setIsConnecting] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
     const loginMutation = useMutation({
         mutationFn: async (request: Parameters<typeof loginUser>[0]) => {
@@ -144,20 +145,31 @@ export function LoginPage() {
                             <div>
                                 <div className="mb-2 flex items-center justify-between gap-4">
                                     <label className="block text-sm font-semibold text-slate-800" htmlFor="password">Mật khẩu</label>
-                                    <Link className="text-sm font-semibold text-blue-700 underline-offset-4 hover:underline" to="/forgot-password">Quên mật khẩu?</Link>
+                                    <Link className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 underline-offset-4 hover:underline" to="/forgot-password">
+                                        <CircleHelp aria-hidden="true" size={15} /> Quên mật khẩu?
+                                    </Link>
                                 </div>
                                 <div className="relative">
                                     <LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                                     <input
                                         autoComplete="current-password"
-                                        className={inputClassName('password')}
+                                        className={`${inputClassName('password')} pr-11`}
                                         id="password"
                                         name="password"
                                         placeholder="Nhập mật khẩu"
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         value={formValues.password}
                                         onChange={(event) => updateField('password', event.target.value)}
                                     />
+                                    <button
+                                        aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                                        aria-pressed={showPassword}
+                                        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+                                        onClick={() => setShowPassword((visible) => !visible)}
+                                        type="button"
+                                    >
+                                        {showPassword ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
+                                    </button>
                                 </div>
                                 {fieldErrors.password && <p className="mt-1.5 text-xs font-medium text-rose-700" role="alert">{fieldErrors.password}</p>}
                             </div>

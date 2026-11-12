@@ -160,7 +160,7 @@ public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
         if (periods.isEmpty()) return 0;
 
         periods.sort(Comparator.comparing(Period::start));
-        long totalDays = 0;
+        long totalMonths = 0;
         LocalDate currentStart = periods.getFirst().start();
         LocalDate currentEnd = periods.getFirst().end();
         for (int i = 1; i < periods.size(); i++) {
@@ -168,12 +168,12 @@ public class WorkExperienceUseCaseImpl implements WorkExperienceUseCase {
             if (!next.start().isAfter(currentEnd.plusDays(1))) {
                 if (next.end().isAfter(currentEnd)) currentEnd = next.end();
             } else {
-                totalDays += ChronoUnit.DAYS.between(currentStart, currentEnd.plusDays(1));
+                totalMonths += ChronoUnit.MONTHS.between(currentStart, currentEnd.plusDays(1));
                 currentStart = next.start();
                 currentEnd = next.end();
             }
         }
-        totalDays += ChronoUnit.DAYS.between(currentStart, currentEnd.plusDays(1));
-        return (int) Math.floor(totalDays / 365.2425d);
+        totalMonths += ChronoUnit.MONTHS.between(currentStart, currentEnd.plusDays(1));
+        return (int) (totalMonths / 12);
     }
 }

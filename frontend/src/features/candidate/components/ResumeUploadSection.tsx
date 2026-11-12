@@ -17,6 +17,7 @@ import {
     CandidateApiError,
 } from '../candidateApi'
 import type { ResumeItem } from '../candidateTypes'
+import { formatIsoDate } from '../../../components/ui/dateFormat'
 import { EmptyStateIllustration, CvManagerIllustration } from '../../../components/illustrations'
 
 interface ResumeUploadSectionProps {
@@ -134,7 +135,7 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
                 <div className="flex items-center gap-3">
                     <CvManagerIllustration className="size-8 shrink-0" />
                     <div>
-                        <h3 className="text-base font-bold text-slate-900">Hồ sơ CV đã tải lên</h3>
+                        <h3 className="text-base font-bold text-slate-900">CV của tôi</h3>
                         <p className="text-xs text-slate-500 font-medium">TopCV Standard - ATS Ready</p>
                     </div>
                 </div>
@@ -215,12 +216,12 @@ export function ResumeUploadSection({ resumes, onRefresh }: ResumeUploadSectionP
                                             {resume.isDefault && (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-semibold text-rose-700">
                                                     <Star className="h-3 w-3 fill-rose-600 text-rose-600" />
-                                                    CV Mặc định
+                                                    CV chính
                                                 </span>
                                             )}
                                         </div>
                                         <p className="mt-0.5 max-w-full truncate text-xs text-slate-500 sm:max-w-md">
-                                            {resume.fileName} &bull; Tải lên ngày {resume.createdAt ? resume.createdAt.split('T')[0] : ''}
+                                            {resume.fileName} &bull; Tải lên ngày {formatIsoDate(resume.createdAt)}
                                         </p>
                                     </div>
                                 </div>

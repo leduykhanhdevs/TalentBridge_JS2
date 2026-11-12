@@ -217,6 +217,15 @@ test('failed recruiter job creation keeps the form open and shows the API error 
             roles: ['ROLE_RECRUITER'],
         }))
     })
+    await page.route('**/api/v1/recruiters/profile', async (route) => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+            statusCode: 200,
+            message: 'OK',
+            data: { id: 901, userId: 901, fullName: 'QA Recruiter', email: 'qa.recruiter@example.invalid', status: 'ACTIVE', companyId: 901, companyName: 'QA Company', companyStatus: 'APPROVED' },
+        }),
+    }))
 
     await page.route('**/api/v1/jobs/my-jobs*', async (route) => {
         await route.fulfill({
@@ -311,7 +320,13 @@ test('candidate can register, sign out and sign back in using the local H2 backe
 
     await page.getByLabel('Họ và tên').fill('Ứng viên UAT')
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Mật khẩu').fill(password)
+    await page.getByLabel('Số điện thoại').fill('0901234567')
+    await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill(password)
+    await expect(page.locator('#register-password')).toHaveAttribute('type', 'password')
+    await page.getByRole('button', { name: 'Hiện mật khẩu' }).click()
+    await expect(page.locator('#register-password')).toHaveAttribute('type', 'text')
+    await page.getByRole('button', { name: 'Ẩn mật khẩu' }).click()
+    await expect(page.locator('#register-password')).toHaveAttribute('type', 'password')
     await page.getByRole('checkbox').check()
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click()
 
@@ -324,7 +339,12 @@ test('candidate can register, sign out and sign back in using the local H2 backe
     expect(await page.evaluate(() => localStorage.getItem('talentbridge_access_token'))).toBeNull()
 
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Mật khẩu').fill(password)
+    await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill(password)
+    await expect(page.locator('#password')).toHaveAttribute('type', 'password')
+    await page.getByRole('button', { name: 'Hiện mật khẩu' }).click()
+    await expect(page.locator('#password')).toHaveAttribute('type', 'text')
+    await page.getByRole('button', { name: 'Ẩn mật khẩu' }).click()
+    await expect(page.locator('#password')).toHaveAttribute('type', 'password')
     await page.getByRole('button', { name: 'Đăng nhập' }).click()
     await expect(page).toHaveURL(/\/$/, { timeout: 10_000 })
     await expect(page.getByRole('button', { name: 'Cài đặt tài khoản' })).toBeVisible()

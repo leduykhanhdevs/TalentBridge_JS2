@@ -43,12 +43,12 @@ public class GeminiCvParserService implements CvParserPort {
         // 1. Trích xuất text thô cực nhanh từ file PDF / DOCX thông qua local parser
         String rawText = fallbackParser.extractRawText(bytes, fileName);
         if (rawText == null || rawText.isBlank()) {
-            return fallbackParser.parse(bytes, fileName);
+            return parseWithFallback(bytes, fileName, CvParsingSource.RULE_BASED_TEXT_EXTRACTION);
         }
 
         if (!geminiApiClient.isConfigured()) {
             log.info("[Gemini AI] Chưa cấu hình API key; dùng bộ phân tích rule-based.");
-            return fallbackParser.parse(bytes, fileName);
+            return parseWithFallback(bytes, fileName, CvParsingSource.RULE_BASED_NO_API_KEY);
         }
 
         try {
@@ -56,11 +56,15 @@ public class GeminiCvParserService implements CvParserPort {
             return callGemini(rawText, fileName, bytes);
         } catch (RestClientResponseException e) {
             log.warn("[Gemini AI] Nhà cung cấp từ chối yêu cầu CV với HTTP {}. Dùng parser dự phòng.", e.getStatusCode().value());
-            return fallbackParser.parse(bytes, fileName);
+            return parseWithFallback(bytes, fileName, CvParsingSource.RULE_BASED_AI_ERROR);
         } catch (Exception e) {
             log.warn("[Gemini AI] Phân tích CV thất bại ({}). Dùng parser dự phòng.", e.getClass().getSimpleName());
-            return fallbackParser.parse(bytes, fileName);
+            return parseWithFallback(bytes, fileName, CvParsingSource.RULE_BASED_AI_ERROR);
         }
+    }
+
+    private ParsedCvResult parseWithFallback(byte[] bytes, String fileName, CvParsingSource source) {
+        return fallbackParser.parse(bytes, fileName).withProcessingSource(source);
     }
 
     private ParsedCvResult callGemini(String rawText, String fileName, byte[] originalBytes) throws Exception {

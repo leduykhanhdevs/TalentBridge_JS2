@@ -91,7 +91,7 @@ class UpdateCompanyStatusUseCaseImplTest {
     }
 
     @Test
-    void doesNotReplaceExistingCompanyLinkWhenAdminApprovesAnotherCompany() {
+    void adminCanApproveCompanyWhenCreatorIsAlreadyLinkedElsewhere() {
         Company candidateCompany = new Company();
         candidateCompany.setId(10L);
         candidateCompany.setName("Requested Company");
@@ -102,17 +102,18 @@ class UpdateCompanyStatusUseCaseImplTest {
         Recruiter creator = new Recruiter();
         creator.setCompany(existingCompany);
         when(companyRepository.findById(10L)).thenReturn(Optional.of(candidateCompany));
+        when(companyRepository.save(any(Company.class))).thenAnswer(call -> call.getArgument(0));
         when(recruiterRepository.findByUserId(20L)).thenReturn(Optional.of(creator));
+        when(joinRequestRepository.findByUserIdAndStatus(20L, CompanyJoinRequestStatus.PENDING))
+                .thenReturn(List.of());
 
-        assertThatThrownBy(() -> useCase.updateCompanyStatus(10L, CompanyStatus.APPROVED, null))
-                .isInstanceOf(DomainException.class)
-                .hasMessageContaining("Existing Company")
-                .hasMessageContaining("gỡ liên kết hiện tại");
+        var result = useCase.updateCompanyStatus(10L, CompanyStatus.APPROVED, null);
 
+        assertThat(result.status()).isEqualTo("APPROVED");
         assertThat(creator.getCompany()).isSameAs(existingCompany);
+        verify(companyRepository).save(candidateCompany);
         verify(recruiterRepository, never()).save(any());
-        verify(companyRepository, never()).save(any());
-        verifyNoInteractions(joinRequestRepository);
+        verify(joinRequestRepository).findByUserIdAndStatus(20L, CompanyJoinRequestStatus.PENDING);
     }
 
     @Test

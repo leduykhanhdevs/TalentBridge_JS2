@@ -27,6 +27,7 @@ import {
     getApplicantNotes,
     getApplicantStageHistory,
     getJobApplicants,
+    openApplicantResume,
     reopenApplicantApplication,
     updateApplicantStage,
 } from '../../features/recruiter/recruiterApplicantApi'
@@ -41,6 +42,8 @@ import { ScheduleInterviewModal } from '../../features/recruiter/components/Sche
 import { countApplicantsByStage } from '../../features/recruiter/recruiterApplicantMetrics'
 import { getCandidateJobAssessment } from '../../features/statistics/statisticsApi'
 import type { CandidateJobAssessment } from '../../features/statistics/statisticsTypes'
+import { CustomSelect } from '../../components/ui/CustomSelect'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 const PIPELINE_ORDER = ['APPLIED', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW', 'OFFERED', 'HIRED', 'REJECTED']
 
@@ -104,6 +107,8 @@ export function RecruiterJobApplicantsPage() {
     const [reopenApplicant, setReopenApplicant] = useState<JobApplicant | null>(null)
     const [reopenReason, setReopenReason] = useState('')
     const [isReopening, setIsReopening] = useState(false)
+    const [cancelApplicant, setCancelApplicant] = useState<JobApplicant | null>(null)
+    const [isCancellingApplicant, setIsCancellingApplicant] = useState(false)
 
     const [notesModalApplicant, setNotesModalApplicant] = useState<JobApplicant | null>(null)
     const [notesList, setNotesList] = useState<ApplicationNote[]>([])
@@ -154,6 +159,16 @@ export function RecruiterJobApplicantsPage() {
     function handleSearchSubmit(e: React.FormEvent) {
         e.preventDefault()
         fetchApplicants()
+    }
+
+    async function handleViewResume(applicant: JobApplicant) {
+        if (!applicant.resumeId) return
+        setErrorMsg(null)
+        try {
+            await openApplicantResume(numericJobId, applicant.resumeId, applicant.resumeFileName || 'CV')
+        } catch (error) {
+            setErrorMsg(error instanceof Error ? error.message : 'Không thể mở CV ứng viên.')
+        }
     }
 
     async function handleAiMatch(applicant: JobApplicant) {
@@ -214,6 +229,25 @@ export function RecruiterJobApplicantsPage() {
             setErrorMsg(err instanceof Error ? err.message : 'Không thể mở lại hồ sơ ứng tuyển.')
         } finally {
             setIsReopening(false)
+        }
+    }
+
+    async function handleCancelApplicant() {
+        if (!cancelApplicant) return
+        setIsCancellingApplicant(true)
+        setErrorMsg(null)
+        try {
+            const updated = await updateApplicantStage(numericJobId, cancelApplicant.id, {
+                stage: 'REJECTED',
+                note: 'Nhà tuyển dụng đã hủy hồ sơ ứng tuyển.',
+            })
+            setApplicants((prev) => prev.map((app) => app.id === updated.id ? { ...app, ...updated } : app))
+            setSuccessMsg(`Đã hủy hồ sơ ứng tuyển của ${cancelApplicant.candidateFullName}.`)
+            setCancelApplicant(null)
+        } catch (err) {
+            setErrorMsg(err instanceof Error ? err.message : 'Không thể hủy hồ sơ ứng tuyển.')
+        } finally {
+            setIsCancellingApplicant(false)
         }
     }
 
@@ -424,19 +458,16 @@ export function RecruiterJobApplicantsPage() {
                         <label htmlFor={stageSelectId} className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             Vòng tuyển dụng
                         </label>
-                        <select
+                        <CustomSelect
                             id={stageSelectId}
+                            aria-label="Vòng tuyển dụng"
                             value={stageFilter}
-                            onChange={(e) => setStageFilter(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
-                        >
-                            <option value="">Tất cả các vòng</option>
-                            {Object.entries(APPLICANT_STAGE_CONFIG).map(([val, conf]) => (
-                                <option key={val} value={val}>
-                                    {conf.label} ({val})
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setStageFilter}
+                            options={[
+                                { value: '', label: 'Tất cả các vòng' },
+                                ...Object.entries(APPLICANT_STAGE_CONFIG).map(([value, conf]) => ({ value, label: `${conf.label} (${value})` })),
+                            ]}
+                        />
                     </div>
 
                     {/* Min Experience */}
@@ -444,21 +475,20 @@ export function RecruiterJobApplicantsPage() {
                         <label htmlFor={expSelectId} className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                             Kinh nghiệm tối thiểu
                         </label>
-                        <select
+                        <CustomSelect
                             id={expSelectId}
-                            value={minExpFilter}
-                            onChange={(e) =>
-                                setMinExpFilter(e.target.value === '' ? '' : Number(e.target.value))
-                            }
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
-                        >
-                            <option value="">Tất cả kinh nghiệm</option>
-                            <option value="1">1+ năm</option>
-                            <option value="2">2+ năm</option>
-                            <option value="3">3+ năm</option>
-                            <option value="5">5+ năm</option>
-                            <option value="8">8+ năm</option>
-                        </select>
+                            aria-label="Kinh nghiệm tối thiểu"
+                            value={minExpFilter === '' ? '' : String(minExpFilter)}
+                            onChange={(value) => setMinExpFilter(value === '' ? '' : Number(value))}
+                            options={[
+                                { value: '', label: 'Tất cả kinh nghiệm' },
+                                { value: '1', label: '1+ năm' },
+                                { value: '2', label: '2+ năm' },
+                                { value: '3', label: '3+ năm' },
+                                { value: '5', label: '5+ năm' },
+                                { value: '8', label: '8+ năm' },
+                            ]}
+                        />
                     </div>
 
                     {/* Sort By */}
@@ -467,17 +497,18 @@ export function RecruiterJobApplicantsPage() {
                             Sắp xếp theo
                         </label>
                         <div className="flex gap-2">
-                            <select
+                            <CustomSelect
                                 id={sortSelectId}
+                                aria-label="Sắp xếp theo"
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none transition"
-                            >
-                                <option value="appliedDate">Ngày nộp</option>
-                                <option value="score">Điểm AI Match</option>
-                                <option value="experience">Năm kinh nghiệm</option>
-                                <option value="fullName">Họ tên ứng viên</option>
-                            </select>
+                                onChange={setSortBy}
+                                options={[
+                                    { value: 'appliedDate', label: 'Ngày nộp' },
+                                    { value: 'score', label: 'Điểm AI Match' },
+                                    { value: 'experience', label: 'Năm kinh nghiệm' },
+                                    { value: 'fullName', label: 'Họ tên ứng viên' },
+                                ]}
+                            />
                             <button
                                 type="button"
                                 onClick={() =>
@@ -610,7 +641,7 @@ export function RecruiterJobApplicantsPage() {
                                                 <span className="flex items-center gap-1 shrink-0">
                                                     <Calendar size={12} className="text-slate-400 shrink-0" />
                                                     Nộp ngày:{' '}
-                                                    {new Date(app.appliedAt).toLocaleDateString('vi-VN')}
+                                                    {formatIsoDate(app.appliedAt)}
                                                 </span>
                                             </div>
 
@@ -670,17 +701,16 @@ export function RecruiterJobApplicantsPage() {
                                         </button>
 
                                         {/* Resume Link */}
-                                        {app.resumeUrl ? (
-                                            <a
-                                                href={app.resumeUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                        {app.resumeId ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => void handleViewResume(app)}
                                                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
-                                                title="Tải hoặc xem file CV"
+                                                title="Xem CV an toàn trong ứng dụng"
                                             >
                                                 <FileText size={13} />
                                                 <span>Xem CV</span>
-                                            </a>
+                                            </button>
                                         ) : (
                                             <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-400">
                                                 <FileText size={13} />
@@ -707,6 +737,16 @@ export function RecruiterJobApplicantsPage() {
                                         >
                                             <CalendarCheck2 size={13} />
                                             <span>Lên lịch PV</span>
+                                        </button>}
+
+                                        {app.status !== 'WITHDRAWN' && !['HIRED', 'REJECTED'].includes(app.currentStage) && <button
+                                            type="button"
+                                            onClick={() => setCancelApplicant(app)}
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition shadow-2xs"
+                                            title="Hủy hồ sơ ứng tuyển của ứng viên"
+                                        >
+                                            <X size={13} />
+                                            <span>Hủy ứng viên</span>
                                         </button>}
 
                                         {/* Change Stage Button */}
@@ -859,6 +899,24 @@ export function RecruiterJobApplicantsPage() {
                             <button type="submit" disabled={isReopening || !reopenReason.trim()} className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{isReopening ? 'Đang mở lại…' : 'Xác nhận mở lại'}</button>
                         </div>
                     </form>
+                </div>
+            )}
+
+            {cancelApplicant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="cancel-applicant-title">
+                    <section className="bento-card w-full max-w-md p-6 shadow-xl">
+                        <h2 className="text-lg font-bold text-slate-900" id="cancel-applicant-title">Xác nhận hủy ứng viên</h2>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Bạn có chắc muốn hủy hồ sơ ứng tuyển của <strong className="text-slate-900">{cancelApplicant.candidateFullName}</strong> khỏi tin tuyển dụng này? Hồ sơ sẽ chuyển sang trạng thái bị từ chối và có thể được mở lại sau.
+                        </p>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button type="button" className="btn-bento-secondary h-9 px-4 text-xs font-bold" disabled={isCancellingApplicant} onClick={() => setCancelApplicant(null)}>Quay lại</button>
+                            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg bg-rose-600 px-4 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50" disabled={isCancellingApplicant} onClick={() => void handleCancelApplicant()}>
+                                {isCancellingApplicant ? <RefreshCw aria-hidden="true" className="animate-spin" size={14} /> : <X aria-hidden="true" size={14} />}
+                                {isCancellingApplicant ? 'Đang hủy…' : 'Xác nhận hủy'}
+                            </button>
+                        </div>
+                    </section>
                 </div>
             )}
 

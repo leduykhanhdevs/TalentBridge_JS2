@@ -21,7 +21,7 @@ button,
 input,
 textarea,
 select {
-  font: inherit;
+  font-family: inherit;
 }
 
 a:not(.btn-bento-primary):not(.btn-bento-secondary) {
@@ -75,4 +75,23 @@ a:not(.btn-bento-primary):not(.btn-bento-secondary) {
     animation: none;
     transform: none;
   }
+}
+
+/* Keep browser form controls visually consistent across candidate and recruiter screens. */
+:where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),
+  select
+) {
+  height: 44px;
+  min-height: 44px;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+:where(textarea) {
+  min-height: 6rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
 }

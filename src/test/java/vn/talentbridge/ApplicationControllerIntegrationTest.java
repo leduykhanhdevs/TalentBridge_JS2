@@ -3,6 +3,9 @@ package vn.talentbridge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -46,6 +49,8 @@ class ApplicationControllerIntegrationTest {
     @Autowired private ApplicationJpaRepository applicationRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private LoginUseCase loginUseCase;
+    @Autowired private JdbcTemplate jdbcTemplate;
+    @PersistenceContext private EntityManager entityManager;
 
     private String candidateToken;
     private CandidateJpaEntity candidate;
@@ -62,6 +67,8 @@ class ApplicationControllerIntegrationTest {
         user.setEmail("apply_test@talentbridge.vn");
         user.setPasswordHash(passwordEncoder.encode("Password123!"));
         user.setFullName("Ứng viên kiểm thử");
+        user.setEmailVerified(true);
+        user.setPhoneVerified(true);
         user.setStatus(UserStatus.ACTIVE);
         user.setRoles(Set.of(candidateRole));
         user = userRepository.save(user);
@@ -122,6 +129,24 @@ class ApplicationControllerIntegrationTest {
         assertEquals(candidate.getId(), saved.orElseThrow().getCandidate().getId());
         assertEquals(resume.getId(), saved.orElseThrow().getResume().getId());
         assertEquals("Thư ứng tuyển kiểm thử", saved.orElseThrow().getCoverLetter());
+    }
+
+    @Test
+    void unverifiedCandidateCannotApply() throws Exception {
+        jdbcTemplate.update(
+                "UPDATE users SET email_verified = false, phone_verified = false WHERE email = ?",
+                "apply_test@talentbridge.vn"
+        );
+        entityManager.clear();
+
+        mockMvc.perform(post(URL)
+                        .header("Authorization", "Bearer " + candidateToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validRequest()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Bạn cần xác minh email trước khi ứng tuyển."));
+
+        assertTrue(applicationRepository.findAll().isEmpty());
     }
 
     @Test

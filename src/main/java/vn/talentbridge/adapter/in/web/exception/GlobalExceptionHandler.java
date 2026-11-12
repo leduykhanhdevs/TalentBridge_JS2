@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import vn.talentbridge.common.ApiResponse;
 import vn.talentbridge.core.domain.exception.DomainException;
+import vn.talentbridge.core.domain.exception.ContactVerificationUnavailableException;
 import vn.talentbridge.core.domain.exception.InvalidRoleException;
 
 import java.util.HashMap;
@@ -20,6 +21,12 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(ContactVerificationUnavailableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleContactVerificationUnavailable(ContactVerificationUnavailableException ex) {
+        log.warn("Contact verification delivery unavailable: {}", ex.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage()), HttpStatus.SERVICE_UNAVAILABLE);
+    }
 
     @ExceptionHandler(InvalidRoleException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidRoleException(InvalidRoleException ex) {

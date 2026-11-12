@@ -45,6 +45,22 @@ public interface PasswordResetTokenJpaRepository
             update PasswordResetTokenJpaEntity t
             set t.usedAt = :usedAt,
                 t.updatedAt = :usedAt
+            where t.user.id = :userId
+              and t.purpose = :purpose
+              and t.usedAt is null
+            """)
+    int invalidateUnusedByUserIdAndPurpose(
+            @Param("userId") Long userId,
+            @Param("purpose") Purpose purpose,
+            @Param("usedAt") LocalDateTime usedAt
+    );
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            update PasswordResetTokenJpaEntity t
+            set t.usedAt = :usedAt,
+                t.updatedAt = :usedAt
             where t.tokenHash = :tokenHash
               and t.purpose = :purpose
               and t.usedAt is null

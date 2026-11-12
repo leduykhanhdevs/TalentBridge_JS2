@@ -2,6 +2,7 @@ package vn.talentbridge.adapter.out.persistence.adapter;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
@@ -69,7 +70,12 @@ public class CompanyRepositoryAdapter implements CompanyRepositoryPort {
     @Override
     @Transactional(readOnly = true)
     public List<Company> findAll(int page, int size, String keyword, CompanyStatus status) {
-        Page<CompanyJpaEntity> resultPage = companyJpaRepository.searchCompanies(keyword, status, PageRequest.of(page, size));
+        Sort newestFirst = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
+        Page<CompanyJpaEntity> resultPage = companyJpaRepository.searchCompanies(
+                keyword,
+                status,
+                PageRequest.of(page, size, newestFirst)
+        );
         return resultPage.stream().map(this::toDomain).collect(Collectors.toList());
     }
 

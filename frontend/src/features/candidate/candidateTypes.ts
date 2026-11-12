@@ -111,6 +111,13 @@ export interface ResumeItem {
     createdAt: string
 }
 
+export interface ContactVerificationStatus {
+    emailVerified: boolean
+    phoneVerified: boolean
+    maskedEmail: string
+    maskedPhone: string
+}
+
 export type ApplicationStage = 'APPLIED' | 'REVIEWING' | 'SCREENING' | 'SHORTLISTED' | 'INTERVIEW' | 'OFFERED' | 'HIRED' | 'REJECTED'
 export type ApplicationStatus = 'SUBMITTED' | 'ACTIVE' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN'
 
@@ -175,7 +182,12 @@ export interface ParsedCvResult {
     skills: string[]
     experiences: ParsedCvExperience[]
     rawText: string
-    processingSource: 'GEMINI' | 'RULE_BASED'
+    processingSource:
+        | 'GEMINI'
+        | 'RULE_BASED'
+        | 'RULE_BASED_NO_API_KEY'
+        | 'RULE_BASED_AI_ERROR'
+        | 'RULE_BASED_TEXT_EXTRACTION'
 }
 
 export interface ApplyParsedCvPayload {

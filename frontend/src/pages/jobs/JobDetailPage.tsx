@@ -4,8 +4,10 @@ import {
     Building2,
     CheckCircle2,
     ExternalLink,
+    LoaderCircle,
     RefreshCw,
     Send,
+    Sparkles,
     TriangleAlert,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -13,6 +15,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { getStoredUser, isAuthenticated } from '../../features/auth/tokenStorage'
 import { getMyApplications } from '../../features/candidate/candidateApi'
 import { getJobDetail, JobApiError } from '../../features/jobs/jobApi'
+import { getMyJobFitAssessment } from '../../features/statistics/statisticsApi'
 import { ApplyJobModal } from '../../features/jobs/components/ApplyJobModal'
 import {
     formatDate,
@@ -59,7 +62,7 @@ function JobNotFoundState() {
 
 function JobDetailSkeleton() {
     return (
-        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-[1200px] animate-pulse px-4 py-8 sm:px-6 lg:px-8">
+        <div aria-label="Đang tải chi tiết việc làm" className="mx-auto w-full max-w-[1760px] animate-pulse px-4 py-8 sm:px-6 lg:px-8">
             <div className="h-5 w-40 rounded bg-slate-200" />
             <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-8">
                 <div className="h-7 w-2/3 rounded bg-slate-200" />
@@ -97,6 +100,12 @@ export function JobDetailPage() {
         queryKey: ['jobs', 'detail', jobId],
         queryFn: () => getJobDetail(jobId),
         enabled: isValidJobId,
+    })
+
+    const myJobFitQuery = useQuery({
+        queryKey: ['candidate-job-fit', user?.id ?? 'anonymous', jobId],
+        queryFn: () => getMyJobFitAssessment(jobId),
+        enabled: Boolean(isCandidate && jobQuery.data?.status === 'ACTIVE' && !jobQuery.data.isDemo),
     })
 
     const myApplicationsQuery = useQuery({
@@ -228,7 +237,7 @@ export function JobDetailPage() {
 
     return (
         <div className="min-h-full bg-[#F5F7FB] py-7 sm:py-9">
-            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8">
                 <nav aria-label="Đường dẫn" className="text-xs text-slate-500 sm:text-sm">
                     <Link className="transition-colors hover:text-[#1D4ED8]" to="/jobs">Việc làm</Link>
                     <span aria-hidden="true" className="px-2">/</span>
@@ -300,6 +309,47 @@ export function JobDetailPage() {
                                 Chọn CV và xác nhận trước khi gửi.
                             </p>
                         </div>
+                        {isCandidate && isActiveJob && !job.isDemo && (
+                            <section aria-label="Đánh giá mức độ phù hợp với công việc" className="mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+                                <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                                    <Sparkles aria-hidden="true" className="text-blue-700" size={16} />
+                                    Mức độ phù hợp với công việc
+                                </h2>
+                                {myJobFitQuery.isPending ? (
+                                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-600" role="status">
+                                        <LoaderCircle aria-hidden="true" className="animate-spin" size={14} /> Đang đối chiếu hồ sơ của bạn…
+                                    </p>
+                                ) : myJobFitQuery.isError ? (
+                                    <div className="mt-3 text-xs leading-5 text-slate-600">
+                                        <p>{myJobFitQuery.error instanceof Error ? myJobFitQuery.error.message : 'Chưa thể đánh giá hồ sơ lúc này.'}</p>
+                                        <Link className="mt-1 inline-block font-semibold text-blue-700 underline" to="/candidate/profile">Hoàn thiện hồ sơ</Link>
+                                    </div>
+                                ) : myJobFitQuery.data ? (
+                                    <div className="mt-3 space-y-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-xs font-medium text-slate-600">Mức độ khớp tham khảo</span>
+                                            <strong className="text-lg tabular-nums text-blue-800">{Math.round(myJobFitQuery.data.match.matchPercentage)}%</strong>
+                                        </div>
+                                        <div aria-label={`Mức độ khớp ${Math.round(myJobFitQuery.data.match.matchPercentage)} phần trăm`} className="h-2 overflow-hidden rounded-full bg-white" role="img">
+                                            <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.max(0, Math.min(100, myJobFitQuery.data.match.matchPercentage))}%` }} />
+                                        </div>
+                                        <p className="text-xs leading-5 text-slate-700">{myJobFitQuery.data.candidateOverallAssessment}</p>
+                                        {myJobFitQuery.data.match.matchingStrengths.length > 0 && (
+                                            <div>
+                                                <p className="text-[11px] font-bold text-emerald-800">Điểm khớp</p>
+                                                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-slate-700">
+                                                    {myJobFitQuery.data.match.matchingStrengths.slice(0, 3).map((item) => <li key={item}>{item}</li>)}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        {myJobFitQuery.data.match.missingCriticalSkills.length > 0 && (
+                                            <p className="text-xs leading-5 text-amber-800">Cần đối chiếu thêm: {myJobFitQuery.data.match.missingCriticalSkills.slice(0, 3).join(', ')}</p>
+                                        )}
+                                        <p className="border-t border-blue-100 pt-2 text-[11px] leading-4 text-slate-500">{myJobFitQuery.data.advisoryNotice} Trạng thái CV: {myJobFitQuery.data.resumeAssessmentStatus || 'chưa xác định'}.</p>
+                                    </div>
+                                ) : null}
+                            </section>
+                        )}
                     </aside>
                 </div>
 

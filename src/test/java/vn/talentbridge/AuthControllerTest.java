@@ -105,6 +105,7 @@ class AuthControllerTest {
                 .email("duplicate@test.com")
                 .password("password123")
                 .fullName("Tran Van B")
+                .phone("0912345678")
                 .role("ROLE_CANDIDATE")
                 .build();
 
@@ -129,6 +130,7 @@ class AuthControllerTest {
                 .email("not-an-email")
                 .password("123") // < 6 chars
                 .fullName("")
+                .phone("0912345678")
                 .role("ROLE_INVALID")
                 .build();
 
@@ -140,6 +142,24 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/auth/register - Thiếu số điện thoại trả về HTTP 400")
+    void testRegisterRequiresPhone() throws Exception {
+        RegisterRequest request = RegisterRequest.builder()
+                .email("missing-phone@test.com")
+                .password("password123")
+                .fullName("Missing Phone")
+                .role("ROLE_CANDIDATE")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.statusCode").value(40002))
+                .andExpect(jsonPath("$.data.phone").value("Số điện thoại không được để trống"));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/auth/login - Đăng nhập hợp lệ trả về HTTP 200")
     void testLoginSuccess() throws Exception {
         // Register account
@@ -147,6 +167,7 @@ class AuthControllerTest {
                 .email("login@test.com")
                 .password("secret123")
                 .fullName("Le Duy Khanh")
+                .phone("0912345678")
                 .role("ROLE_RECRUITER")
                 .build();
 
@@ -177,6 +198,7 @@ class AuthControllerTest {
                 .email("wrongpw@test.com")
                 .password("correct123")
                 .fullName("User Test")
+                .phone("0912345678")
                 .role("ROLE_CANDIDATE")
                 .build();
 
@@ -210,6 +232,7 @@ class AuthControllerTest {
                 .email("me@test.com")
                 .password("password123")
                 .fullName("Current User Test")
+                .phone("0912345678")
                 .role("ROLE_CANDIDATE")
                 .build();
 
@@ -464,6 +487,7 @@ class AuthControllerTest {
                 .email(email)
                 .password("password123")
                 .fullName("Logout Test")
+                .phone("0912345678")
                 .role("ROLE_CANDIDATE")
                 .build();
 

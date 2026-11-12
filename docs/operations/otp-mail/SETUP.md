@@ -1,6 +1,6 @@
-# Gmail OTP relay on Render Free
+# Gmail OTP relay for Render Free
 
-This relay sends password-reset OTP messages through the user's Gmail account using Google Apps Script's HTTPS web-app endpoint. It avoids Render Free's blocked SMTP ports and does not require a `talentbridge.vn` mailbox or paid Render compute.
+This relay sends account-recovery and candidate email-verification OTP messages through the operator's Gmail account using Google Apps Script's HTTPS web-app endpoint. It avoids Render Free's blocked SMTP ports and does not require a `talentbridge.vn` mailbox or paid Render compute.
 
 ## 1. Create the relay in Google Apps Script
 
@@ -17,6 +17,8 @@ In the `talentbridge-backend` service's Environment page, set:
 ```text
 PASSWORD_RESET_MAIL_ENABLED=true
 PASSWORD_RESET_MAIL_PROVIDER=apps-script
+CONTACT_VERIFICATION_EMAIL_ENABLED=true
+CONTACT_VERIFICATION_MAIL_PROVIDER=apps-script
 GOOGLE_APPS_SCRIPT_URL=<deployed web-app URL ending in /exec>
 GOOGLE_APPS_SCRIPT_SECRET=<the same secret stored in Script properties>
 ```
@@ -32,6 +34,6 @@ Personal Gmail accounts currently have a quota of 100 email recipients per day f
 ## Security and operational notes
 
 - The endpoint is public so Render can call it without a Google login; access is restricted by the high-entropy shared secret stored only in Apps Script Script properties and Render Environment.
-- The backend only uses it for password-reset OTP messages and rate-limits OTP verification attempts.
+- The backend uses it for password-reset and candidate email-verification OTP messages. Candidate contact codes expire after 10 minutes, can be requested once per 60 seconds per channel, and are locked after five incorrect attempts.
 - Rotate the secret in both locations if it is exposed. Do not paste it into chat, source code, screenshots, or commit history.
 - The app sends the email from the Gmail account that owns the Apps Script project. The receiver can be any email address entered for an existing TalentBridge account.

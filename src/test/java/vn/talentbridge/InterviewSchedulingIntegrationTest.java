@@ -224,8 +224,8 @@ class InterviewSchedulingIntegrationTest {
     }
 
     @Test
-    @DisplayName("Tải file lịch iCalendar .ics công khai thành công")
-    void shouldDownloadIcsCalendarFile() throws Exception {
+    @DisplayName("Ứng viên và nhà tuyển dụng trong lịch tải được iCalendar; khách chưa xác thực bị chặn")
+    void shouldDownloadIcsCalendarOnlyForInterviewParticipants() throws Exception {
         LocalDateTime interviewTime = LocalDateTime.now().plusDays(2).withHour(14).withMinute(0).withSecond(0).withNano(0);
         String requestJson = String.format("""
                 {
@@ -247,12 +247,19 @@ class InterviewSchedulingIntegrationTest {
         com.fasterxml.jackson.databind.JsonNode rootNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(responseBody);
         long interviewId = rootNode.path("data").path("id").asLong();
 
-        // Test GET /api/v1/interviews/{id}/calendar.ics
-        mockMvc.perform(get("/api/v1/interviews/" + interviewId + "/calendar.ics"))
+        String path = "/api/v1/interviews/" + interviewId + "/calendar.ics";
+        mockMvc.perform(get(path))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get(path).header("Authorization", "Bearer " + recruiterToken))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Disposition", org.hamcrest.Matchers.containsString("interview-")))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("BEGIN:VCALENDAR")))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("BEGIN:VEVENT")))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("END:VCALENDAR")));
+
+        mockMvc.perform(get(path).header("Authorization", "Bearer " + candidateToken))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("DTSTART:")));
     }
 }

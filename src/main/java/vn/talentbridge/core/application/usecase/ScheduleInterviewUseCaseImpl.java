@@ -4,6 +4,7 @@ import vn.talentbridge.core.application.dto.InterviewResult;
 import vn.talentbridge.core.application.dto.ScheduleInterviewCommand;
 import vn.talentbridge.core.application.port.in.ScheduleInterviewUseCase;
 import vn.talentbridge.core.application.port.out.ApplicationStageRepositoryPort;
+import vn.talentbridge.core.application.port.out.CandidateRepositoryPort;
 import vn.talentbridge.core.application.port.out.InterviewRepositoryPort;
 import vn.talentbridge.core.application.port.out.JobApplicationRepositoryPort;
 import vn.talentbridge.core.application.port.out.JobRepositoryPort;
@@ -18,20 +19,25 @@ import vn.talentbridge.core.domain.model.Recruiter;
 import vn.talentbridge.core.domain.vo.ApplicationPipelineStage;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
 
-    private static final DateTimeFormatter ICS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
+    private static final ZoneId APPLICATION_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter ICS_DATE_FORMATTER = DateTimeFormatter
+            .ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
 
     private final InterviewRepositoryPort interviewRepository;
     private final JobApplicationRepositoryPort jobApplicationRepository;
     private final JobRepositoryPort jobRepository;
     private final RecruiterRepositoryPort recruiterRepository;
+    private final CandidateRepositoryPort candidateRepository;
     private final ApplicationStageRepositoryPort applicationStageRepository;
 
     public ScheduleInterviewUseCaseImpl(
@@ -39,11 +45,13 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
             JobApplicationRepositoryPort jobApplicationRepository,
             JobRepositoryPort jobRepository,
             RecruiterRepositoryPort recruiterRepository,
+            CandidateRepositoryPort candidateRepository,
             ApplicationStageRepositoryPort applicationStageRepository) {
         this.interviewRepository = interviewRepository;
         this.jobApplicationRepository = jobApplicationRepository;
         this.jobRepository = jobRepository;
         this.recruiterRepository = recruiterRepository;
+        this.candidateRepository = candidateRepository;
         this.applicationStageRepository = applicationStageRepository;
     }
 
@@ -132,9 +140,8 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
 
     @Override
     public List<InterviewResult> getInterviewsByApplication(Long userId, Long applicationId) {
-        JobApplicant applicant = jobApplicationRepository.findApplicantById(applicationId).orElse(null);
-        Job job = (applicant != null && applicant.getJobId() != null)
-                ? jobRepository.findById(applicant.getJobId()).orElse(null) : null;
+        JobApplicant applicant = requireApplicant(applicationId);
+        Job job = requireRecruiterJob(userId, applicant);
 
         Long jobId = job != null ? job.getId() : null;
         String jobTitle = job != null ? job.getTitle() : (applicant != null ? applicant.getJobTitle() : "Phỏng vấn");
@@ -150,9 +157,9 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
 
     @Override
     public InterviewResult getLatestInterviewForApplication(Long userId, Long applicationId) {
-        JobApplicant applicant = jobApplicationRepository.findApplicantById(applicationId).orElse(null);
-        Job job = (applicant != null && applicant.getJobId() != null)
-                ? jobRepository.findById(applicant.getJobId()).orElse(null) : null;
+        JobApplicant applicant = requireApplicant(applicationId);
+        assertCandidateOwnsApplication(userId, applicant);
+        Job job = applicant.getJobId() == null ? null : jobRepository.findById(applicant.getJobId()).orElse(null);
 
         Long jobId = job != null ? job.getId() : null;
         String jobTitle = job != null ? job.getTitle() : (applicant != null ? applicant.getJobTitle() : "Phỏng vấn");
@@ -166,13 +173,20 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
     }
 
     @Override
-    public byte[] exportIcsCalendar(Long interviewId) {
+    public byte[] exportIcsCalendar(Long userId, String actorRole, Long interviewId) {
         Interview interview = interviewRepository.findById(interviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lịch phỏng vấn", interviewId));
 
-        JobApplicant applicant = jobApplicationRepository.findApplicantById(interview.getApplicationId()).orElse(null);
-        Job job = (applicant != null && applicant.getJobId() != null)
-                ? jobRepository.findById(applicant.getJobId()).orElse(null) : null;
+        JobApplicant applicant = requireApplicant(interview.getApplicationId());
+        Job job;
+        if ("ROLE_CANDIDATE".equals(actorRole)) {
+            assertCandidateOwnsApplication(userId, applicant);
+            job = applicant.getJobId() == null ? null : jobRepository.findById(applicant.getJobId()).orElse(null);
+        } else if ("ROLE_RECRUITER".equals(actorRole)) {
+            job = requireRecruiterJob(userId, applicant);
+        } else {
+            throw new DomainException(40301, "Bạn không có quyền tải lịch phỏng vấn này");
+        }
 
         String jobTitle = job != null ? job.getTitle() : (applicant != null ? applicant.getJobTitle() : "Phỏng vấn");
         String companyName = job != null ? job.getCompanyName() : "TalentBridge";
@@ -181,33 +195,87 @@ public class ScheduleInterviewUseCaseImpl implements ScheduleInterviewUseCase {
         LocalDateTime start = interview.getInterviewTime();
         LocalDateTime end = start.plusHours(1);
 
-        String startUtc = start.atZone(ZoneId.of("Asia/Ho_Chi_Minh")).withZoneSameInstant(ZoneOffset.UTC).format(ICS_DATE_FORMATTER);
-        String endUtc = end.atZone(ZoneId.of("Asia/Ho_Chi_Minh")).withZoneSameInstant(ZoneOffset.UTC).format(ICS_DATE_FORMATTER);
-        String nowUtc = LocalDateTime.now().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).withZoneSameInstant(ZoneOffset.UTC).format(ICS_DATE_FORMATTER);
+        String startUtc = ICS_DATE_FORMATTER.format(start.atZone(APPLICATION_ZONE).toInstant());
+        String endUtc = ICS_DATE_FORMATTER.format(end.atZone(APPLICATION_ZONE).toInstant());
+        String nowUtc = ICS_DATE_FORMATTER.format(Instant.now());
 
         String summary = "Phỏng vấn: " + jobTitle + " - " + companyName;
-        String description = "Phỏng vấn tuyển dụng vị trí " + jobTitle + "\\nỨng viên: " + candName +
-                (interview.getNotes() != null ? "\\nGhi chú: " + interview.getNotes() : "") +
-                "\\nĐịa điểm / Link: " + interview.getMeetingLinkOrAddress();
+        String description = "Phỏng vấn tuyển dụng vị trí " + jobTitle + "\nỨng viên: " + candName +
+                (interview.getNotes() != null ? "\nGhi chú: " + interview.getNotes() : "") +
+                "\nĐịa điểm / Link: " + interview.getMeetingLinkOrAddress();
 
         StringBuilder ics = new StringBuilder();
-        ics.append("BEGIN:VCALENDAR\r\n");
-        ics.append("VERSION:2.0\r\n");
-        ics.append("PRODID:-//TalentBridge//Interview Scheduler//EN\r\n");
-        ics.append("CALSCALE:GREGORIAN\r\n");
-        ics.append("METHOD:PUBLISH\r\n");
-        ics.append("BEGIN:VEVENT\r\n");
-        ics.append("UID:tb-interview-").append(interview.getId()).append("@talentbridge.vn\r\n");
-        ics.append("DTSTAMP:").append(nowUtc).append("\r\n");
-        ics.append("DTSTART:").append(startUtc).append("\r\n");
-        ics.append("DTEND:").append(endUtc).append("\r\n");
-        ics.append("SUMMARY:").append(summary).append("\r\n");
-        ics.append("DESCRIPTION:").append(description).append("\r\n");
-        ics.append("LOCATION:").append(interview.getMeetingLinkOrAddress()).append("\r\n");
-        ics.append("STATUS:CONFIRMED\r\n");
-        ics.append("END:VEVENT\r\n");
-        ics.append("END:VCALENDAR\r\n");
+        appendIcsLine(ics, "BEGIN:VCALENDAR");
+        appendIcsLine(ics, "VERSION:2.0");
+        appendIcsLine(ics, "PRODID:-//TalentBridge//Interview Scheduler//EN");
+        appendIcsLine(ics, "CALSCALE:GREGORIAN");
+        appendIcsLine(ics, "METHOD:PUBLISH");
+        appendIcsLine(ics, "BEGIN:VEVENT");
+        appendIcsLine(ics, "UID:tb-interview-" + interview.getId() + "@talentbridge.vn");
+        appendIcsLine(ics, "DTSTAMP:" + nowUtc);
+        appendIcsLine(ics, "DTSTART:" + startUtc);
+        appendIcsLine(ics, "DTEND:" + endUtc);
+        appendIcsLine(ics, "SUMMARY:" + escapeIcsText(summary));
+        appendIcsLine(ics, "DESCRIPTION:" + escapeIcsText(description));
+        appendIcsLine(ics, "LOCATION:" + escapeIcsText(interview.getMeetingLinkOrAddress()));
+        appendIcsLine(ics, "STATUS:CONFIRMED");
+        appendIcsLine(ics, "END:VEVENT");
+        appendIcsLine(ics, "END:VCALENDAR");
 
         return ics.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private JobApplicant requireApplicant(Long applicationId) {
+        return jobApplicationRepository.findApplicantById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Đơn ứng tuyển", applicationId));
+    }
+
+    private Job requireRecruiterJob(Long recruiterUserId, JobApplicant applicant) {
+        Recruiter recruiter = recruiterRepository.findByUserId(recruiterUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
+        if (recruiter.getCompany() == null || recruiter.getCompany().getId() == null) {
+            throw new DomainException(40001, "Nhà tuyển dụng chưa thuộc công ty nào");
+        }
+        Job job = jobRepository.findById(applicant.getJobId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng", applicant.getJobId()));
+        if (!Objects.equals(recruiter.getCompany().getId(), job.getCompanyId())) {
+            throw new DomainException(40301, "Bạn không có quyền xem lịch phỏng vấn của công ty khác");
+        }
+        return job;
+    }
+
+    private void assertCandidateOwnsApplication(Long candidateUserId, JobApplicant applicant) {
+        var candidate = candidateRepository.findByUserId(candidateUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hồ sơ ứng viên"));
+        if (!Objects.equals(candidate.getId(), applicant.getCandidateId())) {
+            throw new DomainException(40301, "Bạn không có quyền xem lịch phỏng vấn của ứng viên khác");
+        }
+    }
+
+    private static String escapeIcsText(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\")
+                .replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .replace("\n", "\\n")
+                .replace(";", "\\;")
+                .replace(",", "\\,");
+    }
+
+    private static void appendIcsLine(StringBuilder target, String value) {
+        int lineBytes = 0;
+        for (int offset = 0; offset < value.length();) {
+            int codePoint = value.codePointAt(offset);
+            String part = new String(Character.toChars(codePoint));
+            int partBytes = part.getBytes(StandardCharsets.UTF_8).length;
+            if (lineBytes + partBytes > 75) {
+                target.append("\r\n ");
+                lineBytes = 1;
+            }
+            target.append(part);
+            lineBytes += partBytes;
+            offset += Character.charCount(codePoint);
+        }
+        target.append("\r\n");
     }
 }

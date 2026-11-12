@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bot, X } from 'lucide-react'
 import { useLocation } from 'react-router'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { getStoredUser } from '../../auth/tokenStorage'
 import { AssistantChatPanel } from './AssistantChatPanel'
 
 export function TalentBridgeAssistantWidget() {
     const [isOpen, setIsOpen] = useState(false)
+    const [storedUser, setStoredUser] = useState(() => getStoredUser())
     const { pathname } = useLocation()
     const normalizedPathname = pathname.replace(/\/+$/, '') || '/'
     const isAdminPage = normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')
@@ -15,6 +17,16 @@ export function TalentBridgeAssistantWidget() {
         '/forgot-password',
         '/reset-password',
     ].includes(normalizedPathname)
+    useEffect(() => {
+        const syncUser = () => setStoredUser(getStoredUser())
+        window.addEventListener('talentbridge_auth_change', syncUser)
+        window.addEventListener('storage', syncUser)
+        return () => {
+            window.removeEventListener('talentbridge_auth_change', syncUser)
+            window.removeEventListener('storage', syncUser)
+        }
+    }, [])
+    const recruiterMode = Boolean(storedUser?.roles.includes('ROLE_RECRUITER'))
     if (normalizedPathname === '/assistant' || isAuthenticationPage || isAdminPage) return null
 
     return (
@@ -29,7 +41,7 @@ export function TalentBridgeAssistantWidget() {
                             </button>
                         </section>
                     )}>
-                        <AssistantChatPanel compact onClose={() => setIsOpen(false)} />
+                        <AssistantChatPanel key={`assistant-widget-${storedUser?.id ?? 'guest'}`} compact recruiterMode={recruiterMode} onClose={() => setIsOpen(false)} />
                     </ErrorBoundary>
                 </div>
             )}

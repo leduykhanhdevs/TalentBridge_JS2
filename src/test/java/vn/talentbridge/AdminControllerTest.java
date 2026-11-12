@@ -305,6 +305,34 @@ class AdminControllerTest {
     }
 
     @Test
+    @DisplayName("Admin Companies - Duyệt công ty không chặn người tạo đang thuộc công ty khác")
+    void testApproveCompanyWhenCreatorAlreadyBelongsToAnotherCompany() throws Exception {
+        CompanyJpaEntity existingCompany = companyRepository.save(CompanyJpaEntity.builder()
+                .name("Existing Company")
+                .taxCode("0107654321")
+                .status(CompanyStatus.APPROVED)
+                .build());
+        testRecruiter.setCompany(existingCompany);
+        recruiterRepository.save(testRecruiter);
+
+        UpdateCompanyStatusRequest request = UpdateCompanyStatusRequest.builder()
+                .status(CompanyStatus.APPROVED)
+                .reason("Đã xác minh")
+                .build();
+
+        mockMvc.perform(patch("/api/v1/admin/companies/" + testCompany.getId() + "/status")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("APPROVED"));
+
+        RecruiterJpaEntity savedRecruiter = recruiterRepository.findById(testRecruiter.getId()).orElseThrow();
+        org.assertj.core.api.Assertions.assertThat(savedRecruiter.getCompany().getId())
+                .isEqualTo(existingCompany.getId());
+    }
+
+    @Test
     @DisplayName("Admin Companies - Từ chối phê duyệt công ty sang REJECTED kèm lý do")
     void testUpdateCompanyStatus_Reject() throws Exception {
         UpdateCompanyStatusRequest request = UpdateCompanyStatusRequest.builder()

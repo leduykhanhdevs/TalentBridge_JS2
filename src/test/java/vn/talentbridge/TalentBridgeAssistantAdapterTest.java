@@ -106,6 +106,28 @@ class TalentBridgeAssistantAdapterTest {
     }
 
     @Test
+    void reportsKnowledgeBaseAsSourceWhenGeminiReturnsBlankText() {
+        GeminiApiClient configuredProvider = new GeminiApiClient(
+                "test-key", "https://example.test", 100, 100, null) {
+            @Override
+            public String generateContent(String model, Object requestPayload) {
+                return """
+                        {"candidates":[{"content":{"parts":[{"text":"   "}]}}]}
+                        """;
+            }
+        };
+        var groundedAdapter = new GroundedTalentBridgeAssistantAdapter(
+                configuredProvider, objectMapper, "gemini-test");
+
+        var result = groundedAdapter.answer(
+                "Tôi muốn tìm và lọc công việc phù hợp trên TalentBridge.", List.of());
+
+        assertThat(result.source()).isEqualTo("KNOWLEDGE_BASE");
+        assertThat(result.answer()).contains("mục Việc làm");
+        assertThat(result.references()).contains("Tìm việc và ứng tuyển");
+    }
+
+    @Test
     void blocksPersonalDataAndSecretsBeforeCallingTheExternalProvider() {
         AtomicInteger calls = new AtomicInteger();
         GeminiApiClient configuredProvider = new GeminiApiClient(

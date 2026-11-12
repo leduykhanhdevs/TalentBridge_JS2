@@ -36,7 +36,7 @@ export function HomePage() {
 
     return (
         <div className="min-h-screen bg-bento-canvas text-slate-900">
-            <section className="mx-auto grid w-full max-w-[1200px] items-center gap-8 px-4 py-10 sm:px-6 lg:min-h-[470px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-8 lg:py-12">
+            <section className="mx-auto grid w-full max-w-[1760px] items-center gap-8 px-4 py-10 sm:px-6 lg:min-h-[470px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-8 lg:py-12">
                 <div className="max-w-[590px]">
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700 sm:text-sm">
                         Kết nối đúng người, đúng cơ hội
@@ -82,7 +82,7 @@ export function HomePage() {
             </section>
 
             <section className="border-y border-slate-200 bg-white/70">
-                <div className="mx-auto w-full max-w-[1200px] px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+                <div className="mx-auto w-full max-w-[1760px] px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div className="max-w-2xl">
                             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Cơ hội nổi bật</p>

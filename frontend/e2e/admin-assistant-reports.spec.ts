@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 
-test('admin header stays horizontal and assistant exports real PNG, Excel and Word reports', async ({ page }) => {
+test('admin uses vertical sidebar and assistant exports real PNG, Excel and Word reports', async ({ page }) => {
     const pageErrors: string[] = []
     page.on('pageerror', (error) => pageErrors.push(error.message))
     await page.addInitScript(() => {
@@ -13,6 +13,7 @@ test('admin header stays horizontal and assistant exports real PNG, Excel and Wo
             roles: ['ROLE_ADMIN'],
         }))
     })
+    await page.route('**/api/v1/health', (route) => route.fulfill({ status: 200, body: 'ok' }))
     await page.route('**/api/v1/admin/dashboard/stats', (route) => route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -42,16 +43,26 @@ test('admin header stays horizontal and assistant exports real PNG, Excel and Wo
     await expect(page.getByRole('heading', { name: 'Trợ lý quản trị', level: 1 })).toBeVisible()
     await expect(page.getByText('143', { exact: true })).toBeVisible()
     await expect(page.getByText('Phiên làm việc an toàn')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Về TalentBridge' })).toHaveCount(0)
 
     const nav = page.getByRole('navigation', { name: 'Điều hướng quản trị' })
     await expect(nav.getByRole('link', { name: 'Doanh nghiệp' })).toBeVisible()
-    await expect(nav.evaluate((element) => getComputedStyle(element).flexDirection)).resolves.toBe('row')
-    await expect.poll(() => nav.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
-    for (const item of await nav.getByRole('link').all()) await expect(item).toBeInViewport()
-    await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
+    await expect(page.locator('#workspace-navigation')).toHaveCSS('width', '232px')
+    await expect(nav).toHaveCSS('display', 'grid')
+    for (const item of await nav.getByRole('link').all()) await expect(item).toBeVisible()
+    const settingsButton = nav.getByRole('button', { name: 'Cài đặt tài khoản' })
+    await expect(settingsButton).toBeVisible()
+    await expect(settingsButton).not.toHaveClass(/border/)
+    await settingsButton.click()
     await expect(page.getByRole('menuitem', { name: 'Đổi mật khẩu' })).toBeVisible()
     await expect(page.getByRole('menuitem', { name: 'Đăng xuất' })).toBeVisible()
-    await page.getByRole('button', { name: 'Cài đặt tài khoản' }).click()
+    await settingsButton.click()
+
+    await page.setViewportSize({ width: 360, height: 800 })
+    await expect(nav).toBeHidden()
+    await page.getByRole('button', { name: 'Mở điều hướng' }).click()
+    await expect(nav).toBeVisible()
+    await page.setViewportSize({ width: 1280, height: 900 })
 
     const assistant = page.getByRole('region', { name: 'Trợ lý quản trị' })
     await expect(assistant).toBeVisible()

@@ -33,7 +33,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
-  phone?: string;
+  phone: string;
   role: 'ROLE_CANDIDATE' | 'ROLE_RECRUITER';
 }
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { getStoredUser } from '../../features/auth/tokenStorage'
 import {
     getCompanyJoinRequests,
     getRecruiterProfile,
@@ -42,7 +43,7 @@ export function RecruiterPeerApprovalPage() {
     const [serverError, setServerError] = useState('')
 
     const { data: profile } = useQuery({
-        queryKey: ['recruiter-profile'],
+        queryKey: ['recruiter-profile', getStoredUser()?.id ?? 'anonymous'],
         queryFn: getRecruiterProfile,
     })
 

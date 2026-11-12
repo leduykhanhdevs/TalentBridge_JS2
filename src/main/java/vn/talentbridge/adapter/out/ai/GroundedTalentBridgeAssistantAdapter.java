@@ -112,7 +112,10 @@ public class GroundedTalentBridgeAssistantAdapter implements TalentBridgeAssista
 
         try {
             String answer = generateGroundedAnswer(message, evidence);
-            return new AssistantChatResult(answer.isBlank() ? groundedFallback : answer, "GEMINI", references);
+            if (answer.isBlank()) {
+                return new AssistantChatResult(groundedFallback, "KNOWLEDGE_BASE", references);
+            }
+            return new AssistantChatResult(answer, "GEMINI", references);
         } catch (RestClientResponseException exception) {
             log.warn("TalentBridge assistant provider returned HTTP {}; using retrieved guidance.", exception.getStatusCode().value());
         } catch (Exception exception) {

@@ -10,6 +10,8 @@ import type {
     AdminJobStatus,
     JobStatusHistoryResponse,
 } from '../../features/admin/adminTypes'
+import { CustomSelect } from '../../components/ui/CustomSelect'
+import { formatIsoDate } from '../../components/ui/dateFormat'
 
 const STATUS_LABELS: Record<AdminJobStatus, string> = {
     DRAFT: 'Bản nháp', PENDING: 'Chờ duyệt', ACTIVE: 'Đang tuyển',
@@ -86,10 +88,16 @@ export function AdminJobsPage() {
                 </div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                     Trạng thái
-                    <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as AdminJobStatus | ''); setPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                        <option value="">Tất cả</option>
-                        {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
+                    <CustomSelect
+                        aria-label="Lọc trạng thái tin tuyển dụng"
+                        className="w-52"
+                        onChange={(value) => { setStatusFilter(value as AdminJobStatus | ''); setPage(1) }}
+                        options={[
+                            { value: '', label: 'Tất cả' },
+                            ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
+                        ]}
+                        value={statusFilter}
+                    />
                 </label>
             </header>
 
@@ -106,7 +114,7 @@ export function AdminJobsPage() {
                         </div>
                         <h2 className="break-words text-base font-bold text-slate-900">{job.title}</h2>
                         <p className="text-sm text-slate-600">{job.companyName || 'Chưa có doanh nghiệp'} · {job.city || 'Chưa có địa điểm'}</p>
-                        <p className="text-xs text-slate-500">Hạn nộp: {job.deadline || 'Chưa thiết lập'}</p>
+                        <p className="text-xs text-slate-500">Hạn nộp: {formatIsoDate(job.deadline) || 'Chưa thiết lập'}</p>
                         <details className="pt-2 text-sm">
                             <summary className="cursor-pointer font-semibold text-blue-800">Xem nội dung để kiểm duyệt</summary>
                             <div className="mt-3 space-y-3 rounded-xl bg-slate-50 p-3 text-slate-700">

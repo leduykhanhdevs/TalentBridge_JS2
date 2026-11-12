@@ -120,6 +120,8 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
                     u.getCreatedAt(),
                     u.getUpdatedAt()
             );
+            user.setEmailVerified(u.isEmailVerified());
+            user.setPhoneVerified(u.isPhoneVerified());
         }
 
         return new Candidate(
