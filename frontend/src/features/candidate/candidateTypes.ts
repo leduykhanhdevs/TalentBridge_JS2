@@ -118,6 +118,12 @@ export interface ContactVerificationStatus {
     maskedPhone: string
 }
 
+export interface ContactVerificationRequestResult {
+    destination: string
+    alreadyVerified: boolean
+    deliveryAccepted: boolean
+}
+
 export type ApplicationStage = 'APPLIED' | 'REVIEWING' | 'SCREENING' | 'SHORTLISTED' | 'INTERVIEW' | 'OFFERED' | 'HIRED' | 'REJECTED'
 export type ApplicationStatus = 'SUBMITTED' | 'ACTIVE' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN'
 

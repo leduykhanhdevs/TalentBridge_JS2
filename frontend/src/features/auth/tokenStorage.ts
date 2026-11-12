@@ -71,6 +71,13 @@ export function getStoredUser(): UserResponse | null {
     }
 }
 
+export function updateStoredUser(patch: Partial<UserResponse>): void {
+    const currentUser = getStoredUser()
+    if (!currentUser) return
+    localStorage.setItem(USER_KEY, JSON.stringify({ ...currentUser, ...patch }))
+    notifyAuthChange()
+}
+
 export function clearAuthTokens(expectedLogoutIntentId?: string): boolean {
     if (expectedLogoutIntentId && getLogoutIntentId() !== expectedLogoutIntentId) return false
     authMutationVersion += 1

@@ -247,6 +247,22 @@ class HieuRecruiterIntegrationTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/recruiters/companies/request-create - địa chỉ tùy chọn")
+    void testRequestCreateCompanyWithoutAddress() throws Exception {
+        RequestCreateCompanyRequest request = RequestCreateCompanyRequest.builder()
+                .name("UAT Company Without Address")
+                .build();
+
+        mockMvc.perform(post("/api/v1/recruiters/companies/request-create")
+                        .header("Authorization", "Bearer " + hrToken2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.name").value("UAT Company Without Address"))
+                .andExpect(jsonPath("$.data.address").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/recruiters/companies/request-create - email không được dùng làm website")
     void testRequestCreateCompanyRejectsEmailAsWebsite() throws Exception {
         RequestCreateCompanyRequest request = RequestCreateCompanyRequest.builder()

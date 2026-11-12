@@ -52,6 +52,7 @@ class AdminApiMetricsControllerTest {
                 .andExpect(jsonPath("$.data.resetsOnRestart").value(true))
                 .andExpect(jsonPath("$.data.requestCount", greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.data.endpoints[0].endpoint").exists())
+                .andExpect(jsonPath("$.data.statusCounts['200']", greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.data.endpoints[0].buckets[0].startsAt").exists());
     }
 }

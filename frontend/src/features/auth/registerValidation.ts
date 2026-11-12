@@ -5,6 +5,7 @@ export type RegisterFormValues = {
     email: string
     phone: string
     password: string
+    confirmPassword: string
     role: RegisterRole
     position: string
 }
@@ -34,6 +35,8 @@ export function validateRegisterForm(
 
     if (!values.password) errors.password = 'Vui lòng nhập mật khẩu.'
     else if (values.password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự.'
+    if (!values.confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu.'
+    else if (values.confirmPassword !== values.password) errors.confirmPassword = 'Mật khẩu xác nhận không khớp.'
     if (!acceptedTerms) errors.terms = 'Bạn cần đồng ý với điều khoản sử dụng.'
     if (values.role === 'ROLE_RECRUITER' && values.position.trim().length > 100) {
         errors.position = 'Chức danh không được vượt quá 100 ký tự.'

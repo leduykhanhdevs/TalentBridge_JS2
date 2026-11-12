@@ -51,14 +51,29 @@ class ContactVerificationUseCaseImplTest {
         when(tokenGenerator.generateOtp()).thenReturn("123456");
         when(tokenGenerator.hashToken(anyString())).thenReturn("opaque-hash");
 
-        useCase.requestCode(42L, ContactVerificationUseCase.Channel.EMAIL);
+        var requestResult = useCase.requestCode(42L, ContactVerificationUseCase.Channel.EMAIL);
 
+        assertThat(requestResult.destination()).isEqualTo("candidate@example.invalid");
+        assertThat(requestResult.alreadyVerified()).isFalse();
+        assertThat(requestResult.deliveryAccepted()).isTrue();
         ArgumentCaptor<PasswordResetToken> token = ArgumentCaptor.forClass(PasswordResetToken.class);
         verify(tokenRepository).save(token.capture());
         assertThat(token.getValue().getPurpose()).isEqualTo(PasswordResetToken.Purpose.EMAIL_VERIFICATION);
         assertThat(token.getValue().getTokenHash()).isEqualTo("opaque-hash");
         verify(deliveryPort).sendEmailOtp(eq("candidate@example.invalid"), eq("123456"), any());
         verify(deliveryPort, never()).sendPhoneOtp(anyString(), anyString(), any());
+    }
+
+    @Test
+    void requestEmailOtpReportsAlreadyVerifiedWithoutSendingAnotherCode() {
+        user.setEmailVerified(true);
+
+        var result = useCase.requestCode(42L, ContactVerificationUseCase.Channel.EMAIL);
+
+        assertThat(result.destination()).isEqualTo("candidate@example.invalid");
+        assertThat(result.alreadyVerified()).isTrue();
+        assertThat(result.deliveryAccepted()).isFalse();
+        verifyNoInteractions(tokenRepository, tokenGenerator, deliveryPort);
     }
 
     @Test

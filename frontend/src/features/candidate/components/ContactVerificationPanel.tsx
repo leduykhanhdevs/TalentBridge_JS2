@@ -5,6 +5,7 @@ import {
     verifyContactVerificationCode,
 } from '../candidateApi'
 import type { ContactVerificationStatus } from '../candidateTypes'
+import { updateStoredUser } from '../../auth/tokenStorage'
 
 interface ContactVerificationPanelProps {
     status: ContactVerificationStatus
@@ -23,9 +24,21 @@ export function ContactVerificationPanel({ status, onVerified }: ContactVerifica
         setErrorMessage(null)
         setSuccessMessage(null)
         try {
-            await requestContactVerificationCode('EMAIL')
+            const result = await requestContactVerificationCode('EMAIL')
+            if (result.alreadyVerified) {
+                const updated = { ...status, emailVerified: true }
+                updateStoredUser({ emailVerified: true })
+                onVerified(updated)
+                setCodeSent(false)
+                setOtp('')
+                setSuccessMessage('Email ' + result.destination + ' đã được xác minh trước đó.')
+                return
+            }
+            if (!result.deliveryAccepted) {
+                throw new Error('Nhà cung cấp chưa xác nhận tiếp nhận yêu cầu gửi mã.')
+            }
             setCodeSent(true)
-            setSuccessMessage('Đã gửi mã đến email của bạn.')
+            setSuccessMessage('Nhà cung cấp đã chấp nhận yêu cầu gửi mã tới ' + result.destination + '. Điều này chưa xác nhận thư đã vào hộp thư; hãy kiểm tra Inbox và Spam.')
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Không thể gửi mã xác minh.')
         } finally {
@@ -40,6 +53,7 @@ export function ContactVerificationPanel({ status, onVerified }: ContactVerifica
         try {
             const updated = await verifyContactVerificationCode('EMAIL', otp)
             onVerified(updated)
+            updateStoredUser({ emailVerified: updated.emailVerified })
             setOtp('')
             setSuccessMessage('Email đã được xác minh.')
         } catch (error) {

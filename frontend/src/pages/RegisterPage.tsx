@@ -27,6 +27,7 @@ const initialFormValues: RegisterFormValues = {
     email: '',
     phone: '',
     password: '',
+    confirmPassword: '',
     role: 'ROLE_CANDIDATE',
     position: '',
 }
@@ -41,6 +42,7 @@ export function RegisterPage() {
     const [formValues, setFormValues] = useState<RegisterFormValues>(initialFormValues)
     const [acceptedTerms, setAcceptedTerms] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<RegisterFormErrors>({})
     const [serverError, setServerError] = useState('')
     const [successMessage, setSuccessMessage] = useState('')
@@ -89,7 +91,11 @@ export function RegisterPage() {
 
     function updateField(field: keyof RegisterFormValues, value: string) {
         setFormValues((current) => ({ ...current, [field]: value }))
-        setFieldErrors((current) => ({ ...current, [field]: undefined }))
+        setFieldErrors((current) => ({
+            ...current,
+            [field]: undefined,
+            ...(field === 'password' ? { confirmPassword: undefined } : {}),
+        }))
         setServerError('')
         setSuccessMessage('')
     }
@@ -183,6 +189,24 @@ export function RegisterPage() {
                                 </div>
                                 <FieldError id="register-password-error" message={fieldErrors.password} />
                                 {!fieldErrors.password && <p className="mt-1 text-[11px] text-slate-500" id="register-password-help">Sử dụng ít nhất 6 ký tự.</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-slate-800" htmlFor="register-confirm-password">Xác nhận mật khẩu</label>
+                                <div className="relative">
+                                    <LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input aria-describedby={fieldErrors.confirmPassword ? 'register-confirm-password-error' : undefined} aria-invalid={Boolean(fieldErrors.confirmPassword)} autoComplete="new-password" className={`${inputClass('confirmPassword')} pr-11`} id="register-confirm-password" name="confirmPassword" onChange={(event) => updateField('confirmPassword', event.target.value)} placeholder="Nhập lại mật khẩu" type={showConfirmPassword ? 'text' : 'password'} value={formValues.confirmPassword} />
+                                    <button
+                                        aria-label={showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
+                                        aria-pressed={showConfirmPassword}
+                                        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+                                        onClick={() => setShowConfirmPassword((visible) => !visible)}
+                                        type="button"
+                                    >
+                                        {showConfirmPassword ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
+                                    </button>
+                                </div>
+                                <FieldError id="register-confirm-password-error" message={fieldErrors.confirmPassword} />
                             </div>
 
                             <fieldset>

@@ -278,7 +278,7 @@ CREATE TABLE `companies` (
     `website` VARCHAR(255) NULL,
     `industry` VARCHAR(150) NULL,
     `company_size` VARCHAR(50) NULL, -- ví dụ: "50-150 nhân viên"
-    `address` VARCHAR(300) NOT NULL,
+    `address` VARCHAR(300) NULL,
     `city` VARCHAR(100) NOT NULL,
     `tax_code` VARCHAR(50) NULL,
     `description` TEXT NULL,

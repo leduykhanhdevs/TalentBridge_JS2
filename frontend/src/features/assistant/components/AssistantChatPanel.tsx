@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { askTalentBridge } from '../assistantApi'
 import type { AssistantTurn } from '../assistantTypes'
 import { getAdminReportFormat } from '../adminReportIntent'
+import { isPendingAdminQuestion } from '../adminQuestionIntent'
 import { getAccessToken, getStoredUser } from '../../auth/tokenStorage'
 import type { AdminApiMetricsResponse, AdminDashboardStatsResponse, AdminReportFormat } from '../../admin/adminTypes'
 import { getMyJobs } from '../../recruiter/recruiterJobApi'
@@ -185,8 +186,7 @@ export function AssistantChatPanel({
             const normalizedQuestion = normalizeQuestion(question)
             const overviewIntent = ['thong ke', 'tong quan', 'bao nhieu', 'so lieu', 'bao cao', 'tinh hinh']
                 .some((term) => normalizedQuestion.includes(term))
-            const pendingIntent = ['cho duyet', 'can duyet', 'cho xu ly', 'can xu ly', 'chua duyet']
-                .some((term) => normalizedQuestion.includes(term))
+            const pendingIntent = isPendingAdminQuestion(normalizedQuestion)
             const apiIntent = ['api', 'do tre', 'latency', 'loi'].some((term) => normalizedQuestion.includes(term))
             const companyApprovalIntent = ['duyet', 'phe duyet', 'kiem duyet']
                 .some((term) => normalizedQuestion.includes(term))

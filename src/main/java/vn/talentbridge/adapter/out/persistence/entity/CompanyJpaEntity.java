@@ -32,7 +32,7 @@ public class CompanyJpaEntity extends BaseJpaEntity {
     @Column(name = "company_size", length = 50)
     private String companySize;
 
-    @Column(name = "address", length = 255)
+    @Column(name = "address", length = 300)
     private String address;
 
     @Column(name = "city", length = 100)
