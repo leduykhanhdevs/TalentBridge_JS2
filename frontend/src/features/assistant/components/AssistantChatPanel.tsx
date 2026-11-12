@@ -104,6 +104,7 @@ export function AssistantChatPanel({
             const companyApprovalIntent = ['duyet', 'phe duyet', 'kiem duyet']
                 .some((term) => normalizedQuestion.includes(term))
                 && ['doanh nghiep', 'cong ty'].some((term) => normalizedQuestion.includes(term))
+                && !pendingIntent
             const reportFormat = getAdminReportFormat(question, adminMode)
             let adminAnswer: string | null = null
 
