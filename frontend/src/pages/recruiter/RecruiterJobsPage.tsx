@@ -295,7 +295,7 @@ export function RecruiterJobsPage() {
                                     <div className="flex shrink-0 items-center gap-2 border-t border-slate-100 pt-3 sm:border-0 sm:pt-0">
                                         {isPublished ? (
                                             <Link
-                                                className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1D4ED8] px-4 text-xs font-semibold text-white transition hover:bg-blue-800"
+                                                className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1D4ED8] px-4 text-xs font-semibold !text-white transition hover:bg-blue-800"
                                                 to={`/recruiter/jobs/${job.id}/applicants`}
                                             >
                                                 Xem ứng viên
