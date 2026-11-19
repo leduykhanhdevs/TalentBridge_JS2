@@ -94,6 +94,11 @@ public class RecruiterRepositoryAdapter implements RecruiterRepositoryPort {
         return toDomain(saved);
     }
 
+    @Override
+    public void deleteById(Long recruiterId) {
+        recruiterJpaRepository.deleteById(recruiterId);
+    }
+
     private Recruiter toDomain(RecruiterJpaEntity entity) {
         User user = null;
         if (entity.getUser() != null) {

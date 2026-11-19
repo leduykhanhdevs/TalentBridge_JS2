@@ -313,7 +313,9 @@ test('candidate verifies email and applies with their saved primary CV without Z
         status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(currentVerification)),
     }))
     await page.route('**/api/v1/candidates/contact-verification/*/request', async (route) => route.fulfill({
-        status: 200, contentType: 'application/json', body: JSON.stringify(apiResponse(null)),
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(apiResponse({ destination: 'q***@example.invalid', alreadyVerified: false, deliveryAccepted: true })),
     }))
     await page.route('**/api/v1/candidates/contact-verification/*/verify', async (route) => {
         currentVerification = {

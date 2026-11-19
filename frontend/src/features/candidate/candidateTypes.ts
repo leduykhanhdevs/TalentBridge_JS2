@@ -81,16 +81,16 @@ export interface CandidateSkill {
     candidateId: number
     skillId: number
     skillName: string
-    proficiencyLevel: string
-    rating: number
-    yearsOfExperience: number
+    proficiencyLevel?: string | null
+    rating?: number | null
+    yearsOfExperience?: number | null
 }
 
 export interface CandidateSkillRequest {
     skillId?: number
     skillName?: string
-    proficiencyLevel?: string
-    rating: number
+    proficiencyLevel?: string | null
+    rating?: number | null
     yearsOfExperience?: number
 }
 

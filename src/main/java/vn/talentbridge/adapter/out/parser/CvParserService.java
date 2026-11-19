@@ -236,17 +236,17 @@ public class CvParserService implements CvParserPort, CvTextExtractionPort {
     }
 
     private List<String> extractSkills(String text) {
-        Set<String> matched = new LinkedHashSet<>();
-        String lower = text.toLowerCase();
+        Map<String, String> matched = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         for (String skill : COMMON_SKILLS) {
-            Pattern p = Pattern.compile("(?i)\\b" + Pattern.quote(skill) + "\\b");
-            if (p.matcher(text).find() || lower.contains(skill.toLowerCase())) {
-                matched.add(skill);
+            Pattern p = Pattern.compile("(?iu)(?<![\\p{L}\\p{N}])" + Pattern.quote(skill)
+                    + "(?![\\p{L}\\p{N}])");
+            if (p.matcher(text).find()) {
+                matched.putIfAbsent(skill.toLowerCase(Locale.ROOT), skill);
             }
         }
 
-        return new ArrayList<>(matched);
+        return new ArrayList<>(matched.values());
     }
 
     private List<ParsedCvResult.ParsedExperienceItem> extractExperiences(String text) {

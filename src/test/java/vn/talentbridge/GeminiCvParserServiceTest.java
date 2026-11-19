@@ -44,7 +44,7 @@ class GeminiCvParserServiceTest {
                 "title", "Backend Developer",
                 "city", "Ha Noi",
                 "summary", "Experienced backend engineer",
-                "skills", List.of("Java", "Spring Boot"),
+                "skills", List.of("Java", "Spring Boot", "Java", "Kubernetes"),
                 "experiences", List.of()
         ));
         String responseJson = objectMapper.writeValueAsString(Map.of(
@@ -53,15 +53,18 @@ class GeminiCvParserServiceTest {
         startServer(200, responseJson, receivedApiKey, receivedRequest);
 
         byte[] cvBytes = "cv contents".getBytes(StandardCharsets.UTF_8);
-        when(fallbackParser.extractRawText(cvBytes, "private-cv.pdf")).thenReturn("CV content without personal details");
+        when(fallbackParser.extractRawText(cvBytes, "private-cv.pdf"))
+                .thenReturn("CV content explicitly lists Spring Boot and Java.");
         GeminiCvParserService service = service("test-secret");
 
         ParsedCvResult result = service.parse(cvBytes, "private-cv.pdf");
 
         assertThat(result.fullName()).isEqualTo("Nguyen Van A");
         assertThat(result.processingSource()).isEqualTo(CvParsingSource.GEMINI);
+        assertThat(result.skills()).containsExactly("Java", "Spring Boot");
         assertThat(receivedApiKey.get()).isEqualTo("test-secret");
         assertThat(receivedRequest.get()).doesNotContain("private-cv.pdf");
+        assertThat(receivedRequest.get()).contains("Không suy luận");
         verify(fallbackParser, never()).parse(cvBytes, "private-cv.pdf");
     }
 

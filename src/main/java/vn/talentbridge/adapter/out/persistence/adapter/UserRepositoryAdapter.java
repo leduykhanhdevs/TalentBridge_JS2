@@ -85,6 +85,11 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
+    public void deleteById(Long id) {
+        userJpaRepository.deleteById(id);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<User> findAll(int page, int size) {
         return findAll(page, size, null);

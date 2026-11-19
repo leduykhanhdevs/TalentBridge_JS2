@@ -11,4 +11,5 @@ public interface RecruiterRepositoryPort {
     List<Recruiter> findAll(int page, int size, String keyword);
     long count(String keyword);
     Recruiter save(Recruiter recruiter);
+    void deleteById(Long recruiterId);
 }

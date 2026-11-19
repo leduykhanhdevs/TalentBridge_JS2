@@ -10,7 +10,9 @@ import {
     ExternalLink,
     MoreHorizontal,
     Plus,
+    RotateCcw,
     Search,
+    Trash2,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { getStoredUser } from '../../features/auth/tokenStorage'
@@ -18,7 +20,9 @@ import { getRecruiterProfile } from '../../features/recruiter/recruiterApi'
 import {
     closeJob,
     createJob,
+    deleteClosedJob as deleteClosedJobRequest,
     getMyJobs,
+    reopenJob,
     updateJob,
 } from '../../features/recruiter/recruiterJobApi'
 import type {
@@ -84,6 +88,8 @@ export function RecruiterJobsPage() {
 
     // Confirm close modal
     const [confirmCloseId, setConfirmCloseId] = useState<number | null>(null)
+    const [confirmDeleteJob, setConfirmDeleteJob] = useState<RecruiterJobItem | null>(null)
+    const [processingJobId, setProcessingJobId] = useState<number | null>(null)
 
     const loadJobs = useCallback(async () => {
         setIsLoading(true)
@@ -146,6 +152,7 @@ export function RecruiterJobsPage() {
     }
 
     async function handleCloseJob(id: number) {
+        setProcessingJobId(id)
         try {
             await closeJob(id)
             setSuccessMsg('Đã đóng tin tuyển dụng thành công!')
@@ -155,6 +162,39 @@ export function RecruiterJobsPage() {
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Không thể đóng tin tuyển dụng.'
             setErrorMsg(msg)
+        } finally {
+            setProcessingJobId(null)
+        }
+    }
+
+    async function handleReopenJob(job: RecruiterJobItem) {
+        setProcessingJobId(job.id)
+        setErrorMsg(null)
+        try {
+            await reopenJob(job.id)
+            setSuccessMsg('Đã mở lại tin tuyển dụng. Tin đã hiển thị lại cho ứng viên.')
+            await loadJobs()
+            setTimeout(() => setSuccessMsg(null), 4000)
+        } catch (err: unknown) {
+            setErrorMsg(err instanceof Error ? err.message : 'Không thể mở lại tin tuyển dụng.')
+        } finally {
+            setProcessingJobId(null)
+        }
+    }
+
+    async function handleDeleteClosedJob(job: RecruiterJobItem) {
+        setProcessingJobId(job.id)
+        setErrorMsg(null)
+        try {
+            await deleteClosedJobRequest(job.id)
+            setConfirmDeleteJob(null)
+            setSuccessMsg('Đã xóa tin tuyển dụng và toàn bộ hồ sơ ứng tuyển liên quan.')
+            await loadJobs()
+            setTimeout(() => setSuccessMsg(null), 4000)
+        } catch (err: unknown) {
+            setErrorMsg(err instanceof Error ? err.message : 'Không thể xóa tin tuyển dụng.')
+        } finally {
+            setProcessingJobId(null)
         }
     }
 
@@ -310,6 +350,7 @@ export function RecruiterJobsPage() {
                 <div className="space-y-3">
                     {filteredJobs.map((job) => {
                         const isPublished = job.status === 'ACTIVE'
+                        const canReviewApplicants = isPublished || job.status === 'CLOSED'
 
                         return (
                             <div
@@ -334,7 +375,7 @@ export function RecruiterJobsPage() {
                                     </div>
 
                                     <div className="flex shrink-0 items-center gap-2 border-t border-slate-100 pt-3 sm:border-0 sm:pt-0">
-                                        {isPublished ? (
+                                        {canReviewApplicants ? (
                                             <Link
                                                 className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1D4ED8] px-4 text-xs font-semibold !text-white transition hover:bg-blue-800"
                                                 to={`/recruiter/jobs/${job.id}/applicants`}
@@ -367,6 +408,26 @@ export function RecruiterJobsPage() {
                                                 <button className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50" onClick={() => { setEditingJob(job); setIsModalOpen(true) }} type="button">
                                                     <Edit3 aria-hidden="true" size={14} /> Chỉnh sửa tin
                                                 </button>
+                                                {job.status === 'CLOSED' && (
+                                                    <>
+                                                        <button
+                                                            className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                                                            disabled={processingJobId === job.id}
+                                                            onClick={() => { void handleReopenJob(job) }}
+                                                            type="button"
+                                                        >
+                                                            <RotateCcw aria-hidden="true" size={14} /> Mở tin tuyển dụng
+                                                        </button>
+                                                        <button
+                                                            className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                                                            disabled={processingJobId === job.id}
+                                                            onClick={() => setConfirmDeleteJob(job)}
+                                                            type="button"
+                                                        >
+                                                            <Trash2 aria-hidden="true" size={14} /> Xóa tin tuyển dụng
+                                                        </button>
+                                                    </>
+                                                )}
                                                 {isPublished && (
                                                     <button className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-rose-700 hover:bg-rose-50" onClick={() => setConfirmCloseId(job.id)} type="button">
                                                         <Archive aria-hidden="true" size={14} /> Đóng tin tuyển dụng
@@ -448,12 +509,35 @@ export function RecruiterJobsPage() {
                             <button
                                 type="button"
                                 onClick={() => handleCloseJob(confirmCloseId)}
-                                className="flex-1 rounded-xl bg-rose-600 py-2.5 text-xs font-bold text-white hover:bg-rose-700 transition shadow-md shadow-rose-600/20"
+                                disabled={processingJobId === confirmCloseId}
+                                className="flex-1 rounded-xl bg-rose-600 py-2.5 text-xs font-bold text-white hover:bg-rose-700 transition shadow-md shadow-rose-600/20 disabled:opacity-50"
                             >
-                                Xác nhận đóng
+                                {processingJobId === confirmCloseId ? 'Đang đóng…' : 'Xác nhận đóng'}
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {confirmDeleteJob && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+                    <section aria-labelledby="delete-job-title" aria-modal="true" className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl" role="dialog">
+                        <div className="mx-auto grid size-12 place-items-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600">
+                            <Trash2 aria-hidden="true" size={22} />
+                        </div>
+                        <h2 className="mt-4 text-center text-base font-bold text-slate-900" id="delete-job-title">
+                            Bạn có chắc muốn xóa tin “{confirmDeleteJob.title}”?
+                        </h2>
+                        <p className="mt-2 text-center text-sm leading-6 text-slate-600">
+                            Tin đã đóng cùng hồ sơ ứng tuyển và lịch sử xử lý thuộc tin này sẽ bị xóa vĩnh viễn. Tài khoản ứng viên và CV gốc của họ vẫn được giữ.
+                        </p>
+                        <div className="mt-6 flex gap-2">
+                            <button className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50" disabled={processingJobId === confirmDeleteJob.id} onClick={() => setConfirmDeleteJob(null)} type="button">Hủy</button>
+                            <button className="flex-1 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={processingJobId === confirmDeleteJob.id} onClick={() => { void handleDeleteClosedJob(confirmDeleteJob) }} type="button">
+                                {processingJobId === confirmDeleteJob.id ? 'Đang xóa…' : 'Xóa tin tuyển dụng'}
+                            </button>
+                        </div>
+                    </section>
                 </div>
             )}
         </div>

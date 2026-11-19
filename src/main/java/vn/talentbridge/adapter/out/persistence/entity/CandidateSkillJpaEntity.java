@@ -27,14 +27,11 @@ public class CandidateSkillJpaEntity {
     private SkillJpaEntity skill;
 
     @Column(name = "proficiency_level", length = 30)
-    @Builder.Default
-    private String proficiencyLevel = "INTERMEDIATE";
+    private String proficiencyLevel;
 
     @Column(name = "rating")
-    @Builder.Default
-    private Integer rating = 3;
+    private Integer rating;
 
     @Column(name = "years_of_experience")
-    @Builder.Default
-    private Double yearsOfExperience = 1.0;
+    private Double yearsOfExperience;
 }

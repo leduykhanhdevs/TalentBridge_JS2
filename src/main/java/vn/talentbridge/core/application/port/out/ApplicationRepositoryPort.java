@@ -10,4 +10,5 @@ public interface ApplicationRepositoryPort {
     Optional<Application> findByIdForUpdate(Long id);
     Application save(Application application);
     List<CandidateApplicationResult> findMyApplications(Long candidateUserId);
+    void deleteByCandidateId(Long candidateId);
 }

@@ -159,7 +159,7 @@ class CandidateExperienceIntegrationTest {
     }
 
     @Test
-    @DisplayName("Thêm và xóa kỹ năng chuyên môn với đánh giá sao (1-5)")
+    @DisplayName("Thêm và xóa kỹ năng chuyên môn mà không tự gán mức độ, sao hoặc số năm")
     void testCandidateSkill_AddAndRemove() throws Exception {
         CandidateSkillRequest skillReq = new CandidateSkillRequest(
                 null,
@@ -176,7 +176,9 @@ class CandidateExperienceIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statusCode").value(201))
                 .andExpect(jsonPath("$.data.skillName").value("Spring Boot"))
-                .andExpect(jsonPath("$.data.rating").value(4));
+                .andExpect(jsonPath("$.data.rating").doesNotExist())
+                .andExpect(jsonPath("$.data.proficiencyLevel").doesNotExist())
+                .andExpect(jsonPath("$.data.yearsOfExperience").doesNotExist());
 
         // Lấy danh sách kỹ năng của candidate
         mockMvc.perform(get("/api/v1/candidates/skills")

@@ -65,6 +65,7 @@ public class Job {
 
     public void approve() { this.status = JobStatus.ACTIVE; }
     public void close() { this.status = JobStatus.CLOSED; }
+    public void reopen() { this.status = JobStatus.ACTIVE; }
     public void expire() { this.status = JobStatus.EXPIRED; }
 
     public Long getId() { return id; }

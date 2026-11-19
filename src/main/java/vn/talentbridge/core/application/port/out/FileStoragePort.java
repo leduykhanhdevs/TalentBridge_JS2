@@ -16,4 +16,9 @@ public interface FileStoragePort {
      * Deletes the file from storage.
      */
     void deleteFile(String fileUrl);
+
+    /**
+     * Deletes the file only after the current database transaction commits.
+     */
+    void deleteFileAfterCommit(String fileUrl);
 }

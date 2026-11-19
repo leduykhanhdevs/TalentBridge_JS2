@@ -128,6 +128,14 @@ export function JobDetailPage() {
             )
         }
 
+        if (job.status === 'CLOSED') {
+            return (
+                <div className={`rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950 ${extraClass}`} role="status">
+                    Tin tuyển dụng này đã đóng và không còn nhận hồ sơ ứng tuyển.
+                </div>
+            )
+        }
+
         if (!authenticated) {
             return (
                 <button
@@ -263,13 +271,19 @@ export function JobDetailPage() {
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-2">
                                 <span className={`inline-flex rounded-md px-2 py-1 text-[11px] font-semibold ${job.isDemo ? 'bg-amber-50 text-amber-900' : isActiveJob ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
-                                    {job.isDemo ? 'Tin mô phỏng' : isActiveJob ? 'Đang nhận hồ sơ' : 'Tin tuyển dụng'}
+                                    {job.isDemo ? 'Tin mô phỏng' : isActiveJob ? 'Đang nhận hồ sơ' : job.status === 'CLOSED' ? 'Đã đóng' : 'Tin tuyển dụng'}
                                 </span>
                                 {!job.isDemo && <span className="text-xs text-slate-500">Thông tin tuyển dụng do doanh nghiệp cung cấp.</span>}
                             </div>
                         </div>
                     </div>
                 </header>
+
+                {job.status === 'CLOSED' && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="status">
+                        Tin tuyển dụng này đã đóng. Nhà tuyển dụng không nhận thêm hồ sơ mới.
+                    </div>
+                )}
 
                 <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.85fr)]">
                     <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

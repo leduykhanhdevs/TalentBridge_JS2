@@ -95,6 +95,11 @@ public class JobRepositoryAdapter implements JobRepositoryPort {
     }
 
     @Override
+    public void deleteById(Long id) {
+        jobJpaRepository.deleteById(id);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Job> findAll(int page, int size, JobStatus status) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));

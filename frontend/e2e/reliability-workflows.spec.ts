@@ -312,6 +312,7 @@ test('stalled application history request stops loading and offers a retry', asy
 
 test('candidate can register, sign out and sign back in using the local H2 backend', async ({ page }) => {
     const email = `qa.uat.${Date.now()}@talentbridge.test`
+    const phone = `09${Date.now().toString().slice(-8)}`
     const password = 'FixturePassword123!'
 
     await page.goto('/register')
@@ -320,10 +321,11 @@ test('candidate can register, sign out and sign back in using the local H2 backe
 
     await page.getByLabel('Họ và tên').fill('Ứng viên UAT')
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Số điện thoại').fill('0901234567')
+    await page.getByLabel('Số điện thoại').fill(phone)
     await page.getByRole('textbox', { name: 'Mật khẩu', exact: true }).fill(password)
+    await page.getByRole('textbox', { name: 'Xác nhận mật khẩu', exact: true }).fill(password)
     await expect(page.locator('#register-password')).toHaveAttribute('type', 'password')
-    await page.getByRole('button', { name: 'Hiện mật khẩu' }).click()
+    await page.getByRole('button', { name: 'Hiện mật khẩu', exact: true }).click()
     await expect(page.locator('#register-password')).toHaveAttribute('type', 'text')
     await page.getByRole('button', { name: 'Ẩn mật khẩu' }).click()
     await expect(page.locator('#register-password')).toHaveAttribute('type', 'password')

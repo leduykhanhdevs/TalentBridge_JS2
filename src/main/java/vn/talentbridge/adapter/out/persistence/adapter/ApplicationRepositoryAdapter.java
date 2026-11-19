@@ -46,6 +46,11 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
     }
 
     @Override
+    public void deleteByCandidateId(Long candidateId) {
+        applicationJpaRepository.deleteByCandidateId(candidateId);
+    }
+
+    @Override
     public Optional<Application> findByIdForUpdate(Long id) {
         return applicationJpaRepository.findByIdForUpdate(id).map(this::toDomain);
     }

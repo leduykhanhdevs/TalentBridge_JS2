@@ -15,6 +15,7 @@ import vn.talentbridge.core.application.dto.ParsedCvResult;
 import vn.talentbridge.core.application.port.out.CvParserPort;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -84,7 +85,7 @@ public class GeminiCvParserService implements CvParserPort {
                 4. Chức danh (title): Chức danh công việc / vị trí mong muốn (Ví dụ: "Backend Developer", "Kỹ sư Phần mềm", "Fullstack Engineer").
                 5. Tỉnh/Thành phố (city): Nơi cư trú hoặc làm việc (Ví dụ: "Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Cần Thơ", ...).
                 6. Tóm tắt (summary): Tóm tắt ngắn gọn 2-3 câu về mục tiêu nghề nghiệp, thế mạnh bản thân.
-                7. Kỹ năng (skills): Danh sách tất cả các kỹ năng công nghệ, ngôn ngữ lập trình, framework, công cụ, soft skills được nêu trong CV (Ví dụ: ["Java", "Spring Boot", "React", "Docker", "SQL", ...]).
+                7. Kỹ năng (skills): Chỉ trả về tên kỹ năng được nêu rõ trong CV dưới dạng danh sách chuỗi. Không suy luận hoặc tự thêm kỹ năng, mức độ thành thạo, số sao hay số năm kinh nghiệm; trường này chỉ chứa tên kỹ năng.
                 8. Kinh nghiệm làm việc (experiences): Danh sách các công việc đã/đang làm (sắp xếp từ mới nhất):
                    - companyName: Tên công ty hoặc doanh nghiệp.
                    - position: Chức danh / vị trí làm việc.
@@ -151,15 +152,18 @@ public class GeminiCvParserService implements CvParserPort {
         String summary = json.path("summary").asText("").trim();
 
         List<String> skills = new ArrayList<>();
+        Set<String> seenSkillNames = new HashSet<>();
         JsonNode skillsNode = json.path("skills");
         if (skillsNode.isArray()) {
             for (JsonNode s : skillsNode) {
                 String sk = s.asText("").trim();
-                if (!sk.isBlank() && !skills.contains(sk)) {
+                String normalized = sk.toLowerCase(Locale.ROOT);
+                if (!sk.isBlank() && seenSkillNames.add(normalized) && containsExplicitText(rawText, sk)) {
                     skills.add(sk);
                 }
             }
         }
+        skills.sort(String.CASE_INSENSITIVE_ORDER);
 
         List<ParsedCvResult.ParsedExperienceItem> experiences = new ArrayList<>();
         JsonNode expNode = json.path("experiences");
@@ -212,6 +216,15 @@ public class GeminiCvParserService implements CvParserPort {
                 rawText.length() > 2000 ? rawText.substring(0, 2000) : rawText,
                 CvParsingSource.GEMINI
         );
+    }
+
+    private boolean containsExplicitText(String source, String phrase) {
+        if (source == null || phrase == null || phrase.isBlank()) {
+            return false;
+        }
+        String expression = "(?iu)(?<![\\p{L}\\p{N}])" + Pattern.quote(phrase)
+                + "(?![\\p{L}\\p{N}])";
+        return Pattern.compile(expression).matcher(source).find();
     }
 
     private String normalizeDate(String d) {

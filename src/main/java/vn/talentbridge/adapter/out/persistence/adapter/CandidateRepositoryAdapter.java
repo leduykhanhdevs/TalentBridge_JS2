@@ -92,6 +92,11 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
         return toDomain(saved);
     }
 
+    @Override
+    public void deleteById(Long candidateId) {
+        candidateJpaRepository.deleteById(candidateId);
+    }
+
     private Candidate toDomain(CandidateJpaEntity entity) {
         User user = null;
         if (entity.getUser() != null) {

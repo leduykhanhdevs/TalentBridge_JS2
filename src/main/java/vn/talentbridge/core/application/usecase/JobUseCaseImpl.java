@@ -152,9 +152,55 @@ public class JobUseCaseImpl implements JobUseCase {
     }
 
     @Override
+    public JobDetailResult reopenJob(Long recruiterUserId, Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng", jobId));
+        Recruiter recruiter = recruiterRepository.findByUserId(recruiterUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
+
+        if (recruiter.getCompany() == null || !recruiter.getCompany().getId().equals(job.getCompanyId())) {
+            throw new DomainException(40301, "Bạn không có quyền mở lại tin tuyển dụng này");
+        }
+        if (job.getStatus() != JobStatus.CLOSED) {
+            throw new DomainException(40001, "Chỉ có thể mở lại tin tuyển dụng đã đóng");
+        }
+        if (job.getDeadline() != null && job.getDeadline().isBefore(LocalDate.now())) {
+            throw new DomainException(40001, "Hạn ứng tuyển đã qua. Hãy cập nhật hạn ứng tuyển trước khi mở lại tin");
+        }
+
+        job.reopen();
+        job.setUpdatedAt(LocalDateTime.now());
+        Job saved = jobRepository.save(job);
+        recordStatusChange(saved, JobStatus.CLOSED, JobStatus.ACTIVE,
+                "Nhà tuyển dụng mở lại tin tuyển dụng đã đóng.", recruiterUserId);
+        return JobDetailResult.from(saved);
+    }
+
+    @Override
+    public void deleteClosedJob(Long recruiterUserId, Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng", jobId));
+        Recruiter recruiter = recruiterRepository.findByUserId(recruiterUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ nhà tuyển dụng"));
+
+        if (recruiter.getCompany() == null || !recruiter.getCompany().getId().equals(job.getCompanyId())) {
+            throw new DomainException(40301, "Bạn không có quyền xóa tin tuyển dụng này");
+        }
+        if (job.getStatus() != JobStatus.CLOSED) {
+            throw new DomainException(40001, "Chỉ có thể xóa tin tuyển dụng đã đóng");
+        }
+
+        // Database cascades remove job-specific applications and their ATS records.
+        jobRepository.deleteById(jobId);
+    }
+
+    @Override
     public JobDetailResult getJobById(Long jobId) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin tuyển dụng", jobId));
+        if (job.getStatus() != JobStatus.ACTIVE && job.getStatus() != JobStatus.CLOSED) {
+            throw new ResourceNotFoundException("Tin tuyển dụng không còn được công khai", jobId);
+        }
         return JobDetailResult.from(job);
     }
 
