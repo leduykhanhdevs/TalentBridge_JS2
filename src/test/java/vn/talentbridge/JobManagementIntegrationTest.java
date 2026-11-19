@@ -315,6 +315,54 @@ class JobManagementIntegrationTest {
     }
 
     @Test
+    @DisplayName("Tin đã đóng vẫn hiện thông báo cho ứng viên và nhà tuyển dụng xem được danh sách ứng viên")
+    void closedJobRetainsRecruiterAccessAndCanBeReopened() throws Exception {
+        mockMvc.perform(patch("/api/v1/jobs/" + sampleJob.getId() + "/close")
+                        .header("Authorization", "Bearer " + hrToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/jobs/" + sampleJob.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("CLOSED"));
+
+        mockMvc.perform(get("/api/v1/recruiters/jobs/" + sampleJob.getId() + "/applicants")
+                        .header("Authorization", "Bearer " + hrToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/jobs").param("page", "1").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+
+        mockMvc.perform(patch("/api/v1/jobs/" + sampleJob.getId() + "/reopen")
+                        .header("Authorization", "Bearer " + hrToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
+
+        mockMvc.perform(get("/api/v1/jobs").param("page", "1").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("Chỉ xóa được tin đã đóng và xóa thành công sẽ không còn truy cập được")
+    void onlyClosedJobsCanBeDeleted() throws Exception {
+        mockMvc.perform(delete("/api/v1/jobs/" + sampleJob.getId())
+                        .header("Authorization", "Bearer " + hrToken))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(patch("/api/v1/jobs/" + sampleJob.getId() + "/close")
+                        .header("Authorization", "Bearer " + hrToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/v1/jobs/" + sampleJob.getId())
+                        .header("Authorization", "Bearer " + hrToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/jobs/" + sampleJob.getId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("HRPM-31: GET /api/v1/recruiters/my-jobs - HR xem danh sách tin tuyển dụng của mình")
     void testGetRecruiterMyJobs() throws Exception {
         mockMvc.perform(get("/api/v1/recruiters/my-jobs")

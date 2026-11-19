@@ -3,6 +3,8 @@ package vn.talentbridge.adapter.out.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import vn.talentbridge.core.application.port.out.FileStoragePort;
 
 import java.io.IOException;
@@ -90,6 +92,30 @@ public class LocalFileStorageAdapter implements FileStoragePort {
         try {
             Files.deleteIfExists(filePath);
         } catch (IOException ignored) {
+        }
+    }
+
+    @Override
+    public void deleteFileAfterCommit(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) return;
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    deleteFileSafely(fileUrl);
+                }
+            });
+            return;
+        }
+        deleteFileSafely(fileUrl);
+    }
+
+    private void deleteFileSafely(String fileUrl) {
+        try {
+            deleteFile(fileUrl);
+        } catch (RuntimeException e) {
+            log.warn("Không thể xóa file sau thao tác xóa tài khoản: {}", fileUrl, e);
         }
     }
 

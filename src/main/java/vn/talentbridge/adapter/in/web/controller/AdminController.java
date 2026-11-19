@@ -29,6 +29,7 @@ import vn.talentbridge.core.application.dto.JobDetailResult;
 import vn.talentbridge.core.application.dto.RecruiterResult;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.AdminManagementUseCase;
+import vn.talentbridge.core.application.port.in.DeleteUserAccountUseCase;
 import vn.talentbridge.core.application.port.in.JobModerationUseCase;
 import vn.talentbridge.core.application.port.in.UpdateCompanyStatusUseCase;
 import vn.talentbridge.core.domain.vo.CompanyStatus;
@@ -46,6 +47,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminManagementUseCase adminManagementUseCase;
+    private final DeleteUserAccountUseCase deleteUserAccountUseCase;
     private final JobModerationUseCase jobModerationUseCase;
     private final UpdateCompanyStatusUseCase updateCompanyStatusUseCase;
 
@@ -82,6 +84,17 @@ public class AdminController {
     ) {
         UserResult updatedUser = adminManagementUseCase.updateUserStatus(id, request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái tài khoản thành công", UserResponse.from(updatedUser)));
+    }
+
+    @DeleteMapping("/users/{id}")
+    @Operation(summary = "Xóa tài khoản ứng viên hoặc nhà tuyển dụng",
+            description = "Xóa tài khoản và hồ sơ cá nhân; có thể chặn email/số điện thoại đăng ký lại")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean blockIdentifiers) {
+        deleteUserAccountUseCase.deleteAccount(id, principal.getId(), blockIdentifiers);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/companies")

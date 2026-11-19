@@ -12,4 +12,5 @@ public interface CandidateRepositoryPort {
     List<Candidate> findAll(int page, int size, String keyword, UserStatus status);
     long count(String keyword, UserStatus status);
     Candidate save(Candidate candidate);
+    void deleteById(Long candidateId);
 }

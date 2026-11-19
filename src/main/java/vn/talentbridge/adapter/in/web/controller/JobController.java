@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,6 +112,28 @@ public class JobController {
 
         JobDetailResult result = jobUseCase.closeJob(principal.getId(), id);
         return ResponseEntity.ok(ApiResponse.success("Đóng tin tuyển dụng thành công", JobResponse.from(result)));
+    }
+
+    @PatchMapping("/{id}/reopen")
+    @PreAuthorize("hasRole('RECRUITER')")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(summary = "HR mở lại tin tuyển dụng đã đóng")
+    public ResponseEntity<ApiResponse<JobResponse>> reopenJob(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        JobDetailResult result = jobUseCase.reopenJob(principal.getId(), id);
+        return ResponseEntity.ok(ApiResponse.success("Mở lại tin tuyển dụng thành công", JobResponse.from(result)));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('RECRUITER')")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(summary = "HR xóa tin đã đóng và hồ sơ ứng tuyển liên quan")
+    public ResponseEntity<Void> deleteClosedJob(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        jobUseCase.deleteClosedJob(principal.getId(), id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/my-jobs")

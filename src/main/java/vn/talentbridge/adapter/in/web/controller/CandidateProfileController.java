@@ -200,7 +200,7 @@ public class CandidateProfileController {
                     try {
                         candidateSkillUseCase.addCandidateSkill(
                                 principal.getId(),
-                                new AddCandidateSkillCommand(null, skillName.trim(), "INTERMEDIATE", 4, 1.0)
+                                new AddCandidateSkillCommand(null, skillName.trim(), null, null, null)
                         );
                     } catch (Exception ex) {
                         log.warn("Không thể lưu kỹ năng '{}': {}", skillName, ex.getMessage());

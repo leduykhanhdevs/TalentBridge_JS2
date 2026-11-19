@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Award, Star, X } from 'lucide-react'
+import { Award, X } from 'lucide-react'
 import { addCandidateSkill, CandidateApiError } from '../candidateApi'
 import type { SkillItem } from '../candidateTypes'
 import { CustomSelect } from '../../../components/ui/CustomSelect'
@@ -11,14 +11,6 @@ interface CandidateSkillModalProps {
     availableSkills: SkillItem[]
 }
 
-const PROFICIENCY_OPTIONS = [
-    { value: 'BEGINNER', label: 'Mới bắt đầu (Cơ bản)' },
-    { value: 'ELEMENTARY', label: 'Sơ cấp (Đã làm quen)' },
-    { value: 'INTERMEDIATE', label: 'Trung cấp (Làm việc độc lập)' },
-    { value: 'ADVANCED', label: 'Cao cấp (Thành thạo)' },
-    { value: 'EXPERT', label: 'Chuyên gia (Xuất sắc / Lead)' },
-]
-
 export function CandidateSkillModal({
     isOpen,
     onClose,
@@ -28,24 +20,10 @@ export function CandidateSkillModal({
     const [selectedSkillName, setSelectedSkillName] = useState('')
     const [customSkillName, setCustomSkillName] = useState('')
     const [isCustom, setIsCustom] = useState(false)
-    const [rating, setRating] = useState(3)
-    const [hoverRating, setHoverRating] = useState(0)
-    const [proficiencyLevel, setProficiencyLevel] = useState('INTERMEDIATE')
-    const [yearsOfExperience, setYearsOfExperience] = useState('1.0')
-
     const [loading, setLoading] = useState(false)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
     if (!isOpen) return null
-
-    function handleRatingChange(stars: number) {
-        setRating(stars)
-        if (stars === 1) setProficiencyLevel('BEGINNER')
-        else if (stars === 2) setProficiencyLevel('ELEMENTARY')
-        else if (stars === 3) setProficiencyLevel('INTERMEDIATE')
-        else if (stars === 4) setProficiencyLevel('ADVANCED')
-        else if (stars === 5) setProficiencyLevel('EXPERT')
-    }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -66,17 +44,12 @@ export function CandidateSkillModal({
             await addCandidateSkill({
                 skillId: matchedMaster ? matchedMaster.id : undefined,
                 skillName: matchedMaster ? undefined : skillName,
-                proficiencyLevel,
-                rating,
-                yearsOfExperience: parseFloat(yearsOfExperience) || 1.0,
             })
             onSuccess()
             onClose()
             setSelectedSkillName('')
             setCustomSkillName('')
             setIsCustom(false)
-            setRating(3)
-            setYearsOfExperience('1.0')
         } catch (err) {
             if (err instanceof CandidateApiError) {
                 setErrorMsg(err.message)
@@ -155,74 +128,6 @@ export function CandidateSkillModal({
                                 value={selectedSkillName}
                             />
                         )}
-                    </div>
-
-                    {/* Star Rating Selector */}
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Mức độ thành thạo ({rating}/5 sao) <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                            {[1, 2, 3, 4, 5].map((star) => {
-                                const active = (hoverRating || rating) >= star
-                                return (
-                                    <button
-                                        className="p-1 text-slate-300 transition hover:scale-110 focus:outline-none"
-                                        key={star}
-                                        onClick={() => handleRatingChange(star)}
-                                        onMouseEnter={() => setHoverRating(star)}
-                                        onMouseLeave={() => setHoverRating(0)}
-                                        type="button"
-                                    >
-                                        <Star
-                                            className={`size-6 ${
-                                                active
-                                                    ? 'fill-amber-400 text-amber-400'
-                                                    : 'text-slate-300'
-                                            }`}
-                                        />
-                                    </button>
-                                )
-                            })}
-                            <span className="ml-2 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                                {rating === 1 && 'Cơ bản (1 sao)'}
-                                {rating === 2 && 'Sơ cấp (2 sao)'}
-                                {rating === 3 && 'Trung cấp (3 sao)'}
-                                {rating === 4 && 'Thành thạo (4 sao)'}
-                                {rating === 5 && 'Chuyên gia (5 sao)'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor="proficiency-level">
-                            Cấp độ đánh giá
-                        </label>
-                        <CustomSelect
-                            id="proficiency-level"
-                            aria-label="Cấp độ đánh giá"
-                            disabled={loading}
-                            onChange={setProficiencyLevel}
-                            options={PROFICIENCY_OPTIONS}
-                            value={proficiencyLevel}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1" htmlFor="years-exp">
-                            Số năm kinh nghiệm với kỹ năng này
-                        </label>
-                        <input
-                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                            disabled={loading}
-                            id="years-exp"
-                            min="0.1"
-                            onChange={(e) => setYearsOfExperience(e.target.value)}
-                            placeholder="VD: 2.5"
-                            step="0.5"
-                            type="number"
-                            value={yearsOfExperience}
-                        />
                     </div>
 
                     <div className="mt-6 flex justify-end gap-3 pt-2">

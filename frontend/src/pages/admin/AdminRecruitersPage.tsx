@@ -11,6 +11,7 @@ import {
     RefreshCw,
     Search,
     ShieldAlert,
+    Trash2,
     Unlock,
     UserCheck,
     Users,
@@ -19,8 +20,10 @@ import {
 import {
     getAdminRecruiters,
     getRecruiterById,
+    deleteAdminAccount,
     updateUserStatus,
 } from '../../features/admin/adminApi'
+import { DeleteAccountDialog } from '../../features/admin/components/DeleteAccountDialog'
 import type {
     RecruiterAdminResponse,
     UserStatus,
@@ -67,6 +70,8 @@ export function AdminRecruitersPage() {
     const [actionRecruiter, setActionRecruiter] = useState<RecruiterAdminResponse | null>(null)
     const [actionType, setActionType] = useState<'LOCK' | 'UNLOCK'>('LOCK')
     const [actionReason, setActionReason] = useState('')
+    const [deleteRecruiter, setDeleteRecruiter] = useState<RecruiterAdminResponse | null>(null)
+    const [deleteError, setDeleteError] = useState<string | null>(null)
 
     // Mutation to lock/unlock recruiter
     const statusMutation = useMutation({
@@ -97,6 +102,28 @@ export function AdminRecruitersPage() {
             setActionError(msg)
         },
     })
+
+    const deleteMutation = useMutation({
+        mutationFn: ({ userId, blockIdentifiers }: { userId: number; blockIdentifiers: boolean }) =>
+            deleteAdminAccount(userId, blockIdentifiers),
+        onSuccess: async (_result, variables) => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['admin-recruiters'] }),
+                queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] }),
+            ])
+            setSuccessMessage(variables.blockIdentifiers
+                ? 'Đã xóa tài khoản và chặn email/số điện thoại đăng ký lại.'
+                : 'Đã xóa tài khoản. Email/số điện thoại có thể đăng ký lại.')
+            setDeleteRecruiter(null)
+            setDeleteError(null)
+        },
+        onError: (err: unknown) => setDeleteError(err instanceof Error ? err.message : 'Không thể xóa tài khoản.'),
+    })
+
+    function handleDeleteRecruiter(blockIdentifiers: boolean) {
+        if (!deleteRecruiter) return
+        deleteMutation.mutate({ userId: deleteRecruiter.userId, blockIdentifiers })
+    }
 
     function handleSearchSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -499,6 +526,17 @@ export function AdminRecruitersPage() {
                                                         <span>Mở</span>
                                                     </button>
                                                 )}
+                                                <button
+                                                    aria-label="Xóa tài khoản nhà tuyển dụng"
+                                                    className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 sm:text-sm"
+                                                    disabled={deleteMutation.isPending}
+                                                    onClick={() => { setDeleteError(null); setDeleteRecruiter(recruiter) }}
+                                                    title="Xóa tài khoản"
+                                                    type="button"
+                                                >
+                                                    <Trash2 size={14} />
+                                                    <span>Xóa</span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -717,6 +755,17 @@ export function AdminRecruitersPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {deleteRecruiter && (
+                <DeleteAccountDialog
+                    account={deleteRecruiter}
+                    accountType="nhà tuyển dụng"
+                    errorMessage={deleteError}
+                    isPending={deleteMutation.isPending}
+                    onCancel={() => { if (!deleteMutation.isPending) setDeleteRecruiter(null) }}
+                    onDelete={handleDeleteRecruiter}
+                />
             )}
         </div>
     )

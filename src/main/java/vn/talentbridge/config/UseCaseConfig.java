@@ -42,6 +42,8 @@ public class UseCaseConfig {
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
+            BlockedAccountIdentifierRepositoryPort blockedIdentifiers,
+            AccountIdentifierHasherPort accountIdentifierHasher,
             @Value("${talentbridge.jwt.expiration-ms:86400000}")
             long expirationMs,
             @Value("${talentbridge.jwt.refresh-expiration-ms:604800000}")
@@ -54,6 +56,8 @@ public class UseCaseConfig {
                 passwordEncoder,
                 tokenProvider,
                 authSessionRepository,
+                blockedIdentifiers,
+                accountIdentifierHasher,
                 expirationMs,
                 refreshExpirationMs
         );
@@ -188,6 +192,21 @@ public class UseCaseConfig {
             CandidateRepositoryPort candidateRepository) {
         return new AdminManagementUseCaseImpl(userRepository, companyRepository, jobRepository, recruiterRepository,
                 candidateRepository);
+    }
+
+    @Bean
+    public DeleteUserAccountUseCase deleteUserAccountUseCase(
+            UserRepositoryPort userRepository,
+            RecruiterRepositoryPort recruiterRepository,
+            CandidateRepositoryPort candidateRepository,
+            ApplicationRepositoryPort applicationRepository,
+            BlockedAccountIdentifierRepositoryPort blockedIdentifiers,
+            AccountIdentifierHasherPort identifierHasher,
+            ResumeRepositoryPort resumeRepository,
+            FileStoragePort fileStorage) {
+        return new TransactionalDeleteUserAccountUseCase(new DeleteUserAccountUseCaseImpl(
+                userRepository, recruiterRepository, candidateRepository, applicationRepository,
+                blockedIdentifiers, identifierHasher, resumeRepository, fileStorage));
     }
 
     @Bean

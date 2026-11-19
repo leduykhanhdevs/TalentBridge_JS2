@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface JobRepositoryPort {
     Optional<Job> findById(Long id);
     Job save(Job job);
+    void deleteById(Long id);
     List<Job> findAll(int page, int size, JobStatus status);
     List<Job> findByRecruiterUserId(Long recruiterUserId, int page, int size, JobStatus status);
     long countByRecruiterUserId(Long recruiterUserId, JobStatus status);

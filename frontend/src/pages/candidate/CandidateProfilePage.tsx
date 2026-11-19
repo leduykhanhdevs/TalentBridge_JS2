@@ -19,7 +19,6 @@ import {
     Save,
     Share2,
     Sparkles,
-    Star,
     Trash2,
     User,
     X,
@@ -253,9 +252,6 @@ export function CandidateProfilePage() {
         : profile.experienceYears
             ? `${profile.experienceYears} năm (tự động tính)`
             : 'Dưới 1 năm (tự động tính)'
-    const hasSkillExperienceExceeding = skills.some(
-        (skill) => (skill.yearsOfExperience ?? 0) > (profile.experienceYears ?? 0),
-    )
 
     const formatCurrency = (val: number | null | undefined) => {
         if (!val || val <= 0) return 'Thỏa thuận'
@@ -952,17 +948,12 @@ export function CandidateProfilePage() {
                                 </button>
                             </div>
 
-                            {hasSkillExperienceExceeding && (
-                                <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
-                                    Số năm ở một hoặc nhiều kỹ năng đang cao hơn tổng kinh nghiệm từ lịch sử công việc. Hãy kiểm tra lại từng kỹ năng.
-                                </p>
-                            )}
                             {skills.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
                                     <EmptyStateIllustration className="w-20 h-auto mx-auto mb-2" />
                                     <p className="text-sm font-medium text-slate-600">Chưa có kỹ năng nào được cập nhật</p>
                                     <p className="text-xs text-slate-400 mt-1">
-                                        Làm nổi bật hồ sơ của bạn với danh sách kỹ năng chuyên môn và đánh giá mức độ thành thạo (1-5 sao).
+                                        Thêm các kỹ năng được nêu trong CV hoặc bạn muốn giới thiệu.
                                     </p>
                                     <button
                                         type="button"
@@ -973,64 +964,26 @@ export function CandidateProfilePage() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                <ul aria-label="Danh sách kỹ năng chuyên môn" className="flex flex-wrap gap-2.5">
                                     {skills.map((s: CandidateSkill) => (
-                                        <div
+                                        <li
                                             key={s.id}
-                                            className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/40 p-4 hover:border-blue-300 hover:bg-white hover:shadow-sm transition"
+                                            className="group inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/60 px-3.5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-blue-300 hover:bg-white"
                                         >
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div>
-                                                    <h4 className="text-sm font-bold text-slate-900">{s.skillName}</h4>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-800">
-                                                            {s.proficiencyLevel === 'BEGINNER'
-                                                                ? 'Cơ bản'
-                                                                : s.proficiencyLevel === 'ELEMENTARY'
-                                                                ? 'Sơ cấp'
-                                                                : s.proficiencyLevel === 'INTERMEDIATE'
-                                                                ? 'Trung cấp'
-                                                                : s.proficiencyLevel === 'ADVANCED'
-                                                                ? 'Cao cấp'
-                                                                : 'Chuyên gia'}
-                                                        </span>
-                                                        {s.yearsOfExperience != null && s.yearsOfExperience > 0 && (
-                                                            <span className="text-[11px] text-slate-400 font-medium">
-                                                                {s.yearsOfExperience} năm kn
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteSkill(s.id)}
-                                                    className="opacity-0 group-hover:opacity-100 rounded-lg p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
-                                                    title="Xóa kỹ năng"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                            </div>
-
-                                            {/* Golden star rating 1-5 */}
-                                            <div className="flex items-center gap-1 mt-3 pt-2.5 border-t border-slate-200/60">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <Star
-                                                        key={star}
-                                                        className={`h-3.5 w-3.5 ${
-                                                            star <= (s.rating || 0)
-                                                                ? 'fill-amber-400 text-amber-400'
-                                                                : 'fill-slate-200 text-slate-200'
-                                                        }`}
-                                                    />
-                                                ))}
-                                                <span className="text-xs font-bold text-amber-600 ml-1.5">
-                                                    {s.rating || 0}/5
-                                                </span>
-                                            </div>
-                                        </div>
+                                            <Code2 aria-hidden="true" className="size-4 text-blue-700" />
+                                            <span>{s.skillName}</span>
+                                            <button
+                                                aria-label={`Xóa kỹ năng ${s.skillName}`}
+                                                className="rounded-md p-1 text-slate-400 opacity-0 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 group-hover:opacity-100"
+                                                onClick={() => handleDeleteSkill(s.id)}
+                                                title="Xóa kỹ năng"
+                                                type="button"
+                                            >
+                                                <Trash2 aria-hidden="true" className="size-3.5" />
+                                            </button>
+                                        </li>
                                     ))}
-                                </div>
+                                </ul>
                             )}
                         </div>
 

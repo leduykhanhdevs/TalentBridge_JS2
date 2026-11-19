@@ -17,6 +17,8 @@ services:
         value: prod
       - key: TALENTBRIDGE_JWT_SECRET
         generateValue: true
+      - key: TALENTBRIDGE_ACCOUNT_BLOCKING_HMAC_SECRET
+        generateValue: true
       - key: SPRING_DATASOURCE_URL
         sync: false # JDBC URL MySQL Cloud; khi chuyển RDS dùng sslMode=VERIFY_IDENTITY và truststore trong Docker image
       - key: SPRING_DATASOURCE_USERNAME

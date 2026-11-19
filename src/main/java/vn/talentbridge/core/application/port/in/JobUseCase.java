@@ -17,6 +17,10 @@ public interface JobUseCase {
 
     JobDetailResult closeJob(Long recruiterUserId, Long jobId);
 
+    JobDetailResult reopenJob(Long recruiterUserId, Long jobId);
+
+    void deleteClosedJob(Long recruiterUserId, Long jobId);
+
     JobDetailResult getJobById(Long jobId);
 
     List<JobDetailResult> getMyJobs(Long recruiterUserId, int page, int size, JobStatus status);

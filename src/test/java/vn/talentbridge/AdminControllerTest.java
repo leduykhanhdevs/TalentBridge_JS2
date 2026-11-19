@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateCompanyStatusRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateJobStatusRequest;
 import vn.talentbridge.adapter.in.web.dto.request.UpdateUserStatusRequest;
+import vn.talentbridge.adapter.in.web.dto.request.RegisterRequest;
 import vn.talentbridge.adapter.out.persistence.entity.CandidateJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.CompanyJpaEntity;
 import vn.talentbridge.adapter.out.persistence.entity.JobJpaEntity;
@@ -38,8 +39,13 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -117,6 +123,7 @@ class AdminControllerTest {
                 .email("candidate_user@test.com")
                 .passwordHash(passwordEncoder.encode("user123"))
                 .fullName("Candidate User")
+                .phoneNumber("0912345678")
                 .status(UserStatus.ACTIVE)
                 .roles(new HashSet<>(Collections.singletonList(candidateRole)))
                 .build();
@@ -512,5 +519,66 @@ class AdminControllerTest {
         mockMvc.perform(get("/api/v1/admin/candidates/" + testCandidate.getId())
                         .header("Authorization", "Bearer " + candidateToken))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Admin xóa tài khoản thường thì ứng viên có thể đăng ký lại bằng email và số điện thoại cũ")
+    void deleteCandidateAllowsRegistrationAgain() throws Exception {
+        mockMvc.perform(delete("/api/v1/admin/users/" + testUser.getId())
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isNoContent());
+
+        assertFalse(userRepository.existsById(testUser.getId()));
+        assertFalse(candidateRepository.existsById(testCandidate.getId()));
+
+        RegisterRequest registration = RegisterRequest.builder()
+                .email("candidate_user@test.com")
+                .password("Password123!")
+                .fullName("Candidate User Re-registered")
+                .phone("0912345678")
+                .role("ROLE_CANDIDATE")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registration)))
+                .andExpect(status().isCreated());
+
+        assertTrue(userRepository.existsByEmail("candidate_user@test.com"));
+    }
+
+    @Test
+    @DisplayName("Admin xóa và chặn ứng viên thì email và số điện thoại đều không thể đăng ký lại")
+    void deleteAndBlockCandidateRejectsRegistrationIdentifiers() throws Exception {
+        mockMvc.perform(delete("/api/v1/admin/users/" + testUser.getId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("blockIdentifiers", "true"))
+                .andExpect(status().isNoContent());
+
+        RegisterRequest blockedEmail = RegisterRequest.builder()
+                .email("candidate_user@test.com")
+                .password("Password123!")
+                .fullName("New Candidate")
+                .phone("0812345678")
+                .role("ROLE_CANDIDATE")
+                .build();
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(blockedEmail)))
+                .andExpect(status().isConflict());
+
+        RegisterRequest blockedPhone = RegisterRequest.builder()
+                .email("another_candidate@test.com")
+                .password("Password123!")
+                .fullName("Another Candidate")
+                .phone("+84912345678")
+                .role("ROLE_CANDIDATE")
+                .build();
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(blockedPhone)))
+                .andExpect(status().isConflict());
+
+        assertFalse(userRepository.existsByEmail("another_candidate@test.com"));
     }
 }

@@ -169,14 +169,22 @@ CREATE TABLE `candidate_skills` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `candidate_id` BIGINT NOT NULL,
     `skill_id` INT NOT NULL,
-    `proficiency_level` VARCHAR(30) DEFAULT 'INTERMEDIATE', -- BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
-    `rating` INT DEFAULT 3, -- Đánh giá sao (1-5 sao như TopCV)
-    `years_of_experience` DOUBLE DEFAULT 1.0,
+    `proficiency_level` VARCHAR(30) NULL,
+    `rating` INT NULL,
+    `years_of_experience` DOUBLE NULL,
     CONSTRAINT `fk_cand_skills_candidate` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_cand_skills_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE CASCADE,
     UNIQUE KEY `uk_cand_skill` (`candidate_id`, `skill_id`),
     INDEX `idx_cand_skills_candidate` (`candidate_id`),
     INDEX `idx_cand_skills_skill` (`skill_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `blocked_account_identifiers` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `identifier_type` VARCHAR(16) NOT NULL,
+    `identifier_hash` VARCHAR(64) NOT NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT `uk_blocked_account_identifier` UNIQUE (`identifier_type`, `identifier_hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. Bảng candidate_projects: Dự án cá nhân & thực tế (TopCV Projects)

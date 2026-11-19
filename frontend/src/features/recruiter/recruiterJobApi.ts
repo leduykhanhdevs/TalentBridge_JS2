@@ -140,6 +140,31 @@ export async function closeJob(id: number): Promise<RecruiterJobItem> {
     )
 }
 
+export async function reopenJob(id: number): Promise<RecruiterJobItem> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${id}/reopen`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+    })
+    return handleResponse<RecruiterJobItem>(response, 'Không thể mở lại tin tuyển dụng.')
+}
+
+export async function deleteClosedJob(id: number): Promise<void> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/jobs/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    })
+    if (!response.ok) {
+        let message = 'Không thể xóa tin tuyển dụng.'
+        try {
+            const body = await response.json() as ApiResponse<unknown>
+            message = body.message || message
+        } catch {
+            // Keep the endpoint-specific message when the API has no response body.
+        }
+        throw new RecruiterJobApiError(response.status, message)
+    }
+}
+
 /**
  * Lấy chi tiết tin tuyển dụng
  */

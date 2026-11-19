@@ -18,9 +18,9 @@ public class CandidateSkill {
         this.candidateId = candidateId;
         this.skillId = skillId;
         this.skillName = skillName;
-        this.proficiencyLevel = proficiencyLevel != null ? proficiencyLevel : "INTERMEDIATE";
-        this.rating = rating != null ? rating : 3;
-        this.yearsOfExperience = yearsOfExperience != null ? yearsOfExperience : 1.0;
+        this.proficiencyLevel = proficiencyLevel;
+        this.rating = rating;
+        this.yearsOfExperience = yearsOfExperience;
     }
 
     public Long getId() {

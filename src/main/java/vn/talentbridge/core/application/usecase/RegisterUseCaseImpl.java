@@ -5,6 +5,8 @@ import vn.talentbridge.core.application.dto.RegisterCommand;
 import vn.talentbridge.core.application.dto.UserResult;
 import vn.talentbridge.core.application.port.in.RegisterUseCase;
 import vn.talentbridge.core.application.port.out.AuthSessionRepositoryPort;
+import vn.talentbridge.core.application.port.out.AccountIdentifierHasherPort;
+import vn.talentbridge.core.application.port.out.BlockedAccountIdentifierRepositoryPort;
 import vn.talentbridge.core.application.port.out.PasswordEncoderPort;
 import vn.talentbridge.core.application.port.out.TokenProviderPort;
 import vn.talentbridge.core.application.port.out.UserRepositoryPort;
@@ -24,6 +26,7 @@ import vn.talentbridge.core.domain.model.Recruiter;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 public class RegisterUseCaseImpl implements RegisterUseCase {
@@ -34,6 +37,8 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
     private final PasswordEncoderPort passwordEncoder;
     private final TokenProviderPort tokenProvider;
     private final AuthSessionRepositoryPort authSessionRepository;
+    private final BlockedAccountIdentifierRepositoryPort blockedIdentifiers;
+    private final AccountIdentifierHasherPort identifierHasher;
     private final long tokenExpirationMs;
     private final long refreshTokenExpirationMs;
 
@@ -44,6 +49,8 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
             PasswordEncoderPort passwordEncoder,
             TokenProviderPort tokenProvider,
             AuthSessionRepositoryPort authSessionRepository,
+            BlockedAccountIdentifierRepositoryPort blockedIdentifiers,
+            AccountIdentifierHasherPort identifierHasher,
             long tokenExpirationMs,
             long refreshTokenExpirationMs
     ) {
@@ -53,12 +60,19 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.authSessionRepository = authSessionRepository;
+        this.blockedIdentifiers = blockedIdentifiers;
+        this.identifierHasher = identifierHasher;
         this.tokenExpirationMs = tokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
     @Override
     public AuthResult register(RegisterCommand command) {
+        if (isBlocked("EMAIL", normalizeEmail(command.email()))
+                || isBlocked("PHONE", normalizePhone(command.phoneNumber()))) {
+            throw new DomainException(40901, "Email hoặc số điện thoại này không được phép đăng ký tài khoản mới");
+        }
+
         if (userRepository.existsByEmail(command.email())) {
             throw new EmailAlreadyUsedException(command.email());
         }
@@ -168,5 +182,23 @@ public class RegisterUseCaseImpl implements RegisterUseCase {
                 expiresInSeconds,
                 UserResult.from(savedUser)
         );
+    }
+
+    private boolean isBlocked(String type, String normalizedIdentifier) {
+        return normalizedIdentifier != null && blockedIdentifiers.exists(
+                type, identifierHasher.hash(type, normalizedIdentifier));
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null || email.isBlank() ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null || phone.isBlank()) return null;
+        String compact = phone.trim().replaceAll("[\\s().-]", "");
+        if (compact.startsWith("+")) return compact;
+        if (compact.startsWith("0")) return "+84" + compact.substring(1);
+        if (compact.startsWith("84")) return "+" + compact;
+        return compact;
     }
 }

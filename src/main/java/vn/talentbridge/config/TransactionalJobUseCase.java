@@ -36,6 +36,18 @@ public class TransactionalJobUseCase implements JobUseCase {
         return delegate.closeJob(recruiterUserId, jobId);
     }
 
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public JobDetailResult reopenJob(Long recruiterUserId, Long jobId) {
+        return delegate.reopenJob(recruiterUserId, jobId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public void deleteClosedJob(Long recruiterUserId, Long jobId) {
+        delegate.deleteClosedJob(recruiterUserId, jobId);
+    }
+
     @Override public JobDetailResult getJobById(Long jobId) { return delegate.getJobById(jobId); }
     @Override public List<JobDetailResult> getMyJobs(Long userId, int page, int size, JobStatus status) { return delegate.getMyJobs(userId, page, size, status); }
     @Override public long countMyJobs(Long userId, JobStatus status) { return delegate.countMyJobs(userId, status); }

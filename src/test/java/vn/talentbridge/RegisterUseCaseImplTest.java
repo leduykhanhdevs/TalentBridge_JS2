@@ -11,6 +11,7 @@ import vn.talentbridge.core.application.dto.RegisterCommand;
 import vn.talentbridge.core.application.port.out.*;
 import vn.talentbridge.core.application.usecase.RegisterUseCaseImpl;
 import vn.talentbridge.core.domain.exception.InvalidRoleException;
+import vn.talentbridge.core.domain.exception.DomainException;
 import vn.talentbridge.core.domain.model.User;
 import vn.talentbridge.core.domain.vo.RoleName;
 
@@ -42,6 +43,12 @@ class RegisterUseCaseImplTest {
     @Mock
     private AuthSessionRepositoryPort authSessionRepository;
 
+    @Mock
+    private BlockedAccountIdentifierRepositoryPort blockedIdentifiers;
+
+    @Mock
+    private AccountIdentifierHasherPort identifierHasher;
+
     private RegisterUseCaseImpl registerUseCase;
 
     @BeforeEach
@@ -53,9 +60,32 @@ class RegisterUseCaseImplTest {
                 passwordEncoder,
                 tokenProvider,
                 authSessionRepository,
+                blockedIdentifiers,
+                identifierHasher,
                 900000L,
                 604800000L
         );
+    }
+
+    @Test
+    @DisplayName("Does not register an email previously blocked by an administrator")
+    void register_withBlockedEmail_rejectsBeforeCreatingUser() {
+        RegisterCommand command = new RegisterCommand(
+                "Blocked@Test.com",
+                "Password123!",
+                "Blocked User",
+                "0912345678",
+                "ROLE_CANDIDATE",
+                null
+        );
+        when(identifierHasher.hash("EMAIL", "blocked@test.com")).thenReturn("email-hash");
+        when(blockedIdentifiers.exists("EMAIL", "email-hash")).thenReturn(true);
+
+        DomainException exception = assertThrows(DomainException.class, () -> registerUseCase.register(command));
+
+        assertEquals(40901, exception.getCode());
+        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).existsByEmail(anyString());
     }
 
     @Test

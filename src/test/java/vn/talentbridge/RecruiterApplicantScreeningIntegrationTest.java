@@ -200,6 +200,21 @@ class RecruiterApplicantScreeningIntegrationTest {
     }
 
     @Test
+    @DisplayName("Tin đã đóng vẫn cho nhà tuyển dụng xem được các ứng viên đã nộp")
+    void closedJobKeepsApplicantsVisibleToRecruiter() throws Exception {
+        mockMvc.perform(patch("/api/v1/jobs/{jobId}/close", job.getId())
+                        .header("Authorization", "Bearer " + recruiterToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("CLOSED"));
+
+        mockMvc.perform(get("/api/v1/recruiters/jobs/{jobId}/applicants", job.getId())
+                        .header("Authorization", "Bearer " + recruiterToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[*].candidateFullName", containsInAnyOrder("Nguyen Thi Alice", "Tran Van Bob")));
+    }
+
+    @Test
     @DisplayName("HRPM-45: Hỗ trợ route alias /api/v1/jobs/{jobId}/applicants")
     void shouldReturnApplicantsViaAliasRoute() throws Exception {
         mockMvc.perform(get("/api/v1/jobs/{jobId}/applicants", job.getId())

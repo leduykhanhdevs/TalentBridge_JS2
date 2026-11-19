@@ -52,25 +52,14 @@ public class CandidateSkillUseCaseImpl implements CandidateSkillUseCase {
             throw new IllegalArgumentException("Vui lòng chọn hoặc nhập tên kỹ năng");
         }
 
-        int rating = command.rating() != null ? command.rating() : 3;
-        if (rating < 1 || rating > 5) {
-            throw new IllegalArgumentException("Mức độ đánh giá kỹ năng phải từ 1 đến 5 sao");
-        }
-
-        String proficiency = command.proficiencyLevel() != null && !command.proficiencyLevel().isBlank()
-                ? command.proficiencyLevel().trim()
-                : getDefaultProficiencyForRating(rating);
-
-        Double years = command.yearsOfExperience() != null ? command.yearsOfExperience() : 1.0;
-
         CandidateSkill candidateSkill = candidateSkillRepository
                 .findByCandidateIdAndSkillId(candidate.getId(), skill.getId())
-                .orElse(new CandidateSkill(null, candidate.getId(), skill.getId(), skill.getName(), proficiency, rating, years));
+                .orElse(new CandidateSkill(null, candidate.getId(), skill.getId(), skill.getName(), null, null, null));
 
         candidateSkill.setSkillName(skill.getName());
-        candidateSkill.setRating(rating);
-        candidateSkill.setProficiencyLevel(proficiency);
-        candidateSkill.setYearsOfExperience(years);
+        candidateSkill.setRating(null);
+        candidateSkill.setProficiencyLevel(null);
+        candidateSkill.setYearsOfExperience(null);
 
         CandidateSkill saved = candidateSkillRepository.save(candidateSkill);
         return CandidateSkillResult.from(saved);
@@ -102,14 +91,4 @@ public class CandidateSkillUseCaseImpl implements CandidateSkillUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Hồ sơ ứng viên", userId));
     }
 
-    private String getDefaultProficiencyForRating(int rating) {
-        return switch (rating) {
-            case 1 -> "BEGINNER";
-            case 2 -> "ELEMENTARY";
-            case 3 -> "INTERMEDIATE";
-            case 4 -> "ADVANCED";
-            case 5 -> "EXPERT";
-            default -> "INTERMEDIATE";
-        };
-    }
 }

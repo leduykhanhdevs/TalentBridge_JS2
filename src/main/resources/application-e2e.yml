@@ -17,5 +17,7 @@ spring:
 talentbridge:
   jwt:
     secret: dGVzdC1zZWNyZXQta2V5LWZvci10YWxlbnRicmlkZ2UtdGVzdGluZy0xMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA=
+  account-blocking:
+    hmac-secret: local-e2e-only-account-blocking-secret
   cors:
     allowed-origins: http://127.0.0.1:5174

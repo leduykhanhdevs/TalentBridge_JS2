@@ -33,13 +33,25 @@ class FlywaySchemaValidationTest {
         assertThat(flyway).isNotNull();
         MigrationInfo current = flyway.info().current();
         assertThat(current).isNotNull();
-        assertThat(current.getVersion().getVersion()).isEqualTo("6");
-        assertThat(current.getDescription()).isEqualTo("allow company address to be optional");
+        assertThat(current.getVersion().getVersion()).isEqualTo("8");
+        assertThat(current.getDescription()).isEqualTo("remove inferred candidate skill metadata");
         String addressNullable = jdbcTemplate.queryForObject(
                 "SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS " +
                         "WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = 'COMPANIES' AND COLUMN_NAME = 'ADDRESS'",
                 String.class
         );
         assertThat(addressNullable).isEqualTo("YES");
+        String ratingNullable = jdbcTemplate.queryForObject(
+                "SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS " +
+                        "WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = 'CANDIDATE_SKILLS' AND COLUMN_NAME = 'RATING'",
+                String.class
+        );
+        assertThat(ratingNullable).isEqualTo("YES");
+        Long blockedIdentifierTableCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES " +
+                        "WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = 'BLOCKED_ACCOUNT_IDENTIFIERS'",
+                Long.class
+        );
+        assertThat(blockedIdentifierTableCount).isEqualTo(1L);
     }
 }

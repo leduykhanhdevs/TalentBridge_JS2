@@ -77,7 +77,8 @@ export function CvImportModal({ isOpen, onClose, onSuccess }: CvImportModalProps
                 title: result.title || '',
                 city: result.city || '',
                 summary: result.summary || '',
-                skills: [...(result.skills || [])],
+                skills: Array.from(new Set((result.skills || []).map((skill) => skill.trim()).filter(Boolean)))
+                    .sort((left, right) => left.localeCompare(right, 'vi', { sensitivity: 'base' })),
                 experiences: result.experiences ? result.experiences.map((exp) => ({
                     companyName: exp.companyName,
                     position: exp.position,

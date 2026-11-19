@@ -115,6 +115,15 @@ export async function updateUserStatus(
     await handleResponse(response, 'Không thể cập nhật trạng thái tài khoản.')
 }
 
+export async function deleteAdminAccount(userId: number, blockIdentifiers: boolean): Promise<void> {
+    const query = new URLSearchParams({ blockIdentifiers: String(blockIdentifiers) })
+    const response = await authenticatedFetch(API_BASE_URL + '/admin/users/' + userId + '?' + query.toString(), {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    })
+    await handleResponse(response, 'Không thể xóa tài khoản.')
+}
+
 export async function getAdminRecruiters(
     params: RecruiterFilterParams = {},
 ): Promise<PageResponse<RecruiterAdminResponse>> {
